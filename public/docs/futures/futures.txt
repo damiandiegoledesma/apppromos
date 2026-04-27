@@ -1,0 +1,43 @@
+# FUTURES APPPROMOS
+
+## ChatBot
+Objetivo:
+Asistencia al usuario dentro de AppPromos.
+
+Ideas:
+- ayuda sobre cómo usar módulos
+- respuestas rápidas
+- soporte guiado
+- base de conocimiento interna
+
+## Normalización de datos
+Objetivo:
+Mejorar consistencia de productos, rubros y datos entre carnicerías.
+
+Ideas:
+- nombres de productos normalizados
+- categorías consistentes
+- evitar duplicados
+- mejorar comparación entre carnicerías
+
+## Depuración de base de datos
+Objetivo:
+Limpiar Firestore y evitar datos basura.
+
+Ideas:
+- detectar empresas test
+- eliminar registros duplicados
+- limpiar negocios incompletos
+- revisar módulos inconsistentes
+- validar billing y acceso
+
+## Analytics
+Objetivo:
+Entender uso real de AppPromos.
+
+Ideas:
+- usuarios activos
+- módulos usados
+- última actividad
+- clientes en trial
+- clientes vencidos

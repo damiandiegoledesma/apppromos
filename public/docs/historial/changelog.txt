@@ -1,0 +1,37 @@
+# APPPROMOS — CHANGELOG
+
+## V11.4R — Reconciliación Real + Guarda Central de Escritura
+
+Fecha: 2026-04-26
+Base: V11.3 Pre Reconciliación Real
+
+### Incluido
+
+- Actualización de documentación real del estado de la app.
+- Confirmación de arquitectura multi-tenant actual.
+- Confirmación de estados billing reales: active, overdue, suspended.
+- Confirmación de planes reales: trial, basic, pro.
+- Documentación de que premium todavía no existe en código.
+- Documentación de que grace no existe como estado principal.
+- Trial real para nuevas altas: trialEndsAt = hoy + 30 días.
+- Nuevo servicio: public/js/services/write-guard-service.js.
+- updateBusinessState ahora valida assertBusinessCanWrite antes de escribir.
+- Web Premium valida assertBusinessCanWrite antes de guardar configuración/datos.
+- Access Control detecta trial vencido como estado de advertencia/bloqueo de escritura.
+- Mensajes de pago/trial actualizados para UX más clara.
+
+### Decisión comercial aplicada
+
+El cliente puede entrar y consultar información aunque esté vencido, suspendido o tenga trial vencido, pero no puede guardar cambios hasta regularizar o activar plan.
+
+### No incluido todavía
+
+- No se tocaron Firestore Rules.
+- No se modificó resolveSession.
+- No se cambió la estructura core/meta o core/state.
+- No se creó plan Premium.
+- No se migró catálogo base desde demo a catalogs/baseProducts.
+
+### Riesgo controlado
+
+La guarda central JS mejora el control SaaS, pero todavía debe reforzarse con Firestore Rules en una versión posterior.

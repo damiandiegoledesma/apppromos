@@ -1,0 +1,30 @@
+# ESTRUCTURA DEL REPO
+
+/public
+  /js
+    /modules
+    /services
+    app-main.js
+
+  /docs
+    /plantillas
+    /versiones
+    /parches
+    /historial
+    /arquitectura
+    /estado
+    /roadmap
+    /futures
+    /testing
+    /archivados
+
+/firebase
+firestore.rules
+
+IMPORTANTE:
+No incluir en parches:
+- .venv
+- .firebase
+- node_modules
+- logs
+- .bak

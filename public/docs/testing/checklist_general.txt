@@ -1,0 +1,107 @@
+# APPPROMOS — CHECKLIST GENERAL DE PRUEBA
+
+Versión base: V11.4R
+Fecha: 2026-04-26
+
+## Regla principal
+
+No aprobar deploy si falla alguno de estos puntos:
+- Login cliente.
+- Login superadmin.
+- Carga de empresa correcta.
+- Carga de productos.
+- Guardado de precios con cuenta activa.
+- Bloqueo de guardado con cuenta vencida/suspendida.
+- resolveSession estable.
+
+## 1. Prueba cliente active/trial vigente
+
+1. Entrar con usuario cliente.
+2. Confirmar que abre su carnicería, no demo.
+3. Confirmar que se ven productos.
+4. Cambiar un precio.
+5. Guardar.
+6. Recargar.
+7. Confirmar que el precio quedó guardado.
+8. Crear una oferta.
+9. Guardar oferta.
+10. Confirmar que aparece en Guardados.
+
+Resultado esperado:
+Todo opera normalmente.
+
+## 2. Prueba cliente overdue
+
+Desde Admin:
+1. Cambiar billing.status a overdue.
+2. Entrar como cliente.
+3. Confirmar que puede ver su información.
+4. Intentar guardar precio.
+5. Intentar guardar oferta.
+6. Intentar guardar Web Premium.
+
+Resultado esperado:
+Puede consultar, pero no guardar. Debe aparecer mensaje claro de pago vencido.
+
+## 3. Prueba cliente suspended
+
+Desde Admin:
+1. Cambiar billing.status a suspended.
+2. Entrar como cliente.
+3. Confirmar que puede ingresar.
+4. Confirmar que módulos operativos quedan bloqueados.
+5. Intentar guardar cambios si algún botón queda visible.
+
+Resultado esperado:
+No debe guardar nada. Mensaje claro.
+
+## 4. Prueba trial vencido
+
+1. Tomar empresa trial.
+2. Poner trialEndsAt en fecha pasada.
+3. Entrar como cliente.
+4. Confirmar aviso de prueba finalizada.
+5. Intentar guardar precio/oferta/web.
+
+Resultado esperado:
+Puede ver, no puede guardar.
+
+## 5. Prueba superadmin
+
+1. Entrar como superadmin.
+2. Ver listado de empresas.
+3. Cambiar billing active/overdue/suspended.
+4. Entrar a una empresa.
+5. Confirmar que superadmin puede corregir datos aunque la empresa esté vencida/suspendida.
+
+Resultado esperado:
+Admin conserva capacidad de soporte.
+
+## 6. Prueba registro nuevo
+
+1. Registrar nueva carnicería.
+2. Confirmar que se crea users/{uid}.
+3. Confirmar businesses/{businessId}.
+4. Confirmar core/meta.
+5. Confirmar core/state.
+6. Confirmar billing.plan = trial.
+7. Confirmar billing.status = active.
+8. Confirmar billing.trialEndsAt con fecha futura aprox. +30 días.
+
+Resultado esperado:
+Alta completa y trial real.
+
+## 7. Prueba móvil rápida
+
+En celular o modo responsive:
+1. Entrar a Crear oferta.
+2. Buscar productos.
+3. Armar combo.
+4. Guardar.
+5. Ir a WhatsApp.
+6. Copiar/abrir mensaje.
+7. Ir a Precios.
+8. Editar precio.
+
+Resultado esperado:
+No debe sentirse pesado ni confuso para uso en mostrador.

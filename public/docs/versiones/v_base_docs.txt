@@ -1,0 +1,17 @@
+VERSIÓN: BASE DOCS
+FECHA: 2026-04-26
+
+DESCRIPCIÓN:
+Estructura limpia de documentación para AppPromos.
+
+INCLUYE:
+- plantillas
+- estado actual
+- arquitectura
+- roadmap
+- futures
+- changelog
+- checklist de parche
+
+OBJETIVO:
+Evitar pérdida de contexto, parches peligrosos y documentación desalineada con el código real.

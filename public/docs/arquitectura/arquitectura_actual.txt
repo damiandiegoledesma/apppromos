@@ -1,0 +1,171 @@
+# APPPROMOS — ARQUITECTURA ACTUAL REAL
+
+Versión: V11.4R
+Fecha: 2026-04-26
+
+## Principio central
+
+AppPromos es un SaaS multi-tenant para carnicerías. Cada cliente opera una carnicería propia desde móvil o escritorio, pero la experiencia principal debe estar optimizada para uso móvil en contexto real de carnicería.
+
+## Stack
+
+- Firebase Auth.
+- Firebase Firestore.
+- Firebase Hosting.
+- HTML + CSS + JavaScript modular.
+- Sin framework frontend.
+
+## Modelo multi-tenant
+
+Cada usuario cliente tiene asignado un businessId en users/{uid}.
+
+La empresa vive en:
+
+businesses/{businessId}
+businesses/{businessId}/core/meta
+businesses/{businessId}/core/state
+
+El cliente solo puede operar su propia empresa.
+El superadmin puede listar, administrar e ingresar a empresas.
+El guest usa demo.
+
+## resolveSession
+
+Archivo:
+public/js/services/auth-service.js
+
+Responsabilidades:
+- Detectar usuario Firebase.
+- Leer users/{uid}.
+- Leer admins/{uid} si corresponde.
+- Resolver appMode:
+  - guest
+  - client
+  - superadmin
+- Resolver businessId para cliente.
+
+Regla de estabilidad:
+No modificar resolveSession sin prueba completa de login, registro, cliente, demo y superadmin.
+
+## BusinessStore
+
+Archivo:
+public/js/services/business-store.js
+
+Responsabilidades:
+- Guardar en memoria la empresa activa.
+- Evitar lecturas repetidas.
+- Mantener meta/state/productos/combos coherentes durante la sesión.
+
+## Business Service
+
+Archivo:
+public/js/services/business-service.js
+
+Responsabilidades:
+- Abrir empresa.
+- Resolver empresa activa.
+- Actualizar core/state.
+- Guardar cache local.
+- Actualizar marketSnapshots cuando cambian productos.
+
+Desde V11.4R, updateBusinessState usa la guarda central:
+
+assertBusinessCanWrite(businessId, "guardar cambios")
+
+## Write Guard Service
+
+Archivo:
+public/js/services/write-guard-service.js
+
+Responsabilidad:
+Centralizar el permiso de escritura SaaS.
+
+Permite:
+- Superadmin: escribir para soporte.
+- Cliente active/trial vigente: escribir.
+
+Bloquea:
+- Cliente overdue.
+- Cliente suspended.
+- Trial vencido.
+- Empresa disabled/suspended/inactive.
+
+UX esperada:
+El usuario puede entrar y consultar, pero no guardar cambios. Los mensajes deben ser claros y accionables.
+
+## Access Control Service
+
+Archivo:
+public/js/services/access-control-service.js
+
+Responsabilidades:
+- Normalizar módulos.
+- Normalizar billing.
+- Calcular estado de acceso.
+- Renderizar avisos.
+- Bloquear módulos según estado.
+- Calcular días restantes de trial.
+
+Estados billing reales:
+- active
+- overdue
+- suspended
+
+Planes reales:
+- trial
+- basic
+- pro
+
+## Registro de carnicería
+
+Archivo:
+public/js/services/auth-service.js
+
+Flujo:
+1. Crea usuario Firebase Auth.
+2. Crea businesses/{businessId}.
+3. Crea core/meta.
+4. Crea core/state.
+5. Crea publicWebSlugs/{slug}.
+6. Crea publicPhoneKeys/{phoneKey}.
+7. Crea users/{uid}.
+
+Desde V11.4R, billing.trialEndsAt se genera con fecha actual + 30 días.
+
+Riesgo pendiente:
+El registro todavía no es transaccional. Si falla a mitad, pueden quedar datos parciales.
+
+## Catálogo base
+
+Estado actual:
+El registro clona productos desde businesses/demo/core/state.
+
+Decisión de estabilidad:
+No se cambia todavía.
+
+Futuro recomendado:
+Migrar el origen de catálogo base a catalogs/baseProducts/items.
+
+## Admin SaaS
+
+Archivos:
+- public/js/modules/admin-users-module.js
+- public/js/services/admin-service.js
+
+Funciones actuales:
+- Listar empresas.
+- Listar usuarios.
+- Cambiar acceso.
+- Cambiar billing.
+- Cambiar plan.
+- Activar/desactivar módulos.
+- Marcar test business.
+- Eliminar empresas test.
+- Registrar adminActions.
+
+## Archivo legacy
+
+public/admin.html existe pero no forma parte del flujo SaaS moderno.
+
+Debe tratarse como legacy/no usar hasta archivarlo o eliminarlo con seguridad.

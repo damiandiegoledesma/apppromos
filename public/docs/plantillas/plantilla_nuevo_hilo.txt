@@ -1,0 +1,25 @@
+# APPPROMOS — PLANTILLA NUEVO HILO
+
+Estoy desarrollando AppPromos, un SaaS para carnicerías.
+
+VERSIÓN REAL ACTUAL: VXX.X
+VERSIÓN OBJETIVO: VXX.X
+
+ARQUITECTURA:
+- Firebase Auth + Firestore
+- Multi-tenant: 1 usuario = 1 carnicería
+- Frontend HTML + JS modular, sin frameworks
+- BusinessStore + resolveSession
+
+REGLAS CRÍTICAS:
+- NO romper Firebase
+- NO romper resolveSession
+- NO sobreingeniería
+- Mantener estabilidad
+- Analizar repo real antes de proponer parches
+
+En el próximo mensaje voy a subir el repo actual en formato .zip.
+Esperar el archivo antes de responder.
+
+OBJETIVO:
+Continuar el desarrollo de AppPromos de forma profesional, escalable y comercialmente viable.
