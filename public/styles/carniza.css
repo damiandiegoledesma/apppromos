@@ -1,0 +1,274 @@
+/* ============================================================
+   CARNIZA V1 — vendedor interno de AppPromos
+   Botón flotante + panel guiado, sin IA pesada.
+   ============================================================ */
+
+:root {
+  --carniza-primary: #ea580c;
+  --carniza-primary-dark: #c2410c;
+  --carniza-green: #16a34a;
+  --carniza-text: #2a211b;
+  --carniza-muted: #76665b;
+  --carniza-line: #f0dfd0;
+  --carniza-soft: #fff7ed;
+  --carniza-white: #ffffff;
+}
+
+.carniza-root {
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
+  z-index: 990;
+  font-family: inherit;
+}
+
+.carniza-root.is-hidden {
+  display: none;
+}
+
+.carniza-fab {
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fb923c, var(--carniza-primary));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 30px rgba(194, 65, 12, 0.28);
+  cursor: pointer;
+  transform: translateZ(0);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.carniza-fab:hover,
+.carniza-fab:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(194, 65, 12, 0.34);
+  outline: none;
+}
+
+.carniza-fab:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.carniza-fab-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.carniza-fab-pulse {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, .45);
+  animation: carnizaPulse 1.8s infinite;
+}
+
+@keyframes carnizaPulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .45); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.carniza-panel {
+  position: absolute;
+  right: 0;
+  bottom: 72px;
+  width: min(326px, calc(100vw - 28px));
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--carniza-line);
+  border-radius: 24px;
+  box-shadow: 0 22px 55px rgba(55, 32, 18, 0.18);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(10px) scale(.98);
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+
+.carniza-root.is-open .carniza-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.carniza-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  background: linear-gradient(135deg, #fff7ed, #fff);
+  border-bottom: 1px solid #f5e7da;
+}
+
+.carniza-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.carniza-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.12);
+  font-size: 22px;
+}
+
+.carniza-title {
+  margin: 0;
+  color: var(--carniza-text);
+  font-size: 15px;
+  line-height: 1.1;
+  font-weight: 1000;
+}
+
+.carniza-subtitle {
+  margin: 2px 0 0;
+  color: var(--carniza-muted);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.carniza-close {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b5b4d;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.carniza-body {
+  padding: 14px;
+}
+
+.carniza-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 1000;
+  border: 1px solid transparent;
+}
+
+.carniza-badge.active { color:#166534; background:#dcfce7; border-color:#bbf7d0; }
+.carniza-badge.trial { color:#9a3412; background:#ffedd5; border-color:#fed7aa; }
+.carniza-badge.ending { color:#92400e; background:#fef3c7; border-color:#fcd34d; }
+.carniza-badge.warning { color:#c2410c; background:#ffedd5; border-color:#fb923c; }
+.carniza-badge.blocked { color:#991b1b; background:#fee2e2; border-color:#fca5a5; }
+
+.carniza-message {
+  margin: 0 0 12px;
+  color: var(--carniza-text);
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.carniza-hint {
+  margin: 0 0 12px;
+  color: var(--carniza-muted);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.carniza-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.carniza-action {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #fed7aa;
+  border-radius: 15px;
+  background: #fff7ed;
+  color: #7c2d12;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 1000;
+  text-align: left;
+}
+
+.carniza-action:hover,
+.carniza-action:focus-visible {
+  outline: none;
+  border-color: #fb923c;
+  filter: brightness(.99);
+}
+
+.carniza-action.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #fb923c, var(--carniza-primary));
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(234, 88, 12, 0.16);
+}
+
+.carniza-action.whatsapp {
+  border-color: transparent;
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(21, 128, 61, 0.16);
+}
+
+.carniza-footer {
+  padding: 10px 14px 13px;
+  border-top: 1px solid #f5e7da;
+  background: #fffaf7;
+  color: #8a7565;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+body.module-focus-admin .carniza-root {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .carniza-root {
+    right: 13px;
+    bottom: 82px;
+  }
+
+  .carniza-fab {
+    width: 56px;
+    height: 56px;
+  }
+
+  .carniza-panel {
+    right: -2px;
+    bottom: 70px;
+    width: min(314px, calc(100vw - 24px));
+    border-radius: 22px;
+  }
+}
