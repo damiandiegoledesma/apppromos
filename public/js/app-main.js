@@ -14,6 +14,7 @@ import { renderAdminUsers } from "./modules/admin-users-module.js";
 import { renderMarket } from "./modules/market-module.js";
 import { renderWhatsApp } from "./modules/whatsapp-module.js";
 import { renderWebPremium } from "./modules/web-module.js";
+import { initCarniza, updateCarnizaContext } from "./modules/carniza-module.js";
 
 import { updateBusinessBasicData } from "./services/web-premium-service.js";
 import { loadActiveBusinessData } from "./services/data-service.js";
@@ -103,6 +104,12 @@ function restartBusinessControlListener(businessId) {
   unsubscribeBusinessControl = subscribeBusinessControl(businessId, async (control) => {
     const previous = JSON.stringify(currentBusinessControl || {});
     currentBusinessControl = control;
+    updateCarnizaContext({
+      businessControl: currentBusinessControl,
+      payload: currentPayload,
+      panelId: currentPanelId,
+      appMode: currentSession?.appMode || "client"
+    });
     const next = JSON.stringify(control || {});
     if (previous !== next && currentPayload) {
       markLazyPanelsDirty();
@@ -154,6 +161,12 @@ function activatePanel(panelId) {
   document.body.classList.toggle("module-focus-market", panelId === "marketPanel");
   document.body.classList.toggle("module-focus-admin", panelId === "usersPanel");
   window.dispatchEvent(new CustomEvent("apppromos:panel-changed", { detail: { panelId } }));
+  updateCarnizaContext({
+    panelId,
+    businessControl: currentBusinessControl,
+    payload: currentPayload,
+    appMode: currentSession?.appMode || "client"
+  });
 
   document.querySelectorAll(".panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === panelId);
@@ -436,6 +449,12 @@ async function renderBusinessWorkspace(options = {}) {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
   }
   currentPayload = payload;
+  updateCarnizaContext({
+    businessControl: currentBusinessControl,
+    payload: currentPayload,
+    panelId: currentPanelId,
+    appMode: currentSession?.appMode || "client"
+  });
 
   if (!payload.meta || !payload.state) {
     dashboardPanel.innerHTML = `
@@ -526,9 +545,11 @@ async function boot() {
   try {
     bindNav();
     setupTopbarAutoHide();
+    initCarniza({ onNavigate: goToPanel });
 
     const session = await resolveSession();
     currentSession = session;
+    updateCarnizaContext({ appMode: currentSession?.appMode || "client" });
 
     if (session.appMode === "guest") {
       window.location.replace("./index.html");
