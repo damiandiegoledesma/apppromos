@@ -28,11 +28,6 @@ const ACTIONS = {
     kind: "whatsapp",
     run: () => navigateTo("whatsappPanel")
   },
-  whatsappAfterSave: {
-    label: "✅ Ya la guardé: WhatsApp",
-    kind: "whatsapp",
-    run: () => navigateTo("whatsappPanel")
-  },
   home: {
     label: "🏠 Volver a Inicio",
     kind: "secondary",
@@ -93,24 +88,24 @@ function getBusinessName() {
 function getPanelCopy(panelId) {
   if (panelId === "pricesPanel") {
     return {
-      message: "Estás en Precios. Ajustá lo necesario y después armá una oferta.",
-      hint: "Primero dejá claro el precio. Después pasás a Ofertas y salís a vender.",
-      actions: ["offers"]
+      message: "Estás en Precios. Ajustá lo que haga falta y armá una oferta para vender.",
+      hint: "Precio claro, oferta rápida y WhatsApp. Ese es el camino corto.",
+      actions: ["offers", "whatsapp"]
     };
   }
 
   if (panelId === "builderPanel") {
     return {
-      message: "Estás en Ofertas. Primero guardá la oferta y después mandala por WhatsApp.",
-      hint: "Si todavía no la guardaste, no te apures. Guardala y recién después compartila.",
-      actions: ["whatsappAfterSave", "prices"]
+      message: "Esa oferta está para salir. Mandala por WhatsApp.",
+      hint: "Oferta simple, buen precio y mensaje listo para vender.",
+      actions: ["whatsapp", "prices"]
     };
   }
 
   if (panelId === "whatsappPanel") {
     return {
-      message: "Estás en WhatsApp. Elegí una oferta guardada y compartila con tus clientes.",
-      hint: "Acá se manda lo que ya está listo. Si falta algo, volvé a Ofertas.",
+      message: "Estás en WhatsApp. Elegí la oferta y salí a vender.",
+      hint: "Acá cerrás la venta: oferta lista y WhatsApp.",
       actions: ["offers", "prices"]
     };
   }
@@ -128,8 +123,8 @@ function getCarnizaCopy() {
     return {
       badge: "🔒 Pausado",
       tone: "blocked",
-      message: `${businessName} está pausada por ahora.`,
-      hint: "Escribinos y te ayudamos a reactivarla para volver a vender.",
+      message: "La cuenta está pausada.",
+      hint: "Escribinos y te ayudamos a reactivarla.",
       actions: ["supportReactivate", "home"]
     };
   }
@@ -142,7 +137,7 @@ function getCarnizaCopy() {
       message: isTrialExpired
         ? "Tu prueba finalizó. Podés mirar, pero para guardar necesitás activar un plan."
         : "Tenés un pago pendiente. Podés mirar, pero para guardar necesitás regularizar.",
-      hint: "Escribinos por WhatsApp y lo resolvemos para que vuelvas a guardar.",
+      hint: "Escribinos por WhatsApp y lo resolvemos rápido.",
       actions: [isTrialExpired ? "supportPlans" : "supportPayment", "home"]
     };
   }
@@ -152,8 +147,8 @@ function getCarnizaCopy() {
       badge: "⏳ Por vencer",
       tone: "ending",
       message: access.message || "Tu prueba termina pronto.",
-      hint: "Aprovechá estos días: armá una oferta y seguí vendiendo.",
-      actions: ["offers", "supportPlans"]
+      hint: "Seguí vendiendo normal. Si querés, te mostramos cómo dejar AppPromos activo.",
+      actions: ["offers", "supportPlans", "whatsapp"]
     };
   }
 
@@ -162,9 +157,9 @@ function getCarnizaCopy() {
     return {
       badge: "🎁 Prueba",
       tone: "trial",
-      message: panelCopy?.message || "Estás probando AppPromos. Arrancá por Precios u Ofertas.",
-      hint: panelCopy?.hint || "Primero armás o elegís la oferta. Después la mandás por WhatsApp.",
-      actions: panelCopy?.actions || ["prices", "offers"]
+      message: panelCopy?.message || "Estás probando AppPromos. Armá una oferta y mandala por WhatsApp.",
+      hint: panelCopy?.hint || "Probalo como en el mostrador: Precios, Ofertas y WhatsApp.",
+      actions: panelCopy?.actions || ["offers", "prices", "whatsapp"]
     };
   }
 
@@ -173,8 +168,8 @@ function getCarnizaCopy() {
     badge: "✅ Al día",
     tone: "active",
     message: panelCopy?.message || "¿Qué querés vender hoy?",
-    hint: panelCopy?.hint || "Arrancá por Precios o armá una oferta. WhatsApp viene cuando la oferta ya está lista.",
-    actions: panelCopy?.actions || ["prices", "offers"]
+    hint: panelCopy?.hint || "Te ayudo a vender rápido: Precios, Ofertas y WhatsApp.",
+    actions: panelCopy?.actions || ["prices", "offers", "whatsapp"]
   };
 }
 
