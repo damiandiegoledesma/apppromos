@@ -1003,6 +1003,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./styles/carniza-landing.css" />
 </head>
 <body>
   <header class="topbar" id="topbar">
@@ -1447,9 +1448,14 @@
       document.getElementById("tabRegistroBtn").classList.add("active");
       document.getElementById("tabLoginBtn").classList.remove("active");
     });
+
+    document.getElementById("demoBtn")?.addEventListener("click", function() {
+      showSignup();
+    });
   </script>
 
   <script src="./js/vendor/localidades-ar.plugin.js"></script>
   <script type="module" src="./js/modules/auth-module.js"></script>
+  <script src="./js/modules/carniza-landing-module.js"></script>
 </body>
 </html>
