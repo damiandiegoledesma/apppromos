@@ -1,0 +1,46 @@
+# AppPromos — archivos locales / pesados / sensibles
+
+# Dependencias Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables privadas
+.env
+.env.*
+!.env.example
+
+# Firebase local/cache/emuladores
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# WhatsApp bot: dependencias y sesión local
+whatsapp-bot/node_modules/
+whatsapp-bot/auth_info/
+whatsapp-bot/*.session
+whatsapp-bot/*.session-*
+
+# Python local/runtime
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend_python/__pycache__/
+backend_python/data/*.db
+backend_python/data/*.sqlite
+backend_python/data/*.sqlite3
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Builds / temporales
+*.tmp
+*.bak
+*.backup

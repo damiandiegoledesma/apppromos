@@ -1,0 +1,344 @@
+/* ============================================================
+   APPPROMOS V12.3.6 — Branding profundo app + demo + módulos
+   Objetivo: que la app y el modo prueba respiren la landing nueva.
+   Solo visual. No toca Firebase, sesión, demo ni lógica comercial.
+   ============================================================ */
+
+:root {
+  --brand-blue: #0477f2;
+  --brand-blue-dark: #005bd8;
+  --brand-navy: #061a35;
+  --brand-dark: #020817;
+  --brand-green: #22c55e;
+  --brand-green-dark: #16a34a;
+  --brand-red: #ef233c;
+  --brand-ink: #0f172a;
+  --brand-muted: #64748b;
+  --brand-soft: #eff6ff;
+  --brand-soft-2: #eaf3ff;
+  --brand-card: rgba(255,255,255,.96);
+  --brand-line: rgba(4,119,242,.15);
+  --brand-shadow: 0 20px 60px rgba(2, 8, 23, .10);
+  --brand-shadow-blue: 0 18px 46px rgba(4,119,242,.18);
+}
+
+html, body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
+body {
+  background:
+    radial-gradient(circle at top left, rgba(4,119,242,.16), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(34,197,94,.08), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #eef5ff 44%, #ffffff 100%) !important;
+  color: var(--brand-ink) !important;
+}
+body::before,
+body::after,
+.topbar-frame,
+.footer-frame {
+  background: linear-gradient(90deg, var(--brand-navy), var(--brand-blue), var(--brand-navy)) !important;
+  box-shadow: 0 8px 24px rgba(4,119,242,.22) !important;
+}
+
+/* Header + logo: mismo lenguaje que landing */
+.topbar {
+  background: rgba(255,255,255,.88) !important;
+  backdrop-filter: blur(18px) !important;
+  border-bottom: 1px solid rgba(4,119,242,.12) !important;
+  box-shadow: 0 18px 44px rgba(15,23,42,.07) !important;
+}
+.brand {
+  border: 1px solid rgba(4,119,242,.15) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 18px 55px rgba(2, 8, 23, .08) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.99), rgba(239,246,255,.94)) !important;
+  padding: 14px 18px !important;
+}
+.brand:hover {
+  border-color: rgba(4,119,242,.34) !important;
+  box-shadow: 0 24px 68px rgba(4,119,242,.14) !important;
+}
+.brand-left { display: flex !important; align-items: center !important; gap: 14px !important; }
+.app-brand-logo-box {
+  width: 74px !important;
+  height: 74px !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 7px !important;
+  flex: 0 0 auto !important;
+  box-shadow: 0 12px 30px rgba(2,8,23,.13) !important;
+  border: 1px solid rgba(4,119,242,.12) !important;
+}
+.app-brand-logo-box img { width: 100% !important; height: 100% !important; object-fit: contain !important; display: block !important; }
+.brand-copy { min-width: 0 !important; }
+.brand h1,
+.brand-title,
+.app-brand-title {
+  color: var(--brand-navy) !important;
+  letter-spacing: -.045em !important;
+  font-weight: 1000 !important;
+}
+.brand h1 span { color: var(--brand-blue) !important; }
+.brand p,
+.app-brand-subtitle,
+.home-note { color: var(--brand-muted) !important; font-weight: 800 !important; }
+.home-note::after {
+  content: "Listo para vender" !important;
+  background: #e0f2fe !important;
+  color: #075985 !important;
+  border-color: rgba(4,119,242,.18) !important;
+}
+
+/* Navegación: más SaaS premium, menos sistema viejo */
+.nav button,
+.more-links button {
+  border-radius: 999px !important;
+  border: 1px solid rgba(4,119,242,.14) !important;
+  background: #fff !important;
+  color: var(--brand-navy) !important;
+  font-weight: 900 !important;
+  box-shadow: 0 8px 22px rgba(2,8,23,.045) !important;
+}
+.nav button:hover,
+.more-links button:hover {
+  color: var(--brand-blue) !important;
+  border-color: rgba(4,119,242,.38) !important;
+  background: var(--brand-soft) !important;
+}
+.nav button.active,
+.more-links button.active {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: var(--brand-shadow-blue) !important;
+}
+
+/* Panels y cards globales */
+.panel,
+.card,
+.dash-card,
+.dash-main-card,
+.prices-shell,
+.guided-builder .card,
+.market-card,
+.web-card,
+.saved-card,
+.whatsapp-card,
+.admin-card,
+.company-card,
+.module-card {
+  border: 1px solid rgba(4,119,242,.12) !important;
+  border-radius: 28px !important;
+  background: var(--brand-card) !important;
+  box-shadow: var(--brand-shadow) !important;
+}
+.panel.active { animation: appPromosPanelIn .22s ease-out !important; }
+@keyframes appPromosPanelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+h1, h2, h3,
+.dash-main-title,
+.prices-title h2,
+.guided-builder__hero h2,
+.guided-section-head h3,
+.market-title,
+.web-title,
+.saved-title,
+.whatsapp-title {
+  color: var(--brand-navy) !important;
+  letter-spacing: -.04em !important;
+  font-weight: 950 !important;
+}
+.dash-kicker,
+.guided-builder__eyebrow,
+.price-kicker,
+.section-kicker,
+.eyebrow,
+.module-eyebrow { color: var(--brand-blue) !important; font-weight: 1000 !important; }
+
+/* Formularios */
+input, select, textarea,
+.prices-search,
+.prices-select,
+.price-input,
+.guided-builder input,
+.guided-builder select {
+  border: 1px solid rgba(4,119,242,.16) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  color: var(--brand-ink) !important;
+  box-shadow: none !important;
+}
+input:focus, select:focus, textarea:focus,
+.prices-search:focus,
+.prices-select:focus,
+.price-input:focus,
+.guided-builder input:focus,
+.guided-builder select:focus {
+  border-color: rgba(4,119,242,.55) !important;
+  box-shadow: 0 0 0 4px rgba(4,119,242,.12) !important;
+}
+
+/* Botones por intención */
+.btn-primary,
+.prices-btn.primary,
+.guided-primary,
+.dash-save-btn,
+.admin-primary-action,
+button[data-action="save-offer"],
+button[data-primary="true"] {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 30px rgba(4,119,242,.22) !important;
+}
+.btn-success,
+.guided-whatsapp,
+button[data-action="send-whatsapp"],
+.whatsapp-send-btn,
+a[href*="whatsapp"],
+button.whatsapp {
+  background: linear-gradient(135deg, var(--brand-green-dark), var(--brand-green)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 14px 30px rgba(34,197,94,.20) !important;
+}
+.btn-secondary,
+.prices-btn.secondary,
+.guided-secondary,
+.guided-builder__reset,
+.dash-mini-btn,
+.mini-action,
+.price-chip,
+button.secondary {
+  background: #fff !important;
+  color: var(--brand-navy) !important;
+  border: 1px solid rgba(4,119,242,.14) !important;
+}
+.price-chip.active,
+.guided-step.active {
+  background: var(--brand-soft) !important;
+  color: var(--brand-blue) !important;
+  border-color: rgba(4,119,242,.32) !important;
+  box-shadow: 0 12px 24px rgba(4,119,242,.10) !important;
+}
+.guided-step__number,
+.step-num,
+.dash-value {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)) !important;
+  color: #fff !important;
+}
+.dash-action-btn,
+.dash-step-btn,
+.price-row,
+.guided-product-card,
+.guided-adjust-row,
+.saved-row,
+.whatsapp-offer-row,
+.market-row,
+.web-row {
+  border: 1px solid rgba(4,119,242,.12) !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+  box-shadow: 0 10px 28px rgba(2,8,23,.055) !important;
+}
+.dash-action-btn:hover,
+.dash-step-btn:hover,
+.price-row:hover,
+.guided-product-card:hover,
+.saved-row:hover,
+.whatsapp-offer-row:hover,
+.market-row:hover,
+.web-row:hover {
+  border-color: rgba(4,119,242,.34) !important;
+  transform: translateY(-1px);
+}
+
+/* MODO PRUEBA: deja de verse viejo */
+#demoModeBanner,
+.demo-mode-banner,
+.app-demo-banner {
+  width: min(1120px, calc(100% - 8px)) !important;
+  margin: 8px auto 18px !important;
+  padding: 16px 18px !important;
+  border: 1px solid rgba(4,119,242,.22) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(circle at left, rgba(4,119,242,.18), transparent 34%),
+    linear-gradient(135deg, #ffffff, #eaf3ff) !important;
+  color: var(--brand-navy) !important;
+  box-shadow: 0 18px 48px rgba(2,8,23,.10) !important;
+}
+.demo-mode-banner strong,
+.app-demo-banner__copy strong,
+#demoModeBanner strong { color: var(--brand-navy) !important; font-weight: 1000 !important; }
+.demo-mode-banner span,
+.app-demo-banner__copy span,
+#demoModeBanner span { color: var(--brand-muted) !important; font-weight: 800 !important; }
+.demo-mode-banner a,
+.app-demo-banner__btn,
+#demoCreateAccountBtn {
+  border: none !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)) !important;
+  color: #fff !important;
+  font-weight: 1000 !important;
+  padding: 11px 16px !important;
+  cursor: pointer !important;
+  box-shadow: 0 14px 28px rgba(4,119,242,.24) !important;
+  text-decoration: none !important;
+}
+
+/* Acceso / prueba activa */
+#accessGate > *,
+#businessSwitcher > *,
+.access-gate,
+.business-switcher {
+  border-color: rgba(4,119,242,.14) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: var(--brand-navy) !important;
+}
+
+/* Carniza: integrado a marca nueva */
+.carniza-fab {
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-dark)) !important;
+  box-shadow: 0 18px 42px rgba(4,119,242,.32) !important;
+  border: 3px solid #fff !important;
+}
+.carniza-panel {
+  border: 1px solid rgba(4,119,242,.16) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 28px 70px rgba(2,8,23,.20) !important;
+}
+.carniza-card-head {
+  background: linear-gradient(135deg, #eff6ff, #ffffff) !important;
+  border-bottom-color: rgba(4,119,242,.12) !important;
+}
+.carniza-avatar { border-color: rgba(4,119,242,.20) !important; box-shadow: 0 10px 22px rgba(4,119,242,.12) !important; }
+.carniza-title { color: var(--brand-navy) !important; }
+.carniza-subtitle, .carniza-hint { color: var(--brand-muted) !important; }
+.carniza-message { color: var(--brand-ink) !important; }
+.carniza-action { background: #eff6ff !important; border-color: rgba(4,119,242,.18) !important; color: var(--brand-navy) !important; }
+.carniza-action:hover { background: #dbeafe !important; border-color: rgba(4,119,242,.34) !important; }
+
+.footer { background: var(--brand-dark) !important; }
+.footer a,
+.footer strong { color: #93c5fd !important; }
+
+@media (max-width: 768px) {
+  .brand { padding: 12px !important; }
+  .brand-left { width: 100% !important; align-items: center !important; }
+  .app-brand-logo-box { width: 62px !important; height: 62px !important; border-radius: 18px !important; }
+  .panel { border-radius: 24px !important; padding: 14px !important; }
+  #demoModeBanner,
+  .demo-mode-banner,
+  .app-demo-banner { align-items: stretch !important; display: grid !important; gap: 10px !important; }
+  .demo-mode-banner a,
+  .app-demo-banner__btn,
+  #demoCreateAccountBtn { width: 100% !important; min-height: 46px !important; text-align: center !important; }
+}
+@media (max-width: 480px) {
+  .brand h1 { font-size: 1.28rem !important; }
+  .brand p { font-size: .78rem !important; }
+  .app-brand-logo-box { width: 56px !important; height: 56px !important; }
+}

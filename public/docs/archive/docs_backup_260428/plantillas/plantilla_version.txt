@@ -1,0 +1,32 @@
+VERSIÓN: VXX.X
+FECHA: YYYY-MM-DD HH:MM
+
+DESCRIPCIÓN:
+Resumen corto del objetivo de esta versión.
+
+INCLUYE:
+- Cambio 1
+- Cambio 2
+- Cambio 3
+
+NO INCLUYE:
+- Qué NO se tocó
+- Qué queda pendiente
+
+ARCHIVOS MODIFICADOS:
+- public/js/...
+- public/docs/...
+
+RIESGOS:
+- Firebase
+- resolveSession
+- BusinessStore
+- Billing
+- Multi-tenant
+
+CHECKLIST:
+[ ] Probado local
+[ ] Firebase intacto
+[ ] resolveSession intacto
+[ ] No se pisaron carpetas innecesarias
+[ ] Documentación actualizada

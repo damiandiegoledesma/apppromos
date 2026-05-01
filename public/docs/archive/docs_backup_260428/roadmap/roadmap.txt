@@ -1,0 +1,199 @@
+# APPPROMOS — ROADMAP REAL DESDE V11.4R
+
+Fecha: 2026-04-26
+
+## Criterio rector
+
+AppPromos debe ser una herramienta móvil, rápida y confiable para carnicerías reales.
+
+El cliente la usa mientras:
+- atiende mostrador,
+- cobra,
+- responde WhatsApp,
+- modifica precios,
+- arma ofertas,
+- trabaja con carne,
+- y no tiene tiempo para pantallas confusas.
+
+Por eso el roadmap prioriza:
+1. Menos pasos.
+2. Botones grandes.
+3. Mensajes claros.
+4. Guardados seguros.
+5. Nada de sobreingeniería.
+6. No romper Firebase ni resolveSession.
+
+---
+
+## FASE 1 — V11.4R Reconciliación Real
+
+Estado: incluido en esta versión.
+
+Incluido:
+- Documentación real actualizada.
+- Trial real 30 días para nuevas altas.
+- Guarda central de escritura SaaS.
+- Bloqueo de guardado para overdue/suspended/trial vencido.
+- Superadmin conserva capacidad de soporte.
+- UX de bloqueo pensada como consulta permitida + guardado bloqueado.
+
+Pendiente de prueba:
+- Login cliente active.
+- Login cliente trial vigente.
+- Login cliente overdue.
+- Login cliente suspended.
+- Guardar precios.
+- Guardar combo.
+- Guardar Web Premium.
+- Admin cambiando billing.
+
+---
+
+## FASE 2 — V11.4.1 Pruebas y ajuste fino de billing UX
+
+Objetivo:
+Validar que el usuario entienda el estado de su cuenta sin frustrarse.
+
+Tareas:
+- Revisar textos de aviso en móvil.
+- Asegurar que el botón guardar muestre mensaje claro si no puede guardar.
+- Evitar errores técnicos tipo permission denied en pantalla.
+- Mostrar estado de Trial/Pago/Acceso de forma compacta en header.
+- Agregar checklist manual de billing.
+
+Regla UX:
+Nunca mostrar una pantalla vacía por deuda. El cliente debe ver su información y entender qué acción necesita.
+
+---
+
+## FASE 3 — V11.4.2 Firestore Rules con billing
+
+Objetivo:
+Pasar de bloqueo JS a bloqueo real también en reglas.
+
+Tareas:
+- Diseñar regla canWriteBusinessByBilling.
+- Probar con cliente active.
+- Probar con overdue.
+- Probar con suspended.
+- Probar con superadmin.
+- No tocar lectura si no es necesario.
+
+Advertencia:
+No aplicar reglas sin prueba manual. Es zona crítica.
+
+---
+
+## FASE 4 — V11.5 Matriz Plan -> Módulos
+
+Objetivo:
+Definir comercialmente qué incluye cada plan.
+
+Propuesta inicial:
+
+Trial:
+- Todo habilitado por 30 días.
+
+Basic:
+- Precios.
+- Combos / ofertas básicas.
+- WhatsApp básico si no implica costo externo.
+
+Pro:
+- Precios.
+- Combos.
+- Competencia.
+- WhatsApp.
+- Web Premium.
+- Historial/analítica futura.
+
+No agregar Premium hasta validar mercado.
+
+---
+
+## FASE 5 — UX móvil operativa
+
+Objetivo:
+Hacer que AppPromos se sienta como una herramienta de mostrador, no como un sistema administrativo pesado.
+
+Principios:
+- Acciones principales siempre visibles.
+- Menos texto largo en pantallas operativas.
+- Guardar en 1 toque.
+- Confirmaciones cortas.
+- Botones grandes.
+- Filtros simples.
+- Evitar scroll innecesario.
+- Vista clara del resultado antes de guardar/enviar.
+
+Prioridad de módulos:
+1. Crear oferta.
+2. Precios.
+3. WhatsApp.
+4. Guardados.
+5. Dashboard.
+6. Competencia.
+7. Web Premium.
+8. Admin.
+
+---
+
+## FASE 6 — Registro robusto
+
+Objetivo:
+Evitar altas incompletas.
+
+Tareas:
+- setupStatus: creating / ready / error.
+- Mejor manejo de errores si falla creación parcial.
+- Botón admin para detectar empresas incompletas.
+- Futuro: Cloud Function o callable para alta transaccional.
+
+---
+
+## FASE 7 — Catálogo base real
+
+Objetivo:
+Dejar de usar demo como plantilla estructural.
+
+Tareas:
+- Crear catalogs/baseProducts/items.
+- Migrar clone desde catálogo base.
+- Mantener demo como empresa demo, no como fuente de verdad.
+- Versionar catálogo.
+
+---
+
+## FASE 8 — Comercialización SaaS
+
+Objetivo:
+Preparar AppPromos para vender.
+
+Tareas:
+- Página comercial.
+- Planes claros.
+- Onboarding simple.
+- Videos cortos de uso.
+- Demo guiada.
+- Mensajes de venta para carniceros.
+- Métricas de activación.
+
+---
+
+## V11.4.1 — Registro normalizado + modelo central
+
+Estado: generado como parche incremental desde V11.4R FULL.
+
+Incluye:
+- Alta de carnicería con teléfono normalizado.
+- Localidad con autocomplete Localidades AR.
+- Provincia y provinceId automáticos.
+- CompanyAdmin con creación/clonado más consistente.
+- Modelo central documentado.
+- DEMO preservada como template operativo actual.
+- PromosDepurador queda como future de mantenimiento/depuración.
+
+Próximos futures:
+- V11.5: Admin > Salud de Base solo diagnóstico.
+- V11.6: PromosDepurador operativo con dry-run, preview, backup y rollback.
+- V12: Catálogo base formal completo reemplazando gradualmente DEMO como template.

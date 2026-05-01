@@ -1,0 +1,15 @@
+.app-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-header-logo img {
+  height: 48px;
+}
+
+.app-header-logo span {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0B2A4A;
+}

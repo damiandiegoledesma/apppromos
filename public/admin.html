@@ -1,0 +1,442 @@
+<!-- LEGACY / NO USAR COMO ADMIN PRINCIPAL. Admin SaaS real: app.html + admin-users-module.js. Mantener solo como archivo histórico hasta archivarlo con seguridad. -->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppPromos Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f0f0; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #b63b2b, #8d2f23); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { margin: 0; font-size: 32px; }
+    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .btn-primary { background: #b63b2b; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-info { background: #17a2b8; color: white; }
+    .btn-secondary { background: #ddd; color: #333; }
+    .main { background: white; padding: 25px; border-radius: 12px; }
+    .carnicery { border: 1px solid #e0e0e0; padding: 20px; margin-bottom: 20px; border-radius: 12px; }
+    .carnicery h3 { margin: 0 0 12px; color: #b63b2b; font-size: 18px; }
+    .carnicery-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; padding: 15px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 14px; }
+    .actions { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+    .btn-action { padding: 8px 12px; font-size: 12px; border-radius: 6px; }
+    .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #f8f5f0, #e8ddd5); }
+    .login-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 50px rgba(0,0,0,0.2); max-width: 400px; width: 90%; }
+    .login-card h1 { margin: 0 0 10px; font-size: 28px; color: #b63b2b; }
+    .login-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
+    .error-message { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: none; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.show { display: flex; }
+    .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-content h2 { margin-top: 0; color: #b63b2b; }
+    .modal-content input, .modal-content textarea, .modal-content select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+    .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-buttons button { flex: 1; padding: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+    .data-table th { background: #f8f9fa; font-weight: bold; text-align: left; }
+    .data-table th, .data-table td { padding: 10px; border-bottom: 1px solid #eee; }
+    .price { color: #b63b2b; font-weight: bold; }
+    .empty-state { text-align: center; padding: 40px; color: #999; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+    .tab-btn { padding: 12px 20px; background: none; border: none; cursor: pointer; color: #666; font-weight: bold; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: #b63b2b; border-bottom-color: #b63b2b; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1>🏢 AppPromos Admin</h1>
+      <p style="color: #666; margin: 10px 0;">Panel de Gestión</p>
+      <div id="errorMessage" class="error-message"></div>
+      <input id="loginKey" type="password" placeholder="🔑 Clave de superadmin" onkeypress="if(event.key==='Enter') loguearAdmin()" autofocus />
+      <button class="btn-primary" onclick="loguearAdmin()" style="width: 100%; padding: 12px;">Acceder</button>
+      <p style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">Clave: apppromos2024admin</p>
+    </div>
+  </div>
+
+  <div id="adminScreen" style="display: none;">
+    <div class="container">
+      <div class="header">
+        <div><h1>🏢 AppPromos Admin</h1><p>Gestión de Carnicerías</p></div>
+        <div>
+          <button class="btn-danger" onclick="salir()">🚪 Salir</button>
+        </div>
+      </div>
+      <div id="content" class="main"><p style="text-align: center;">⏳ Cargando carnicerías...</p></div>
+    </div>
+  </div>
+
+  <!-- MODAL PRODUCTOS -->
+  <div id="modalProductos" class="modal"><div class="modal-content"><h2>📦 Productos</h2><div class="tabs"><button class="tab-btn active" onclick="switchTab('productos', 'lista')">Listado</button><button class="tab-btn" onclick="switchTab('productos', 'nuevo')">Agregar</button></div><div id="tabListaProductos" class="tab-content active"></div><div id="tabNuevoProducto" class="tab-content"><input id="newProdNombre" type="text" placeholder="Nombre *" /><input id="newProdRubro" type="text" placeholder="Rubro" /><input id="newProdPrecio" type="number" placeholder="Precio" step="0.01" /><button class="btn-success" onclick="agregarProducto()" style="width: 100%; margin-top: 10px;">Agregar</button></div><div class="modal-buttons"><button class="btn-secondary" onclick="cerrarModal('modalProductos')" style="flex: 1;">Cerrar</button></div></div></div>
+
+  <!-- MODAL COMBOS -->
+  <div id="modalCombos" class="modal"><div class="modal-content"><h2>🎁 Combos</h2><div class="tabs"><button class="tab-btn active" onclick="switchTab('combos', 'lista')">Listado</button><button class="tab-btn" onclick="switchTab('combos', 'nuevo')">Agregar</button></div><div id="tabListaCombos" class="tab-content active"></div><div id="tabNuevaCombo" class="tab-content"><input id="newComboNombre" type="text" placeholder="Nombre *" /><input id="newComboPrecio" type="number" placeholder="Precio" step="0.01" /><textarea id="newComboDesc" placeholder="Descripción" style="min-height: 60px;"></textarea><button class="btn-success" onclick="agregarCombo()" style="width: 100%; margin-top: 10px;">Agregar</button></div><div class="modal-buttons"><button class="btn-secondary" onclick="cerrarModal('modalCombos')" style="flex: 1;">Cerrar</button></div></div></div>
+
+  <!-- MODAL COMPARAR -->
+  <div id="modalComparar" class="modal"><div class="modal-content"><h2>📊 Comparar Precios</h2><select id="selectCarni1" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;"><option value="">Carnicería 1...</option></select><select id="selectCarni2" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;"><option value="">Carnicería 2...</option></select><div id="compareResultado"></div><div class="modal-buttons"><button class="btn-secondary" onclick="cerrarModal('modalComparar')">Cerrar</button><button class="btn-info" onclick="generarComparacion()">Comparar</button></div></div></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5e2yOOdP9QnN3751RdoSHEWZUDHUUbJU",
+      authDomain: "apppromos.firebaseapp.com",
+      projectId: "apppromos",
+      storageBucket: "apppromos.firebasestorage.app",
+      messagingSenderId: "449601412282",
+      appId: "1:449601412282:web:2a50257ba816c0ea32b683"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let carniceries = [];
+    let currentCarniProductos = null;
+    let currentCarniCombos = null;
+
+    window.loguearAdmin = () => {
+      const key = document.getElementById("loginKey").value.trim();
+      const err = document.getElementById("errorMessage");
+      
+      if (!key) {
+        err.textContent = "❌ Ingresá la clave";
+        err.style.display = "block";
+        return;
+      }
+
+      if (key !== "apppromos2024admin") {
+        err.textContent = "❌ Clave incorrecta";
+        err.style.display = "block";
+        return;
+      }
+
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("adminScreen").style.display = "block";
+      cargarCarniceries();
+    };
+
+    async function cargarCarniceries() {
+      try {
+        const snapshot = await getDocs(collection(db, "businesses"));
+        carniceries = [];
+        
+        for (const docSnap of snapshot.docs) {
+          const businessId = docSnap.id;
+          const meta = docSnap.data();
+          carniceries.push({
+            businessId,
+            name: meta.name || businessId,
+            direccion: meta.direccion || "",
+            ciudad: meta.ciudad || "",
+            telefono: meta.telefono || ""
+          });
+        }
+
+        if (carniceries.length === 0) {
+          document.getElementById("content").innerHTML = "<p style='text-align: center; color: #999;'>Sin carnicerías.</p>";
+          return;
+        }
+
+        let html = "";
+        for (const c of carniceries) {
+          html += `
+            <div class="carnicery">
+              <h3>${c.name}</h3>
+              <div class="carnicery-info">
+                <div>📍 ${c.direccion || "Sin dirección"}</div>
+                <div>🏙️ ${c.ciudad || "Sin ciudad"}</div>
+                <div>📞 ${c.telefono || "Sin teléfono"}</div>
+              </div>
+              <div class="actions">
+                <button class="btn-action btn-success" onclick="abrirProductos('${c.businessId}')">📦 Productos</button>
+                <button class="btn-action btn-info" onclick="abrirCombos('${c.businessId}')">🎁 Combos</button>
+                <button class="btn-action btn-info" onclick="abrirComparar()">📊 Comparar</button>
+              </div>
+            </div>
+          `;
+        }
+        document.getElementById("content").innerHTML = html;
+      } catch (error) {
+        console.error("Error cargando:", error);
+        document.getElementById("content").innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+      }
+    }
+
+    window.abrirProductos = async (businessId) => {
+      currentCarniProductos = businessId;
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", businessId, "core", "state"));
+        const products = stateSnap.exists() ? (stateSnap.data().products || []) : [];
+        
+        let html = products.length === 0 ? "<p class='empty-state'>Sin productos</p>" : 
+          `<table class="data-table">
+            <thead>
+              <tr><th>Nombre</th><th>Rubro</th><th>Precio</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+              ${products.map(p => `
+                <tr>
+                  <td>${p.nombre}</td>
+                  <td>${p.rubro || "—"}</td>
+                  <td class="price">$${parseFloat(p.precio || 0).toLocaleString('es-AR')}</td>
+                  <td><button class="btn-action btn-danger" onclick="delProducto('${businessId}', '${p.id}')">X</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>`;
+        
+        document.getElementById("tabListaProductos").innerHTML = html;
+        document.getElementById("modalProductos").classList.add("show");
+      } catch (error) {
+        console.error("Error cargando productos:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.agregarProducto = async () => {
+      if (!currentCarniProductos) return;
+      
+      const nombre = document.getElementById("newProdNombre").value.trim();
+      if (!nombre) { alert("❌ Nombre requerido"); return; }
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", currentCarniProductos, "core", "state"));
+        const products = (stateSnap.data().products || []);
+        
+        products.push({
+          id: Date.now().toString(),
+          nombre,
+          rubro: document.getElementById("newProdRubro").value.trim(),
+          precio: parseFloat(document.getElementById("newProdPrecio").value || 0),
+          active: true
+        });
+        
+        await updateDoc(doc(db, "businesses", currentCarniProductos, "core", "state"), { products });
+        
+        alert("✅ Producto agregado");
+        document.getElementById("newProdNombre").value = "";
+        document.getElementById("newProdRubro").value = "";
+        document.getElementById("newProdPrecio").value = "";
+        abrirProductos(currentCarniProductos);
+      } catch (error) {
+        console.error("Error agregando producto:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.delProducto = async (businessId, productId) => {
+      if (!confirm("¿Eliminar este producto?")) return;
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", businessId, "core", "state"));
+        const products = (stateSnap.data().products || []).filter(p => p.id !== productId);
+        
+        await updateDoc(doc(db, "businesses", businessId, "core", "state"), { products });
+        
+        abrirProductos(businessId);
+      } catch (error) {
+        console.error("Error eliminando producto:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.abrirCombos = async (businessId) => {
+      currentCarniCombos = businessId;
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", businessId, "core", "state"));
+        const combos = stateSnap.exists() ? (stateSnap.data().savedCombos || []) : [];
+        
+        let html = combos.length === 0 ? "<p class='empty-state'>Sin combos</p>" :
+          `<table class="data-table">
+            <thead>
+              <tr><th>Nombre</th><th>Precio</th><th>Descripción</th><th>Acción</th></tr>
+            </thead>
+            <tbody>
+              ${combos.map(c => `
+                <tr>
+                  <td>${c.nombre}</td>
+                  <td class="price">$${parseFloat(c.precio || 0).toLocaleString('es-AR')}</td>
+                  <td>${(c.descripcion || "—").substring(0, 40)}...</td>
+                  <td><button class="btn-action btn-danger" onclick="delCombo('${businessId}', '${c.id}')">X</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>`;
+        
+        document.getElementById("tabListaCombos").innerHTML = html;
+        document.getElementById("modalCombos").classList.add("show");
+      } catch (error) {
+        console.error("Error cargando combos:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.agregarCombo = async () => {
+      if (!currentCarniCombos) return;
+      
+      const nombre = document.getElementById("newComboNombre").value.trim();
+      if (!nombre) { alert("❌ Nombre requerido"); return; }
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", currentCarniCombos, "core", "state"));
+        const combos = (stateSnap.data().savedCombos || []);
+        
+        combos.push({
+          id: Date.now().toString(),
+          nombre,
+          precio: parseFloat(document.getElementById("newComboPrecio").value || 0),
+          descripcion: document.getElementById("newComboDesc").value
+        });
+        
+        await updateDoc(doc(db, "businesses", currentCarniCombos, "core", "state"), { savedCombos: combos });
+        
+        alert("✅ Combo agregado");
+        document.getElementById("newComboNombre").value = "";
+        document.getElementById("newComboPrecio").value = "";
+        document.getElementById("newComboDesc").value = "";
+        abrirCombos(currentCarniCombos);
+      } catch (error) {
+        console.error("Error agregando combo:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.delCombo = async (businessId, comboId) => {
+      if (!confirm("¿Eliminar este combo?")) return;
+      
+      try {
+        const stateSnap = await getDoc(doc(db, "businesses", businessId, "core", "state"));
+        const combos = (stateSnap.data().savedCombos || []).filter(c => c.id !== comboId);
+        
+        await updateDoc(doc(db, "businesses", businessId, "core", "state"), { savedCombos: combos });
+        
+        abrirCombos(businessId);
+      } catch (error) {
+        console.error("Error eliminando combo:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.abrirComparar = () => {
+      const s1 = document.getElementById("selectCarni1");
+      const s2 = document.getElementById("selectCarni2");
+      
+      s1.innerHTML = '<option value="">Seleccionar...</option>';
+      s2.innerHTML = '<option value="">Seleccionar...</option>';
+      
+      carniceries.forEach(c => {
+        s1.appendChild(new Option(c.name, c.businessId));
+        s2.appendChild(new Option(c.name, c.businessId));
+      });
+      
+      document.getElementById("compareResultado").innerHTML = "";
+      document.getElementById("modalComparar").classList.add("show");
+    };
+
+    window.generarComparacion = async () => {
+      const id1 = document.getElementById("selectCarni1").value;
+      const id2 = document.getElementById("selectCarni2").value;
+      
+      if (!id1 || !id2 || id1 === id2) {
+        alert("❌ Selecciona 2 carnicerías diferentes");
+        return;
+      }
+      
+      try {
+        const c1 = carniceries.find(c => c.businessId === id1);
+        const c2 = carniceries.find(c => c.businessId === id2);
+        
+        const s1 = await getDoc(doc(db, "businesses", id1, "core", "state"));
+        const s2 = await getDoc(doc(db, "businesses", id2, "core", "state"));
+        
+        const prods1 = s1.exists() ? (s1.data().products || []) : [];
+        const prods2 = s2.exists() ? (s2.data().products || []) : [];
+        
+        const m1 = {}, m2 = {};
+        prods1.forEach(p => m1[p.nombre] = p);
+        prods2.forEach(p => m2[p.nombre] = p);
+        
+        const nombres = new Set([...Object.keys(m1), ...Object.keys(m2)]);
+        const comp = Array.from(nombres).sort().map(n => {
+          const p1 = m1[n];
+          const p2 = m2[n];
+          const pr1 = p1 ? parseFloat(p1.precio || 0) : null;
+          const pr2 = p2 ? parseFloat(p2.precio || 0) : null;
+          
+          let diff = null, pct = null;
+          if (pr1 !== null && pr2 !== null) {
+            diff = pr2 - pr1;
+            pct = ((diff / pr1) * 100).toFixed(2);
+          }
+          
+          return { n, pr1, pr2, diff, pct };
+        });
+        
+        let html = `<h3 style="margin-top: 20px; margin-bottom: 15px; color: #b63b2b;">${c1.name} vs ${c2.name}</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th style="text-align: right;">$ ${c1.name}</th>
+                <th style="text-align: right;">$ ${c2.name}</th>
+                <th style="text-align: right;">Diferencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${comp.map(r => {
+                const p1 = r.pr1 !== null ? `$${r.pr1.toLocaleString('es-AR')}` : "N/A";
+                const p2 = r.pr2 !== null ? `$${r.pr2.toLocaleString('es-AR')}` : "N/A";
+                let dif = "N/A";
+                if (r.diff !== null) {
+                  const col = r.diff > 0 ? "#28a745" : "#dc3545";
+                  const sg = r.diff > 0 ? "+" : "";
+                  dif = `<span style="color: ${col}; font-weight: bold;">${sg}$${r.diff.toLocaleString('es-AR')} (${r.pct}%)</span>`;
+                }
+                return `<tr><td>${r.n}</td><td style="text-align: right;">${p1}</td><td style="text-align: right;">${p2}</td><td style="text-align: right;">${dif}</td></tr>`;
+              }).join("")}
+            </tbody>
+          </table>`;
+        
+        document.getElementById("compareResultado").innerHTML = html;
+      } catch (error) {
+        console.error("Error comparando:", error);
+        alert(`❌ ${error.message}`);
+      }
+    };
+
+    window.cerrarModal = (id) => {
+      document.getElementById(id).classList.remove("show");
+    };
+    
+    window.switchTab = (mod, tab) => {
+      document.querySelectorAll(`.modal.show .tab-content`).forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(`.modal.show .tab-btn`).forEach(el => el.classList.remove("active"));
+      
+      if (mod === "productos") {
+        document.getElementById(tab === "lista" ? "tabListaProductos" : "tabNuevoProducto").classList.add("active");
+      } else {
+        document.getElementById(tab === "lista" ? "tabListaCombos" : "tabNuevaCombo").classList.add("active");
+      }
+      
+      event.target.classList.add("active");
+    };
+    
+    window.salir = () => {
+      document.getElementById("adminScreen").style.display = "none";
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("loginKey").value = "";
+      carniceries = [];
+      currentCarniProductos = null;
+      currentCarniCombos = null;
+    };
+  </script>
+</body>
+</html>

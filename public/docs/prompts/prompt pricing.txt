@@ -1,0 +1,123 @@
+Estoy trabajando en el Proyecto AppPromos, un SaaS para carnicerías argentinas.
+
+Quiero seguir en profundidad con el análisis crítico y comercial del PLAN DE PRICING de AppPromos.
+
+Contexto general:
+- AppPromos es una app para carniceros argentinos.
+- El usuario objetivo es el carnicero de mostrador, que trabaja muchas horas, usa mucho WhatsApp y no quiere herramientas complicadas.
+- La app debe sentirse simple, rápida y casi automática.
+- No usar lenguaje técnico como SaaS, backend, Firestore, IA, etc. de cara al carnicero.
+- El tono comercial debe ser bien carnicero, directo, emocional y de mostrador.
+- La promesa fuerte no es “software”, sino vender más rápido, sacar ofertas y no perder margen.
+
+Documentos a tener en cuenta:
+- AppPromos_Planes_Definicion.md
+- AppPromos_Planes_Modulos.xlsx
+
+Pricing actual definido:
+1. FREE TRIAL
+   - 30 días gratis.
+   - Sin tarjeta.
+   - Acceso completo o casi completo para enamorar al carnicero.
+   - Objetivo: que pruebe el valor real de AppPromos.
+
+2. IMPULSO — $19.999/mes
+   - Plan de entrada.
+   - Para carnicerías que quieren vender rápido por WhatsApp.
+   - Incluye precios, ofertas, WhatsApp y Carniza Vendedor.
+   - Debatir si debe incluir Ofertas Guardadas limitadas para no sentirse demasiado pobre.
+
+3. SALVADOR — $34.999/mes
+   - Plan CORE / recomendado.
+   - Diferencial fuerte: anti-merma, vender lo que se está quedando, no mandar todo a la picadora.
+   - Incluye Carniza Liquidador / Vender Urgente, Inteligencia Comercial y Ofertas Guardadas.
+   - Este debe ser el plan estrella.
+   - Lenguaje sugerido: “No tires carne. Vendela.” / “Vendé antes de mandar margen a la picadora.”
+
+4. COMPLETO — $44.999/mes
+   - Todo lo de SALVADOR + Web Premium.
+   - No prometer soporte 24/7.
+   - Reemplazar soporte 24/7 por algo tipo:
+     - app guiada paso a paso
+     - ayuda dentro de la app
+     - acompañamiento inicial
+     - tan fácil que no necesitás soporte
+
+5. Usuarios adicionales
+   - $5.000/mes cada uno.
+   - Un usuario dueño incluido en todos los planes.
+
+Ideas comerciales surgidas:
+- “AppPromos te ayuda a vender más rápido y a que no tengas que mandar todo a la picadora.”
+- “Vendé antes de picar.”
+- “La carne quieta no paga cuentas.”
+- “Si se está quedando, movela.”
+- “No pierdas margen por esperar.”
+- “Tu mercadería vale más vendida hoy que picada mañana.”
+- “AppPromos no viene a darte trabajo. Viene a sacarte trabajo.”
+- “Si hay que explicarla mucho, no sirve.”
+- “Carniza vende. La Nelly cuida. AppPromos acompaña.”
+- “Internamente: urgencia. Externamente: oportunidad.”
+- El carnicero entiende más “picadora”, “cámara”, “mostrador”, “WhatsApp”, “margen”, “oferta de hoy” que palabras tipo “optimización”, “inventario”, “reducción de merma” o “automatización avanzada”.
+
+Punto crítico sobre promesa anti-merma:
+- Cuidar no sobreprometer “IA detecta qué vence” si todavía no hay stock, fechas de vencimiento o detección automática real.
+- Por ahora conviene venderlo como:
+  - Carniza te ayuda a vender mercadería que se está quedando.
+  - Vender urgente.
+  - Sacar ofertas antes de perder valor.
+  - No terminar mandando todo a la picadora.
+- Más adelante, si hay stock/rotación/vencimientos reales, se podrá hablar de detección automática.
+
+Punto crítico sobre Web Premium:
+- Web Premium está listo, pero hoy no se crea automáticamente con el registro.
+- Se pensó como plus/on demand.
+- Pero surgió una idea fuerte: al registrarse, el carnicero podría ver automáticamente:
+  “Ya tenés tu página: apppromos.web.app/carniceria-lopez-3462...”
+- Eso genera efecto wow.
+- El riesgo: si la web automática muestra precios/ofertas demo como si fueran reales, puede generar confusión.
+- Propuesta a analizar:
+  - web creada desde el día 1 en modo arranque/setup;
+  - no mostrar datos demo como si fueran reales;
+  - usarlo como activación: “Ya tenés tu vidriera, ahora cargá tus precios reales”;
+  - web básica incluida en planes;
+  - Web Premium completa como diferencial de COMPLETO o plan superior.
+- Requisitos técnicos/conceptuales:
+  - slug único normalizado desde la primera sesión;
+  - teléfono normalizado desde la primera sesión;
+  - nombre de carnicería limpio y normalizado;
+  - localidad/provincia normalizadas desde la primera sesión;
+  - definir estado de web: setup / activa / pausada / premium;
+  - si cambia teléfono, cambia slug;
+  - si cambia nombre, cambia slug;
+  - definir qué pasa si vence el trial.
+
+Punto crítico sobre soporte:
+- No prometer soporte 24 horas.
+- El enfoque es autoservicio extremo.
+- La app tiene que ser tan fácil que el carnicero no necesite llamar.
+- Carniza y La Nelly deben guiar dentro de la app.
+- Si el usuario necesita soporte para entender lo básico, falló el producto.
+
+Quiero que hagas:
+1. Análisis crítico del pricing actual.
+2. Riesgos de confusión o sobrepromesa.
+3. Recomendación de estructura final de planes.
+4. Qué incluir y excluir en cada plan.
+5. Cómo presentar SALVADOR como plan recomendado.
+6. Qué hacer con Web Premium: gratis en trial, básica para todos, premium en Completo, o alternativa.
+7. Cómo reescribir el copy de cada plan en lenguaje carnicero.
+8. Cómo se debería ver la tabla comparativa sin marear al carnicero.
+9. Qué eventos de Analytics deberíamos mirar para validar si la landing empuja a Demo o a Prueba Gratis.
+10. Qué documentos deberías generar como salida.
+
+Documentos que quiero que generes como propuesta en formato Markdown:
+- AppPromos_Pricing_Analisis_Critico.md
+- AppPromos_Pricing_Propuesta_Final.md
+- AppPromos_Copy_Comercial_Planes.md
+- AppPromos_WebPremium_Estrategia_Trial.md
+- AppPromos_Tips_Comerciales.md
+
+Condición importante:
+No me des una respuesta complaciente. Quiero análisis crítico, comercial y práctico.
+Pensá como socio de producto y negocio, no como redactor publicitario.

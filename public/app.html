@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AppPromos · App</title>
+  <link rel="icon" type="image/png" href="/assets/logo/apppromos-favicon-transparent.png" />
+
+  <!-- Design System Compartido -->
+  <link rel="stylesheet" href="./design-system.css" />
+  <link rel="stylesheet" href="./styles/carniza.css" />
+  <link rel="stylesheet" href="./styles/app-brand-refresh.css" />
+
+  <style>
+    :root {
+      --app-bg: var(--bg-light);
+      --app-card: var(--bg-white);
+      --app-text: var(--text-dark);
+      --app-muted: var(--text-light);
+      --app-line: var(--border);
+      --app-brand: var(--primary);
+      --app-brand-dark: var(--primary-dark);
+      --app-radius: var(--radius-lg);
+    }
+
+    body {
+      background: var(--app-bg);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ==================== MARCO ROJO TOP ==================== */
+    .topbar-frame {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%);
+      padding: 3px 0;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 4px 12px rgba(196, 30, 58, 0.15);
+      transition: transform 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
+    }
+
+    .topbar-frame.app-header-hidden,
+    body.ui-top-hidden .topbar-frame {
+      transform: translateY(-120%);
+      opacity: 0;
+      padding: 0;
+      pointer-events: none;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-md) var(--space-lg) 120px;
+    }
+
+
+
+    .demo-mode-banner {
+      margin: 0 0 var(--space-md);
+      border: 1px solid rgba(196, 30, 58, 0.25);
+      background: #fff7ed;
+      color: #4b1d12;
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+      font-size: 0.92rem;
+    }
+
+    .demo-mode-banner strong {
+      color: var(--app-brand);
+    }
+
+    .demo-mode-banner a {
+      color: #fff;
+      background: var(--app-brand);
+      border-radius: 999px;
+      padding: 8px 12px;
+      text-decoration: none;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* ==================== TOPBAR ==================== */
+    .topbar {
+      position: sticky;
+      top: 3px;
+      z-index: var(--z-sticky);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--app-line);
+      margin-bottom: var(--space-lg);
+      max-height: 360px;
+      overflow: visible;
+      transition:
+        transform 0.24s ease,
+        opacity 0.18s ease,
+        max-height 0.24s ease,
+        padding 0.24s ease,
+        margin 0.24s ease;
+      will-change: transform, opacity, max-height;
+    }
+
+    .topbar.app-header-hidden,
+    body.ui-top-hidden .topbar {
+      transform: translateY(-120%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .topbar-inner {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+    }
+
+    /* ==================== BRAND SECTION ==================== */
+    .brand {
+      background: var(--app-card);
+      border: 1px solid var(--app-line);
+      border-radius: 18px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-lg);
+      flex-wrap: nowrap;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+
+    .brand:hover {
+      border-color: var(--app-brand);
+      box-shadow: var(--shadow-md);
+    }
+
+    .brand-left {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .brand h1 {
+      margin: 0 0 2px 0;
+      font-size: 1.45rem;
+      color: var(--app-brand);
+      line-height: 1.1;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--app-muted);
+      font-size: 0.82rem;
+    }
+
+    .brand-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      min-width: 0;
+      max-width: 560px;
+      flex: 0 1 560px;
+    }
+
+    #accessGate,
+    #businessSwitcher {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    #businessSwitcher {
+      max-width: 100%;
+    }
+
+
+    .home-note {
+      margin: 0 0 6px;
+      color: var(--app-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .nav-shell {
+      overflow: hidden;
+    }
+
+    /* ==================== NAVIGATION ==================== */
+    .nav {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: var(--space-sm);
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .nav button {
+      min-height: 42px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--app-line);
+      background: var(--app-card);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--app-text);
+      white-space: nowrap;
+      flex: 0 0 auto;
+      padding: 0 13px;
+    }
+
+    .nav button:hover {
+      border-color: var(--app-brand);
+      color: var(--app-brand);
+      background: rgba(196, 30, 58, 0.05);
+    }
+
+    .nav button.active {
+      background: var(--app-brand);
+      color: white;
+      border-color: var(--app-brand);
+      box-shadow: var(--shadow-md);
+    }
+
+    .more-links {
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+
+    .more-links.open {
+      display: grid;
+    }
+
+    .more-links button {
+      min-height: 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--app-line);
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ==================== PANELS ==================== */
+    .panel {
+      display: none;
+      background: var(--app-card);
+      border: 1px solid var(--app-line);
+      border-radius: var(--app-radius);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+      animation: fadeIn 0.3s ease-out;
+      overflow: visible;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-scroll-fix {
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+
+
+    /* ==================== FOCUS MODE MÓDULOS ==================== */
+    body.module-focus-market .topbar {
+      display: none;
+    }
+
+    body.module-focus-market .app {
+      padding-top: var(--space-md);
+    }
+
+    body.module-focus-market #marketPanel {
+      border-radius: 18px;
+      padding: var(--space-lg);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ==================== MARCO ROJO BOTTOM ==================== */
+    .footer-frame {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%);
+      padding: 3px 0;
+      margin-top: 60px;
+      box-shadow: 0 -4px 12px rgba(196, 30, 58, 0.15);
+    }
+
+    .footer {
+      background: #2a2a2a;
+      color: #fff;
+      padding: var(--space-2xl) var(--space-lg);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .footer a:hover {
+      color: var(--accent-gold);
+      text-decoration: underline;
+    }
+
+
+    /* ==================== V11.2.1 UI/UX PULIDO ==================== */
+    .home-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .home-note::after {
+      content: "SaaS controlado";
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #fff8f4;
+      color: #6b4b3e;
+      border: 1px solid #e7e1d8;
+      font-size: 0.72rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .footer strong {
+      color: var(--primary-light);
+    }
+
+    @media (max-width: 768px) {
+      .topbar-inner {
+        padding: 0 var(--space-md);
+      }
+
+      .brand-left {
+        min-width: 0;
+      }
+
+      .brand-right {
+        gap: 6px;
+      }
+
+      .home-note {
+        font-size: 0.76rem;
+        margin-bottom: 8px;
+      }
+
+      .nav-shell {
+        margin-left: calc(var(--space-md) * -1);
+        margin-right: calc(var(--space-md) * -1);
+        padding: 0 var(--space-md);
+      }
+
+      .panel {
+        padding: 14px;
+      }
+    }
+
+
+    /* ==================== V11.3A HEADER COMPACTO + SCROLL ==================== */
+    .admin-switcher-compact {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border: 1px solid #e7e1d8;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(0,0,0,.04);
+      max-width: 100%;
+    }
+
+    .admin-switcher-compact strong {
+      font-size: 12px;
+      color: #6b4b3e;
+      white-space: nowrap;
+    }
+
+    .admin-switcher-compact select {
+      min-height: 32px;
+      min-width: 150px;
+      max-width: 220px;
+      border: 1px solid #d8d0c4;
+      border-radius: 9px;
+      padding: 0 9px;
+      background: #fff;
+      font-weight: 800;
+      color: #1f1f1f;
+    }
+
+    @media (max-width: 900px) {
+      .brand {
+        flex-wrap: wrap;
+      }
+
+      .brand-right {
+        flex: 1 1 100%;
+        max-width: none;
+        align-items: stretch;
+      }
+
+      #accessGate,
+      #businessSwitcher {
+        justify-content: stretch;
+      }
+
+      .admin-switcher-compact {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .admin-switcher-compact select {
+        flex: 1;
+        max-width: none;
+      }
+    }
+
+
+    /* ==================== V11.3A.6 ADMIN FOCUS DEFINITIVO ==================== */
+    body.module-focus-admin .topbar-frame,
+    body.module-focus-admin .topbar {
+      display: none !important;
+    }
+
+    body.module-focus-admin .app {
+      padding-top: var(--space-md);
+    }
+
+    body.module-focus-admin #usersPanel {
+      border-radius: 18px;
+      padding-top: var(--space-lg);
+    }
+
+    body.module-focus-admin .footer-frame,
+    body.module-focus-admin .footer {
+      display: none;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1024px) {
+      .more-links {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: var(--space-md) 0;
+      }
+
+      .topbar-inner {
+        gap: var(--space-md);
+      }
+
+      .brand {
+        flex-direction: column;
+        gap: var(--space-sm);
+        padding: 12px;
+      }
+
+      .brand-right {
+        min-width: 100%;
+        align-items: stretch;
+      }
+
+      #accessGate,
+      #businessSwitcher {
+        justify-content: stretch;
+      }
+
+      .nav {
+        flex-wrap: nowrap;
+      }
+
+      .app {
+        padding: var(--space-md) var(--space-md) 120px;
+      }
+
+      .panel {
+        padding: var(--space-lg);
+        border-radius: 18px;
+      }
+
+      .nav button {
+        min-height: 48px;
+        font-size: 0.92rem;
+      }
+
+      .topbar-frame {
+        position: sticky;
+        top: 0;
+      }
+
+      .topbar {
+        top: 3px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand h1 {
+        font-size: 1.5rem;
+      }
+
+      .brand p {
+        font-size: 0.85rem;
+      }
+
+      .nav {
+        flex-wrap: nowrap;
+      }
+    }
+
+
+    /* ==================== V12.3.4 BRANDING APPPROMOS ==================== */
+    :root {
+      --app-bg: #f4f8ff;
+      --app-card: #ffffff;
+      --app-text: #0f172a;
+      --app-muted: #475569;
+      --app-line: rgba(4, 119, 242, 0.16);
+      --app-brand: #0477f2;
+      --app-brand-dark: #061a35;
+      --app-brand-soft: #eaf3ff;
+      --app-success: #16a34a;
+      --app-radius: 18px;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(4,119,242,.13), transparent 36%),
+        linear-gradient(180deg, #f8fbff 0%, #eef6ff 42%, #f4f8ff 100%);
+    }
+
+    body::before,
+    body::after {
+      background: linear-gradient(90deg, #061a35 0%, #0477f2 52%, #061a35 100%);
+      box-shadow: 0 8px 22px rgba(4, 119, 242, 0.22);
+    }
+
+    .topbar-frame,
+    .footer-frame {
+      background: linear-gradient(90deg, #061a35 0%, #0477f2 52%, #061a35 100%);
+      box-shadow: 0 4px 14px rgba(4, 119, 242, 0.16);
+    }
+
+    .topbar {
+      background: rgba(248, 251, 255, 0.92);
+      border-bottom: 1px solid rgba(4,119,242,.14);
+      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .brand {
+      background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(234,243,255,.96));
+      border: 1px solid rgba(4,119,242,.16);
+      border-radius: 24px;
+      box-shadow: 0 18px 55px rgba(2, 8, 23, 0.08);
+    }
+
+    .brand:hover {
+      border-color: rgba(4,119,242,.34);
+      box-shadow: 0 22px 64px rgba(4, 119, 242, 0.12);
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .app-brand-logo-box {
+      width: 66px;
+      height: 66px;
+      border-radius: 18px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      padding: 3px;
+      flex: 0 0 auto;
+      box-shadow: 0 12px 30px rgba(2, 8, 23, 0.12);
+      border: 1px solid rgba(4,119,242,.10);
+    }
+
+    .app-brand-logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand h1 {
+      color: var(--app-brand-dark);
+      letter-spacing: -0.04em;
+      font-size: 1.55rem;
+      font-weight: 1000;
+    }
+
+    .brand h1 span {
+      color: var(--app-brand);
+    }
+
+    .brand p {
+      color: var(--app-muted);
+      font-weight: 800;
+    }
+
+    .home-note {
+      color: #334155;
+      font-weight: 900;
+    }
+
+    .home-note::after {
+      content: "Listo para vender";
+      color: #075985;
+      background: #e0f2fe;
+      border-color: rgba(4,119,242,.18);
+    }
+
+    .nav button {
+      border-color: rgba(4,119,242,.14);
+      background: rgba(255,255,255,.92);
+      color: #0f172a;
+      border-radius: 999px;
+      font-weight: 900;
+      box-shadow: 0 8px 24px rgba(15,23,42,.05);
+    }
+
+    .nav button:hover {
+      border-color: rgba(4,119,242,.32);
+      color: var(--app-brand);
+      background: var(--app-brand-soft);
+    }
+
+    .nav button.active {
+      background: linear-gradient(135deg, #0477f2, #005bd8);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(4,119,242,.22);
+    }
+
+    .panel {
+      border-color: rgba(4,119,242,.13);
+      border-radius: 24px;
+      box-shadow: 0 22px 60px rgba(15,23,42,.07);
+    }
+
+    .demo-mode-banner {
+      border-color: rgba(4,119,242,.18);
+      background: #eaf3ff;
+      color: #0f172a;
+    }
+
+    .demo-mode-banner strong { color: var(--app-brand); }
+    .demo-mode-banner a { background: linear-gradient(135deg, #0477f2, #005bd8); }
+
+    .footer {
+      background: #020817;
+    }
+
+    .footer strong,
+    .footer a {
+      color: #60a5fa;
+    }
+
+    @media (max-width: 768px) {
+      .brand-left {
+        width: 100%;
+        align-items: center;
+      }
+
+      .app-brand-logo-box {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .brand h1 { font-size: 1.28rem; }
+      .brand p { font-size: 0.78rem; }
+      .app-brand-logo-box { width: 52px; height: 52px; }
+    }
+
+  </style>
+<link rel="stylesheet" href="/styles/status-compact.css">
+</head>
+<body>
+  <!-- MARCO ROJO TOP -->
+  <div class="topbar-frame"></div>
+  
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-left">
+            <span class="app-brand-logo-box" aria-hidden="true">
+              <img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" />
+            </span>
+            <div class="brand-copy">
+              <h1>App<span>Promos</span></h1>
+              <p>Vender carne más rápido: precios, ofertas y WhatsApp.</p>
+            </div>
+          </div>
+
+          <div class="brand-right">
+            <div id="accessGate"></div>
+            <div id="businessSwitcher"></div>
+          </div>
+        </div>
+
+        <div class="nav-shell">
+          <p class="home-note">Acciones rápidas para el mostrador.</p>
+          <nav class="nav" id="mainNav">
+            <button data-panel="dashboardPanel" class="active">🏠 Inicio</button>
+            <button data-panel="pricesPanel">⚡ Cambiar precios</button>
+            <button data-panel="builderPanel">🔥 Crear oferta</button>
+            <button data-panel="whatsappPanel">📤 WhatsApp</button>
+            <button type="button" data-toggle-more="true">⚙️ Más</button>
+          </nav>
+          <div class="more-links" id="moreLinks">
+            <button data-panel="savedPanel">💾 Guardados</button>
+            <button data-panel="marketPanel">📊 Competencia</button>
+            <button data-panel="webPanel">🌐 Mi Web</button>
+            <button data-panel="usersPanel">🛡️ Admin</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="dashboardPanel" class="panel panel-scroll-fix active"></section>
+    <section id="pricesPanel" class="panel panel-scroll-fix"></section>
+    <section id="savedPanel" class="panel panel-scroll-fix"></section>
+    <section id="builderPanel" class="panel panel-scroll-fix"></section>
+    <section id="usersPanel" class="panel panel-scroll-fix"></section>
+    <section id="whatsappPanel" class="panel panel-scroll-fix"></section>
+    <section id="marketPanel" class="panel panel-scroll-fix"></section>
+    <section id="webPanel" class="panel panel-scroll-fix"></section>
+  </div>
+
+  <!-- MARCO ROJO BOTTOM + FOOTER -->
+  <div class="footer-frame"></div>
+  <footer class="footer">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg);">
+      <p style="margin: 0 0 12px 0;">
+        <strong>APPPROMOS</strong> · 
+        <a href="#">Features</a> · 
+        <a href="#">Pricing</a> · 
+        <a href="#">Contacto</a>
+      </p>
+      <p style="margin: 0; font-size: 0.85rem; color: #999;">
+        © 2026 AppPromos. Herramienta para carnicerías en Argentina.
+      </p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { renderBusinessSwitcher } from "./js/modules/business-switcher-module.js";
+    import { renderAccessGate } from "./js/modules/access-gate-module.js";
+
+    const accessEl = document.getElementById("accessGate");
+    const switcherEl = document.getElementById("businessSwitcher");
+
+    const isLogged = await renderAccessGate(accessEl, {
+      // V12.3.1: app.html también funciona como puerta de entrada pública.
+      // Si no hay sesión, NO vuelve a index.html: app-main muestra login/registro.
+      redirectIfGuest: false,
+      loginUrl: "./index.html"
+    });
+
+    if (isLogged && switcherEl) {
+      await renderBusinessSwitcher(switcherEl);
+    }
+  </script>
+
+
+
+    <script src="./js/vendor/localidades-ar.plugin.js"></script>
+    <script type="module" src="./js/app-main.js"></script>
+<script src="/js/status-compact.js"></script>
+</body>
+</html>

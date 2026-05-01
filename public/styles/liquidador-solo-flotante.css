@@ -1,0 +1,21 @@
+/* V12.4.1 — Liquidador solo flotante
+   Objetivo: sacar el liquidador viejo del cuerpo principal sin romper lógica.
+   El liquidador queda como acceso premium desde el botón flotante "Vender urgente".
+*/
+
+/* Oculta bloques viejos del liquidador renderizados dentro del home */
+#home-liquidator,
+#liquidador-home,
+.liquidador-home,
+.liquidator-home,
+.liquidador-panel,
+.liquidator-panel,
+.home-liquidator,
+.quick-liquidator,
+.quick-sale-liquidator {
+  display: none !important;
+}
+
+/* Fallback visual: si el bloque viejo no tiene clase estable,
+   ocultamos cards antiguas que contienen el CTA LIQUIDAR HOY mediante JS complementario.
+*/

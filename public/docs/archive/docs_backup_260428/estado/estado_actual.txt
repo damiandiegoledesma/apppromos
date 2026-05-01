@@ -1,0 +1,120 @@
+# APPPROMOS — ESTADO ACTUAL REAL
+
+Versión real del repo: V11.4R — Reconciliación Real + Guarda Central de Escritura
+Fecha: 2026-04-26
+Base recibida: apppromosV11.3 Pre Reconciliacion Real.zip
+
+## Objetivo de esta versión
+
+Ordenar la versión real del SaaS y avanzar con cambios chicos, seguros y comerciales sin romper Firebase, resolveSession ni la arquitectura multi-tenant.
+
+Prioridad de producto:
+1. Estabilidad.
+2. Experiencia de usuario móvil.
+3. Control SaaS comercial.
+4. Escalabilidad multi-tenant.
+
+## Arquitectura real confirmada
+
+- Firebase Auth + Firestore.
+- Frontend HTML + JS modular, sin frameworks.
+- Multi-tenant: 1 usuario cliente = 1 carnicería.
+- resolveSession determina modo de uso:
+  - guest
+  - client
+  - superadmin
+- BusinessStore mantiene en memoria la empresa activa, meta, state, productos, combos y datos asociados.
+- El cliente no puede cambiar libremente de businessId.
+- Superadmin puede administrar e impersonar empresas.
+
+## Colecciones/documentos principales
+
+- users/{uid}
+- admins/{uid}
+- businesses/{businessId}
+- businesses/{businessId}/core/meta
+- businesses/{businessId}/core/state
+- publicWebSlugs/{slug}
+- publicPhoneKeys/{phoneKey}
+- adminActions/{id}
+- marketSnapshots/{businessId}
+
+## Billing real en código
+
+Estados reales:
+- active
+- overdue
+- suspended
+
+Planes reales:
+- trial
+- basic
+- pro
+
+No existe todavía plan premium en código.
+No existe estado grace como estado principal. Si se usa período de gracia, debe representarse como billing.status = overdue + graceEndsAt.
+
+## Trial real
+
+Desde V11.4R, el alta de nuevas carnicerías crea trialEndsAt con fecha actual + 30 días.
+
+Importante:
+- Las carnicerías creadas antes de esta versión pueden tener trialEndsAt = null.
+- Para esos casos, se recomienda corregir manualmente desde Admin o mediante migración controlada futura.
+
+## Control SaaS de escritura
+
+Desde V11.4R se agregó una guarda central de escritura:
+
+public/js/services/write-guard-service.js
+
+Regla comercial aplicada:
+- El cliente puede entrar y consultar datos aunque esté vencido/suspendido.
+- Si billing está overdue, trial vencido o suspended, el cliente NO puede guardar cambios.
+- Si la empresa está disabled, suspended o inactive, el cliente NO puede operar módulos.
+- Superadmin mantiene permiso de escritura para soporte y corrección operativa.
+
+Esto mejora la lógica SaaS sin tocar Firestore Rules todavía.
+
+## Decisión UX importante
+
+La app está pensada para carnicerías que usan el celular mientras atienden, cobran, despostan, responden WhatsApp y modifican precios rápido.
+
+Por eso la restricción de pago debe ser clara y no confusa:
+- Se permite entrar.
+- Se permite mirar información.
+- Se bloquea solo el guardado.
+- El mensaje debe explicar qué pasa y qué hacer.
+- No se debe dejar al usuario en una pantalla rota o vacía.
+
+## Módulos reales
+
+- Dashboard
+- Precios
+- Competencia
+- Crear ofertas / combos
+- Guardados
+- WhatsApp
+- Mi Web Premium
+- Admin SaaS
+- Access Gate
+- Business Switcher
+- Company Admin
+
+## Pendientes críticos
+
+1. Endurecer Firestore Rules para que billing también bloquee escrituras desde reglas, no solo desde JS.
+2. Definir matriz Plan -> Módulos.
+3. Corregir carnicerías viejas sin trialEndsAt.
+4. Separar o archivar public/admin.html legacy.
+5. Definir si Web Premium será módulo de Pro o addon.
+6. Revisar UX móvil módulo por módulo.
+7. Preparar pruebas manuales de pago vencido/suspendido.
+
+## NO tocar sin cuidado
+
+- resolveSession.
+- validateUserCanAccessBusiness.
+- BusinessStore.
+- paths core/meta y core/state.
+- Firebase Rules sin checklist previo.

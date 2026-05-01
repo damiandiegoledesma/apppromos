@@ -1,0 +1,27 @@
+CHECKLIST PARCHE APPPROMOS
+
+ANTES:
+[ ] Repo base confirmado
+[ ] Backup o ZIP estable guardado
+[ ] No trabajar sobre repo viejo
+[ ] Revisar archivos a modificar
+[ ] Confirmar que no se toca Firebase innecesariamente
+[ ] Confirmar que no se toca resolveSession innecesariamente
+
+DURANTE:
+[ ] Modificar solo archivos necesarios
+[ ] No incluir .venv
+[ ] No incluir .firebase
+[ ] No incluir logs
+[ ] No incluir .bak
+[ ] No pisar carpetas completas sin necesidad
+
+DESPUÉS:
+[ ] Probar app local
+[ ] Probar login
+[ ] Probar Admin
+[ ] Probar módulo afectado
+[ ] Actualizar /docs/versiones/
+[ ] Actualizar /docs/historial/changelog.txt
+[ ] Actualizar /docs/estado/estado_actual.txt
+[ ] Preparar nuevo hilo con plantilla

@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AppPromos | Vendé lo que hoy perderías en 3 toques</title>
+  <meta name="description" content="AppPromos ayuda a carnicerías argentinas a crear ofertas, liquidar stock y vender por WhatsApp en segundos. Probalo gratis 30 días, sin tarjeta." />
+  <meta name="theme-color" content="#071d3a" />
+  <link rel="icon" type="image/png" href="/assets/logo/apppromos-favicon-transparent.png" />
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBJM7TQRSN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EBJM7TQRSN');
+  </script>
+
+  <link rel="stylesheet" href="./styles/carniza-landing.css" />
+
+  <style>
+    :root {
+      --blue: #0477f2;
+      --blue2: #005bd8;
+      --navy: #061a35;
+      --dark: #020817;
+      --white: #ffffff;
+      --muted: #dbeafe;
+      --green: #22c55e;
+      --red: #ef233c;
+      --card: rgba(255,255,255,.08);
+      --line: rgba(255,255,255,.14);
+      --shadow: 0 24px 70px rgba(0,0,0,.35);
+      --radius: 26px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--white);
+      background: radial-gradient(circle at top left, #123a75 0, var(--dark) 42%, #000 100%);
+    }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .wrap { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      backdrop-filter: blur(16px);
+      background: rgba(2,8,23,.86);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 14px; font-weight: 1000; letter-spacing: -.03em; font-size: 24px; text-decoration:none; }
+    .brand-logo-box {
+      width: 76px;
+      height: 76px;
+      border-radius: 18px;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      padding: 3px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.28);
+      flex: 0 0 auto;
+    }
+    .brand img { width: 100%; height: 100%; object-fit: contain; }
+    .brand span b { color: var(--blue); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 46px; padding: 0 18px; border-radius: 999px;
+      text-decoration: none; font-weight: 1000; border: 1px solid transparent;
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--blue), var(--blue2)); color: #fff; }
+    .btn-green { background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; }
+    .btn-light { background: rgba(255,255,255,.10); border-color: var(--line); color: #fff; box-shadow: none; }
+    .btn-red { background: linear-gradient(135deg, #ef233c, #b80f26); color: #fff; }
+    .btn-big { min-height: 56px; padding: 0 24px; font-size: 17px; letter-spacing: .01em; }
+
+    .hero { position: relative; overflow: hidden; padding: 64px 0 34px; }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, rgba(2,8,23,.96), rgba(2,8,23,.66), rgba(2,8,23,.20)),
+        url('/assets/product/landing/hero-app-promos.webp') center/cover no-repeat;
+      opacity: .95;
+    }
+    .hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: 1.02fr .98fr; gap: 28px; align-items: center; }
+    .eyebrow { color: #93c5fd; font-weight: 1000; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
+    h1 { margin: 12px 0 14px; font-size: clamp(42px, 7vw, 78px); line-height: .96; letter-spacing: -.055em; }
+    h1 .accent { color: var(--blue); }
+    .lead { margin: 0 0 24px; color: #dbeafe; font-size: clamp(18px, 2.4vw, 23px); line-height: 1.35; max-width: 660px; font-weight: 700; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
+    .microcopy { color: #eff6ff; font-size: 13px; font-weight: 900; margin-top: -16px; opacity: .92; }
+    .trust { display: flex; flex-wrap: wrap; gap: 10px; color: #eff6ff; font-size: 14px; font-weight: 900; }
+    .pill { background: rgba(255,255,255,.10); border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; }
+    .hero-card { background: rgba(2,8,23,.62); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
+    .hero-card img { border-radius: 18px; width: 100%; object-fit: cover; }
+
+    section { padding: 54px 0; }
+    .section-title { text-align: center; max-width: 760px; margin: 0 auto 30px; }
+    .section-title h2 { margin: 0 0 10px; font-size: clamp(31px, 5vw, 52px); line-height: 1.02; letter-spacing: -.04em; }
+    .section-title p { margin: 0; color: #cbd5e1; font-size: 18px; font-weight: 700; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .step-card, .benefit-card, .price-card, .web-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.055));
+      border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.22);
+    }
+    .step-num { width: 54px; height: 54px; border-radius: 18px; background: var(--blue); display: grid; place-items: center; font-size: 28px; font-weight: 1000; margin-bottom: 15px; }
+    .step-card h3, .benefit-card h3, .web-card h3 { margin: 0 0 8px; font-size: 24px; line-height: 1.05; }
+    .step-card p, .benefit-card p, .web-card p { margin: 0; color: #cbd5e1; line-height: 1.45; font-weight: 700; }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; }
+    .visual { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: #061a35; }
+    .copy h2 { font-size: clamp(32px, 5vw, 54px); margin: 0 0 14px; line-height: 1.02; letter-spacing: -.04em; }
+    .copy p { color: #dbeafe; font-size: 18px; line-height: 1.45; font-weight: 750; }
+    .checklist { display: grid; gap: 10px; margin: 20px 0 0; padding: 0; list-style: none; }
+    .checklist li { background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; font-weight: 900; }
+
+    .benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .benefit-icon { font-size: 34px; margin-bottom: 10px; }
+
+    .gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .gallery img { border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 18px 45px rgba(0,0,0,.24); height: 100%; object-fit: cover; }
+
+    .pricing { background: linear-gradient(180deg, rgba(4,119,242,.20), rgba(2,8,23,.0)); }
+    .price-card { max-width: 780px; margin: 0 auto; text-align: center; padding: 34px 22px; }
+    .price-kicker { color: #93c5fd; font-weight: 1000; text-transform: uppercase; letter-spacing: .08em; }
+    .price-main { font-size: clamp(50px, 9vw, 92px); font-weight: 1000; letter-spacing: -.06em; line-height: .94; margin: 12px 0; }
+    .price-main span { color: var(--blue); }
+    .price-list { margin: 22px auto; padding: 0; list-style: none; display: grid; gap: 11px; max-width: 520px; text-align: left; }
+    .price-list li { padding: 13px 15px; border-radius: 16px; background: rgba(255,255,255,.09); border: 1px solid var(--line); font-weight: 950; }
+
+    .web-card { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: center; }
+
+    .final-cta { padding: 62px 0 80px; text-align: center; background: radial-gradient(circle at center, rgba(4,119,242,.28), rgba(2,8,23,0) 62%); }
+    .final-cta h2 { font-size: clamp(34px, 6vw, 66px); line-height: 1; letter-spacing: -.05em; margin: 0 0 14px; }
+    .final-cta p { color: #dbeafe; font-size: 19px; font-weight: 800; margin: 0 0 26px; }
+    footer { border-top: 1px solid var(--line); padding: 22px 0; color: #94a3b8; font-size: 14px; }
+    footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .footer-socials { display:flex; gap:10px; align-items:center; }
+    .footer-socials a { width:38px; height:38px; border:1px solid var(--line); border-radius:999px; display:inline-grid; place-items:center; text-decoration:none; background:rgba(255,255,255,.06); color:#fff; font-weight:1000; }
+    .web-plus-card { position:relative; overflow:hidden; }
+    .web-plus-badge { display:inline-flex; align-items:center; min-height:30px; padding:0 12px; border-radius:999px; background:rgba(4,119,242,.16); border:1px solid rgba(147,197,253,.28); color:#bfdbfe; font-size:12px; font-weight:1000; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+    .web-mockup { border-radius:24px; padding:16px; background:linear-gradient(135deg,#eaf3ff,#ffffff); color:#061a35; box-shadow:0 24px 60px rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.45); }
+    .web-mockup-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .web-mockup-brand strong { display:block; font-size:18px; line-height:1.05; }
+    .web-mockup-brand span { color:#0477f2; font-weight:900; font-size:12px; }
+    .web-mockup-pill { border-radius:999px; background:#dcfce7; color:#166534; padding:7px 10px; font-size:12px; font-weight:1000; }
+    .web-offers { display:grid; gap:10px; }
+    .web-offer { border:1px solid #dbeafe; border-radius:16px; padding:12px; background:#fff; display:grid; gap:6px; }
+    .web-offer b { color:#0f172a; }
+    .web-offer small { color:#64748b; font-weight:800; }
+    .web-offer-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .web-offer-price { color:#0b63ce; font-size:18px; font-weight:1000; }
+    .web-wa { border:none; border-radius:999px; background:#16a34a; color:white; min-height:34px; padding:0 12px; font-weight:1000; }
+
+
+    /* V12.3.2 — Login / registro integrado en landing */
+    .auth-section {
+      display: none;
+      min-height: calc(100vh - 82px);
+      padding: 72px 0;
+      background: radial-gradient(circle at top, rgba(4,119,242,.22), rgba(2,8,23,.96) 58%, #000 100%);
+    }
+    body.auth-mode main#top { display: none; }
+    body.auth-mode .auth-section { display: block; }
+    .auth-container {
+      width: min(460px, calc(100% - 32px));
+      margin: 0 auto;
+      background: rgba(255,255,255,.98);
+      color: #061a35;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 26px;
+      padding: 34px 26px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.38);
+    }
+    .auth-back {
+      border: 0;
+      background: transparent;
+      color: #0477f2;
+      font-weight: 1000;
+      cursor: pointer;
+      padding: 0;
+      margin: 0 0 22px;
+      font-size: 15px;
+    }
+    .auth-container h2 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      letter-spacing: -.04em;
+      color: #061a35;
+    }
+    .auth-help {
+      margin: 0 0 24px;
+      color: #475569;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #eaf2ff;
+      padding: 6px;
+      border-radius: 999px;
+      margin-bottom: 22px;
+    }
+    .tabs button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #334155;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background: linear-gradient(135deg, #0477f2, #005bd8);
+      color: white;
+      box-shadow: 0 10px 24px rgba(4,119,242,.25);
+    }
+    .tab { display: none; }
+    .tab.active { display: block; }
+    .tab input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 14px;
+      margin: 0 0 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 750;
+      color: #061a35;
+      background: #f8fafc;
+    }
+    .tab input:focus {
+      outline: none;
+      border-color: #0477f2;
+      box-shadow: 0 0 0 4px rgba(4,119,242,.12);
+      background: white;
+    }
+    .tab .submit {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 6px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0477f2, #005bd8);
+      color: white;
+      font-weight: 1000;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 14px 30px rgba(4,119,242,.28);
+    }
+    .status {
+      min-height: 20px;
+      margin-top: 12px;
+      color: #b91c1c;
+      font-weight: 850;
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .hero { padding: 42px 0 28px; }
+      .hero .wrap, .split, .web-card { grid-template-columns: 1fr; }
+      .hero::before { background: linear-gradient(180deg, rgba(2,8,23,.96), rgba(2,8,23,.74)), url('/assets/product/landing/hero-app-promos.webp') center/cover no-repeat; }
+      .nav { min-height: 74px; }
+      .nav-actions .btn-light { display: none; }
+      .brand { font-size: 20px; }
+      .brand-logo-box { width: 62px; height: 62px; border-radius: 16px; }
+      .steps, .benefits { grid-template-columns: 1fr; }
+      .gallery { grid-template-columns: 1fr 1fr; }
+      .hero-card { order: -1; }
+      .hero-card img { max-height: 440px; object-fit: cover; object-position: top; }
+      section { padding: 42px 0; }
+      .btn { width: 100%; }
+      .hero-ctas { display: grid; }
+      .nav-actions { gap: 6px; }
+      .nav-actions .btn { min-height: 40px; padding: 0 12px; font-size: 13px; width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="AppPromos inicio">
+        <span class="brand-logo-box"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" /></span>
+        <span>App<b>Promos</b></span>
+      </a>
+      <nav class="nav-actions" aria-label="Acciones principales">
+        <a class="btn btn-light" href="#como-funciona">Cómo funciona</a>
+        <a class="btn btn-light" href="#login">Iniciar sesión</a>
+        <a class="btn btn-primary" href="/app.html?demo=1">Probar demo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <div class="eyebrow">Para carnicerías que quieren vender más</div>
+          <h1>Vendé lo que hoy perderías. <span class="accent">En 3 toques.</span></h1>
+          <p class="lead">Armá combos en 10 segundos. Mandalos por WhatsApp. Vendé hoy lo que mañana tirás.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-green btn-big" href="/app.html?demo=1">📲 Probar demo</a>
+            <a class="btn btn-primary btn-big" href="#signup">🚀 EMPEZÁ GRATIS AHORA</a>
+          </div>
+          <div class="microcopy">Te lleva 1 minuto</div>
+          <div class="trust">
+            <span class="pill">✅ Sin tarjeta</span>
+            <span class="pill">✅ Sin compromiso</span>
+            <span class="pill">✅ Listo para WhatsApp</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <img src="/assets/product/landing/hero-app-promos.webp" alt="AppPromos ayuda a vender más hoy desde el celular" />
+        </div>
+      </div>
+    </section>
+
+    <section id="como-funciona">
+      <div class="wrap">
+        <div class="section-title">
+          <h2>3 pasos. Así de simple.</h2>
+          <p>Diseñada para el mostrador: rápida, clara y usable desde el celular.</p>
+        </div>
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-num">1</div>
+            <h3>Elegís productos</h3>
+            <p>Marcás lo que querés vender hoy: combos, ofertas o mercadería que necesitás mover.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">2</div>
+            <h3>Liquidás hoy</h3>
+            <p>Definís el descuento de forma simple, sin calcular a mano ni armar planillas.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-num">3</div>
+            <h3>Vendés por WhatsApp</h3>
+            <p>La oferta queda lista para enviar a tus clientes. Vendés más rápido y con menos vueltas.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split">
+        <div class="visual">
+          <img src="/assets/product/landing/paso-demo.webp" alt="En AppPromos creás una oferta en 3 toques y vendés hoy" />
+        </div>
+        <div class="copy">
+          <div class="eyebrow">Menos tiempo, más venta</div>
+          <h2>Dejá de perder tiempo. Empezá a vender más hoy.</h2>
+          <p>AppPromos convierte la oferta que antes te llevaba varios minutos en un mensaje claro, vendedor y listo para WhatsApp.</p>
+          <ul class="checklist">
+            <li>⚡ Ofertas listas en segundos</li>
+            <li>📲 Venta directa por WhatsApp</li>
+            <li>🔥 Liquidá stock antes de perderlo</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-title">
+          <h2>Más ventas. Menos tiempo. Más resultados.</h2>
+          <p>Una app pensada para carniceros que trabajan todo el día y necesitan vender sin complicarse.</p>
+        </div>
+        <div class="benefits">
+          <article class="benefit-card">
+            <div class="benefit-icon">📈</div>
+            <h3>Más ventas</h3>
+            <p>Llegás directo al celular de tus clientes con ofertas claras y rápidas.</p>
+          </article>
+          <article class="benefit-card">
+            <div class="benefit-icon">⏱️</div>
+            <h3>Ahorro de tiempo</h3>
+            <p>Armás promociones en segundos, sin escribir todo desde cero.</p>
+          </article>
+          <article class="benefit-card">
+            <div class="benefit-icon">🔥</div>
+            <h3>Liquidá stock</h3>
+            <p>Vendé lo que te queda hoy antes de que se te transforme en pérdida.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap split">
+        <div class="copy">
+          <div class="eyebrow">El dolor real</div>
+          <h2>¿Cuánto tardás en armar una oferta?</h2>
+          <p>Mientras pensás, calculás y escribís, otros ya están vendiendo. AppPromos te ayuda a salir rápido con una promo lista para mandar.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-red" href="/app.html?demo=1">🔥 Crear oferta ahora</a>
+          </div>
+        </div>
+        <div class="visual">
+          <img src="/assets/product/landing/app-promos-oferta.webp" alt="Con AppPromos armás ofertas en segundos" />
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap web-card web-plus-card">
+        <div class="copy">
+          <div class="web-plus-badge">Plus opcional</div>
+          <div class="eyebrow">Web Premium</div>
+          <h2>Tu carnicería también puede verse online.</h2>
+          <p>Un módulo adicional para mostrar catálogo, ofertas y pedidos online cuando quieras llevar AppPromos un paso más allá.</p>
+          <ul class="checklist">
+            <li>🌐 Catálogo visible</li>
+            <li>🥩 Ofertas destacadas</li>
+            <li>📲 Pedidos por WhatsApp</li>
+          </ul>
+        </div>
+        <div class="web-mockup" aria-label="Vista previa de Web Premium">
+          <div class="web-mockup-top">
+            <div class="web-mockup-brand"><strong>Carnicería de Carniza</strong><span>Ofertas de hoy</span></div>
+            <div class="web-mockup-pill">Pedidos por WhatsApp</div>
+          </div>
+          <div class="web-offers">
+            <div class="web-offer">
+              <b>Combo Parrillero</b>
+              <small>Asado + chorizo + morcilla</small>
+              <div class="web-offer-row"><span class="web-offer-price">$ 31.900</span><button class="web-wa" type="button">Pedir</button></div>
+            </div>
+            <div class="web-offer">
+              <b>Promo familiar</b>
+              <small>Milanesas + pollo + carne picada</small>
+              <div class="web-offer-row"><span class="web-offer-price">Oferta especial</span><button class="web-wa" type="button">Ver</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing" id="precios">
+      <div class="wrap">
+        <div class="price-card">
+          <div class="price-kicker">Sin tarjeta. Sin compromiso. Cancelá cuando quieras.</div>
+          <div class="price-main">30 DÍAS <span>GRATIS</span></div>
+          <p class="lead" style="margin-left:auto;margin-right:auto;">Usalo completo 30 días. Después decidís.</p>
+          <ul class="price-list">
+            <li>✅ Armá combos en 10 segundos</li>
+            <li>✅ Enviá por WhatsApp automático</li>
+            <li>✅ Vendé lo que te queda hoy</li>
+            <li>✅ Atendé desde el celular</li>
+            <li>✅ Liquidador de stock integrado</li>
+          </ul>
+          <a class="btn btn-primary btn-big" href="#signup">EMPEZÁ GRATIS AHORA</a>
+          <p style="margin:14px 0 0;color:#dbeafe;font-weight:900;">Si no te gusta, cancelás y listo. Sin preguntas.</p>
+        </div>
+      </div>
+    </section>
+    <section class="final-cta">
+      <div class="wrap">
+        <h2>Empezá hoy a vender más.</h2>
+        <p>Probá AppPromos 30 días gratis y mandá tu primera oferta por WhatsApp.</p>
+        <div class="hero-ctas" style="justify-content:center;">
+          <a class="btn btn-green btn-big" href="/app.html?demo=1">📲 Probar demo</a>
+          <a class="btn btn-primary btn-big" href="#signup">🚀 Crear mi cuenta gratis</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <section id="auth" class="auth-section" aria-label="Ingreso y registro AppPromos">
+    <div class="auth-container">
+      <button class="auth-back" type="button" onclick="showLanding()">← Volver a la landing</button>
+      <h2>AppPromos</h2>
+      <p class="auth-help">Entrá o creá tu carnicería para empezar a vender por WhatsApp.</p>
+
+      <div class="tabs">
+        <button id="tabLoginBtn" type="button" class="active">Ingresar</button>
+        <button id="tabRegistroBtn" type="button">Registrarse</button>
+      </div>
+
+      <div id="tabLogin" class="tab active">
+        <input id="loginEmail" placeholder="Email" autocomplete="email" />
+        <input id="loginPassword" type="password" placeholder="Contraseña" autocomplete="current-password" />
+        <button id="loginBtn" class="submit" type="button">Ingresar</button>
+        <div id="loginStatus" class="status"></div>
+      </div>
+
+      <div id="tabRegistro" class="tab">
+        <input id="businessName" placeholder="Nombre carnicería" />
+        <input id="ownerName" placeholder="Nombre responsable" />
+        <input id="email" placeholder="Email" autocomplete="email" />
+        <input id="password" type="password" placeholder="Contraseña" autocomplete="new-password" />
+        <input id="direccion" placeholder="Dirección" />
+        <input id="telefono" placeholder="Teléfono / WhatsApp" />
+        <input id="ciudad" placeholder="Localidad" data-localidad-ar autocomplete="off" />
+        <input id="provincia" placeholder="Provincia" data-provincia-ar readonly />
+        <input id="provinceId" type="hidden" data-provincia-id-ar />
+        <button id="registroBtn" class="submit" type="button">Crear mi carnicería</button>
+        <div id="registroStatus" class="status"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>© AppPromos — La app para carnicerías argentinas</div>
+      <div class="footer-socials"><a href="https://www.facebook.com/apppromossaas/" target="_blank" rel="noopener" aria-label="Facebook AppPromos">f</a><a href="https://www.instagram.com/promosappsaas/" target="_blank" rel="noopener" aria-label="Instagram AppPromos">◎</a></div>
+    </div>
+  </footer>
+
+  <script>
+    function setAuthTab(mode) {
+      const loginBtn = document.getElementById("tabLoginBtn");
+      const registroBtn = document.getElementById("tabRegistroBtn");
+      const loginTab = document.getElementById("tabLogin");
+      const registroTab = document.getElementById("tabRegistro");
+      const showRegister = mode === "signup" || mode === "register";
+
+      loginBtn?.classList.toggle("active", !showRegister);
+      registroBtn?.classList.toggle("active", showRegister);
+      loginTab?.classList.toggle("active", !showRegister);
+      registroTab?.classList.toggle("active", showRegister);
+    }
+
+    function showAuth(mode) {
+      document.body.classList.add("auth-mode");
+      setAuthTab(mode);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showLanding() {
+      document.body.classList.remove("auth-mode");
+      history.replaceState(null, "", "#top");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function handleAuthHash() {
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      if (hash === "login") showAuth("login");
+      if (hash === "signup" || hash === "register") showAuth("signup");
+    }
+
+    window.showSignup = () => showAuth("signup");
+    window.showLogin = () => showAuth("login");
+    window.showLanding = showLanding;
+    window.addEventListener("hashchange", handleAuthHash);
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("tabLoginBtn")?.addEventListener("click", () => setAuthTab("login"));
+      document.getElementById("tabRegistroBtn")?.addEventListener("click", () => setAuthTab("signup"));
+      handleAuthHash();
+    });
+  </script>
+  <script src="./js/vendor/localidades-ar.plugin.js"></script>
+  <script type="module" src="./js/modules/auth-module.js"></script>
+  <script src="./js/modules/carniza-landing-module.js"></script>
+
+<script src="./js/vendor/localidades-ar.plugin.js"></script>
+<script type="module" src="./js/modules/auth-module.js"></script>
+<script src="./js/modules/carniza-landing-module.js"></script>
+
+<script>
+  (function () {
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function getButtonText(element) {
+      return String(
+        element.innerText ||
+        element.textContent ||
+        element.value ||
+        element.getAttribute("aria-label") ||
+        ""
+      ).trim().slice(0, 80);
+    }
+
+    function getCtaName(element) {
+      const text = normalizeText(getButtonText(element));
+      const href = normalizeText(element.getAttribute("href") || "");
+      const id = normalizeText(element.id || "");
+      const className = normalizeText(element.className || "");
+      const dataCta = normalizeText(element.getAttribute("data-analytics-cta") || "");
+
+      const fullText = [text, href, id, className, dataCta].join(" ");
+
+      if (
+        fullText.includes("probar demo") ||
+        fullText.includes("demo") ||
+        fullText.includes("carniceria de carniza")
+      ) {
+        return "probar_demo";
+      }
+
+      if (
+        fullText.includes("empezar gratis") ||
+        fullText.includes("empeza gratis") ||
+        fullText.includes("registrarse") ||
+        fullText.includes("registrese") ||
+        fullText.includes("registro") ||
+        fullText.includes("crear cuenta") ||
+        fullText.includes("probar gratis")
+      ) {
+        return "registro_gratis";
+      }
+
+      if (
+        fullText.includes("iniciar sesion") ||
+        fullText.includes("login") ||
+        fullText.includes("entrar")
+      ) {
+        return "iniciar_sesion";
+      }
+
+      return null;
+    }
+
+    function trackEvent(eventName, params) {
+      try {
+        if (typeof window.gtag !== "function") {
+          console.info("[AppPromos Analytics]", eventName, params);
+          return;
+        }
+
+        window.gtag("event", eventName, params);
+      } catch (error) {
+        console.warn("[AppPromos Analytics] No se pudo registrar evento", error);
+      }
+    }
+
+    document.addEventListener("click", function (event) {
+      const element = event.target.closest(
+        "a, button, [role='button'], input[type='button'], input[type='submit']"
+      );
+
+      if (!element) return;
+
+      const ctaName = getCtaName(element);
+      if (!ctaName) return;
+
+      const buttonText = getButtonText(element);
+      const href = element.getAttribute("href") || "";
+
+      trackEvent("ap_landing_cta_click", {
+        cta_name: ctaName,
+        cta_text: buttonText,
+        cta_href: href,
+        page_path: window.location.pathname
+      });
+
+      if (ctaName === "probar_demo") {
+        trackEvent("ap_demo_click", {
+          cta_text: buttonText,
+          cta_href: href,
+          page_path: window.location.pathname
+        });
+      }
+
+      if (ctaName === "registro_gratis") {
+        trackEvent("ap_signup_click", {
+          cta_text: buttonText,
+          cta_href: href,
+          page_path: window.location.pathname
+        });
+      }
+
+      if (ctaName === "iniciar_sesion") {
+        trackEvent("ap_login_click", {
+          cta_text: buttonText,
+          cta_href: href,
+          page_path: window.location.pathname
+        });
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function adminProfile() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && adminProfile().active == true
+        && (adminProfile().role == "superadmin" || adminProfile().role == "admin");
+    }
+
+    function isSuperadmin() {
+      return isAdmin()
+        || (signedIn() && currentUser().role == "superadmin");
+    }
+
+    function ownsBusiness(businessId) {
+      return signedIn() && currentUser().businessId == businessId;
+    }
+
+    function isOwnerUid() {
+      return signedIn()
+        && request.resource.data.ownerUid is string
+        && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || isSuperadmin());
+      allow create, update, delete: if isSuperadmin();
+    }
+
+    match /adminActions/{actionId} {
+      allow read: if isAdmin() || isSuperadmin();
+      allow create: if isAdmin() || isSuperadmin();
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && (request.auth.uid == uid || isAdmin() || isSuperadmin());
+    }
+
+    match /businesses/{businessId} {
+      allow read: if businessId == "demo" || ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow delete: if (isAdmin() || isSuperadmin()) && resource.data.isTestBusiness == true;
+    }
+
+    match /businesses/{businessId}/{document=**} {
+      allow read: if businessId == "demo" || ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow create: if signedIn() && (ownsBusiness(businessId) || isAdmin() || isSuperadmin() || request.resource.data.ownerUid == request.auth.uid);
+      allow update, delete: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+    }
+
+    match /publicWebSlugs/{slug} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.businessId is string
+        && (isOwnerUid() || ownsBusiness(request.resource.data.businessId) || isAdmin() || isSuperadmin());
+      allow update: if signedIn()
+        && request.resource.data.businessId is string
+        && (ownsBusiness(request.resource.data.businessId) || isAdmin() || isSuperadmin());
+      allow delete: if signedIn()
+        && (ownsBusiness(resource.data.businessId) || isAdmin() || isSuperadmin());
+    }
+
+    match /publicPhoneKeys/{phoneKey} {
+      // V11.4.1: registro público necesita consultar duplicados antes de crear Auth.
+      // El documento de índice debe mantenerse mínimo: businessId, phoneKey, active, updatedAt.
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.businessId is string
+        && (
+          getAfter(/databases/$(database)/documents/businesses/$(request.resource.data.businessId)).data.ownerUid == request.auth.uid
+          || isOwnerUid()
+          || ownsBusiness(request.resource.data.businessId)
+          || isAdmin()
+          || isSuperadmin()
+        );
+      allow update: if signedIn()
+        && request.resource.data.businessId is string
+        && (ownsBusiness(request.resource.data.businessId) || isAdmin() || isSuperadmin());
+      allow delete: if signedIn()
+        && (ownsBusiness(resource.data.businessId) || isAdmin() || isSuperadmin());
+    }
+
+    match /marketSnapshots/{businessId} {
+      allow read: if signedIn();
+      allow create, update, delete: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+    }
+
+    match /catalogs/{document=**} {
+      allow read: if signedIn();
+      allow write: if isAdmin() || isSuperadmin();
+    }
+  }
+}

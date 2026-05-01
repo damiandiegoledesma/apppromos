@@ -1,0 +1,71 @@
+#fab-liquidador {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 9999;
+  animation: pulse 6s infinite;
+}
+
+#fab-liquidador:hover {
+  transform: scale(1.08);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+#modal-liquidador {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+#modal-liquidador.active {
+  display: flex;
+}
+
+.liq-box {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 380px;
+}
+
+.liq-box input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.liq-descuentos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#liq-vender {
+  width: 100%;
+  padding: 12px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}

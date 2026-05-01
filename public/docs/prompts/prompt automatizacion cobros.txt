@@ -1,0 +1,149 @@
+Estoy trabajando en el Proyecto AppPromos, un SaaS para carnicerías argentinas.
+
+Quiero seguir en profundidad con la AUTOMATIZACIÓN DE COBRANZAS de AppPromos.
+
+Contexto general:
+- AppPromos apunta a carniceros argentinos.
+- La app debe ser simple, autoservicio y sin necesidad de soporte constante.
+- No quiero tener que atender personalmente a miles de carniceros para cobrar, activar, pausar o regularizar cuentas.
+- El objetivo es que el carnicero pague solo, el sistema detecte el pago, la app habilite o pause sola, y La Nelly comunique todo con tono amable.
+- La frase de base es:
+  “El carnicero paga solo. El sistema detecta. La Nelly avisa. AppPromos sigue funcionando.”
+
+Pricing actual:
+1. FREE TRIAL — 30 días.
+2. IMPULSO — $19.999/mes.
+3. SALVADOR — $34.999/mes.
+4. COMPLETO — $44.999/mes.
+5. Usuarios adicionales — $5.000/mes cada uno.
+
+Decisiones comerciales:
+- SALVADOR es el plan core.
+- COMPLETO incluye Web Premium, pero NO prometer soporte 24/7.
+- No quiero estructura pesada de soporte.
+- La app debe ser tan simple que casi no haga falta contestar consultas.
+- La Nelly debe encargarse del tono de cobro/cuidado:
+  - firme
+  - amable
+  - resolutiva
+  - sin sonar a cobradora agresiva
+  - sin lenguaje técnico
+  - con frases tipo “Lo resolvemos”
+
+Idea de cobranzas:
+- Usar Mercado Pago Suscripciones como primera opción para Argentina.
+- Crear links/planes de suscripción:
+  - AppPromos IMPULSO
+  - AppPromos SALVADOR
+  - AppPromos COMPLETO
+  - Usuarios adicionales
+- Primera etapa puede ser simple:
+  - planes creados en Mercado Pago;
+  - links de pago;
+  - La Nelly muestra botones de pago;
+  - validación manual o semi-manual si hace falta.
+- Segunda etapa:
+  - automatizar con webhooks de Mercado Pago;
+  - Firebase actualiza estado de empresa automáticamente;
+  - la app habilita o pausa módulos según plan/estado.
+
+Estados comerciales posibles:
+- trial_active
+- trial_expiring
+- active
+- overdue
+- suspended
+- cancelled
+
+Estados visibles para el carnicero:
+- Prueba activa
+- Prueba por vencer
+- Al día
+- Pago pendiente
+- Acceso pausado
+- Cuenta cancelada
+
+Reglas UX/cobranza:
+- Si el usuario está al día, La Nelly no molesta.
+- Si la prueba está por vencer, La Nelly avisa con cuidado.
+- Si hay pago pendiente, La Nelly aparece con CTA claro para regularizar.
+- Si el acceso está pausado, la app no debe borrar datos.
+- El usuario debe poder entrar y ver algo, pero no guardar/cambiar cosas críticas si está vencido.
+- En estado sensible, Carniza debe esconderse o minimizarse para que no compita con La Nelly.
+- Carniza vende. La Nelly cuida/resuelve.
+- No usar lenguaje de castigo.
+- No decir cosas como “moroso”, “bloqueado por deuda”, “cuenta suspendida por falta de pago” de forma fría.
+- Usar lenguaje:
+  - “Hay algo para resolver”
+  - “Lo resolvemos”
+  - “Tu acceso está pausado”
+  - “No perdiste tu información”
+  - “Regularizá y seguís vendiendo”
+
+Arquitectura conceptual deseada:
+- BillingService
+- AccessControlService
+- PlanService
+- MercadoPagoService
+- MercadoPagoWebhook
+- LaNellyBillingMessages
+- AdminBillingPanel
+- WriteGuardService para impedir guardados si no corresponde
+
+Datos mínimos por empresa:
+- plan
+- billingStatus
+- trialStartedAt
+- trialEndsAt
+- paidUntil
+- provider
+- subscriptionId
+- lastPaymentStatus
+- extraUsers
+- webStatus
+- modulesEnabled
+- accessStatus
+
+Flujo deseado:
+1. Usuario se registra.
+2. Entra en Free Trial 30 días.
+3. La Nelly avisa cuando faltan pocos días.
+4. Usuario elige plan.
+5. Paga por Mercado Pago.
+6. Mercado Pago notifica a AppPromos.
+7. Firebase actualiza la empresa.
+8. AppPromos habilita plan/módulos.
+9. Si falla pago, pasa a pago pendiente.
+10. Si pasan X días, pasa a acceso pausado.
+11. La Nelly guía al usuario para regularizar.
+12. Todo esto sin que yo tenga que atender manualmente.
+
+Quiero que analices:
+1. Qué tan simple es empezar con Mercado Pago.
+2. Qué conviene hacer primero manual/semi-manual.
+3. Qué conviene automatizar después.
+4. Cómo diseñar los estados de pago y acceso.
+5. Qué mensajes debe usar La Nelly.
+6. Qué pasa cuando vence trial.
+7. Qué pasa cuando falla un pago.
+8. Qué pasa cuando el usuario cambia de plan.
+9. Qué pasa con usuarios adicionales.
+10. Qué pasa con Web Premium si el plan no la incluye o vence.
+11. Qué panel admin mínimo necesito.
+12. Qué NO conviene construir todavía.
+
+Documentos que quiero que generes como propuesta en formato Markdown:
+- AppPromos_Cobranzas_Estrategia_V1.md
+- AppPromos_MercadoPago_Suscripciones_Plan.md
+- AppPromos_Billing_Estados_y_Reglas.md
+- AppPromos_LaNelly_Mensajes_Cobranzas.md
+- AppPromos_Admin_Cobranzas_Minimo.md
+- AppPromos_Roadmap_Cobranzas_Automatizadas.md
+
+Condición importante:
+Quiero una propuesta práctica y escalable.
+No quiero sobredimensionar.
+No quiero soporte 24/7.
+No quiero un monstruo administrativo.
+Quiero cobrar, habilitar, pausar y regularizar de forma clara, automática y humana.
+Pensá como socio de producto, negocio y operaciones.
