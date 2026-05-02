@@ -1,0 +1,16 @@
+PATCH V12.7.2-A.5 — Demo precios editables + WhatsApp limpio
+
+Copiar la carpeta apppromos sobre C:\apppromos y reemplazar archivos.
+
+Luego abrir:
+  http://localhost:5000/app.html?demo=1
+
+Hacer Ctrl+F5 y probar:
+- Cambiar precios en demo.
+- Confirmar mensaje de prueba segura.
+- Combos -> WhatsApp sin caracteres raros.
+- Crear oferta -> WhatsApp sin caracteres raros.
+- Vender urgente intacto.
+
+No hace falta correr seeder.
+No comitear hasta terminar el checklist.

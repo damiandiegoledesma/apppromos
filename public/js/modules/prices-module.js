@@ -25,7 +25,15 @@ export function renderPrices(container, products = [], businessId = null, option
     ? options.onProductsUpdated
     : null;
   const canWrite = options.canWrite !== false;
-  const writeBlockMessage = options.writeBlockMessage || "Tu cuenta está en modo consulta. Para volver a guardar cambios, regularizá tu plan.";
+  const isDemoPriceSession =
+    businessId === "demo" ||
+    options.isDemoMode === true ||
+    new URLSearchParams(window.location.search || "").get("demo") === "1" ||
+    new URLSearchParams(window.location.search || "").get("mode") === "demo";
+  const canPersistPrices = canWrite || isDemoPriceSession;
+  const writeBlockMessage = isDemoPriceSession
+    ? "Estás probando AppPromos. Estos cambios quedan solo en esta demo."
+    : (options.writeBlockMessage || "Tu cuenta está en modo consulta. Para volver a guardar cambios, regularizá tu plan.");
 
   let searchTerm = "";
   let rubroFilter = "";
@@ -125,9 +133,9 @@ export function renderPrices(container, products = [], businessId = null, option
     }
 
     if (saveAllBtn) {
-      saveAllBtn.disabled = !canWrite || isSaving || pendingCount === 0;
-      saveAllBtn.textContent = !canWrite
-        ? "🔒 Para guardar, ponete al día"
+      saveAllBtn.disabled = !canPersistPrices || isSaving || pendingCount === 0;
+      saveAllBtn.textContent = !canPersistPrices
+        ? (isDemoPriceSession ? "💾 Guardar cambios de prueba" : "🔒 Para guardar, ponete al día")
         : isSaving
           ? "⏳ Guardando..."
           : pendingCount > 0
@@ -149,8 +157,10 @@ export function renderPrices(container, products = [], businessId = null, option
     const pendingCount = getPendingCount();
     if (pendingCount > 0) {
       setStatus("pending", `${pendingCount} cambio${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"}`);
-    } else if (!canWrite) {
+    } else if (!canPersistPrices) {
       setStatus("error", "🔒 Para guardar, ponete al día por estado de cuenta");
+    } else if (isDemoPriceSession) {
+      setStatus("idle", "Estás probando AppPromos. Estos cambios quedan solo en esta demo.");
     } else {
       setStatus("idle", "Sin cambios pendientes");
     }
@@ -163,7 +173,7 @@ export function renderPrices(container, products = [], businessId = null, option
   }
 
   async function persistChanges(changes) {
-    if (!canWrite) {
+    if (!canPersistPrices) {
       blockWriteAttempt();
       throw new Error(writeBlockMessage);
     }
@@ -184,8 +194,8 @@ export function renderPrices(container, products = [], businessId = null, option
 
     isSaving = false;
     draw();
-    setStatus("saved", "✅ Guardado");
-    showToast("Cambios guardados", "ok");
+    setStatus("saved", isDemoPriceSession ? "Guardado en esta demo" : "✅ Guardado");
+    showToast(isDemoPriceSession ? "Cambio guardado en esta demo" : "Cambios guardados", "ok");
   }
 
   async function saveAllPendingChanges() {
@@ -198,7 +208,7 @@ export function renderPrices(container, products = [], businessId = null, option
       showToast("No se pudo identificar la carnicería activa", "error");
       return;
     }
-    if (!canWrite) {
+    if (!canPersistPrices) {
       blockWriteAttempt();
       return;
     }
@@ -243,7 +253,7 @@ export function renderPrices(container, products = [], businessId = null, option
   }
 
   function applyMassAdjustment(mode = "rubro", presetPercent = null) {
-    if (!canWrite) {
+    if (!canPersistPrices) {
       blockWriteAttempt();
       return;
     }
@@ -332,12 +342,12 @@ export function renderPrices(container, products = [], businessId = null, option
           <div class="price-actions-wrap">
             <label class="price-input-wrap">
               <span>Nuevo precio</span>
-              <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canWrite ? "" : "readonly"} />
+              <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
             </label>
             <div class="price-actions">
-              <button data-save="${key}" class="mini-action" ${canWrite ? "" : "disabled"}>💾</button>
-              <button data-edit="${key}" class="mini-action" ${canWrite ? "" : "disabled"}>✏️</button>
-              <button data-del="${key}" class="mini-action danger" ${canWrite ? "" : "disabled"}>🗑️</button>
+              <button data-save="${key}" class="mini-action" ${canPersistPrices ? "" : "disabled"}>💾</button>
+              <button data-edit="${key}" class="mini-action" ${canPersistPrices ? "" : "disabled"}>✏️</button>
+              <button data-del="${key}" class="mini-action danger" ${canPersistPrices ? "" : "disabled"}>🗑️</button>
             </div>
           </div>
         </div>
@@ -348,7 +358,7 @@ export function renderPrices(container, products = [], businessId = null, option
     inputs.forEach((input, index) => {
       input.onfocus = () => input.select?.();
       input.oninput = () => {
-        if (!canWrite) {
+        if (!canPersistPrices) {
           blockWriteAttempt();
           return;
         }
@@ -412,7 +422,7 @@ export function renderPrices(container, products = [], businessId = null, option
           return;
         }
 
-        if (!canWrite) {
+        if (!canPersistPrices) {
           blockWriteAttempt();
           return;
         }
@@ -430,7 +440,7 @@ export function renderPrices(container, products = [], businessId = null, option
 
     container.querySelectorAll("[data-edit]").forEach((btn) => {
       btn.onclick = async () => {
-        if (!canWrite) {
+        if (!canPersistPrices) {
           blockWriteAttempt();
           return;
         }
@@ -463,7 +473,7 @@ export function renderPrices(container, products = [], businessId = null, option
 
     container.querySelectorAll("[data-del]").forEach((btn) => {
       btn.onclick = async () => {
-        if (!canWrite) {
+        if (!canPersistPrices) {
           blockWriteAttempt();
           return;
         }
@@ -565,7 +575,7 @@ export function renderPrices(container, products = [], businessId = null, option
         </div>
       </div>
 
-      ${!canWrite ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : ""}
+      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #93c5fd;border-radius:16px;background:#eff6ff;color:#1d4ed8;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
       <div class="prices-toolbar">
         <div class="prices-toolbar-row">
