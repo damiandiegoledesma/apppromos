@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es-AR">
 <head>
   <meta charset="utf-8" />
@@ -134,14 +134,31 @@
     .gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     .gallery img { border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 18px 45px rgba(0,0,0,.24); height: 100%; object-fit: cover; }
 
-    .pricing { background: linear-gradient(180deg, rgba(4,119,242,.20), rgba(2,8,23,.0)); }
-    .price-card { max-width: 780px; margin: 0 auto; text-align: center; padding: 34px 22px; }
-    .price-kicker { color: #93c5fd; font-weight: 1000; text-transform: uppercase; letter-spacing: .08em; }
-    .price-main { font-size: clamp(50px, 9vw, 92px); font-weight: 1000; letter-spacing: -.06em; line-height: .94; margin: 12px 0; }
-    .price-main span { color: var(--blue); }
-    .price-list { margin: 22px auto; padding: 0; list-style: none; display: grid; gap: 11px; max-width: 520px; text-align: left; }
-    .price-list li { padding: 13px 15px; border-radius: 16px; background: rgba(255,255,255,.09); border: 1px solid var(--line); font-weight: 950; }
-
+        .pricing { background: linear-gradient(180deg, rgba(4,119,242,.22), rgba(2,8,23,.0)); }
+    .pricing-intro { text-align:center; max-width:820px; margin:0 auto 24px; }
+    .pricing-intro .eyebrow { margin-bottom:10px; }
+    .pricing-intro h2 { margin:0 0 10px; font-size:clamp(32px,5vw,56px); line-height:1.02; letter-spacing:-.045em; }
+    .pricing-intro p { margin:0; color:#dbeafe; font-size:18px; font-weight:800; line-height:1.42; }
+    .price-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; align-items:stretch; }
+    .plan-card {
+      position:relative; display:flex; flex-direction:column; min-height:100%; padding:22px 18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.055));
+      border:1px solid var(--line); border-radius:24px; box-shadow:0 18px 55px rgba(0,0,0,.24);
+    }
+    .plan-card.recommended { border-color:rgba(245,158,11,.78); box-shadow:0 24px 75px rgba(245,158,11,.20), 0 18px 55px rgba(0,0,0,.28); transform:translateY(-6px); background:linear-gradient(180deg, rgba(120,53,15,.68), rgba(255,255,255,.07)); }
+    .plan-badge { align-self:flex-start; display:inline-flex; align-items:center; min-height:28px; padding:0 10px; margin-bottom:12px; border-radius:999px; background:rgba(147,197,253,.16); border:1px solid rgba(147,197,253,.24); color:#bfdbfe; font-size:11px; text-transform:uppercase; letter-spacing:.07em; font-weight:1000; }
+    .plan-card.recommended .plan-badge { background:rgba(245,158,11,.20); border-color:rgba(245,158,11,.35); color:#fde68a; }
+    .plan-card h3 { margin:0; font-size:24px; letter-spacing:-.03em; }
+    .plan-price { margin:10px 0 8px; font-size:32px; line-height:1; font-weight:1000; letter-spacing:-.045em; }
+    .plan-price small { display:block; margin-top:5px; color:#cbd5e1; font-size:12px; letter-spacing:0; font-weight:900; }
+    .plan-copy { color:#dbeafe; font-size:14px; line-height:1.38; font-weight:850; min-height:58px; }
+    .plan-list { margin:14px 0 18px; padding:0; list-style:none; display:grid; gap:8px; }
+    .plan-list li { padding:10px 11px; border-radius:14px; background:rgba(255,255,255,.08); border:1px solid var(--line); color:#eff6ff; font-size:13px; line-height:1.25; font-weight:900; }
+    .plan-card .btn { margin-top:auto; width:100%; min-height:46px; padding:0 14px; }
+    .pricing-note { margin:22px auto 0; max-width:880px; display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:16px; border-radius:22px; background:rgba(255,255,255,.09); border:1px solid var(--line); }
+    .pricing-note strong { display:block; font-size:18px; letter-spacing:-.02em; }
+    .pricing-note p { margin:4px 0 0; color:#dbeafe; font-weight:800; line-height:1.35; }
+    .pricing-note small { color:#cbd5e1; font-weight:850; }
     .web-card { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: center; }
 
     .final-cta { padding: 62px 0 80px; text-align: center; background: radial-gradient(circle at center, rgba(4,119,242,.28), rgba(2,8,23,0) 62%); }
@@ -150,7 +167,7 @@
     footer { border-top: 1px solid var(--line); padding: 22px 0; color: #94a3b8; font-size: 14px; }
     footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
     .footer-socials { display:flex; gap:10px; align-items:center; }
-    .footer-socials a { width:38px; height:38px; border:1px solid var(--line); border-radius:999px; display:inline-grid; place-items:center; text-decoration:none; background:rgba(255,255,255,.06); color:#fff; font-weight:1000; }
+    .footer-socials a { width:48px; height:48px; font-size:20px; border:1px solid var(--line); border-radius:999px; display:inline-grid; place-items:center; text-decoration:none; background:rgba(255,255,255,.06); color:#fff; font-weight:1000; }
     .web-plus-card { position:relative; overflow:hidden; }
     .web-plus-badge { display:inline-flex; align-items:center; min-height:30px; padding:0 12px; border-radius:999px; background:rgba(4,119,242,.16); border:1px solid rgba(147,197,253,.28); color:#bfdbfe; font-size:12px; font-weight:1000; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
     .web-mockup { border-radius:24px; padding:16px; background:linear-gradient(135deg,#eaf3ff,#ffffff); color:#061a35; box-shadow:0 24px 60px rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.45); }
@@ -289,6 +306,10 @@
       .hero-ctas { display: grid; }
       .nav-actions { gap: 6px; }
       .nav-actions .btn { min-height: 40px; padding: 0 12px; font-size: 13px; width: auto; }
+      .price-grid { grid-template-columns:1fr; }
+      .plan-card.recommended { transform:none; }
+      .pricing-note { grid-template-columns:1fr; text-align:left; }
+      .pricing-note .btn { width:100%; }
     }
   </style>
 </head>
@@ -308,7 +329,7 @@
   </header>
 
   <main id="top">
-    <section class="hero">
+    <section class="hero" data-carniza-section="hero">
       <div class="wrap">
         <div>
           <div class="eyebrow">Para carnicerías que quieren vender más</div>
@@ -331,7 +352,7 @@
       </div>
     </section>
 
-    <section id="como-funciona">
+    <section id="como-funciona" data-carniza-section="how">
       <div class="wrap">
         <div class="section-title">
           <h2>3 pasos. Así de simple.</h2>
@@ -451,38 +472,92 @@
       </div>
     </section>
 
-    <section class="pricing" id="precios">
+        <section class="pricing" id="precios" data-carniza-section="pricing">
       <div class="wrap">
-        <div class="price-card">
-          <div class="price-kicker">Sin tarjeta. Sin compromiso. Cancelá cuando quieras.</div>
-          <div class="price-main">30 DÍAS <span>GRATIS</span></div>
-          <p class="lead" style="margin-left:auto;margin-right:auto;">Usalo completo 30 días. Después decidís.</p>
-          <ul class="price-list">
-            <li>✅ Armá combos en 10 segundos</li>
-            <li>✅ Enviá por WhatsApp automático</li>
-            <li>✅ Vendé lo que te queda hoy</li>
-            <li>✅ Atendé desde el celular</li>
-            <li>✅ Liquidador de stock integrado</li>
-          </ul>
-          <a class="btn btn-primary btn-big" href="#signup">EMPEZÁ GRATIS AHORA</a>
-          <p style="margin:14px 0 0;color:#dbeafe;font-weight:900;">Si no te gusta, cancelás y listo. Sin preguntas.</p>
+        <div class="pricing-intro">
+          <div class="eyebrow">Planes simples</div>
+          <h2>Elegí cómo querés vender.</h2>
+          <p>Arrancás gratis 30 días. Después elegís el plan que mejor acompaña a tu carnicería.</p>
+        </div>
+
+        <div class="price-grid" aria-label="Planes AppPromos">
+          <article class="plan-card">
+            <div class="plan-badge">Prueba gratis</div>
+            <h3>30 días gratis</h3>
+            <div class="plan-price">$0<small>Sin tarjeta</small></div>
+            <p class="plan-copy">Probás AppPromos 30 días y ya tenés tu web propia de arranque.</p>
+            <ul class="plan-list">
+              <li>Crear ofertas y combos</li>
+              <li>Enviar por WhatsApp</li>
+              <li>Demo fuerte para probar sin vueltas</li>
+            </ul>
+            <a class="btn btn-green" href="#signup">Crear mi carnicería gratis</a>
+          </article>
+
+          <article class="plan-card">
+            <div class="plan-badge">Entrada simple</div>
+            <h3>ARRANQUE</h3>
+            <div class="plan-price">$19.999<small>por mes</small></div>
+            <p class="plan-copy">Vendés rápido por WhatsApp y tenés tu web básica para mostrar la carnicería.</p>
+            <ul class="plan-list">
+              <li>Ofertas rápidas</li>
+              <li>Precios y productos base</li>
+              <li>Web propia básica</li>
+            </ul>
+            <a class="btn btn-primary" href="#signup">Empezar gratis</a>
+          </article>
+
+          <article class="plan-card recommended">
+            <div class="plan-badge">Recomendado</div>
+            <h3>SALVADOR</h3>
+            <div class="plan-price">$34.999<small>por mes</small></div>
+            <p class="plan-copy">Vendés cortes buenos antes de que pierdan valor y cuidás margen.</p>
+            <ul class="plan-list">
+              <li>Todo lo de ARRANQUE</li>
+              <li>Vender urgente / anti-picadora</li>
+              <li>Ofertas guardadas más potentes</li>
+            </ul>
+            <a class="btn btn-green" href="#signup">Quiero salvar margen</a>
+          </article>
+
+          <article class="plan-card">
+            <div class="plan-badge">Más control</div>
+            <h3>DUEÑO</h3>
+            <div class="plan-price">$54.999<small>por mes</small></div>
+            <p class="plan-copy">Mirás mercado, cuidás precios y personalizás tu web como vidriera profesional.</p>
+            <ul class="plan-list">
+              <li>Todo lo de SALVADOR</li>
+              <li>Mercado / competencia</li>
+              <li>Web personalizada</li>
+            </ul>
+            <a class="btn btn-primary" href="#signup">Empezar gratis</a>
+          </article>
+        </div>
+
+        <div class="pricing-note">
+          <div>
+            <strong>Todos los planes tienen web propia. DUEÑO tiene web personalizada.</strong>
+            <p>Usuario adicional: $9.999/mes. AppPromos está pensada para que vendas rápido, no para llenarte de trabajo.</p>
+          </div>
+          <a class="btn btn-light" href="/app.html?demo=1">Probar demo</a>
         </div>
       </div>
     </section>
+
     <section class="final-cta">
       <div class="wrap">
-        <h2>Empezá hoy a vender más.</h2>
-        <p>Probá AppPromos 30 días gratis y mandá tu primera oferta por WhatsApp.</p>
+        <h2>Probala. Si te sirve, la hacés tuya.</h2>
+        <p>Creá tu carnicería gratis, actualizá tus precios y salí vendiendo. Tenés 30 días sin costo.</p>
         <div class="hero-ctas" style="justify-content:center;">
           <a class="btn btn-green btn-big" href="/app.html?demo=1">📲 Probar demo</a>
-          <a class="btn btn-primary btn-big" href="#signup">🚀 Crear mi cuenta gratis</a>
+          <a class="btn btn-primary btn-big" href="#signup">🚀 Crear mi carnicería gratis</a>
         </div>
       </div>
     </section>
   </main>
 
 
-  <section id="auth" class="auth-section" aria-label="Ingreso y registro AppPromos">
+  <section id="auth" class="auth-section" data-carniza-section="auth" aria-label="Ingreso y registro AppPromos">
     <div class="auth-container">
       <button class="auth-back" type="button" onclick="showLanding()">← Volver a la landing</button>
       <h2>AppPromos</h2>
@@ -568,11 +643,6 @@
   <script src="./js/vendor/localidades-ar.plugin.js"></script>
   <script type="module" src="./js/modules/auth-module.js"></script>
   <script src="./js/modules/carniza-landing-module.js"></script>
-
-<script src="./js/vendor/localidades-ar.plugin.js"></script>
-<script type="module" src="./js/modules/auth-module.js"></script>
-<script src="./js/modules/carniza-landing-module.js"></script>
-
 <script>
   (function () {
     function normalizeText(value) {
@@ -695,3 +765,4 @@
 
 </body>
 </html>
+
