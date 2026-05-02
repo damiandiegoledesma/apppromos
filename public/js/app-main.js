@@ -59,6 +59,28 @@ let currentBusinessControl = null;
 let unsubscribeBusinessControl = null;
 let lazyRenderInProgress = null;
 let currentPanelId = "dashboardPanel";
+let currentActiveProducts = [];
+
+function normalizeActiveProductCatalog(products = []) {
+  return (Array.isArray(products) ? products : [])
+    .filter((product) => {
+      if (!product) return false;
+      if (product.active === false || product.activo === false) return false;
+      const price = Number(product.precio ?? product.price ?? product.precioFinal ?? product.valor ?? 0);
+      return Number.isFinite(price) && price > 0;
+    });
+}
+
+function setActiveProductCatalog(products = []) {
+  currentActiveProducts = normalizeActiveProductCatalog(products);
+  return currentActiveProducts;
+}
+
+function getActiveProductCatalog() {
+  if (Array.isArray(currentActiveProducts) && currentActiveProducts.length) return currentActiveProducts;
+  const fromState = currentPayload?.state?.products || currentPayload?.products || [];
+  return normalizeActiveProductCatalog(fromState);
+}
 
 function markLazyPanelsDirty() {
   [usersPanel, marketPanel, webPanel].forEach((panel) => {
@@ -99,7 +121,7 @@ function getWriteOptions() {
   if (currentSession?.isDemo) {
     return {
       canWrite: false,
-      writeBlockMessage: "Esta es una demo. Podés armar la oferta completa, pero para guardar tus precios y mandarla por WhatsApp necesitás crear tu carnicería gratis."
+      writeBlockMessage: "Esta es una demo. Podés armar ofertas y probar WhatsApp. Para guardar tus datos reales, creá tu carnicería gratis."
     };
   }
 
@@ -137,8 +159,182 @@ function restartBusinessControlListener(businessId) {
 }
 
 
+
+const DEMO_LIMITS = {
+  whatsappMax: 10,
+  promosMax: 10,
+  daysMax: 15
+};
+const DEMO_USAGE_KEY = "apppromos:demo:usage:v1";
+
+function readDemoUsage() {
+  const fallback = {
+    firstUsedAt: new Date().toISOString(),
+    whatsappSentCount: 0,
+    promosSavedCount: 0
+  };
+  try {
+    const parsed = JSON.parse(localStorage.getItem(DEMO_USAGE_KEY) || "null");
+    if (!parsed || typeof parsed !== "object") return fallback;
+    return {
+      firstUsedAt: parsed.firstUsedAt || fallback.firstUsedAt,
+      whatsappSentCount: Number(parsed.whatsappSentCount || 0),
+      promosSavedCount: Number(parsed.promosSavedCount || 0)
+    };
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function saveDemoUsage(usage) {
+  try {
+    localStorage.setItem(DEMO_USAGE_KEY, JSON.stringify({
+      firstUsedAt: usage.firstUsedAt || new Date().toISOString(),
+      whatsappSentCount: Math.max(0, Number(usage.whatsappSentCount || 0)),
+      promosSavedCount: Math.max(0, Number(usage.promosSavedCount || 0))
+    }));
+  } catch (_) {}
+}
+
+function ensureDemoUsage() {
+  const usage = readDemoUsage();
+  saveDemoUsage(usage);
+  return usage;
+}
+
+function getDemoAgeDays(usage = readDemoUsage()) {
+  const first = Date.parse(usage.firstUsedAt || "");
+  if (!Number.isFinite(first)) return 0;
+  return Math.max(0, Math.floor((Date.now() - first) / 86400000));
+}
+
+function getDemoDaysRemaining(usage = readDemoUsage()) {
+  return Math.max(0, DEMO_LIMITS.daysMax - getDemoAgeDays(usage));
+}
+
+function isDemoExpired(usage = readDemoUsage()) {
+  const first = Date.parse(usage.firstUsedAt || "");
+  if (!Number.isFinite(first)) return false;
+  return Date.now() - first >= DEMO_LIMITS.daysMax * 86400000;
+}
+
+function updateDemoBannerUsage() {
+  if (!currentSession?.isDemo) return;
+  const usage = ensureDemoUsage();
+  const el = document.getElementById("demoUsageText");
+  if (!el) return;
+  const days = getDemoDaysRemaining(usage);
+  el.textContent = `Demo: ${usage.whatsappSentCount}/${DEMO_LIMITS.whatsappMax} WhatsApps · ${usage.promosSavedCount}/${DEMO_LIMITS.promosMax} promos · ${days} día${days === 1 ? "" : "s"} disponibles.`;
+}
+
+function showDemoConversionPrompt(kind = "whatsapp") {
+  const existing = document.getElementById("demoConversionPrompt");
+  if (existing) existing.remove();
+
+  const usage = ensureDemoUsage();
+  const expired = isDemoExpired(usage);
+  const title = expired
+    ? "Tu demo ya cumplió su trabajo"
+    : kind === "promo"
+      ? "La demo ya guardó 10 promos"
+      : "Ya probaste bastante la demo";
+  const message = expired
+    ? "Para seguir vendiendo, creá tu carnicería gratis, cargá tus precios y salí andando. Tenés 30 días sin costo."
+    : kind === "promo"
+      ? "Para guardar más promos, creá tu carnicería gratis y seguí trabajando con tus propios precios."
+      : "Para seguir mandando ofertas por WhatsApp, creá tu carnicería gratis y usá AppPromos con tus propios precios.";
+
+  const overlay = document.createElement("div");
+  overlay.id = "demoConversionPrompt";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(15,23,42,.52);display:flex;align-items:center;justify-content:center;padding:18px;";
+  overlay.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="demoConversionTitle" style="width:min(520px,100%);background:#fff;border-radius:24px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28);border:1px solid #fed7aa;">
+      <div style="font-size:.78rem;font-weight:1000;color:#b45309;text-transform:uppercase;letter-spacing:.04em;">Demo de AppPromos</div>
+      <h2 id="demoConversionTitle" style="margin:8px 0 8px;color:#7c2d12;line-height:1.1;">${title}</h2>
+      <p style="margin:0;color:#374151;font-weight:800;line-height:1.45;">${message}</p>
+      <div style="margin:14px 0 0;padding:12px;border-radius:16px;background:#fff7ed;color:#7c2d12;font-weight:900;line-height:1.35;">
+        Probá AppPromos en demo. Si te sirve, hacela tuya.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+        <button type="button" id="demoGoSignupBtn" style="min-height:48px;border:0;border-radius:15px;background:#16a34a;color:white;font-weight:1000;cursor:pointer;">Crear mi carnicería gratis</button>
+        <button type="button" id="demoBackHomeBtn" style="min-height:48px;border:1px solid #fed7aa;border-radius:15px;background:#fff;color:#7c2d12;font-weight:1000;cursor:pointer;">Volver al inicio</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#demoGoSignupBtn")?.addEventListener("click", () => {
+    window.location.href = "./index.html#signup";
+  });
+  overlay.querySelector("#demoBackHomeBtn")?.addEventListener("click", () => {
+    overlay.remove();
+    goToPanel("dashboardPanel");
+  });
+}
+
+function registerDemoWhatsappAttempt(source = "demo") {
+  if (!currentSession?.isDemo) return true;
+  const usage = ensureDemoUsage();
+  if (isDemoExpired(usage)) {
+    showDemoConversionPrompt("expired");
+    return false;
+  }
+  if (usage.whatsappSentCount >= DEMO_LIMITS.whatsappMax) {
+    showDemoConversionPrompt("whatsapp");
+    return false;
+  }
+  usage.whatsappSentCount += 1;
+  saveDemoUsage(usage);
+  updateDemoBannerUsage();
+  trackCarnizaSignal("demo_whatsapp_clicked", { source, count: usage.whatsappSentCount });
+  return true;
+}
+
+function registerDemoPromoSaveAttempt(payload = {}) {
+  if (!currentSession?.isDemo) return true;
+  const usage = ensureDemoUsage();
+  if (isDemoExpired(usage)) {
+    showDemoConversionPrompt("expired");
+    return false;
+  }
+  if (usage.promosSavedCount >= DEMO_LIMITS.promosMax) {
+    showDemoConversionPrompt("promo");
+    return false;
+  }
+  usage.promosSavedCount += 1;
+  saveDemoUsage(usage);
+  updateDemoBannerUsage();
+  trackCarnizaSignal("demo_promo_saved", { source: payload?.mode || "discount", count: usage.promosSavedCount });
+  return true;
+}
+
+function getDemoActionOptions() {
+  return {
+    onBeforeWhatsapp: ({ source } = {}) => registerDemoWhatsappAttempt(source || "demo"),
+    onBeforePromoSave: ({ payload } = {}) => registerDemoPromoSaveAttempt(payload || {})
+  };
+}
+
+function getBuilderOptions() {
+  return {
+    businessId: currentBusinessId,
+    ...getWriteOptions(),
+    ...getDemoActionOptions()
+  };
+}
+
+function getShareOptions(source = "saved") {
+  return {
+    onBeforeWhatsapp: () => registerDemoWhatsappAttempt(source)
+  };
+}
+
 function insertDemoBanner() {
-  if (!currentSession?.isDemo || document.getElementById("demoModeBanner")) return;
+  if (!currentSession?.isDemo) return;
+  ensureDemoUsage();
+  if (document.getElementById("demoModeBanner")) {
+    updateDemoBannerUsage();
+    return;
+  }
   const appRoot = document.querySelector(".app");
   if (!appRoot) return;
   const banner = document.createElement("div");
@@ -147,7 +343,8 @@ function insertDemoBanner() {
   banner.innerHTML = `
     <div class="app-demo-banner__copy">
       <strong>Estás probando la Carnicería de Carniza.</strong>
-      <span>Podés navegar y armar ofertas. Para guardar tus precios y ofertas reales, registrate gratis.</span>
+      <span>Podés navegar, armar ofertas y probar WhatsApp. Si te sirve, hacela tuya.</span>
+      <small id="demoUsageText" style="display:block;margin-top:4px;font-weight:900;color:#7c2d12;"></small>
     </div>
     <button type="button" id="demoCreateAccountBtn" class="app-demo-banner__btn">Crear mi carnicería gratis</button>
   `;
@@ -155,6 +352,7 @@ function insertDemoBanner() {
   banner.querySelector("#demoCreateAccountBtn")?.addEventListener("click", () => {
     window.location.href = "./index.html#signup";
   });
+  updateDemoBannerUsage();
 }
 
 
@@ -185,8 +383,7 @@ function ensureCarnizaAIService() {
 }
 
 function getCurrentProductsForCarniza() {
-  const products = currentPayload?.state?.products || currentPayload?.products || [];
-  return Array.isArray(products) ? products : [];
+  return getActiveProductCatalog();
 }
 
 function getBusinessNameForCarniza() {
@@ -292,6 +489,7 @@ function renderCarnizaUrgentStockCard(container) {
   const realProducts = normalizeCarnizaRealProducts(getCurrentProductsForCarniza());
   const discounts = [10, 15, 20, 25];
   const selectedIds = new Set();
+  const selectedQty = new Map();
   let selectedDiscount = 20;
   let searchText = "";
 
@@ -301,14 +499,15 @@ function renderCarnizaUrgentStockCard(container) {
   card.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
       '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;">🔥 Decile a Carniza qué necesitás vender URGENTE</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
       '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid #fed7aa;background:#fff;" /></div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:10px;"><input data-carniza-product-search type="text" inputmode="text" placeholder="Buscar producto real: marucha, osobuco, pollo entero..." style="flex:1;min-width:0;min-height:44px;border:1px solid #e7c6a8;border-radius:13px;padding:0 12px;font-weight:900;background:#fff;" /><button type="button" data-carniza-clear-search style="min-width:48px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:18px;font-weight:1000;cursor:pointer;">×</button></div>' +
+    '<div style="font-size:13px;font-weight:1000;color:#8a2600;margin:4px 0 7px;">1. Elegí producto</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:10px;"><input data-carniza-product-search type="text" inputmode="text" placeholder="Buscar producto real: marucha, osobuco, alitas..." style="flex:1;min-width:0;min-height:44px;border:1px solid #e7c6a8;border-radius:13px;padding:0 12px;font-weight:900;background:#fff;" /><button type="button" data-carniza-clear-search style="min-width:48px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:18px;font-weight:1000;cursor:pointer;">×</button></div>' +
+    '<div data-carniza-selected style="display:none;margin:2px 0 12px;padding:10px;border-radius:13px;background:#fff;border:2px solid #fdba74;color:#4b2a12;font-size:13px;font-weight:900;box-shadow:0 8px 18px rgba(251,146,60,.12);"></div>' +
     '<div data-carniza-real-products style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px;"></div>' +
-    '<div data-carniza-selected style="display:none;margin:2px 0 12px;padding:10px;border-radius:13px;background:#fff;border:1px dashed #e7c6a8;color:#4b2a12;font-size:13px;font-weight:900;"></div>' +
-    '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">💸 Elegí un descuento rápido</div>' +
+    '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">2. Ajustá descuento</div>' +
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
     '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste para liquidar. Los productos gancho van a precio normal.</div>' +
-    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">🔥 LIQUIDAR HOY</button>' +
+    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">3. Armar oferta urgente</button>' +
     '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
 
@@ -321,7 +520,9 @@ function renderCarnizaUrgentStockCard(container) {
   const helpEl = card.querySelector("[data-carniza-discount-help]");
 
   function getSelectedProducts() {
-    return realProducts.filter((item) => selectedIds.has(item.id));
+    return realProducts
+      .filter((item) => selectedIds.has(item.id))
+      .map((item) => ({ ...item, qty: Math.max(0.5, Number(selectedQty.get(item.id) || 1)) }));
   }
 
   function getVisibleProducts() {
@@ -348,7 +549,17 @@ function renderCarnizaUrgentStockCard(container) {
       return;
     }
     selectedEl.style.display = "block";
-    selectedEl.innerHTML = "Seleccionados para liquidar: " + selected.map((item) => "🔥 " + escapeCarnizaHtml(formatCarnizaProductDisplay(item))).join(" · ");
+    selectedEl.innerHTML = '<div style="font-size:13px;color:#8a2600;font-weight:1000;margin-bottom:7px;">2. Ajustá cantidad antes de liquidar</div>' +
+      selected.map((item) =>
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid #f3dcc7;">' +
+          '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔥 ' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</span>' +
+          '<span style="display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;">' +
+            '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" style="min-width:30px;min-height:30px;border-radius:10px;border:1px solid #e7c6a8;background:#fff;font-weight:1000;">−</button>' +
+            '<strong style="min-width:48px;text-align:center;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
+            '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" style="min-width:30px;min-height:30px;border-radius:10px;border:1px solid #e7c6a8;background:#fff;font-weight:1000;">+</button>' +
+          '</span>' +
+        '</div>'
+      ).join("");
   }
 
   function renderProductButtons() {
@@ -391,9 +602,28 @@ function renderCarnizaUrgentStockCard(container) {
     if (!btn) return;
     const id = String(btn.dataset.productId || "").trim();
     if (!id) return;
-    if (selectedIds.has(id)) selectedIds.delete(id);
-    else selectedIds.add(id);
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+      selectedQty.delete(id);
+    } else {
+      selectedIds.add(id);
+      selectedQty.set(id, selectedQty.get(id) || 1);
+    }
     renderProductButtons();
+    hideError();
+  });
+
+  selectedEl.addEventListener("click", (event) => {
+    const minus = event.target.closest("[data-urgent-qty-minus]");
+    const plus = event.target.closest("[data-urgent-qty-plus]");
+    const btn = minus || plus;
+    if (!btn) return;
+    const id = String(btn.dataset.urgentQtyMinus || btn.dataset.urgentQtyPlus || "").trim();
+    if (!id) return;
+    const current = Math.max(0.5, Number(selectedQty.get(id) || 1));
+    const next = plus ? current + 0.5 : Math.max(0.5, current - 0.5);
+    selectedQty.set(id, next);
+    renderSelectedSummary();
     hideError();
   });
 
@@ -427,7 +657,8 @@ function renderCarnizaUrgentStockCard(container) {
         name: item.name,
         rubro: item.rubro,
         unit: item.unit,
-        price: item.price
+        price: item.price,
+        qty: Math.max(0.5, Number(item.qty || 1))
       }));
       const response = service?.buildUrgentStockCombo ? await service.buildUrgentStockCombo({
         products: urgentNames,
@@ -567,6 +798,7 @@ function renderCarnizaUrgentStockCard(container) {
     whatsapp?.addEventListener("click", (event) => {
       const cleanName = cleanExternalOfferTitle(nameInput?.value || "");
       if (!cleanName) { event.preventDefault(); if (error) error.style.display = "block"; nameInput?.focus(); return; }
+      if (!registerDemoWhatsappAttempt("vender_urgente")) { event.preventDefault(); return; }
       trackCarnizaSignal("whatsapp_abierto", { source: "liquidador", offerName: cleanName, businessId: currentPayload?.businessId || currentBusinessId || null });
     });
     resultEl.querySelectorAll("[data-copy-message]").forEach((node) => node.addEventListener("click", async () => {
@@ -913,7 +1145,7 @@ function renderCurrentDashboard() {
           state: result.state
         };
         renderCurrentDashboard();
-        renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {});
+        renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
         markLazyPanelsDirty();
         alert("Datos del negocio guardados correctamente.");
       }
@@ -953,7 +1185,24 @@ function activatePanel(panelId) {
   });
 }
 
+function resetBuilderPanelForNewSale() {
+  if (!builderPanel || !currentBusinessId || !currentPayload?.state) return;
+
+  const products = getActiveProductCatalog();
+
+  renderBuilder(builderPanel, products, async (...args) => {
+    await trackBusinessActivityThrottled(currentBusinessId, 60);
+    return refreshSavedModule(...args);
+  }, getBuilderOptions());
+}
+
 function goToPanel(panelId, options = {}) {
+  // Crear oferta debe abrir siempre como una acción nueva.
+  // Evita que quede cacheada una oferta anterior y el carnicero se trabe en celular.
+  if (panelId === "builderPanel") {
+    resetBuilderPanelForNewSale();
+  }
+
   activatePanel(panelId);
   setMoreLinksVisible(Boolean(options.keepMoreOpen));
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1096,8 +1345,8 @@ async function refreshSavedModule() {
     meta: data.meta,
     state: data.state
   };
-  renderSaved(savedPanel, data.state);
-  renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], data.meta || {});
+  renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], data.meta || {}, getShareOptions("whatsapp_panel"));
   renderCurrentDashboard();
   markLazyPanelsDirty();
 }
@@ -1196,9 +1445,10 @@ async function syncProductDrivenViews(updatedProducts = null) {
       ...currentPayload.state,
       products: updatedProducts
     };
+    const activeProducts = setActiveProductCatalog(updatedProducts);
 
     renderCurrentDashboard();
-    renderBuilder(builderPanel, updatedProducts, refreshSavedModule, { businessId: currentBusinessId, ...getWriteOptions() });
+    renderBuilder(builderPanel, activeProducts, refreshSavedModule, getBuilderOptions());
     markLazyPanelsDirty();
     if (currentPanelId === "marketPanel") {
       await refreshMarketModule();
@@ -1215,9 +1465,10 @@ async function syncProductDrivenViews(updatedProducts = null) {
     meta: data.meta,
     state: data.state
   };
+  const activeProducts = setActiveProductCatalog(data.products);
 
   renderCurrentDashboard();
-  renderBuilder(builderPanel, data.products, refreshSavedModule, { businessId: currentBusinessId, ...getWriteOptions() });
+  renderBuilder(builderPanel, activeProducts, refreshSavedModule, getBuilderOptions());
   markLazyPanelsDirty();
   if (currentPanelId === "marketPanel") {
     await refreshMarketModule();
@@ -1269,9 +1520,10 @@ async function renderBusinessWorkspace(options = {}) {
   // La Nelly queda en la alerta superior. Evitamos duplicar el mensaje dentro de Inicio.
 
   const data = await loadActiveBusinessData(currentBusinessId);
+  const activeProducts = setActiveProductCatalog(data.products);
 
   if (!setPanelLocked(pricesPanel, "prices")) {
-    renderPrices(pricesPanel, data.products, currentBusinessId, {
+    renderPrices(pricesPanel, activeProducts, currentBusinessId, {
       ...getWriteOptions(),
       onProductsUpdated: async (...args) => {
         await trackBusinessActivityThrottled(currentBusinessId, 60);
@@ -1281,12 +1533,12 @@ async function renderBusinessWorkspace(options = {}) {
     if (isPaymentOverdue()) injectAccessWarning(pricesPanel);
   }
 
-  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state);
-  if (!setPanelLocked(builderPanel, "combos")) renderBuilder(builderPanel, data.products, async (...args) => {
+  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  if (!setPanelLocked(builderPanel, "combos")) renderBuilder(builderPanel, activeProducts, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);
-  }, { businessId: currentBusinessId, ...getWriteOptions() });
-  if (!setPanelLocked(whatsappPanel, "whatsapp")) renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], payload.meta || {});
+  }, getBuilderOptions());
+  if (!setPanelLocked(whatsappPanel, "whatsapp")) renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], payload.meta || {}, getShareOptions("whatsapp_panel"));
 
   if (usersPanel) {
     usersPanel.dataset.rendered = "";

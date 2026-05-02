@@ -85,7 +85,7 @@ function buildMessage(combo, meta = {}, customer = {}) {
   return lines.join("\n");
 }
 
-export function renderWhatsApp(container, savedCombos = [], meta = {}) {
+export function renderWhatsApp(container, savedCombos = [], meta = {}, options = {}) {
   const combos = Array.isArray(savedCombos) ? [...savedCombos] : [];
   const latestCombos = combos.sort((a, b) => {
     const aTime = Date.parse(a?.updatedAt || a?.createdAt || 0) || 0;
@@ -244,6 +244,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}) {
       if (openBtn) {
         openBtn.onclick = () => {
           saveLastCustomer(meta, { name: customerName, phone: customerPhone });
+          if (typeof options?.onBeforeWhatsapp === "function" && options.onBeforeWhatsapp({ source: "whatsapp_panel" }) === false) return;
           window.open(liveUrl, "_blank");
         };
       }

@@ -158,7 +158,7 @@ const CarnizaAIService = (() => {
         rubro: item.rubro,
         price: item.price,
         unit: item.unit || "kg",
-        qty: getDefaultQty(item.name),
+        qty: Math.max(0.5, Number(item.qty || getDefaultQty(item.name))),
         urgent: true
       });
     });
@@ -332,6 +332,7 @@ const CarnizaAIService = (() => {
         rubro: String(item?.rubro || item?.category || item?.categoria || "").trim(),
         price: Number(item?.price ?? item?.precio ?? 0),
         unit: item?.unit || item?.unidad || "kg",
+        qty: Number(item?.qty ?? item?.cantidad ?? 1) || 1,
       });
     });
     return result;

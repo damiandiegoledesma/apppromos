@@ -66,7 +66,17 @@ function openWhatsapp(combo) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-export function renderSaved(container, state) {
+function canRunOptionHook(hook, payload) {
+  if (typeof hook !== "function") return true;
+  try {
+    return hook(payload) !== false;
+  } catch (error) {
+    console.warn("AppPromos: no se pudo validar el envío de demo", error);
+    return true;
+  }
+}
+
+export function renderSaved(container, state, options = {}) {
   const savedCombos = normalizeSavedCombosFromState(state)
     .slice()
     .sort((a, b) => {
@@ -82,25 +92,26 @@ export function renderSaved(container, state) {
       .saved-head { border:1px solid #ece7df; border-radius:18px; padding:18px; background:#fff; }
       .saved-head h2 { margin:0 0 6px; color:#8b1f1f; }
       .saved-head p { margin:0; color:#6b7280; }
-      .saved-list { display:flex; flex-direction:column; gap:10px; }
-      .saved-card { border:1px solid #ece7df; border-radius:18px; padding:16px; background:#fff; }
+      .saved-list { display:flex; flex-direction:column; gap:8px; }
+      .saved-card { border:1px solid #dbeafe; border-radius:14px; padding:10px 12px; background:#fff; display:grid; grid-template-columns:minmax(220px,1fr) minmax(120px,auto) auto; gap:8px 12px; align-items:center; }
       .saved-card.demo-preloaded { border-color:#f0c36d; background:#fffaf0; }
-      .saved-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-      .saved-title { font-size:17px; font-weight:900; color:#111827; }
-      .saved-sub { color:#6b7280; margin-top:4px; font-size:13px; }
-      .saved-badge { display:inline-flex; margin-top:8px; padding:4px 8px; border-radius:999px; background:#fde68a; color:#78350f; font-size:12px; font-weight:800; }
-      .saved-price { color:#8b1f1f; font-size:22px; font-weight:900; white-space:nowrap; }
-      .saved-items { margin:10px 0 0; color:#374151; font-size:14px; line-height:1.45; }
-      .saved-actions { margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
-      .saved-whatsapp { border:0; border-radius:999px; padding:10px 14px; background:#16a34a; color:#fff; font-weight:900; cursor:pointer; }
+      .saved-top { display:block; min-width:0; }
+      .saved-title { font-size:16px; font-weight:1000; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .saved-sub { color:#64748b; margin-top:2px; font-size:12px; font-weight:800; }
+      .saved-badge { display:inline-flex; margin-top:4px; padding:3px 7px; border-radius:999px; background:#fde68a; color:#78350f; font-size:11px; font-weight:900; }
+      .saved-price { color:#8b1f1f; font-size:18px; font-weight:1000; white-space:nowrap; text-align:right; }
+      .saved-items { grid-column:1 / -1; color:#374151; font-size:12px; line-height:1.28; font-weight:850; background:#f8fafc; border:1px solid #e5e7eb; border-radius:11px; padding:7px 9px; }
+      .saved-items strong { color:#111827; }
+      .saved-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+      .saved-whatsapp { border:0; border-radius:999px; padding:9px 13px; background:#16a34a; color:#fff; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-empty { border:1px dashed #d1d5db; border-radius:18px; padding:22px; background:#fff; color:#6b7280; text-align:center; }
-      @media (max-width: 640px) { .saved-top { flex-direction:column; } .saved-price { font-size:24px; } .saved-actions { justify-content:stretch; } .saved-whatsapp { width:100%; } }
+      @media (max-width: 760px) { .saved-card { grid-template-columns:1fr auto; align-items:start; } .saved-items { grid-column:1 / -1; } .saved-price { text-align:right; font-size:18px; } .saved-actions { grid-column:1 / -1; justify-content:stretch; } .saved-whatsapp { width:100%; } }
     </style>
 
     <div class="saved-shell">
       <div class="saved-head">
-        <h2>🥩 Combos y ofertas listas</h2>
-        <p>Elegí un combo de la demo o una oferta guardada y mandala por WhatsApp.</p>
+        <h2>🥩 Promos para repetir</h2>
+        <p>Elegí una promo guardada o combo demo y mandalo por WhatsApp.</p>
       </div>
       <div id="savedList" class="saved-list"></div>
     </div>
@@ -116,8 +127,10 @@ export function renderSaved(container, state) {
   savedListEl.innerHTML = savedCombos
     .map((combo, index) => {
       const items = Array.isArray(combo.items) ? combo.items : [];
+      const visibleItems = items.slice(0, 4);
+      const extraCount = Math.max(0, items.length - visibleItems.length);
       const itemsText = items.length
-        ? items.map((item) => `• ${escapeHtml(item.nombre || "Producto")} · ${escapeHtml(item.cantidad || 0)} ${escapeHtml(item.unidad || "kg")}${item.rubro ? ` · ${escapeHtml(item.rubro)}` : ""}`).join("<br>")
+        ? visibleItems.map((item) => `• ${escapeHtml(item.nombre || "Producto")} · ${escapeHtml(item.cantidad || item.qty || 0)} ${escapeHtml(item.unidad || item.unit || "kg")}${item.rubro ? ` · ${escapeHtml(item.rubro)}` : ""}`).join("<br>") + (extraCount ? `<br><strong>+${extraCount} producto${extraCount === 1 ? "" : "s"} más</strong>` : "")
         : "Sin detalle";
       const total = combo.total || combo?.snapshot?.totals?.total_redondeado || 0;
       const isPreloaded = combo.isDemoPreloaded;
@@ -125,16 +138,14 @@ export function renderSaved(container, state) {
       return `
         <article class="saved-card ${isPreloaded ? "demo-preloaded" : ""}">
           <div class="saved-top">
-            <div>
-              <div class="saved-title">${escapeHtml(combo.name || "Oferta sin nombre")}</div>
-              ${combo.description ? `<div class="saved-sub">${escapeHtml(combo.description)}</div>` : `<div class="saved-sub">Guardada: ${escapeHtml(formatDate(combo.createdAt))}</div>`}
-              ${isPreloaded ? `<span class="saved-badge">Combo demo listo</span>` : ""}
-            </div>
-            <div class="saved-price">${formatCurrency(total)}</div>
+            <div class="saved-title">${escapeHtml(combo.name || "Promo sin nombre")}</div>
+            ${combo.description ? `<div class="saved-sub">${escapeHtml(combo.description)}</div>` : `<div class="saved-sub">Guardada: ${escapeHtml(formatDate(combo.createdAt))}</div>`}
+            ${isPreloaded ? `<span class="saved-badge">Combo demo listo</span>` : ""}
           </div>
           <div class="saved-items">${itemsText}</div>
+          <div class="saved-price">${formatCurrency(total)}</div>
           <div class="saved-actions">
-            <button type="button" class="saved-whatsapp" data-whatsapp-index="${index}">Enviar por WhatsApp</button>
+            <button type="button" class="saved-whatsapp" data-whatsapp-index="${index}">Enviar</button>
           </div>
         </article>
       `;
@@ -145,7 +156,9 @@ export function renderSaved(container, state) {
     button.addEventListener("click", (event) => {
       const index = Number(event.currentTarget.dataset.whatsappIndex);
       const combo = savedCombos[index];
-      if (combo) openWhatsapp(combo);
+      if (!combo) return;
+      if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "saved", combo })) return;
+      openWhatsapp(combo);
     });
   });
 }

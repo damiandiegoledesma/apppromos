@@ -43,20 +43,39 @@ function formatQty(value) {
   return Number.isInteger(number) ? String(number) : String(number).replace(".", ",");
 }
 
+function getProductName(product = {}) {
+  return String(product.nombre || product.name || product.label || product.title || "Sin nombre").trim();
+}
+
+function getProductRubro(product = {}) {
+  return String(product.rubro || product.category || product.categoria || product.section || "").trim();
+}
+
+function getProductUnit(product = {}) {
+  return String(product.unidad || product.unit || "kg").trim() || "kg";
+}
+
+function getProductPrice(product = {}) {
+  const value = product.precio ?? product.price ?? product.precioFinal ?? product.valor ?? 0;
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : 0;
+}
+
 function getProductKey(product) {
-  return product?.productKey || product?.id || product?.nombre || null;
+  return product?.productKey || product?.id || product?.key || getProductName(product) || null;
 }
 
 function normalizeProduct(product) {
   return {
-    id: product?.id || product?.productKey || null,
+    ...product,
+    id: product?.id || product?.productKey || product?.key || null,
     productKey: getProductKey(product),
-    nombre: product?.nombre || "Sin nombre",
-    precio: Number(product?.precio || 0),
-    rubro: product?.rubro || "",
-    unidad: product?.unidad || "kg",
-    cantidad: 1,
-    descuento_individual: 0,
+    nombre: getProductName(product),
+    precio: getProductPrice(product),
+    rubro: getProductRubro(product),
+    unidad: getProductUnit(product),
+    cantidad: Number(product?.cantidad || 1),
+    descuento_individual: clampPercent(product?.descuento_individual || 0),
   };
 }
 
@@ -65,33 +84,35 @@ function calculateDiscountItem(item) {
   const precio = Number(item.precio || 0);
   const descuento = clampPercent(item.descuento_individual || 0);
   const bruto = precio * cantidad;
-  const neto = roundUpTo100(bruto * (1 - descuento / 100));
+  const descuentoMonto = bruto * (descuento / 100);
+  const neto = roundUpTo100(bruto - descuentoMonto);
 
   return {
     cantidad,
     precio,
     descuento,
     bruto,
+    descuentoMonto,
     neto,
   };
 }
 
 function calculateDiscountTotals(items = [], globalDiscount = 0) {
-  const subtotalBruto = items.reduce((acc, item) => {
-    return acc + calculateDiscountItem(item).bruto;
-  }, 0);
-
-  const subtotalNeto = items.reduce((acc, item) => {
-    return acc + calculateDiscountItem(item).neto;
-  }, 0);
-
+  const subtotalBruto = items.reduce((acc, item) => acc + calculateDiscountItem(item).bruto, 0);
+  const subtotalNeto = items.reduce((acc, item) => acc + calculateDiscountItem(item).neto, 0);
+  const descuentoPorProducto = Math.max(0, subtotalBruto - subtotalNeto);
   const descuentoGlobal = clampPercent(globalDiscount);
-  const total = roundUpTo100(subtotalNeto * (1 - descuentoGlobal / 100));
+  const descuentoGlobalMonto = subtotalNeto * (descuentoGlobal / 100);
+  const total = roundUpTo100(subtotalNeto - descuentoGlobalMonto);
+  const descuentosAplicados = Math.max(0, subtotalBruto - total);
 
   return {
     subtotalBruto,
     subtotalNeto,
+    descuentoPorProducto,
     descuentoGlobal,
+    descuentoGlobalMonto,
+    descuentosAplicados,
     total,
   };
 }
@@ -128,29 +149,90 @@ function openComboWhatsapp(combo) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-export function renderBuilder(container, products = [], onComboSaved = null) {
+function canRunOptionHook(hook, payload) {
+  if (typeof hook !== "function") return true;
+  try {
+    return hook(payload) !== false;
+  } catch (error) {
+    console.warn("AppPromos: no se pudo validar la acción de demo", error);
+    return true;
+  }
+}
+
+const PRODUCT_RENDER_BATCH = 24;
+const QUICK_SUGGESTED_LIMIT = 5;
+
+export function renderBuilder(container, products = [], onComboSaved = null, options = {}) {
   if (!container) return;
 
-  const safeProducts = Array.isArray(products) ? products : [];
+  const safeProducts = (Array.isArray(products) ? products : [])
+    .map((product) => normalizeProduct(product))
+    .filter((product) => product && product.active !== false && product.activo !== false && product.precio > 0)
+    .sort((a, b) => String(a.rubro || "").localeCompare(String(b.rubro || ""), "es") || String(a.nombre || "").localeCompare(String(b.nombre || ""), "es"));
+
   let mode = "chooser";
 
-  const state = {
-    quick: {
-      items: [],
-      searchTerm: "",
-      rubroFilter: "",
-    },
-    discount: {
+  function createQuickState() {
+    return {
       step: 1,
       items: [],
       searchTerm: "",
       rubroFilter: "",
+      productLimit: PRODUCT_RENDER_BATCH,
+    };
+  }
+
+  function createDiscountState() {
+    return {
+      step: 1,
+      items: [],
+      searchTerm: "",
+      rubroFilter: "",
+      productLimit: PRODUCT_RENDER_BATCH,
       globalDiscount: 0,
       offerName: "OFERTA DEL DIA",
-    },
+    };
+  }
+
+  const state = {
+    quick: createQuickState(),
+    discount: createDiscountState(),
   };
 
-  function getUniqueRubros(productList) {
+  function resetQuickState() {
+    state.quick = createQuickState();
+  }
+
+  function resetDiscountState() {
+    state.discount = createDiscountState();
+  }
+
+  function resetAllOfferFlows() {
+    resetQuickState();
+    resetDiscountState();
+  }
+
+  function showChooser({ clear = false } = {}) {
+    if (clear) resetAllOfferFlows();
+    mode = "chooser";
+    renderChooser();
+  }
+
+  function startQuickMode() {
+    resetQuickState();
+    resetDiscountState();
+    mode = "quick";
+    renderQuick();
+  }
+
+  function startDiscountMode() {
+    resetQuickState();
+    resetDiscountState();
+    mode = "discount";
+    renderDiscount();
+  }
+
+  function getUniqueRubros(productList = safeProducts) {
     const rubros = new Set();
     productList.forEach((product) => {
       const rubro = String(product.rubro || "").trim();
@@ -160,59 +242,47 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
   }
 
   function getFilteredProducts({ searchTerm = "", rubroFilter = "" } = {}) {
-    return safeProducts.filter((product) => {
-      if (product?.active === false) return false;
+    const term = String(searchTerm || "").toLowerCase().trim();
+    const selectedRubro = String(rubroFilter || "").toLowerCase().trim();
 
+    const filtered = safeProducts.filter((product) => {
       const nombre = String(product.nombre || "").toLowerCase();
       const rubro = String(product.rubro || "").toLowerCase();
-      const term = String(searchTerm || "").toLowerCase().trim();
-
       const matchSearch = !term || nombre.includes(term) || rubro.includes(term);
-      const matchRubro = !rubroFilter || rubro === String(rubroFilter).toLowerCase();
+      const matchRubro = !selectedRubro || rubro === selectedRubro;
       return matchSearch && matchRubro;
     });
+
+    return filtered;
   }
 
-  function buildProductOptions(filteredProducts) {
-    return filteredProducts
-      .map((product) => {
-        const originalIndex = safeProducts.findIndex(
-          (p) => p === product || (p.nombre === product.nombre && p.rubro === product.rubro)
-        );
-        const label = `${product?.nombre || "Sin nombre"} (${product?.rubro || "Sin rubro"})`;
-        return `<option value="${originalIndex}">${escapeHtml(label)}</option>`;
-      })
-      .join("");
+  function findProductByKey(key) {
+    return safeProducts.find((product) => String(getProductKey(product)) === String(key));
   }
 
-  function buildRubroOptions(selected = "") {
-    return getUniqueRubros(safeProducts)
-      .map((rubro) => `<option value="${escapeHtml(rubro)}" ${rubro === selected ? "selected" : ""}>${escapeHtml(rubro)}</option>`)
-      .join("");
+  function addProductToList(list, product) {
+    const key = getProductKey(product);
+    const existing = list.find((item) => String(item.productKey || item.id || item.nombre) === String(key));
+    if (existing) {
+      existing.cantidad = Number(existing.cantidad || 1) + 1;
+      return;
+    }
+    list.push(normalizeProduct(product));
   }
 
   function getQuickTotal() {
-    return state.quick.items.reduce((acc, item) => {
-      return acc + Number(item.precio || 0) * Number(item.cantidad || 0);
-    }, 0);
+    const rawTotal = state.quick.items.reduce((acc, item) => acc + Number(item.precio || 0) * Number(item.cantidad || 0), 0);
+    return roundUpTo100(rawTotal);
   }
 
   function buildQuickPayload() {
-    const now = new Date();
     return {
-      name: "Oferta del día " + now.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }),
+      name: "OFERTA DEL DIA",
       description: "Oferta rápida creada para vender por WhatsApp.",
       mode: "quick",
-      items: state.quick.items.map((item) => ({
-        productKey: item.productKey || item.id || null,
-        nombre: item.nombre,
-        rubro: item.rubro || "",
-        unidad: item.unidad || "kg",
-        precio: Number(item.precio || 0),
-        cantidad: Number(item.cantidad || 1),
-        subtotal: Number(item.precio || 0) * Number(item.cantidad || 1),
-      })),
+      items: state.quick.items.map((item) => ({ ...item })),
       total: getQuickTotal(),
+      createdAt: new Date().toISOString(),
     };
   }
 
@@ -222,262 +292,502 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
       name: state.discount.offerName || "OFERTA DEL DIA",
       description: "Oferta con descuentos creada para vender por WhatsApp.",
       mode: "discount",
-      descuento_global: totals.descuentoGlobal,
-      subtotal_bruto: totals.subtotalBruto,
-      subtotal_neto: totals.subtotalNeto,
+      discountSummary: {
+        globalDiscount: state.discount.globalDiscount,
+        subtotalBruto: totals.subtotalBruto,
+        subtotalNeto: totals.subtotalNeto,
+        descuentosAplicados: totals.descuentosAplicados,
+      },
       items: state.discount.items.map((item) => {
         const calc = calculateDiscountItem(item);
         return {
-          productKey: item.productKey || item.id || null,
-          nombre: item.nombre,
-          rubro: item.rubro || "",
-          unidad: item.unidad || "kg",
-          precio: Number(item.precio || 0),
-          cantidad: calc.cantidad,
+          ...item,
+          precio_original: calc.bruto,
           descuento_individual: calc.descuento,
-          subtotal_bruto: calc.bruto,
-          subtotal: calc.neto,
+          total_con_descuento: calc.neto,
         };
       }),
       total: totals.total,
+      tipo: "promo_con_descuento",
+      savedAs: "promo",
+      isPromotional: true,
+      status: "active",
+      createdAt: new Date().toISOString(),
     };
   }
 
-  async function saveBuiltCombo(combo, { openWhatsapp = false } = {}) {
-    if (!combo.items.length) {
-      alert("Agregá al menos un producto");
-      return;
+  async function saveBuiltCombo(payload) {
+    if (payload?.mode !== "discount") {
+      alert("Esta oferta es del momento. Mandala por WhatsApp; solo las promos con descuento se guardan.");
+      return null;
+    }
+    if (!canRunOptionHook(options?.onBeforePromoSave, { source: "builder_discount", payload })) {
+      return null;
+    }
+    const combo = await saveCombo(payload, options?.businessId || null);
+    if (typeof onComboSaved === "function") await onComboSaved(combo);
+    alert("Promo con descuento guardada.");
+    return combo;
+  }
+
+  function goHome() {
+    resetAllOfferFlows();
+    window.dispatchEvent(new CustomEvent("apppromos:builder-go-home"));
+    const homeButton = document.querySelector('button[data-panel="dashboardPanel"]');
+    if (homeButton) homeButton.click();
+  }
+
+  function renderTopActions(title, subtitle, backLabel = "← Cambiar modo") {
+    return `
+      <header style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #dbeafe; border-radius:18px; padding:14px;">
+        <div>
+          <div style="font-size:.72rem; font-weight:1000; color:#2563eb; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
+          <h2 style="margin:5px 0 4px;">${escapeHtml(title)}</h2>
+          ${subtitle ? `<p class="muted" style="margin:0;">${escapeHtml(subtitle)}</p>` : ""}
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+          <button data-builder-home type="button">Inicio</button>
+          <button data-back-mode type="button">${escapeHtml(backLabel)}</button>
+        </div>
+      </header>
+    `;
+  }
+
+  function bindTopActions(root, backHandler) {
+    root.querySelectorAll("[data-builder-home]").forEach((button) => button.addEventListener("click", goHome));
+    root.querySelectorAll("[data-back-mode]").forEach((button) => button.addEventListener("click", backHandler));
+  }
+
+  function renderRubroChips(scope, activeRubro) {
+    const rubros = getUniqueRubros();
+    return `
+      <div style="display:flex; gap:7px; overflow:auto; padding:2px 0 4px; scrollbar-width:thin;">
+        <button type="button" data-${scope}-rubro="" style="white-space:nowrap; border-radius:999px; padding:9px 12px; font-weight:1000; border:1px solid ${!activeRubro ? "#2563eb" : "#dbeafe"}; background:${!activeRubro ? "#dbeafe" : "#fff"}; color:#172554;">Todos</button>
+        ${rubros.map((rubro) => `
+          <button type="button" data-${scope}-rubro="${escapeHtml(rubro)}" style="white-space:nowrap; border-radius:999px; padding:9px 12px; font-weight:1000; border:1px solid ${rubro === activeRubro ? "#2563eb" : "#dbeafe"}; background:${rubro === activeRubro ? "#dbeafe" : "#fff"}; color:#172554;">${escapeHtml(rubro)}</button>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderProductGrid(scope, filteredProducts, selectedItems = []) {
+    if (!safeProducts.length) {
+      return `<div class="empty">No hay productos con precio para armar una oferta.</div>`;
     }
 
-    try {
-      const saved = await saveCombo(combo);
-      console.log("OFERTA PROCESADA:", saved);
-
-      if (typeof onComboSaved === "function") {
-        await onComboSaved(saved);
-      }
-
-      if (openWhatsapp) {
-        openComboWhatsapp(saved);
-      }
-
-      alert(openWhatsapp ? "Oferta lista para mandar por WhatsApp" : "Oferta guardada correctamente");
-    } catch (error) {
-      console.error("ERROR AL GUARDAR OFERTA:", error);
-      alert("No se pudo guardar la oferta. Probá de nuevo.");
+    if (!filteredProducts.length) {
+      return `<div class="empty">No encontré productos con ese filtro.</div>`;
     }
+
+    const localState = scope === "quick" ? state.quick : state.discount;
+    const hasSearch = String(localState.searchTerm || "").trim().length > 0;
+    const hasRubro = String(localState.rubroFilter || "").trim().length > 0;
+    const isQuickSuggestions = scope === "quick" && !hasSearch && !hasRubro;
+
+    const limit = isQuickSuggestions
+      ? QUICK_SUGGESTED_LIMIT
+      : Math.max(PRODUCT_RENDER_BATCH, Number(localState.productLimit || PRODUCT_RENDER_BATCH));
+    const visibleProducts = filteredProducts.slice(0, limit);
+    const hiddenCount = Math.max(0, filteredProducts.length - visibleProducts.length);
+    const selectedKeys = new Set(selectedItems.map((item) => String(item.productKey || item.id || item.nombre)));
+
+    const headerTitle = isQuickSuggestions
+      ? "Sugeridos para arrancar"
+      : hasSearch
+        ? `Resultados para “${localState.searchTerm}”`
+        : hasRubro
+          ? `Productos de ${localState.rubroFilter}`
+          : "Catálogo";
+
+    const headerHelp = isQuickSuggestions
+      ? "Buscá o tocá un rubro para encontrar cualquier producto."
+      : hiddenCount
+        ? "Hay más resultados. Usá buscar, rubros o ver más."
+        : "Catálogo listo.";
+
+    return `
+      <div style="display:grid; gap:9px;">
+        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; color:#64748b; font-size:.82rem; font-weight:900;">
+          <span>${escapeHtml(headerTitle)}</span>
+          <span>${escapeHtml(headerHelp)}</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:9px;">
+          ${visibleProducts.map((product) => {
+            const key = getProductKey(product);
+            const active = selectedKeys.has(String(key));
+            const actionText = active ? "Elegido" : "Sumar";
+            return `
+              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:76px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#dbeafe"}; background:${active ? "#ecfdf5" : "#fff"}; color:#172554; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
+                <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
+                  <strong style="font-size:.96rem; line-height:1.15;">${escapeHtml(product.nombre || "Producto")}</strong>
+                  <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#2563eb"};">${active ? "✓" : "+"} ${actionText}</span>
+                </div>
+                <div style="margin-top:7px; font-size:.78rem; font-weight:900; color:#64748b;">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
+              </button>
+            `;
+          }).join("")}
+        </div>
+        ${hiddenCount && !isQuickSuggestions ? `
+          <button type="button" data-${scope}-show-more="true" style="min-height:44px; border:1px solid #bfdbfe; border-radius:14px; background:#eff6ff; color:#1d4ed8; font-weight:1000; cursor:pointer;">
+            Ver más resultados (${hiddenCount} más)
+          </button>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  function renderSelectedStrip(items, totalLabel = "Total estimado") {
+    if (!items.length) {
+      return `
+        <div style="position:sticky; top:0; z-index:5; background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:12px; color:#64748b; font-weight:900;">
+          Todavía no elegiste productos.
+        </div>
+      `;
+    }
+
+    const rawTotal = items.reduce((acc, item) => acc + Number(item.precio || 0) * Number(item.cantidad || 0), 0);
+    return `
+      <div style="position:sticky; top:0; z-index:5; background:#ecfdf5; border:1px solid #bbf7d0; border-radius:16px; padding:12px; box-shadow:0 10px 22px rgba(15,23,42,.08);">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
+          <strong style="color:#14532d;">${items.length} producto${items.length === 1 ? "" : "s"} elegido${items.length === 1 ? "" : "s"}</strong>
+          <strong style="color:#14532d;">${escapeHtml(totalLabel)}: $ ${formatMoney(roundUpTo100(rawTotal))}</strong>
+        </div>
+        <div style="margin-top:6px; color:#166534; font-weight:800; font-size:.86rem; white-space:nowrap; overflow:auto;">
+          ${items.map((item) => `${escapeHtml(item.nombre)} · ${formatQty(item.cantidad)} ${escapeHtml(item.unidad || "kg")}`).join("  |  ")}
+        </div>
+      </div>
+    `;
+  }
+
+
+  function renderQuickFloatingSummary() {
+    const count = state.quick.items.length;
+    const total = getQuickTotal();
+    return `
+      <aside style="position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;max-width:760px;margin:0 auto;background:#eff6ff;border:1px solid #bfdbfe;border-radius:18px;padding:11px;box-shadow:0 14px 34px rgba(15,23,42,.20);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:.72rem;color:#1e40af;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Resumen</div>
+            <strong style="display:block;color:#1e3a8a;">${count} producto${count === 1 ? "" : "s"} · Total $ ${formatMoney(total)}</strong>
+          </div>
+          <button id="quickReviewBtn" type="button" style="background:#2563eb;color:#fff;border-color:#2563eb;min-height:44px;${count ? "" : "opacity:.6;"}">Ver oferta lista</button>
+        </div>
+      </aside>
+    `;
   }
 
   function renderChooser() {
     container.innerHTML = `
       <section style="display:grid; gap:14px;">
-        <header style="background:#fff; border:1px solid #dbeafe; border-radius:18px; padding:18px; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-          <div style="font-size:.74rem; font-weight:900; color:#2563eb; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
-          <h2 style="margin:6px 0 4px; font-size:2rem; line-height:1;">Elegí cómo querés vender</h2>
-          <p class="muted" style="margin:0;">Usá oferta rápida para salir vendiendo ya, o una oferta con descuentos para ajustar mejor la promo.</p>
+        <header style="background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:18px;">
+          <div style="font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
+          <h2 style="margin:6px 0 4px;">Elegí cómo querés vender</h2>
+          <p class="muted" style="margin:0;">Una oferta rápida para mandar ya, o una con descuentos si querés trabajar mejor el precio.</p>
         </header>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px;">
-          <button id="quickModeBtn" type="button" style="text-align:left; background:#fff; border:2px solid #bfdbfe; border-radius:18px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:.78rem; font-weight:900; color:#2563eb; text-transform:uppercase;">Oferta rápida</div>
-            <h3 style="margin:6px 0 6px; font-size:1.35rem;">Armar y mandar</h3>
-            <p style="margin:0; color:#64748b; font-weight:700;">Elegís productos, se calcula el total y la mandás por WhatsApp. Sin descuentos.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;">
+          <button id="quickModeBtn" type="button" style="text-align:left; background:#eff6ff; border:2px solid #bfdbfe; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
+            <div style="font-size:2rem;">⚡</div>
+            <h3 style="margin:8px 0 4px;">Oferta rápida</h3>
+            <p style="margin:0; color:#1e3a8a; font-weight:800;">Tocás productos, revisás total y la mandás por WhatsApp.</p>
           </button>
-
-          <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:18px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:.78rem; font-weight:900; color:#c2410c; text-transform:uppercase;">Oferta con descuentos</div>
-            <h3 style="margin:6px 0 6px; font-size:1.35rem;">Productos, ajustes y vender</h3>
-            <p style="margin:0; color:#7c2d12; font-weight:700;">Aplicás descuento por producto o general, ves el total final y la mandás por WhatsApp.</p>
+          <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
+            <div style="font-size:2rem;">🏷️</div>
+            <h3 style="margin:8px 0 4px;">Oferta con descuentos</h3>
+            <p style="margin:0; color:#7c2d12; font-weight:800;">Ves cuánto queda antes de mandar. Sin hacer cuentas a mano.</p>
           </button>
         </div>
       </section>
     `;
 
-    container.querySelector("#quickModeBtn")?.addEventListener("click", () => {
-      mode = "quick";
-      renderQuick();
+    container.querySelector("#quickModeBtn")?.addEventListener("click", startQuickMode);
+    container.querySelector("#discountModeBtn")?.addEventListener("click", startDiscountMode);
+  }
+
+  function bindProductSelection(root, scope, list, localState, rerender) {
+    root.querySelector(`#${scope}SearchInput`)?.addEventListener("input", (event) => {
+      localState.searchTerm = event.target.value.trim().toLowerCase();
+      localState.productLimit = PRODUCT_RENDER_BATCH;
+      rerender();
     });
 
-    container.querySelector("#discountModeBtn")?.addEventListener("click", () => {
-      mode = "discount";
-      state.discount.step = 1;
-      renderDiscount();
+    root.querySelectorAll(`[data-${scope}-rubro]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        localState.rubroFilter = event.currentTarget.getAttribute(`data-${scope}-rubro`) || "";
+        localState.productLimit = PRODUCT_RENDER_BATCH;
+        rerender();
+      });
+    });
+
+    root.querySelector(`[data-${scope}-show-more]`)?.addEventListener("click", () => {
+      const total = getFilteredProducts(localState).length;
+      localState.productLimit = Math.min(total, Number(localState.productLimit || PRODUCT_RENDER_BATCH) + PRODUCT_RENDER_BATCH);
+      rerender();
+    });
+
+    root.querySelectorAll(`[data-${scope}-add-key]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const key = event.currentTarget.getAttribute(`data-${scope}-add-key`);
+        const product = findProductByKey(key);
+        if (!product) return;
+        addProductToList(list, product);
+        rerender();
+      });
     });
   }
 
   function renderQuick() {
     const filteredProducts = getFilteredProducts(state.quick);
 
+    if (state.quick.step === 2) {
+      renderQuickReview();
+      return;
+    }
+
     container.innerHTML = `
-      <section style="display:grid; gap:14px;">
-        <header style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #dbeafe; border-radius:18px; padding:18px;">
-          <div>
-            <div style="font-size:.72rem; font-weight:900; color:#2563eb; text-transform:uppercase; letter-spacing:.04em;">Oferta rápida</div>
-            <h2 style="margin:6px 0 4px;">Armar y mandar</h2>
-            <p class="muted" style="margin:0;">Elegí productos, ajustá kilos y mandá por WhatsApp sin descuentos.</p>
-          </div>
-          <button id="backToChooserBtn" type="button">← Cambiar modo</button>
-        </header>
+      <section style="display:grid; gap:12px;">
+        ${renderTopActions("Oferta rápida", "Arrancá con sugeridos o buscá cualquier producto del catálogo.")}
+        ${renderSelectedStrip(state.quick.items)}
 
-        <div class="toolbar">
-          <input id="quickSearchInput" type="text" placeholder="Buscar productos..." value="${escapeHtml(state.quick.searchTerm)}" style="flex:1; min-width:150px;" />
-          <select id="quickRubroSelect" style="min-width:140px;">
-            <option value="">Todos los rubros</option>
-            ${buildRubroOptions(state.quick.rubroFilter)}
-          </select>
+        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px 108px; display:grid; gap:12px;">
+          <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #bfdbfe; border-radius:14px; padding:0 12px; font-weight:900;" />
+          ${renderRubroChips("quick", state.quick.rubroFilter)}
+          ${renderProductGrid("quick", filteredProducts, state.quick.items)}
         </div>
 
-        <div class="toolbar">
-          <select id="quickProductSelect">
-            <option value="">Seleccionar producto...</option>
-            ${buildProductOptions(filteredProducts)}
-          </select>
-          <button id="quickAddItemBtn" type="button">Agregar</button>
-        </div>
-
-        <div id="quickList" class="list"></div>
-
-        <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid #dbeafe; border-radius:16px; padding:14px;">
-          <strong>Total: $ <span id="quickTotal">${formatMoney(getQuickTotal())}</span></strong>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-            <button id="quickSaveBtn" type="button">Guardar oferta</button>
-            <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Guardar y mandar WhatsApp</button>
-          </div>
-        </div>
+        ${renderQuickFloatingSummary()}
       </section>
     `;
 
-    const listEl = container.querySelector("#quickList");
+    bindTopActions(container, () => showChooser({ clear: true }));
+    bindProductSelection(container, "quick", state.quick.items, state.quick, renderQuick);
 
-    if (!state.quick.items.length) {
-      listEl.innerHTML = `<div class="empty">No hay productos en la oferta rápida.</div>`;
-    } else {
-      listEl.innerHTML = state.quick.items.map((item, index) => {
-        const subtotal = Number(item.precio || 0) * Number(item.cantidad || 0);
-        return `
-          <article class="row">
-            <div class="row-top" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-              <div>
-                <div class="row-title">${escapeHtml(item.nombre)}</div>
-                <div class="row-sub">${escapeHtml(item.rubro || "Sin rubro")} · ${escapeHtml(item.unidad || "kg")} · $ ${formatMoney(item.precio)}</div>
-              </div>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-quick-qty="${index}" style="width:76px;" />
-                <button type="button" data-quick-del="${index}">Quitar</button>
-              </div>
-            </div>
-            <div style="text-align:right; margin-top:6px; font-weight:800;">$ ${formatMoney(subtotal)}</div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    container.querySelector("#backToChooserBtn")?.addEventListener("click", () => {
-      mode = "chooser";
-      renderChooser();
-    });
-
-    container.querySelector("#quickSearchInput")?.addEventListener("input", (event) => {
-      state.quick.searchTerm = event.target.value.trim().toLowerCase();
-      renderQuick();
-    });
-
-    container.querySelector("#quickRubroSelect")?.addEventListener("change", (event) => {
-      state.quick.rubroFilter = event.target.value.trim();
-      renderQuick();
-    });
-
-    container.querySelector("#quickAddItemBtn")?.addEventListener("click", () => {
-      const index = container.querySelector("#quickProductSelect")?.value;
-      if (index === "" || index == null) return;
-      const product = safeProducts[Number(index)];
-      if (!product) return;
-      state.quick.items.push(normalizeProduct(product));
-      renderQuick();
-    });
-
-    container.querySelectorAll("[data-quick-qty]").forEach((input) => {
-      input.addEventListener("change", (event) => {
-        const index = Number(event.target.dataset.quickQty);
-        const nextValue = Number(event.target.value) || 1;
-        state.quick.items[index].cantidad = nextValue <= 0 ? 1 : nextValue;
-        renderQuick();
-      });
-    });
-
-    container.querySelectorAll("[data-quick-del]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const index = Number(event.target.dataset.quickDel);
-        state.quick.items.splice(index, 1);
-        renderQuick();
-      });
-    });
-
-    container.querySelector("#quickSaveBtn")?.addEventListener("click", async () => {
-      const combo = buildQuickPayload();
-      await saveBuiltCombo(combo, { openWhatsapp: false });
-      state.quick.items = [];
-      renderQuick();
-    });
-
-    container.querySelector("#quickWhatsappBtn")?.addEventListener("click", async () => {
-      const combo = buildQuickPayload();
-      await saveBuiltCombo(combo, { openWhatsapp: true });
-      state.quick.items = [];
+    container.querySelector("#quickReviewBtn")?.addEventListener("click", () => {
+      if (!state.quick.items.length) {
+        alert("Elegí al menos un producto para ver la oferta lista.");
+        return;
+      }
+      state.quick.step = 2;
       renderQuick();
     });
   }
 
-  function renderDiscountSteps() {
-    const steps = [
-      { id: 1, title: "Productos", sub: "Elegí qué vendés" },
-      { id: 2, title: "Ajustes", sub: "Cantidad y descuentos" },
-      { id: 3, title: "Vender", sub: "Guardar y compartir" },
-    ];
+  function renderQuantityList(items, scope, includeDiscount = false) {
+    return items.map((item, index) => {
+      const subtotal = Number(item.precio || 0) * Number(item.cantidad || 0);
+      const calc = calculateDiscountItem(item);
+      const lineDiscount = calc.descuento > 0 ? Math.max(0, calc.descuentoMonto) : 0;
 
-    return `
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0;">
-        ${steps.map((step) => `
-          <button type="button" data-discount-step="${step.id}" style="text-align:left; border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:12px; cursor:pointer;">
-            <strong style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:999px; background:#2563eb; color:white; margin-right:8px;">${step.id}</strong>
-            <span style="font-weight:900;">${step.title}</span>
-            <small style="display:block; color:#64748b; margin-left:36px;">${step.sub}</small>
-          </button>
-        `).join("")}
-      </div>
+      if (includeDiscount) {
+        return `
+          <article style="background:#fff; border:1px solid #fed7aa; border-radius:14px; padding:8px 10px; overflow-x:auto; box-shadow:0 4px 14px rgba(15,23,42,.04);">
+            <div style="display:grid; grid-template-columns:minmax(150px,1.25fr) 116px 112px 156px 128px 74px; gap:8px; align-items:center; min-width:740px;">
+              <div style="min-width:0;">
+                <strong style="display:block; font-size:.95rem; color:#431407; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
+                <span style="display:block; margin-top:2px; font-size:.74rem; color:#64748b; font-weight:900; white-space:nowrap;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#f8fafc; border-radius:12px; padding:5px;">
+                <button type="button" data-${scope}-minus="${index}" style="min-width:30px; min-height:32px; padding:0;">−</button>
+                <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:48px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
+                <button type="button" data-${scope}-plus="${index}" style="min-width:30px; min-height:32px; padding:0;">+</button>
+              </div>
+
+              <div style="font-size:.78rem; color:#334155; font-weight:950; text-align:center; white-space:nowrap;">
+                Base<br><strong>$ ${formatMoney(calc.bruto)}</strong>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#fff7ed; border-radius:12px; padding:5px;">
+                <span style="font-size:.72rem; font-weight:1000; color:#7c2d12;">Desc.</span>
+                <button type="button" data-${scope}-discount-minus="${index}" style="min-width:28px; min-height:32px; padding:0;">−</button>
+                <input type="number" min="0" max="100" step="1" value="${calc.descuento}" data-${scope}-percent="${index}" style="width:44px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
+                <button type="button" data-${scope}-discount-plus="${index}" style="min-width:28px; min-height:32px; padding:0;">+</button>
+                <span style="font-weight:1000;color:#7c2d12;">%</span>
+              </div>
+
+              <div style="text-align:right; white-space:nowrap;">
+                <span data-${scope}-line-discount="${index}" style="display:block; font-size:.72rem; color:#92400e; font-weight:900;">Desc. -$ ${formatMoney(lineDiscount)}</span>
+                <strong data-${scope}-line-final="${index}" style="display:block; color:#c2410c; font-size:.98rem;">Queda $ ${formatMoney(calc.neto)}</strong>
+              </div>
+
+              <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 9px; border-radius:10px;">Quitar</button>
+            </div>
+          </article>
+        `;
+      }
+
+      return `
+        <article style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:8px 10px; overflow-x:auto; box-shadow:0 4px 14px rgba(15,23,42,.04);">
+          <div style="display:grid; grid-template-columns:minmax(170px,1fr) 126px 130px 74px; gap:8px; align-items:center; min-width:520px;">
+            <div style="min-width:0;">
+              <strong style="display:block; font-size:.96rem; color:#111827; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
+              <span style="display:block; margin-top:2px; font-size:.76rem; color:#64748b; font-weight:900; white-space:nowrap;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#f8fafc; border-radius:12px; padding:5px;">
+              <button type="button" data-${scope}-minus="${index}" style="min-width:30px; min-height:32px; padding:0;">−</button>
+              <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:50px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
+              <button type="button" data-${scope}-plus="${index}" style="min-width:30px; min-height:32px; padding:0;">+</button>
+            </div>
+
+            <strong style="color:#0f172a; text-align:right; white-space:nowrap;">$ ${formatMoney(subtotal)}</strong>
+            <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 9px; border-radius:10px;">Quitar</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  function updateDiscountLive(root) {
+    const totals = calculateDiscountTotals(state.discount.items, state.discount.globalDiscount);
+    root.querySelectorAll("[data-discount-summary-subtotal]").forEach((el) => { el.textContent = `$ ${formatMoney(totals.subtotalBruto)}`; });
+    root.querySelectorAll("[data-discount-summary-discounts]").forEach((el) => { el.textContent = `-$ ${formatMoney(totals.descuentosAplicados)}`; });
+    root.querySelectorAll("[data-discount-summary-total]").forEach((el) => { el.textContent = `$ ${formatMoney(totals.total)}`; });
+
+    state.discount.items.forEach((item, index) => {
+      const calc = calculateDiscountItem(item);
+      root.querySelectorAll(`[data-discountAdjust-line-discount="${index}"]`).forEach((el) => { el.textContent = `Desc. -$ ${formatMoney(calc.descuento > 0 ? Math.max(0, calc.descuentoMonto) : 0)}`; });
+      root.querySelectorAll(`[data-discountAdjust-line-final="${index}"]`).forEach((el) => { el.textContent = `Queda $ ${formatMoney(calc.neto)}`; });
+    });
+  }
+
+  function bindQuantityList(root, scope, items, rerender) {
+    const isDiscountAdjust = scope === "discountAdjust";
+    const refresh = () => {
+      if (isDiscountAdjust) updateDiscountLive(root);
+      else rerender();
+    };
+
+    root.querySelectorAll(`[data-${scope}-qty]`).forEach((input) => {
+      input.addEventListener("input", (event) => {
+        const index = Number(event.target.getAttribute(`data-${scope}-qty`));
+        const nextValue = Number(event.target.value || 1);
+        items[index].cantidad = nextValue <= 0 ? 1 : nextValue;
+        refresh();
+      });
+      input.addEventListener("change", (event) => {
+        const index = Number(event.target.getAttribute(`data-${scope}-qty`));
+        const nextValue = Number(event.target.value || 1);
+        items[index].cantidad = nextValue <= 0 ? 1 : nextValue;
+        if (!isDiscountAdjust) rerender();
+        else updateDiscountLive(root);
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-minus]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const index = Number(event.currentTarget.getAttribute(`data-${scope}-minus`));
+        items[index].cantidad = Math.max(0.5, Number(items[index].cantidad || 1) - 0.5);
+        rerender();
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-plus]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const index = Number(event.currentTarget.getAttribute(`data-${scope}-plus`));
+        items[index].cantidad = Number(items[index].cantidad || 1) + 0.5;
+        rerender();
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-del]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const index = Number(event.currentTarget.getAttribute(`data-${scope}-del`));
+        items.splice(index, 1);
+        rerender();
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-percent]`).forEach((input) => {
+      input.addEventListener("input", (event) => {
+        const index = Number(event.target.getAttribute(`data-${scope}-percent`));
+        items[index].descuento_individual = clampPercent(event.target.value);
+        if (isDiscountAdjust) updateDiscountLive(root);
+      });
+      input.addEventListener("change", (event) => {
+        const index = Number(event.target.getAttribute(`data-${scope}-percent`));
+        items[index].descuento_individual = clampPercent(event.target.value);
+        rerender();
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-discount-minus]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const index = Number(event.currentTarget.getAttribute(`data-${scope}-discount-minus`));
+        items[index].descuento_individual = Math.max(0, clampPercent(items[index].descuento_individual || 0) - 1);
+        rerender();
+      });
+    });
+
+    root.querySelectorAll(`[data-${scope}-discount-plus]`).forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const index = Number(event.currentTarget.getAttribute(`data-${scope}-discount-plus`));
+        items[index].descuento_individual = Math.min(100, clampPercent(items[index].descuento_individual || 0) + 1);
+        rerender();
+      });
+    });
+  }
+
+  function renderQuickReview() {
+    const payload = buildQuickPayload();
+    const whatsappPreview = buildWhatsappText(payload);
+
+    container.innerHTML = `
+      <section style="display:grid; gap:12px;">
+        ${renderTopActions("Oferta lista", "Revisá kilos y mandá por WhatsApp. Esta oferta no se guarda.", "← Productos")}
+        <div style="display:grid; gap:10px;">
+          ${renderQuantityList(state.quick.items, "quickReview")}
+        </div>
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:18px; padding:14px; display:grid; gap:10px;">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
+            <strong style="font-size:1.2rem; color:#1e3a8a;">Total final: $ ${formatMoney(payload.total)}</strong>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
+            </div>
+          </div>
+          <div style="background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
+        </div>
+      </section>
     `;
+
+    bindTopActions(container, () => { state.quick.step = 1; renderQuick(); });
+    bindQuantityList(container, "quickReview", state.quick.items, renderQuickReview);
+
+
+    container.querySelector("#quickWhatsappBtn")?.addEventListener("click", () => {
+      const payload = buildQuickPayload();
+      if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "builder_quick", payload })) return;
+      openComboWhatsapp(payload);
+    });
   }
 
   function renderDiscount() {
     const totals = calculateDiscountTotals(state.discount.items, state.discount.globalDiscount);
+    const steps = [
+      { id: 1, title: "Productos" },
+      { id: 2, title: "Descuentos" },
+      { id: 3, title: "Vender" },
+    ];
 
     container.innerHTML = `
-      <section style="display:grid; gap:14px;">
-        <header style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:18px;">
-          <div>
-            <div style="font-size:.72rem; font-weight:900; color:#c2410c; text-transform:uppercase; letter-spacing:.04em;">Oferta con descuentos</div>
-            <h2 style="margin:6px 0 4px;">Crear oferta guiada</h2>
-            <p class="muted" style="margin:0;">Armá una oferta en 3 pasos: productos, ajustes y WhatsApp.</p>
-          </div>
-          <button id="discountBackToChooserBtn" type="button">← Cambiar modo</button>
-        </header>
-
-        ${renderDiscountSteps()}
-
+      <section style="display:grid; gap:12px;">
+        ${renderTopActions("Oferta con descuentos", "Armá una promo con descuento. Esta sí podés guardarla.")}
+        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;">
+          ${steps.map((step) => `
+            <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
+          `).join("")}
+        </div>
         <div id="discountStepContent"></div>
       </section>
     `;
 
-    container.querySelector("#discountBackToChooserBtn")?.addEventListener("click", () => {
-      mode = "chooser";
-      renderChooser();
-    });
+    bindTopActions(container, () => showChooser({ clear: true }));
 
     container.querySelectorAll("[data-discount-step]").forEach((button) => {
       button.addEventListener("click", (event) => {
         const nextStep = Number(event.currentTarget.dataset.discountStep);
         if (nextStep > 1 && !state.discount.items.length) {
-          alert("Primero agregá al menos un producto.");
+          alert("Elegí al menos un producto para seguir.");
           return;
         }
         state.discount.step = nextStep;
@@ -486,95 +796,32 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
     });
 
     const content = container.querySelector("#discountStepContent");
-    if (!content) return;
-
-    if (state.discount.step === 1) {
-      renderDiscountStepProducts(content);
-      return;
-    }
-
-    if (state.discount.step === 2) {
-      renderDiscountStepAdjust(content, totals);
-      return;
-    }
-
-    renderDiscountStepSell(content, totals);
+    if (state.discount.step === 1) renderDiscountStepProducts(content);
+    if (state.discount.step === 2) renderDiscountStepAdjust(content, totals);
+    if (state.discount.step === 3) renderDiscountStepSell(content, totals);
   }
 
   function renderDiscountStepProducts(content) {
     const filteredProducts = getFilteredProducts(state.discount);
-
     content.innerHTML = `
-      <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:16px; display:grid; gap:12px;">
-        <h3 style="margin:0;">1. Elegí productos</h3>
-        <p class="muted" style="margin:0;">Sumá los cortes o productos que van a entrar en la promo.</p>
-
-        <div class="toolbar">
-          <input id="discountSearchInput" type="text" placeholder="Buscar productos..." value="${escapeHtml(state.discount.searchTerm)}" style="flex:1; min-width:150px;" />
-          <select id="discountRubroSelect" style="min-width:140px;">
-            <option value="">Todos los rubros</option>
-            ${buildRubroOptions(state.discount.rubroFilter)}
-          </select>
+      <div style="display:grid; gap:12px;">
+        ${renderSelectedStrip(state.discount.items)}
+        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
+          <input id="discountSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.discount.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #fed7aa; border-radius:14px; padding:0 12px; font-weight:900;" />
+          ${renderRubroChips("discount", state.discount.rubroFilter)}
+          ${renderProductGrid("discount", filteredProducts, state.discount.items)}
         </div>
-
-        <div class="toolbar">
-          <select id="discountProductSelect">
-            <option value="">Seleccionar producto...</option>
-            ${buildProductOptions(filteredProducts)}
-          </select>
-          <button id="discountAddItemBtn" type="button">Agregar</button>
-        </div>
-
-        <div class="list">
-          ${state.discount.items.length ? state.discount.items.map((item, index) => `
-            <article class="row">
-              <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
-                <div>
-                  <strong>${escapeHtml(item.nombre)}</strong>
-                  <div class="row-sub">${escapeHtml(item.rubro || "Sin rubro")} · $ ${formatMoney(item.precio)}/${escapeHtml(item.unidad || "kg")}</div>
-                </div>
-                <button type="button" data-discount-del="${index}">Quitar</button>
-              </div>
-            </article>
-          `).join("") : `<div class="empty">Todavía no agregaste productos.</div>`}
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
-          <button id="discountNextAdjustBtn" type="button">Siguiente: ajustar</button>
+        <div style="position:sticky; bottom:10px; z-index:6; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:12px; box-shadow:0 12px 28px rgba(15,23,42,.12); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+          <strong>${state.discount.items.length} producto${state.discount.items.length === 1 ? "" : "s"}</strong>
+          <button id="discountNextAdjustBtn" type="button" style="background:#f97316; color:#fff; border-color:#f97316;">Ajustar descuentos</button>
         </div>
       </div>
     `;
 
-    content.querySelector("#discountSearchInput")?.addEventListener("input", (event) => {
-      state.discount.searchTerm = event.target.value.trim().toLowerCase();
-      renderDiscount();
-    });
-
-    content.querySelector("#discountRubroSelect")?.addEventListener("change", (event) => {
-      state.discount.rubroFilter = event.target.value.trim();
-      renderDiscount();
-    });
-
-    content.querySelector("#discountAddItemBtn")?.addEventListener("click", () => {
-      const index = content.querySelector("#discountProductSelect")?.value;
-      if (index === "" || index == null) return;
-      const product = safeProducts[Number(index)];
-      if (!product) return;
-      state.discount.items.push(normalizeProduct(product));
-      renderDiscount();
-    });
-
-    content.querySelectorAll("[data-discount-del]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const index = Number(event.currentTarget.dataset.discountDel);
-        state.discount.items.splice(index, 1);
-        renderDiscount();
-      });
-    });
-
+    bindProductSelection(content, "discount", state.discount.items, state.discount, () => renderDiscountStepProducts(content));
     content.querySelector("#discountNextAdjustBtn")?.addEventListener("click", () => {
       if (!state.discount.items.length) {
-        alert("Agregá al menos un producto.");
+        alert("Elegí al menos un producto para seguir.");
         return;
       }
       state.discount.step = 2;
@@ -582,115 +829,69 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
     });
   }
 
-  function renderDiscountStepAdjust(content, totals) {
-    content.innerHTML = `
-      <div style="display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,1fr); gap:14px; align-items:start;">
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:16px; display:grid; gap:12px;">
-          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
-            <div>
-              <h3 style="margin:0;">2. Ajustá cantidades</h3>
-              <p class="muted" style="margin:4px 0 0;">Usá kilos y descuentos si hace falta. El total se actualiza solo.</p>
-            </div>
-            <button id="discountBackProductsBtn" type="button">← Productos</button>
+  function renderDiscountSummary(totals, compact = false, floating = false) {
+    const baseStyle = floating
+      ? "position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;max-width:760px;margin:0 auto;"
+      : "position:sticky;top:0;z-index:5;";
+
+    return `
+      <aside style="${baseStyle} background:#fff7ed; border:1px solid #fed7aa; border-radius:18px; padding:${compact ? "10px" : "14px"}; box-shadow:0 14px 34px rgba(15,23,42,.20);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;">
+          <div style="font-size:.76rem; color:#9a3412; font-weight:1000; text-transform:uppercase; letter-spacing:.04em;">Resumen</div>
+          <div style="font-size:.72rem; color:#9a3412; font-weight:900;">se actualiza solo</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px;">
+          <div style="background:#fff; border:1px solid #fed7aa; border-radius:13px; padding:8px; min-width:0;">
+            <div style="font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05;">Sin descuento</div>
+            <strong data-discount-summary-subtotal style="display:block; margin-top:3px; color:#431407; font-size:.92rem; white-space:nowrap;">$ ${formatMoney(totals.subtotalBruto)}</strong>
           </div>
-
-          ${state.discount.items.map((item, index) => {
-            const calc = calculateDiscountItem(item);
-            return `
-              <article class="row">
-                <div style="display:grid; grid-template-columns:minmax(150px,1fr) auto auto auto auto; gap:10px; align-items:center;">
-                  <div>
-                    <strong>${escapeHtml(item.nombre)}</strong>
-                    <div class="row-sub">${escapeHtml(item.rubro || "Sin rubro")} · $ ${formatMoney(item.precio)}/${escapeHtml(item.unidad || "kg")}</div>
-                  </div>
-                  <button type="button" data-qty-minus="${index}">−</button>
-                  <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-discount-qty="${index}" style="width:72px; text-align:center; font-weight:900;" />
-                  <button type="button" data-qty-plus="${index}">+</button>
-                  <span style="font-weight:800;">${escapeHtml(item.unidad || "kg")}</span>
-                  <div style="grid-column:2 / span 4; display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
-                    <label style="font-size:.78rem; font-weight:900; color:#2563eb;">Desc. %</label>
-                    <input type="number" min="0" max="100" step="1" value="${calc.descuento}" data-discount-percent="${index}" style="width:80px; text-align:center; font-weight:900;" />
-                    <strong>Neto: $ ${formatMoney(calc.neto)}</strong>
-                    <button type="button" data-discount-del-adjust="${index}" style="color:#dc2626;">Eliminar</button>
-                  </div>
-                </div>
-              </article>
-            `;
-          }).join("")}
-
-          <div style="border:1px solid #bfdbfe; background:#eff6ff; border-radius:16px; padding:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
-            <strong>Descuento general</strong>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <input id="globalDiscountInput" type="number" min="0" max="100" step="1" value="${totals.descuentoGlobal}" style="width:90px; text-align:center; font-weight:900;" />
-              <strong>%</strong>
-            </div>
+          <div style="background:#fff; border:1px solid #fed7aa; border-radius:13px; padding:8px; min-width:0;">
+            <div style="font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05;">Descuentos</div>
+            <strong data-discount-summary-discounts style="display:block; margin-top:3px; color:#b45309; font-size:.92rem; white-space:nowrap;">-$ ${formatMoney(totals.descuentosAplicados)}</strong>
           </div>
-
-          <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-            <button id="discountBackProductsBtn2" type="button">← Productos</button>
-            <button id="discountNextSellBtn" type="button">Ver oferta lista</button>
+          <div style="background:#fff; border:2px solid #fb923c; border-radius:13px; padding:8px; min-width:0;">
+            <div style="font-size:.68rem; color:#9a3412; font-weight:1000; line-height:1.05;">Total final</div>
+            <strong data-discount-summary-total style="display:block; margin-top:3px; color:#c2410c; font-size:1.02rem; white-space:nowrap;">$ ${formatMoney(totals.total)}</strong>
           </div>
         </div>
+      </aside>
+    `;
+  }
 
-        ${renderDiscountPreview(totals)}
+  function renderDiscountStepAdjust(content, totals) {
+    content.innerHTML = `
+      <div style="display:grid; gap:12px;">
+        ${renderDiscountSummary(totals, true, true)}
+        <div style="display:grid; gap:10px; padding-bottom:132px;">
+          ${renderQuantityList(state.discount.items, "discountAdjust", true)}
+        </div>
+        <div style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:12px; display:grid; gap:8px;">
+          <label style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; font-weight:1000; color:#7c2d12;">
+            Descuento general
+            <span><input id="discountGlobalInput" type="number" min="0" max="100" step="1" value="${state.discount.globalDiscount}" style="width:80px; text-align:center; font-weight:1000;" /> %</span>
+          </label>
+          <p class="muted" style="margin:0;">Se aplica al final. El cliente no ve estos descuentos: recibe una oferta limpia.</p>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <button id="discountBackProductsBtn" type="button">← Productos</button>
+          <button id="discountNextSellBtn" type="button" style="background:#f97316; color:#fff; border-color:#f97316;">Ver oferta lista</button>
+        </div>
       </div>
     `;
 
-    content.querySelectorAll("[data-discount-qty]").forEach((input) => {
-      input.addEventListener("change", (event) => {
-        const index = Number(event.target.dataset.discountQty);
-        const nextValue = Number(event.target.value) || 1;
-        state.discount.items[index].cantidad = nextValue <= 0 ? 1 : nextValue;
-        renderDiscount();
-      });
-    });
+    bindQuantityList(content, "discountAdjust", state.discount.items, () => renderDiscountStepAdjust(content, calculateDiscountTotals(state.discount.items, state.discount.globalDiscount)));
 
-    content.querySelectorAll("[data-qty-minus]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const index = Number(event.currentTarget.dataset.qtyMinus);
-        const current = Number(state.discount.items[index].cantidad || 1);
-        state.discount.items[index].cantidad = Math.max(0.5, current - 0.5);
-        renderDiscount();
-      });
-    });
-
-    content.querySelectorAll("[data-qty-plus]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const index = Number(event.currentTarget.dataset.qtyPlus);
-        const current = Number(state.discount.items[index].cantidad || 1);
-        state.discount.items[index].cantidad = current + 0.5;
-        renderDiscount();
-      });
-    });
-
-    content.querySelectorAll("[data-discount-percent]").forEach((input) => {
-      input.addEventListener("change", (event) => {
-        const index = Number(event.target.dataset.discountPercent);
-        state.discount.items[index].descuento_individual = clampPercent(event.target.value);
-        renderDiscount();
-      });
-    });
-
-    content.querySelectorAll("[data-discount-del-adjust]").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        const index = Number(event.currentTarget.dataset.discountDelAdjust);
-        state.discount.items.splice(index, 1);
-        if (!state.discount.items.length) state.discount.step = 1;
-        renderDiscount();
-      });
-    });
-
-    content.querySelector("#globalDiscountInput")?.addEventListener("change", (event) => {
+    content.querySelector("#discountGlobalInput")?.addEventListener("input", (event) => {
       state.discount.globalDiscount = clampPercent(event.target.value);
-      renderDiscount();
+      updateDiscountLive(content);
+    });
+
+    content.querySelector("#discountGlobalInput")?.addEventListener("change", (event) => {
+      state.discount.globalDiscount = clampPercent(event.target.value);
+      renderDiscountStepAdjust(content, calculateDiscountTotals(state.discount.items, state.discount.globalDiscount));
     });
 
     content.querySelector("#discountBackProductsBtn")?.addEventListener("click", () => {
-      state.discount.step = 1;
-      renderDiscount();
-    });
-
-    content.querySelector("#discountBackProductsBtn2")?.addEventListener("click", () => {
       state.discount.step = 1;
       renderDiscount();
     });
@@ -701,56 +902,27 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
     });
   }
 
-  function renderDiscountPreview(totals) {
-    return `
-      <aside style="background:#fff7ed; border:1px solid #fed7aa; border-radius:18px; padding:16px; position:sticky; top:10px;">
-        <div style="font-size:.72rem; font-weight:900; color:#c2410c; text-transform:uppercase;">Vista para vender</div>
-        <h3 style="margin:8px 0;">${escapeHtml(state.discount.offerName || "OFERTA DEL DIA")}</h3>
-        <ul style="margin:0 0 12px 18px; padding:0; display:grid; gap:5px;">
-          ${state.discount.items.map((item) => {
-            const calc = calculateDiscountItem(item);
-            return `<li>${formatQty(calc.cantidad)} ${escapeHtml(item.unidad || "kg")} · ${escapeHtml(item.nombre)}</li>`;
-          }).join("")}
-        </ul>
-        <div style="font-size:1.6rem; color:#c2410c; font-weight:1000;">TOTAL: $ ${formatMoney(totals.total)}</div>
-      </aside>
-    `;
-  }
-
   function renderDiscountStepSell(content, totals) {
     const combo = buildDiscountPayload();
     const whatsappPreview = buildWhatsappText(combo);
 
     content.innerHTML = `
-      <div style="display:grid; grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr); gap:14px; align-items:start;">
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:16px; display:grid; gap:12px;">
-          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
-            <div>
-              <h3 style="margin:0;">3. Oferta lista</h3>
-              <p class="muted" style="margin:4px 0 0;">Revisá el nombre, guardá y mandá por WhatsApp.</p>
-            </div>
-            <button id="discountBackAdjustBtn" type="button">← Ajustes</button>
-          </div>
-
-          <label style="display:grid; gap:6px; font-weight:900;">
-            Nombre comercial de la oferta
+      <div style="display:grid; gap:12px;">
+        ${renderDiscountSummary(totals, true)}
+        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
+          <label style="display:grid; gap:6px; font-weight:1000;">
+            Nombre comercial de la promo
             <input id="discountOfferNameInput" type="text" value="${escapeHtml(state.discount.offerName)}" placeholder="OFERTA DEL DIA" />
           </label>
-
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45;">
-            ${escapeHtml(whatsappPreview)}
-          </div>
-
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
           <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-            <button id="discountBackAdjustBtn2" type="button">← Volver y ajustar</button>
+            <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              <button id="discountSaveBtn" type="button">Guardar oferta</button>
+              <button id="discountSaveBtn" type="button">Guardar como promo</button>
               <button id="discountWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
             </div>
           </div>
         </div>
-
-        ${renderDiscountPreview(totals)}
       </div>
     `;
 
@@ -763,25 +935,16 @@ export function renderBuilder(container, products = [], onComboSaved = null) {
       renderDiscount();
     });
 
-    content.querySelector("#discountBackAdjustBtn2")?.addEventListener("click", () => {
-      state.discount.step = 2;
-      renderDiscount();
-    });
-
     content.querySelector("#discountSaveBtn")?.addEventListener("click", async () => {
-      const payload = buildDiscountPayload();
-      await saveBuiltCombo(payload, { openWhatsapp: false });
-      state.discount.items = [];
-      state.discount.step = 1;
-      renderDiscount();
+      const saved = await saveBuiltCombo(buildDiscountPayload());
+      if (saved) showChooser({ clear: true });
     });
 
-    content.querySelector("#discountWhatsappBtn")?.addEventListener("click", async () => {
+    content.querySelector("#discountWhatsappBtn")?.addEventListener("click", () => {
       const payload = buildDiscountPayload();
-      await saveBuiltCombo(payload, { openWhatsapp: true });
-      state.discount.items = [];
-      state.discount.step = 1;
-      renderDiscount();
+      if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "builder_discount", payload })) return;
+      openComboWhatsapp(payload);
+      showChooser({ clear: true });
     });
   }
 

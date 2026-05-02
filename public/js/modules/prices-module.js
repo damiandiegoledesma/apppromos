@@ -328,27 +328,20 @@ export function renderPrices(container, products = [], businessId = null, option
       const isDirty = pendingChanges[key] !== undefined;
 
       return `
-        <div class="price-row ${isDirty ? "dirty" : ""}">
+        <div class="price-row ${isDirty ? "dirty" : ""}" title="${p.rubro || "Sin rubro"}">
           <div class="price-row-main">
             <div class="price-name">${p.nombre}</div>
-            <div class="price-meta">
-              <span>${getRubroIcon(p.rubro)}</span>
-              <span>${p.rubro || "Sin rubro"}</span>
-              <span>·</span>
-              <span>${formatCurrency(p.precio)}</span>
-            </div>
           </div>
 
-          <div class="price-actions-wrap">
-            <label class="price-input-wrap">
-              <span>Nuevo precio</span>
-              <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
-            </label>
-            <div class="price-actions">
-              <button data-save="${key}" class="mini-action" ${canPersistPrices ? "" : "disabled"}>💾</button>
-              <button data-edit="${key}" class="mini-action" ${canPersistPrices ? "" : "disabled"}>✏️</button>
-              <button data-del="${key}" class="mini-action danger" ${canPersistPrices ? "" : "disabled"}>🗑️</button>
-            </div>
+          <label class="price-input-wrap" aria-label="Precio para ${p.nombre}">
+            <span>Precio</span>
+            <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
+          </label>
+
+          <div class="price-actions">
+            <button data-save="${key}" class="mini-action save" title="Guardar" ${canPersistPrices ? "" : "disabled"}>💾</button>
+            <button data-edit="${key}" class="mini-action" title="Editar" ${canPersistPrices ? "" : "disabled"}>✏️</button>
+            <button data-del="${key}" class="mini-action danger" title="Desactivar" ${canPersistPrices ? "" : "disabled"}>🗑️</button>
           </div>
         </div>
       `;
@@ -531,21 +524,24 @@ export function renderPrices(container, products = [], businessId = null, option
       .prices-btn.secondary { background:#fff; color:#333; }
       .price-chip { border-radius:999px; padding:0 14px; }
       .price-chip.active { background:#b63b2b; color:#fff; border-color:#b63b2b; }
-      .prices-list { display:flex; flex-direction:column; gap:12px; }
+      .prices-list { display:grid; grid-template-columns:1fr; gap:5px; }
+      @media (min-width: 1100px) {
+        .prices-list { grid-template-columns:1fr 1fr; }
+      }
       .price-row {
-        display:flex; justify-content:space-between; gap:16px; align-items:center; padding:18px; background:#fff;
-        border:1px solid #ece7df; border-radius:16px; transition:all .2s ease; flex-wrap:wrap;
+        display:grid; grid-template-columns:minmax(0,1fr) minmax(100px,124px) 104px; gap:7px; align-items:center;
+        padding:6px 8px; background:#fff; border:1px solid #dbeafe; border-radius:13px;
+        transition:all .2s ease; min-height:42px;
       }
       .price-row.dirty { border-color:#f59e0b; background:#fffbeb; }
-      .price-row-main { flex:1; min-width:220px; }
-      .price-name { font-size:24px; font-weight:950; color:#8b1f1f; color:#111827; margin-bottom:4px; }
-      .price-meta { display:flex; gap:8px; flex-wrap:wrap; color:#6b7280; font-size:14px; }
-      .price-meta span:last-child { font-weight:900; color:#374151; }
-      .price-actions-wrap { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
-      .price-input-wrap { display:flex; flex-direction:column; gap:4px; color:#6b7280; font-size:12px; font-weight:700; }
-      .price-input { width:170px; min-height:54px; border-radius:12px; border:1px solid #d1d5db; padding:0 12px; font-size:24px; font-weight:950; color:#8b1f1f; }
-      .price-actions { display:flex; gap:8px; align-items:center; }
-      .mini-action { min-width:48px; font-size:18px; }
+      .price-row-main { min-width:0; display:flex; align-items:center; gap:7px; }
+      .price-name { font-size:15px; font-weight:1000; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .price-actions-wrap { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+      .price-input-wrap { display:block; color:#64748b; font-size:0; font-weight:900; }
+      .price-input-wrap span { display:none; }
+      .price-input { width:100%; min-height:34px; border-radius:11px; border:1px solid #bfdbfe; padding:0 9px; font-size:15px; font-weight:1000; color:#0f172a; box-sizing:border-box; }
+      .price-actions { display:flex; gap:5px; align-items:center; justify-content:flex-end; }
+      .mini-action { min-width:30px; min-height:34px; font-size:14px; border-radius:10px; }
       .mini-action.danger { color:#991b1b; }
       .prices-empty { padding:18px; color:#6b7280; border:1px dashed #d1d5db; border-radius:14px; }
       .prices-toast {
@@ -560,10 +556,14 @@ export function renderPrices(container, products = [], businessId = null, option
         .prices-toolbar { top: 60px; padding:12px; }
         .prices-toolbar-row { align-items:stretch; }
         .prices-search, .prices-select, .prices-btn { width:100%; }
-        .price-input { width:100%; min-height:56px; }
-        .price-actions-wrap { width:100%; justify-content:space-between; align-items:stretch; }
-        .price-actions { margin-left:auto; align-self:center; }
-        .price-input-wrap { flex:1; }
+        .prices-list { grid-template-columns:1fr; }
+        .price-row { grid-template-columns:1fr 96px 98px; gap:6px; align-items:center; padding:8px; }
+        .price-row-main { display:block; min-width:0; }
+        .price-name { font-size:15px; }
+        .price-input-wrap { width:100%; }
+        .price-input { width:100%; min-height:36px; font-size:15px; }
+        .price-actions { justify-content:flex-end; }
+        .mini-action { min-height:34px; min-width:30px; }
       }
     </style>
 
