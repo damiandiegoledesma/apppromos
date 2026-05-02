@@ -1,6 +1,6 @@
 /* ============================================================
-   CARNIZA LANDING — V11.4.5E
-   Vendedor de AppPromos en index.html.
+   CARNIZA LANDING — V12.10-A2
+   Carniza contextual para landing/conversion.
    No toca Carniza App.
    ============================================================ */
 
@@ -11,7 +11,7 @@
   --cl-ink: #171717;
   --cl-muted: #6b5f5f;
   --cl-soft: #fff7f2;
-  --cl-line: rgba(220, 38, 38, 0.16);
+  --cl-line: rgba(4, 119, 242, 0.18);
   --cl-white: #ffffff;
 }
 
@@ -25,16 +25,18 @@
 
 .carniza-landing-fab {
   position: relative;
-  width: 62px;
-  height: 62px;
+  min-width: 162px;
+  height: 72px;
+  padding: 8px 16px 8px 8px;
   border: 0;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--cl-primary), var(--cl-burgundy) 70%, var(--cl-rose));
   color: #fff;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 18px 36px rgba(4, 119, 242, 0.28);
+  justify-content: flex-start;
+  gap: 10px;
+  box-shadow: 0 20px 42px rgba(4, 119, 242, 0.34);
   cursor: pointer;
   transition: transform .16s ease, box-shadow .16s ease;
   -webkit-tap-highlight-color: transparent;
@@ -52,19 +54,29 @@
 }
 
 .carniza-landing-fab-icon {
-  width: 48px;
-  height: 48px;
-  max-width: 48px;
-  max-height: 48px;
+  width: 56px;
+  height: 56px;
+  max-width: 56px;
+  max-height: 56px;
   border-radius: 999px;
   object-fit: cover;
   display: block;
+  background: #fff;
+}
+
+.carniza-landing-fab-label {
+  max-width: 86px;
+  font-size: 13px;
+  line-height: 1.05;
+  font-weight: 1000;
+  letter-spacing: -.02em;
+  text-align: left;
 }
 
 .carniza-landing-dot {
   position: absolute;
-  right: 2px;
-  top: 2px;
+  right: 6px;
+  top: 4px;
   width: 15px;
   height: 15px;
   border-radius: 50%;
@@ -83,7 +95,7 @@
 .carniza-landing-panel {
   position: absolute;
   right: 0;
-  bottom: 76px;
+  bottom: 88px;
   width: min(350px, calc(100vw - 28px));
   background: rgba(255,255,255,.985);
   color: var(--cl-ink);
@@ -110,7 +122,7 @@
   gap: 10px;
   padding: 14px 14px 10px;
   background: linear-gradient(135deg, #fff7f2, #fff);
-  border-bottom: 1px solid rgba(220, 38, 38, 0.1);
+  border-bottom: 1px solid rgba(4, 119, 242, 0.12);
 }
 
 .carniza-landing-brand {
@@ -154,7 +166,7 @@
   border: 0;
   border-radius: 999px;
   background: #fff;
-  color: #7a3030;
+  color: #1d4ed8;
   cursor: pointer;
   font-size: 18px;
   font-weight: 900;
@@ -171,9 +183,9 @@
   padding: 0 10px;
   margin-bottom: 10px;
   border-radius: 999px;
-  background: rgba(220, 38, 38, .09);
+  background: rgba(4, 119, 242, .09);
   color: var(--cl-burgundy);
-  border: 1px solid rgba(220,38,38,.16);
+  border: 1px solid rgba(4,119,242,.16);
   font-size: 12px;
   font-weight: 950;
 }
@@ -202,9 +214,9 @@
 .carniza-landing-action {
   width: 100%;
   min-height: 44px;
-  border: 1px solid rgba(220,38,38,.16);
+  border: 1px solid rgba(4,119,242,.16);
   border-radius: 15px;
-  background: #fff7f2;
+  background: #f8fbff;
   color: var(--cl-burgundy);
   cursor: pointer;
   display: flex;
@@ -221,19 +233,12 @@
   border-color: transparent;
   color: #fff;
   background: linear-gradient(135deg, var(--cl-primary), var(--cl-burgundy));
-  box-shadow: 0 10px 22px rgba(220,38,38,.18);
-}
-
-.carniza-landing-action.whatsapp {
-  border-color: transparent;
-  color: #fff;
-  background: linear-gradient(135deg, #22c55e, #15803d);
-  box-shadow: 0 10px 22px rgba(21,128,61,.16);
+  box-shadow: 0 10px 22px rgba(4,119,242,.18);
 }
 
 .carniza-landing-footer {
   padding: 11px 14px 13px;
-  border-top: 1px solid rgba(220,38,38,.10);
+  border-top: 1px solid rgba(4,119,242,.10);
   background: #fffaf7;
   color: #806767;
   font-size: 11px;
@@ -248,21 +253,27 @@
   }
 
   .carniza-landing-fab {
-    width: 58px;
-    height: 58px;
+    min-width: 138px;
+    height: 64px;
+    padding: 7px 12px 7px 7px;
+  }
+
+  .carniza-landing-fab-icon {
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    max-height: 50px;
+  }
+
+  .carniza-landing-fab-label {
+    max-width: 72px;
+    font-size: 12px;
   }
 
   .carniza-landing-panel {
     right: -2px;
-    bottom: 72px;
+    bottom: 78px;
     width: min(326px, calc(100vw - 24px));
     border-radius: 22px;
   }
-}
-
-/* V12.0.NNN.5 Carniza landing avatar */
-.carniza-landing-fab-icon,
-.carniza-landing-avatar {
-  object-fit: cover;
-  border-radius: 999px;
 }
