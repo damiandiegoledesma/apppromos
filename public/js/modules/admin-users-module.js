@@ -15,6 +15,7 @@ import {
   updateBusinessBillingStatus,
   setBusinessTestFlag,
   markExistingBusinessesAsTest,
+  cloneBusinessAsTest,
   deleteTestBusiness,
   archiveBusiness,
   restoreBusiness,
@@ -1053,10 +1054,27 @@ export async function renderAdminUsers(container, options = {}) {
                         <button data-test-business="${escapeHtml(row.businessId)}" data-test-current="${row.isTestBusiness ? "true" : "false"}" type="button" class="admin-action-mini">${row.isTestBusiness ? "Quitar TEST" : "Marcar TEST"}</button>
                         <button data-logs-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Ver logs</button>
                         <button data-defaults-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Reparar configuración base</button>
-                        ${row.isTestBusiness ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini danger">Borrar TEST</button>` : ""}
+                        ${row.isTestBusiness
+                          ? `<button data-clone-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Clonar como TEST</button>`
+                          : `<button type="button" class="admin-action-mini" disabled title="Solo disponible para empresas TEST">Clonar solo TEST</button>`}
                       </div>
                       <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
                         “Reparar configuración base” se usa solo si una empresa vieja o de prueba no muestra bien módulos, acceso o datos básicos. No es una acción diaria.
+                      </div>
+                      <div style="margin-top:8px;color:#7a4b00;font-size:12px;line-height:1.35;">
+                        <strong>Empresas TEST:</strong> sirven para probar, clonar escenarios y limpiar datos sin tocar clientes reales. Ver documentación en <code>public/docs/EMPRESAS_TEST_APPPROMOS.md</code>.
+                      </div>
+                    </div>
+
+                    <div class="admin-detail-box">
+                      <strong>Zona peligrosa</strong>
+                      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                        ${row.isTestBusiness
+                          ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini danger">Eliminar TEST</button>`
+                          : `<button type="button" class="admin-action-mini danger" disabled title="Los clientes reales se archivan. No se eliminan desde acá.">Eliminar solo TEST</button>`}
+                      </div>
+                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                        Eliminar TEST borra datos de prueba conocidos y libera índices TEST. No borra usuarios de Firebase Auth. Para clientes reales, usar Archivar.
                       </div>
                     </div>
                   </div>
@@ -1299,17 +1317,80 @@ export async function renderAdminUsers(container, options = {}) {
     }
   }
 
+  function openCloneTestModal(row) {
+    const businessId = row.businessId;
+    const backdrop = document.createElement("div");
+    backdrop.className = "admin-modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="admin-modal" role="dialog" aria-modal="true" aria-label="Clonar empresa como TEST">
+        <div class="admin-modal-header">
+          <div>
+            <h3 style="margin:0;font-size:22px;">Clonar como TEST</h3>
+            <div style="margin-top:5px;color:#6e6e6e;font-size:14px;">
+              ${escapeHtml(businessHumanName(row))}
+            </div>
+          </div>
+          <button type="button" data-close-clone-modal style="min-width:38px;min-height:38px;border:none;border-radius:999px;background:#ece7df;font-weight:900;cursor:pointer;">✕</button>
+        </div>
+
+        <div class="admin-modal-body">
+          <div class="admin-help" style="margin:0;">
+            <strong>Esto crea una copia de prueba.</strong><br>
+            Copia catálogo/precios y configuración conocida, pero no crea usuario Auth, no duplica WhatsApp como índice real, no publica web y no convierte la copia en cliente real.
+          </div>
+          <div style="margin-top:12px;padding:12px;border:1px solid #f1d79a;border-radius:14px;background:#fff8e7;color:#7a4b00;font-size:13px;line-height:1.35;">
+            Usá esta acción para probar cambios, reproducir bugs o armar escenarios de demo sin tocar clientes reales.
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" data-close-clone-modal style="min-height:40px;padding:0 14px;border:none;border-radius:10px;background:#ece7df;color:#1f1f1f;font-weight:900;cursor:pointer;">Cancelar</button>
+          <button type="button" data-confirm-clone-test style="min-height:40px;padding:0 16px;border:none;border-radius:10px;background:#1f1f1f;color:#fff;font-weight:900;cursor:pointer;">Crear copia TEST</button>
+        </div>
+      </div>
+    `;
+
+    const close = () => backdrop.remove();
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) close();
+    });
+    backdrop.querySelectorAll("[data-close-clone-modal]").forEach((button) => button.addEventListener("click", close));
+
+    backdrop.querySelector("[data-confirm-clone-test]")?.addEventListener("click", async () => {
+      const button = backdrop.querySelector("[data-confirm-clone-test]");
+      button.disabled = true;
+      button.textContent = "Clonando...";
+      try {
+        const result = await cloneBusinessAsTest(businessId);
+        close();
+        await loadData();
+        alert(
+          `Copia TEST creada.\n\n` +
+          `Nueva empresa: ${result.name || "Copia TEST"}\n` +
+          `ID: ${result.newBusinessId}\n\n` +
+          `No se creó usuario Auth, no se publicó web y no se duplicó WhatsApp como índice real.`
+        );
+      } catch (error) {
+        alert(error?.message || "No se pudo clonar la empresa TEST");
+        button.disabled = false;
+        button.textContent = "Crear copia TEST";
+      }
+    });
+
+    document.body.appendChild(backdrop);
+  }
+
   function openDeleteTestModal(row) {
     const businessId = row.businessId;
     const backdrop = document.createElement("div");
     backdrop.className = "admin-modal-backdrop";
     backdrop.innerHTML = `
-      <div class="admin-modal" role="dialog" aria-modal="true" aria-label="Borrar empresa test">
+      <div class="admin-modal" role="dialog" aria-modal="true" aria-label="Eliminar empresa TEST">
         <div class="admin-modal-header">
           <div>
-            <h3 style="margin:0;font-size:22px;color:#b42318;">Borrar empresa test</h3>
+            <h3 style="margin:0;font-size:22px;color:#b42318;">Eliminar empresa TEST</h3>
             <div style="margin-top:5px;color:#6e6e6e;font-size:14px;">
-              ${escapeHtml(row.name || businessId)}
+              ${escapeHtml(businessHumanName(row))}
             </div>
           </div>
           <button type="button" data-close-delete-modal style="min-width:38px;min-height:38px;border:none;border-radius:999px;background:#ece7df;font-weight:900;cursor:pointer;">✕</button>
@@ -1318,17 +1399,20 @@ export async function renderAdminUsers(container, options = {}) {
         <div class="admin-modal-body">
           <div class="admin-danger-box">
             <strong>Esta acción es irreversible.</strong><br>
-            Solo se permite para empresas marcadas como TEST. Para confirmar, escribí exactamente <strong>BORRAR</strong>.
+            Solo se permite para empresas marcadas como TEST. Borra datos de prueba conocidos y puede liberar índices TEST de WhatsApp/web. No borra usuarios de Firebase Auth.
           </div>
           <label style="display:grid;gap:6px;font-weight:900;">
             Confirmación
-            <input data-delete-confirm-input type="text" placeholder="Escribí BORRAR" style="min-height:42px;border:1px solid #e7e1d8;border-radius:12px;padding:0 12px;font-weight:900;" />
+            <input data-delete-confirm-input type="text" placeholder="Escribí ELIMINAR TEST" style="min-height:42px;border:1px solid #e7e1d8;border-radius:12px;padding:0 12px;font-weight:900;" />
           </label>
+          <div style="margin-top:10px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+            Para clientes reales, usá Archivar. No elimines empresas reales desde el frontend.
+          </div>
         </div>
 
         <div class="admin-modal-footer">
           <button type="button" data-close-delete-modal style="min-height:40px;padding:0 14px;border:none;border-radius:10px;background:#ece7df;color:#1f1f1f;font-weight:900;cursor:pointer;">Cancelar</button>
-          <button type="button" data-confirm-delete-test disabled style="min-height:40px;padding:0 16px;border:none;border-radius:10px;background:#b42318;color:#fff;font-weight:900;cursor:pointer;opacity:.45;">Borrar definitivamente</button>
+          <button type="button" data-confirm-delete-test disabled style="min-height:40px;padding:0 16px;border:none;border-radius:10px;background:#b42318;color:#fff;font-weight:900;cursor:pointer;opacity:.45;">Eliminar TEST</button>
         </div>
       </div>
     `;
@@ -1338,7 +1422,7 @@ export async function renderAdminUsers(container, options = {}) {
     const deleteButton = backdrop.querySelector("[data-confirm-delete-test]");
 
     input?.addEventListener("input", () => {
-      const enabled = input.value.trim() === "BORRAR";
+      const enabled = input.value.trim() === "ELIMINAR TEST";
       deleteButton.disabled = !enabled;
       deleteButton.style.opacity = enabled ? "1" : ".45";
     });
@@ -1349,17 +1433,24 @@ export async function renderAdminUsers(container, options = {}) {
     backdrop.querySelectorAll("[data-close-delete-modal]").forEach((button) => button.addEventListener("click", close));
 
     deleteButton?.addEventListener("click", async () => {
-      if (input?.value.trim() !== "BORRAR") return;
+      if (input?.value.trim() !== "ELIMINAR TEST") return;
       deleteButton.disabled = true;
-      deleteButton.textContent = "Borrando...";
+      deleteButton.textContent = "Eliminando...";
       try {
-        await deleteTestBusiness(businessId);
+        const result = await deleteTestBusiness(businessId);
         close();
         await loadData();
+        alert(
+          `Empresa TEST eliminada.\n\n` +
+          `Subcolecciones limpiadas: ${Object.values(result.deletedCollections || {}).reduce((total, value) => total + Number(value || 0), 0)} documentos\n` +
+          `WhatsApps/index liberados: ${result.phoneKeysDeleted || 0}\n` +
+          `Slugs web liberados: ${result.slugsDeleted || 0}\n\n` +
+          `No se borró ningún usuario de Firebase Auth.`
+        );
       } catch (error) {
-        alert(error?.message || "No se pudo borrar empresa test");
+        alert(error?.message || "No se pudo eliminar empresa TEST");
         deleteButton.disabled = false;
-        deleteButton.textContent = "Borrar definitivamente";
+        deleteButton.textContent = "Eliminar TEST";
       }
     });
 
@@ -1495,11 +1586,20 @@ export async function renderAdminUsers(container, options = {}) {
       });
     });
 
+    content.querySelectorAll("[data-clone-test-business]").forEach((button) => {
+      button.addEventListener("click", () => {
+        closeAllActionMenus();
+        const row = businesses.find((b) => b.businessId === button.dataset.cloneTestBusiness);
+        if (!row) return alert("No se encontró la carnicería para clonar");
+        openCloneTestModal(row);
+      });
+    });
+
     content.querySelectorAll("[data-delete-test-business]").forEach((button) => {
       button.addEventListener("click", () => {
         closeAllActionMenus();
         const row = businesses.find((b) => b.businessId === button.dataset.deleteTestBusiness);
-        if (!row) return alert("No se encontró la carnicería para borrar");
+        if (!row) return alert("No se encontró la carnicería para eliminar");
         openDeleteTestModal(row);
       });
     });

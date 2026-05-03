@@ -319,6 +319,189 @@ function userBelongsToAnyBusiness(user = {}, businessIds = new Set()) {
   return [...directIds, ...arrayIds].some((businessId) => businessIds.has(businessId));
 }
 
+
+const CLONE_SAFE_SUBCOLLECTIONS = [
+  "items",
+  "combos",
+  "savedOffers",
+  "offers",
+  "promos"
+];
+
+const DELETE_TEST_SUBCOLLECTIONS = [
+  ...CLONE_SAFE_SUBCOLLECTIONS,
+  "metrics",
+  "userMetrics",
+  "activity",
+  "logs"
+];
+
+function clonePlainData(value) {
+  if (!value || typeof value !== "object") return value;
+  try {
+    if (typeof structuredClone === "function") return structuredClone(value);
+  } catch (_) {}
+  try { return JSON.parse(JSON.stringify(value)); }
+  catch (_) { return { ...value }; }
+}
+
+function cleanNullableText(value) {
+  return String(value || "").trim();
+}
+
+function buildTestCloneName(source = {}) {
+  const base = cleanNullableText(source.displayName || source.name || source.businessName || source.id || source.businessId || "Carnicería");
+  const suffix = "— Copia TEST";
+  return base.includes("Copia TEST") ? `${base} ${new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}` : `${base} ${suffix}`;
+}
+
+function sanitizeBusinessRootForTestClone(source = {}, newBusinessId, now) {
+  const copy = clonePlainData(source) || {};
+  const cloneName = buildTestCloneName(source);
+
+  [
+    "id",
+    "businessId",
+    "ownerUid",
+    "ownerEmail",
+    "ownerName",
+    "email",
+    "phone",
+    "telefono",
+    "whatsapp",
+    "phoneKey",
+    "publicPhoneKey",
+    "slug",
+    "publicSlug",
+    "publicUrl",
+    "webSlug"
+  ].forEach((key) => { delete copy[key]; });
+
+  const nextWeb = copy.web && typeof copy.web === "object" ? { ...copy.web } : {};
+
+  return {
+    ...copy,
+    businessId: newBusinessId,
+    id: newBusinessId,
+    name: cloneName,
+    displayName: cloneName,
+    status: "active",
+    archived: false,
+    restoredAt: null,
+    isTestBusiness: true,
+    adminStatus: "test",
+    clonedFromBusinessId: source.businessId || source.id || null,
+    clonedAt: now,
+    clonedReason: "Copia TEST creada desde Panel Admin",
+    testMarkedAt: now,
+    testReason: "Empresa clonada como TEST desde Panel Admin",
+    ownerUid: null,
+    ownerEmail: "",
+    email: "",
+    phone: "",
+    telefono: "",
+    whatsapp: "",
+    phoneKey: "",
+    publicPhoneKey: "",
+    web: {
+      ...nextWeb,
+      enabled: false,
+      active: false,
+      published: false,
+      slug: null,
+      publicUrl: null,
+      clonedDisabled: true,
+      updatedAt: now
+    },
+    billing: {
+      ...(copy.billing || {}),
+      status: "active",
+      plan: copy.billing?.plan || "trial"
+    },
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function sanitizeMetaForTestClone(meta = {}, cloneRoot = {}, now) {
+  const copy = clonePlainData(meta) || {};
+  ["ownerUid", "ownerEmail", "email", "phone", "telefono", "whatsapp", "phoneKey", "publicPhoneKey", "slug", "publicSlug", "publicUrl", "webSlug"].forEach((key) => { delete copy[key]; });
+  return {
+    ...copy,
+    businessId: cloneRoot.businessId,
+    name: cloneRoot.name,
+    displayName: cloneRoot.displayName,
+    ownerUid: null,
+    ownerEmail: "",
+    email: "",
+    phone: "",
+    telefono: "",
+    whatsapp: "",
+    phoneKey: "",
+    isTestBusiness: true,
+    adminStatus: "test",
+    clonedFromBusinessId: cloneRoot.clonedFromBusinessId || null,
+    clonedAt: now,
+    testMarkedAt: now,
+    testReason: "Empresa clonada como TEST desde Panel Admin",
+    updatedAt: now
+  };
+}
+
+async function copyKnownSubcollection(sourceBusinessId, targetBusinessId, collectionName, now) {
+  const snap = await safeAdminCollectionSnapshot(`businesses/${sourceBusinessId}/${collectionName}`);
+  if (!snap?.forEach) return 0;
+
+  const writes = [];
+  let count = 0;
+  snap.forEach((itemDoc) => {
+    const data = clonePlainData(itemDoc.data() || {});
+    const cleanData = {
+      ...data,
+      businessId: targetBusinessId,
+      clonedFromBusinessId: sourceBusinessId,
+      clonedAt: now,
+      isTestData: true,
+      updatedAt: now
+    };
+    writes.push(setDoc(doc(db, "businesses", targetBusinessId, collectionName, itemDoc.id), cleanData, { merge: false }));
+    count += 1;
+  });
+
+  await Promise.all(writes);
+  return count;
+}
+
+async function deleteKnownSubcollectionDocs(businessId, collectionName) {
+  const snap = await safeAdminCollectionSnapshot(`businesses/${businessId}/${collectionName}`);
+  if (!snap?.forEach) return 0;
+
+  const deletes = [];
+  let count = 0;
+  snap.forEach((itemDoc) => {
+    deletes.push(deleteDoc(doc(db, "businesses", businessId, collectionName, itemDoc.id)));
+    count += 1;
+  });
+  await Promise.all(deletes);
+  return count;
+}
+
+async function deleteIndexesForTestBusiness(businessId, collectionName) {
+  const snap = await safeAdminCollectionSnapshot(collectionName);
+  if (!snap?.forEach) return 0;
+
+  const deletes = [];
+  let count = 0;
+  snap.forEach((indexDoc) => {
+    const data = indexDoc.data() || {};
+    if (String(data.businessId || "") !== String(businessId)) return;
+    deletes.push(deleteDoc(doc(db, collectionName, indexDoc.id)));
+    count += 1;
+  });
+  await Promise.all(deletes);
+  return count;
+}
+
 export async function markExistingBusinessesAsTest(options = {}) {
   await requireAdmin();
   const now = new Date().toISOString();
@@ -494,12 +677,150 @@ export async function setUserDisabled(uid, disabled = true) {
   });
 }
 
+export async function cloneBusinessAsTest(businessId) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const sourceRoot = await readBusinessRoot(businessId);
+  if (!sourceRoot) throw new Error("No se encontró la empresa de origen");
+  if (sourceRoot.isTestBusiness !== true && sourceRoot.adminStatus !== "test") {
+    throw new Error("Por seguridad, solo se clonan empresas marcadas como TEST");
+  }
+
+  const now = new Date().toISOString();
+  const newBusinessRef = doc(collection(db, "businesses"));
+  const newBusinessId = newBusinessRef.id;
+  const cloneRoot = sanitizeBusinessRootForTestClone({ ...sourceRoot, businessId }, newBusinessId, now);
+
+  await setDoc(newBusinessRef, cloneRoot, { merge: false });
+
+  let metaCopied = false;
+  let stateCopied = false;
+  try {
+    const sourceMeta = await readPath(`businesses/${businessId}/core/meta`);
+    if (sourceMeta) {
+      await setDoc(doc(db, "businesses", newBusinessId, "core", "meta"), sanitizeMetaForTestClone(sourceMeta, cloneRoot, now), { merge: false });
+      metaCopied = true;
+    }
+  } catch (error) {
+    console.warn("No se pudo copiar core/meta en clon TEST", error);
+  }
+
+  try {
+    const sourceState = await readPath(`businesses/${businessId}/core/state`);
+    if (sourceState) {
+      const stateCopy = clonePlainData(sourceState) || {};
+      await setDoc(doc(db, "businesses", newBusinessId, "core", "state"), {
+        ...stateCopy,
+        businessId: newBusinessId,
+        status: "active",
+        archived: false,
+        isTestBusiness: true,
+        adminStatus: "test",
+        clonedFromBusinessId: businessId,
+        clonedAt: now,
+        updatedAt: now
+      }, { merge: false });
+      stateCopied = true;
+    }
+  } catch (error) {
+    console.warn("No se pudo copiar core/state en clon TEST", error);
+  }
+
+  const copiedCollections = {};
+  for (const collectionName of CLONE_SAFE_SUBCOLLECTIONS) {
+    try {
+      copiedCollections[collectionName] = await copyKnownSubcollection(businessId, newBusinessId, collectionName, now);
+    } catch (error) {
+      console.warn(`No se pudo copiar ${collectionName} en clon TEST`, error);
+      copiedCollections[collectionName] = 0;
+    }
+  }
+
+  const result = {
+    sourceBusinessId: businessId,
+    newBusinessId,
+    name: cloneRoot.name,
+    metaCopied,
+    stateCopied,
+    copiedCollections,
+    createdAt: now
+  };
+
+  await logAdminAction({
+    action: "test_business_cloned",
+    targetBusinessId: businessId,
+    before: { sourceBusinessId: businessId },
+    after: result
+  });
+
+  await logAdminAction({
+    action: "test_business_clone_created",
+    targetBusinessId: newBusinessId,
+    before: null,
+    after: result
+  });
+
+  return result;
+}
+
 export async function deleteTestBusiness(businessId) {
   await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
   const before = await readBusinessRoot(businessId);
-  if (!before?.isTestBusiness) throw new Error("Solo se pueden borrar físicamente empresas marcadas como prueba");
+  if (!before) throw new Error("No se encontró la empresa TEST para eliminar");
+  if (before.isTestBusiness !== true && before.adminStatus !== "test") {
+    throw new Error("Solo se pueden eliminar empresas marcadas como TEST. Para clientes reales, usá Archivar.");
+  }
+
+  const deletedCollections = {};
+  for (const collectionName of DELETE_TEST_SUBCOLLECTIONS) {
+    try {
+      deletedCollections[collectionName] = await deleteKnownSubcollectionDocs(businessId, collectionName);
+    } catch (error) {
+      console.warn(`No se pudo borrar ${collectionName} de empresa TEST`, error);
+      deletedCollections[collectionName] = 0;
+    }
+  }
+
+  let coreDeleted = 0;
+  for (const coreDoc of ["meta", "state"]) {
+    try {
+      await deleteDoc(doc(db, "businesses", businessId, "core", coreDoc));
+      coreDeleted += 1;
+    } catch (error) {
+      console.warn(`No se pudo borrar core/${coreDoc} de empresa TEST`, error);
+    }
+  }
+
+  let phoneKeysDeleted = 0;
+  let slugsDeleted = 0;
+  try { phoneKeysDeleted = await deleteIndexesForTestBusiness(businessId, "publicPhoneKeys"); }
+  catch (error) { console.warn("No se pudieron liberar publicPhoneKeys TEST", error); }
+  try { slugsDeleted = await deleteIndexesForTestBusiness(businessId, "publicWebSlugs"); }
+  catch (error) { console.warn("No se pudieron liberar publicWebSlugs TEST", error); }
+
   await deleteDoc(doc(db, "businesses", businessId));
-  await logAdminAction({ action: "test_business_deleted", targetBusinessId: businessId, before, after: null });
+
+  const result = {
+    businessId,
+    deletedCollections,
+    coreDeleted,
+    phoneKeysDeleted,
+    slugsDeleted,
+    authDeleted: false,
+    deletedAt: new Date().toISOString()
+  };
+
+  await logAdminAction({
+    action: "test_business_deleted",
+    targetBusinessId: businessId,
+    before,
+    after: result
+  });
+
+  return result;
 }
 
 export async function trackBusinessLogin(businessId) {
