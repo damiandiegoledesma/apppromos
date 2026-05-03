@@ -3,7 +3,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  deleteUser
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
@@ -416,6 +417,8 @@ export async function registerClientAndBusiness(data) {
     throw new Error("Faltan datos obligatorios");
   }
 
+  await assertPhoneKeyAvailable(identity.phoneKey);
+
   if (!identity.isValidPhone || identity.phoneKey.length < 8) {
     throw new Error("Teléfono / WhatsApp válido requerido");
   }
@@ -424,10 +427,6 @@ export async function registerClientAndBusiness(data) {
     throw new Error("Seleccioná una localidad válida para completar provincia automáticamente");
   }
 
-  const existingPhone = await trackedGetDoc(doc(db, "publicPhoneKeys", identity.phoneKey), `publicPhoneKeys/${identity.phoneKey}`);
-  if (existingPhone.exists()) {
-    throw new Error("Ese teléfono / WhatsApp ya está usado por otra carnicería");
-  }
 
   if (String(password).length < 6) {
     throw new Error("Contraseña mínimo 6 caracteres");
@@ -524,6 +523,11 @@ export async function registerClientAndBusiness(data) {
     });
 
     await setDoc(doc(db, "businesses", businessId, "core", "state"), {
+      businessId,
+      ownerUid: uid,
+      ownerEmail: email,
+      businessName,
+      createdAt: now,
       activePriceListId,
       products: templateProducts,
       savedCombos: [],
@@ -575,6 +579,12 @@ export async function registerClientAndBusiness(data) {
       businessId
     };
   } catch (error) {
+    await rollbackIncompleteRegistration(cred, businessId, error);
+
+    if (isPhoneAlreadyUsedError(error)) {
+      throw buildPhoneAlreadyUsedError();
+    }
+
     throw new Error(`No se pudo crear la carnicería desde la plantilla demo: ${error.message}`);
   }
 }

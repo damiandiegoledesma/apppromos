@@ -9,6 +9,55 @@ import { setActiveBusinessId } from "../services/business-service.js";
 
 const auth = getAuth(app);
 
+function safeValue(id) {
+  return document.getElementById(id)?.value?.trim() || "";
+}
+
+function rawValue(id) {
+  return document.getElementById(id)?.value || "";
+}
+
+function setStatus(element, message) {
+  if (element) element.textContent = message || "";
+}
+
+function humanLoginError() {
+  return "Volvé a intentar. Revisá si ingresaste bien tu mail y contraseña.";
+}
+
+function humanRegisterError(error) {
+  const text = String(error?.code || error?.message || "").toLowerCase();
+  if (
+    text.includes("phone-already-used") ||
+    text.includes("phone_already_used") ||
+    text.includes("teléfono / whatsapp") ||
+    text.includes("telefono / whatsapp") ||
+    text.includes("whatsapp ya está usado") ||
+    text.includes("whatsapp ya esta usado")
+  ) {
+    return "Ese teléfono / WhatsApp ya está registrado en otra carnicería. Probá con otro número o iniciá sesión si esa carnicería es tuya.";
+  }
+
+
+  if (text.includes("email-already-in-use")) {
+    return "Ese email ya está registrado. Probá iniciar sesión.";
+  }
+
+  if (text.includes("invalid-email")) {
+    return "Revisá que el email esté bien escrito.";
+  }
+
+  if (text.includes("weak-password") || text.includes("password")) {
+    return "La contraseña debe tener al menos 6 caracteres.";
+  }
+
+  if (text.includes("network")) {
+    return "No pudimos conectar. Revisá internet y volvé a intentar.";
+  }
+
+  return "No pudimos crear la cuenta. Revisá los datos y volvé a intentar.";
+}
+
 /* =========================
    TABS
 ========================= */
@@ -19,19 +68,21 @@ const tabRegistroBtn = document.getElementById("tabRegistroBtn");
 const tabLogin = document.getElementById("tabLogin");
 const tabRegistro = document.getElementById("tabRegistro");
 
-tabLoginBtn.onclick = () => {
-  tabLoginBtn.classList.add("active");
-  tabRegistroBtn.classList.remove("active");
-  tabLogin.classList.add("active");
-  tabRegistro.classList.remove("active");
-};
+if (tabLoginBtn && tabRegistroBtn && tabLogin && tabRegistro) {
+  tabLoginBtn.onclick = () => {
+    tabLoginBtn.classList.add("active");
+    tabRegistroBtn.classList.remove("active");
+    tabLogin.classList.add("active");
+    tabRegistro.classList.remove("active");
+  };
 
-tabRegistroBtn.onclick = () => {
-  tabRegistroBtn.classList.add("active");
-  tabLoginBtn.classList.remove("active");
-  tabRegistro.classList.add("active");
-  tabLogin.classList.remove("active");
-};
+  tabRegistroBtn.onclick = () => {
+    tabRegistroBtn.classList.add("active");
+    tabLoginBtn.classList.remove("active");
+    tabRegistro.classList.add("active");
+    tabLogin.classList.remove("active");
+  };
+}
 
 /* =========================
    LOGIN
@@ -40,23 +91,31 @@ tabRegistroBtn.onclick = () => {
 const loginBtn = document.getElementById("loginBtn");
 const loginStatus = document.getElementById("loginStatus");
 
-loginBtn.onclick = async () => {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+if (loginBtn) {
+  loginBtn.onclick = async () => {
+    const email = safeValue("loginEmail");
+    const password = rawValue("loginPassword");
 
-  try {
-    loginStatus.textContent = "Ingresando...";
-    await signInWithEmailAndPassword(auth, email, password);
+    if (!email || !password) {
+      setStatus(loginStatus, "Completá tu email y contraseña para entrar.");
+      return;
+    }
 
-    window.location.href = "./app.html";
+    try {
+      setStatus(loginStatus, "Ingresando...");
+      await signInWithEmailAndPassword(auth, email, password);
 
-  } catch (e) {
-    loginStatus.textContent = e.message;
-  }
-};
+      window.location.href = "./app.html";
+
+    } catch (e) {
+      console.warn("Login no completado:", e?.code || e?.message || e);
+      setStatus(loginStatus, humanLoginError());
+    }
+  };
+}
 
 /* =========================
-   REGISTRO NUEVO
+   REGISTRO
 ========================= */
 
 const registroBtn = document.getElementById("registroBtn");
@@ -69,53 +128,63 @@ ciudadInput?.addEventListener("localidad-ar:change", (event) => {
   const detail = event.detail || {};
   if (provinciaInput) provinciaInput.value = detail.provinciaNombre || "";
   if (provinceIdInput) provinceIdInput.value = detail.provinciaId || "";
-  registroStatus.textContent = detail.provinciaNombre
-    ? `Localidad validada: ${detail.nombre}, ${detail.provinciaNombre}`
-    : "";
+  setStatus(
+    registroStatus,
+    detail.provinciaNombre ? `Localidad validada: ${detail.nombre}, ${detail.provinciaNombre}` : ""
+  );
 });
 
-registroBtn.onclick = async () => {
+if (registroBtn) {
+  registroBtn.onclick = async () => {
+    const password = rawValue("password");
+    const passwordRepeat = rawValue("passwordRepeat");
 
-  const data = {
-    businessName: document.getElementById("businessName").value,
-    ownerName: document.getElementById("ownerName").value,
-    email: document.getElementById("email").value,
-    password: document.getElementById("password").value,
-    direccion: document.getElementById("direccion").value,
-    telefono: document.getElementById("telefono").value,
-    ciudad: document.getElementById("ciudad").value,
-    locality: document.getElementById("ciudad").value,
-    province: document.getElementById("provincia")?.value || document.getElementById("ciudad")?.dataset?.provinciaNombre || "",
-    provinceId: document.getElementById("provinceId")?.value || document.getElementById("ciudad")?.dataset?.provinciaId || ""
-  };
+    if (password !== passwordRepeat) {
+      setStatus(registroStatus, "Las contraseñas no coinciden. Revisalas y volvé a intentar.");
+      return;
+    }
 
-  try {
-    registroStatus.textContent = "Creando carnicería...";
+    if (password.length < 6) {
+      setStatus(registroStatus, "La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
 
-    const result = await registerClientAndBusiness(data);
+    const data = {
+      businessName: safeValue("businessName"),
+      ownerName: safeValue("ownerName"),
+      email: safeValue("email"),
+      password,
+      direccion: safeValue("direccion"),
+      telefono: safeValue("telefono"),
+      ciudad: safeValue("ciudad"),
+      provincia: safeValue("provincia"),
+      provinceId: safeValue("provinceId")
+    };
 
-    await setActiveBusinessId(result.businessId);
+    if (!data.businessName || !data.ownerName || !data.email || !data.telefono || !data.ciudad) {
+      setStatus(registroStatus, "Completá los datos principales para crear tu carnicería.");
+      return;
+    }
 
-    registroStatus.textContent = "Listo, entrando...";
+    try {
+      setStatus(registroStatus, "Creando tu carnicería...");
 
-    setTimeout(() => {
-      window.location.href = "./app.html";
-    }, 800);
+      const result = await registerClientAndBusiness(data);
 
-  } catch (e) {
-    console.error(e);
-    registroStatus.textContent = e.message;
-  }
-};
+      await setActiveBusinessId(result.businessId);
 
-/* =========================
-   DEMO
-========================= */
+      setStatus(
+        registroStatus,
+        "Cuenta creada. Para volver a entrar a AppPromos, usá tu email y la contraseña que acabás de crear."
+      );
 
-const demoBtn = document.getElementById("demoBtn");
+      setTimeout(() => {
+        window.location.href = "./app.html";
+      }, 1800);
 
-if (demoBtn) {
-  demoBtn.onclick = async () => {
-    window.location.href = "./app.html?demo=1";
+    } catch (e) {
+      console.error("Registro no completado:", e);
+      setStatus(registroStatus, humanRegisterError(e));
+    }
   };
 }

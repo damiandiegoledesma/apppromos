@@ -569,22 +569,43 @@
       </div>
 
       <div id="tabLogin" class="tab active">
-        <input id="loginEmail" placeholder="Email" autocomplete="email" />
-        <input id="loginPassword" type="password" placeholder="Contraseña" autocomplete="current-password" />
+        <p class="auth-help">
+          <strong>Ingresá a tu carnicería</strong>
+          Usá el email y la contraseña con los que te registraste.
+        </p>
+        <input id="loginEmail" name="loginEmail" type="email" placeholder="Email con el que te registraste" autocomplete="email" />
+        <input id="loginPassword" name="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password" />
         <button id="loginBtn" class="submit" type="button">Ingresar</button>
         <div id="loginStatus" class="status"></div>
       </div>
 
       <div id="tabRegistro" class="tab">
-        <input id="businessName" placeholder="Nombre carnicería" />
-        <input id="ownerName" placeholder="Nombre responsable" />
-        <input id="email" placeholder="Email" autocomplete="email" />
-        <input id="password" type="password" placeholder="Contraseña" autocomplete="new-password" />
-        <input id="direccion" placeholder="Dirección" />
-        <input id="telefono" placeholder="Teléfono / WhatsApp" />
-        <input id="ciudad" placeholder="Localidad" data-localidad-ar autocomplete="off" />
-        <input id="provincia" placeholder="Provincia" data-provincia-ar readonly />
-        <input id="provinceId" type="hidden" data-provincia-id-ar />
+        <p class="auth-help">
+          <strong>Creá tu carnicería gratis</strong>
+          Guardá estos datos: después vas a entrar con este email y contraseña.
+        </p>
+
+        <input id="businessName" name="businessName" placeholder="Ej: Carnicería El Corte" autocomplete="organization" />
+        <p class="field-hint">Así va a aparecer tu negocio dentro de AppPromos.</p>
+
+        <input id="ownerName" name="ownerName" placeholder="Ej: Juan Pérez" autocomplete="name" />
+
+        <input id="email" name="email" type="email" placeholder="Ej: micarniceria@gmail.com" autocomplete="email" />
+        <p class="field-hint">Este email lo vas a usar para entrar a tu cuenta.</p>
+
+        <input id="password" name="password" type="password" placeholder="Creá una contraseña" autocomplete="new-password" />
+        <input id="passwordRepeat" name="passwordRepeat" type="password" placeholder="Repetí la misma contraseña" autocomplete="new-password" />
+        <p class="field-hint">Después vas a entrar con este email y contraseña.</p>
+
+        <input id="direccion" name="direccion" placeholder="Ej: Belgrano 1250" autocomplete="street-address" />
+
+        <input id="telefono" name="telefono" placeholder="Ej: 3462 543210" autocomplete="tel" />
+        <p class="field-hint">Poné el número que usás para vender por WhatsApp.</p>
+
+        <input id="ciudad" name="ciudad" placeholder="Ej: Venado Tuerto" data-localidad-ar autocomplete="off" />
+        <input id="provincia" name="provincia" placeholder="Ej: Santa Fe" data-provincia-ar readonly />
+        <input id="provinceId" name="provinceId" type="hidden" data-provincia-id-ar />
+
         <button id="registroBtn" class="submit" type="button">Crear mi carnicería</button>
         <div id="registroStatus" class="status"></div>
       </div>
@@ -765,4 +786,5 @@
 
 </body>
 </html>
+
 
