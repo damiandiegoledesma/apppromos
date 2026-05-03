@@ -1,4 +1,4 @@
-import {
+﻿import {
   DEFAULT_MODULES,
   MODULE_LABELS,
   BILLING_PLANS,
@@ -35,6 +35,81 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+function firstText(...values) {
+  for (const value of values) {
+    const clean = String(value ?? "").trim();
+    if (clean) return clean;
+  }
+  return "";
+}
+
+function businessHumanName(row = {}) {
+  return firstText(row.name, row.displayName, row.meta?.name, row.meta?.displayName, row.businessId, "Sin nombre");
+}
+
+function businessOwnerName(row = {}) {
+  return firstText(
+    row.responsable,
+    row.responsibleName,
+    row.ownerName,
+    row.owner?.displayName,
+    row.owner?.nombre,
+    row.meta?.responsable,
+    row.meta?.responsibleName,
+    row.meta?.ownerName,
+    "Sin responsable"
+  );
+}
+
+function businessOwnerEmail(row = {}) {
+  return firstText(row.ownerEmail, row.email, row.owner?.email, row.meta?.ownerEmail, row.meta?.email, "Sin email");
+}
+
+function businessPhone(row = {}) {
+  return firstText(
+    row.telefono,
+    row.phone,
+    row.whatsapp,
+    row.ownerPhone,
+    row.meta?.telefono,
+    row.meta?.phone,
+    row.meta?.whatsapp,
+    row.owner?.telefono,
+    row.owner?.phone,
+    "Sin teléfono"
+  );
+}
+
+function businessLocation(row = {}) {
+  const city = firstText(row.localidad, row.city, row.meta?.localidad, row.meta?.city);
+  const province = firstText(row.provincia, row.province, row.meta?.provincia, row.meta?.province);
+  return [city, province].filter(Boolean).join(", ") || "Sin localidad";
+}
+
+function businessAddress(row = {}) {
+  return firstText(row.direccion, row.address, row.meta?.direccion, row.meta?.address, "");
+}
+
+function shortUid(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return "—";
+  if (clean.length <= 12) return clean;
+  return `${clean.slice(0, 8)}...${clean.slice(-4)}`;
+}
+
+function businessLabel(row = {}) {
+  const name = businessHumanName(row);
+  const phone = businessPhone(row);
+  return `${name}${phone && phone !== "Sin teléfono" ? " · " + phone : ""}`;
+}
+
+function findBusinessForUser(user = {}, businesses = []) {
+  const userBusinessId = String(user.businessId || "").trim();
+  if (!userBusinessId) return null;
+  return businesses.find((business) => String(business.businessId || "") === userBusinessId) || null;
 }
 
 function fmtDate(value) {
@@ -198,6 +273,13 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 140px 140px 140px;gap:10px;margin-bottom:12px;align-items:end;}
       .admin-toolbar label{display:grid;gap:5px;font-size:12px;color:#6e6e6e;font-weight:900;text-transform:uppercase;}
       .admin-toolbar input,.admin-toolbar select{min-height:42px;border:1px solid #e7e1d8;border-radius:12px;background:#fff;padding:0 12px;font-weight:800;}
+      .admin-human-card{display:grid;gap:4px;min-width:220px;}
+      .admin-human-name{font-weight:1000;font-size:14px;color:#1f1f1f;}
+      .admin-human-line{font-size:12px;color:#5f5147;line-height:1.28;}
+      .admin-human-line strong{color:#1f1f1f;}
+      .admin-tech-id{margin-top:5px;font-size:11px;color:#8a8178;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;}
+      .admin-user-card{display:grid;gap:4px;}
+      .admin-user-email{font-weight:1000;color:#1f1f1f;}
       .admin-help{margin-bottom:12px;padding:12px;border-radius:14px;background:#fff8f4;color:#6b4b3e;font-size:13px;line-height:1.35;}
       .admin-status-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:12px;}
       .admin-status-legend div{padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #eee6dc;font-size:12px;line-height:1.3;color:#5f5147;}
@@ -277,7 +359,7 @@ export async function renderAdminUsers(container, options = {}) {
 
     const q = businessSearch.trim().toLowerCase();
     const visibleBusinesses = businesses.filter((row) => {
-      const haystack = [row.name, row.businessId, row.ownerEmail, row.owner?.email]
+      const haystack = [row.name, row.displayName, row.businessId, row.ownerEmail, row.email, row.owner?.email, row.responsable, row.responsibleName, row.telefono, row.phone, row.whatsapp, row.localidad, row.provincia, row.meta?.name, row.meta?.responsable, row.meta?.telefono, row.meta?.localidad, row.meta?.provincia]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -303,7 +385,7 @@ export async function renderAdminUsers(container, options = {}) {
       <div class="admin-toolbar">
         <label>
           Buscar carnicería
-          <input id="adminBusinessSearch" type="search" placeholder="Nombre, ID o email..." value="${escapeHtml(businessSearch)}" />
+          <input id="adminBusinessSearch" type="search" placeholder="Nombre, responsable, email, teléfono o localidad..." value="${escapeHtml(businessSearch)}" />
         </label>
         <label>
           Acceso
@@ -351,10 +433,16 @@ export async function renderAdminUsers(container, options = {}) {
                 return `
                 <tr>
                   <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    <div style="font-weight:900;">${escapeHtml(row.name || row.businessId)}</div>
-                    <div style="font-size:12px;color:#6e6e6e;">${escapeHtml(row.businessId)}</div>
-                    <div style="font-size:12px;color:#6e6e6e;">${escapeHtml(row.ownerEmail || row.owner?.email || "sin owner")}</div>
-                    ${row.isTestBusiness ? `<div style="margin-top:4px;color:#8a6200;font-weight:900;font-size:12px;">TEST</div>` : ""}
+                    <div class="admin-human-card">
+                      <div class="admin-human-name">${escapeHtml(businessHumanName(row))}</div>
+                      <div class="admin-human-line"><strong>Responsable:</strong> ${escapeHtml(businessOwnerName(row))}</div>
+                      <div class="admin-human-line"><strong>Email:</strong> ${escapeHtml(businessOwnerEmail(row))}</div>
+                      <div class="admin-human-line"><strong>WhatsApp:</strong> ${escapeHtml(businessPhone(row))}</div>
+                      <div class="admin-human-line"><strong>Ubicación:</strong> ${escapeHtml(businessLocation(row))}</div>
+                      ${businessAddress(row) ? `<div class="admin-human-line"><strong>Dirección:</strong> ${escapeHtml(businessAddress(row))}</div>` : ""}
+                      <div class="admin-tech-id">ID técnico: ${escapeHtml(row.businessId)}</div>
+                    </div>
+                    ${row.isTestBusiness ? `<div style="margin-top:6px;color:#8a6200;font-weight:900;font-size:12px;">TEST</div>` : ""}
                   </td>
                   <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
                     ${statusBadge(row.status)}
@@ -442,24 +530,49 @@ export async function renderAdminUsers(container, options = {}) {
 
   function renderUsers() {
     content.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:760px;">
-        <thead><tr style="background:#f8f5f0;">
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Usuario</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Rol</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Carnicería</th>
-          <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Acceso</th>
-        </tr></thead>
-        <tbody>
-          ${users.map((u) => `
-            <tr>
-              <td style="padding:10px;border-bottom:1px solid #f0ebe3;"><strong>${escapeHtml(u.email || "Sin email")}</strong><div style="font-size:12px;color:#6e6e6e;">${escapeHtml(u.uid)}</div></td>
-              <td style="padding:10px;border-bottom:1px solid #f0ebe3;">${escapeHtml(u.role || "client")}</td>
-              <td style="padding:10px;border-bottom:1px solid #f0ebe3;">${escapeHtml(u.businessId || "—")}</td>
-              <td style="padding:10px;border-bottom:1px solid #f0ebe3;">${escapeHtml(u.status || "active")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
+      <div class="admin-help">
+        <strong>Usuarios:</strong> acá se ve quién entra a AppPromos, con qué email, qué rol tiene y a qué carnicería pertenece. Las contraseñas no se muestran por seguridad.
+      </div>
+
+      <div class="admin-table-wrap">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:920px;">
+          <thead><tr style="background:#f8f5f0;">
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Usuario</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Rol</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Carnicería</th>
+            <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Acceso</th>
+          </tr></thead>
+          <tbody>
+            ${users.map((u) => {
+              const linkedBusiness = findBusinessForUser(u, businesses);
+              return `
+                <tr>
+                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
+                    <div class="admin-user-card">
+                      <div class="admin-user-email">${escapeHtml(u.email || "Sin email")}</div>
+                      ${u.displayName ? `<div class="admin-human-line"><strong>Nombre:</strong> ${escapeHtml(u.displayName)}</div>` : ""}
+                      <div class="admin-tech-id">UID técnico: ${escapeHtml(shortUid(u.uid))}</div>
+                    </div>
+                  </td>
+                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">${escapeHtml(u.role || "client")}</td>
+                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
+                    ${linkedBusiness ? `
+                      <div class="admin-human-name">${escapeHtml(businessHumanName(linkedBusiness))}</div>
+                      <div class="admin-human-line"><strong>Responsable:</strong> ${escapeHtml(businessOwnerName(linkedBusiness))}</div>
+                      <div class="admin-human-line"><strong>WhatsApp:</strong> ${escapeHtml(businessPhone(linkedBusiness))}</div>
+                      <div class="admin-tech-id">ID técnico: ${escapeHtml(u.businessId || "—")}</div>
+                    ` : `
+                      <div class="admin-human-line">Sin carnicería asociada</div>
+                      <div class="admin-tech-id">${escapeHtml(u.businessId || "—")}</div>
+                    `}
+                  </td>
+                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">${escapeHtml(u.status || "active")}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
     `;
   }
 
@@ -765,3 +878,4 @@ export async function renderAdminUsers(container, options = {}) {
   reloadBtn?.addEventListener("click", loadData);
   await loadData();
 }
+

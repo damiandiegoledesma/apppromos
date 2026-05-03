@@ -1,4 +1,4 @@
-import {
+﻿import {
   db,
   doc,
   collection,
@@ -125,6 +125,18 @@ export async function listAdminBusinesses() {
       ...normalized,
       businessId,
       id: businessId,
+      name: root.name || meta?.name || normalized.name || businessId,
+      displayName: root.displayName || meta?.displayName || root.name || meta?.name || normalized.name || businessId,
+      responsable: root.responsable || root.responsibleName || root.ownerName || meta?.responsable || meta?.responsibleName || owner?.displayName || owner?.nombre || "",
+      responsibleName: root.responsibleName || root.responsable || root.ownerName || meta?.responsibleName || meta?.responsable || owner?.displayName || owner?.nombre || "",
+      email: root.email || root.ownerEmail || meta?.email || meta?.ownerEmail || owner?.email || "",
+      ownerEmail: root.ownerEmail || root.email || owner?.email || meta?.ownerEmail || meta?.email || "",
+      telefono: root.telefono || root.phone || root.whatsapp || meta?.telefono || meta?.phone || meta?.whatsapp || owner?.telefono || owner?.phone || "",
+      phone: root.phone || root.telefono || root.whatsapp || meta?.phone || meta?.telefono || meta?.whatsapp || owner?.phone || owner?.telefono || "",
+      whatsapp: root.whatsapp || root.telefono || root.phone || meta?.whatsapp || meta?.telefono || meta?.phone || "",
+      localidad: root.localidad || root.city || meta?.localidad || meta?.city || "",
+      provincia: root.provincia || root.province || meta?.provincia || meta?.province || "",
+      direccion: root.direccion || root.address || meta?.direccion || meta?.address || "",
       owner,
       meta
     };
@@ -295,3 +307,4 @@ export function subscribeBusinessControl(businessId, callback) {
     console.warn("Listener business control error", error);
   });
 }
+
