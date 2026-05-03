@@ -403,6 +403,78 @@ export async function logoutUser() {
    NUEVA LÓGICA: CLONAR DEMO
 ========================= */
 
+
+function buildPhoneAlreadyUsedError() {
+  const error = new Error("PHONE_ALREADY_USED");
+  error.code = "app/phone-already-used";
+  return error;
+}
+
+function isPhoneAlreadyUsedError(error) {
+  const text = String(error?.code || error?.message || error || "").toLowerCase();
+
+  return (
+    text.includes("phone-already-used") ||
+    text.includes("phone_already_used") ||
+    text.includes("phone already used") ||
+    text.includes("teléfono / whatsapp") ||
+    text.includes("telefono / whatsapp") ||
+    text.includes("whatsapp ya está usado") ||
+    text.includes("whatsapp ya esta usado") ||
+    text.includes("phone_already_used")
+  );
+}
+
+async function assertPhoneKeyAvailable(phoneKey) {
+  const cleanPhoneKey = String(phoneKey || "").trim();
+
+  if (!cleanPhoneKey) {
+    throw new Error("Teléfono / WhatsApp inválido");
+  }
+
+  const phoneKeySnap = await trackedGetDoc(
+    doc(db, "publicPhoneKeys", cleanPhoneKey),
+    `publicPhoneKeys/${cleanPhoneKey}`
+  );
+
+  if (phoneKeySnap.exists()) {
+    const data = phoneKeySnap.data() || {};
+    if (data.active !== false) {
+      throw buildPhoneAlreadyUsedError();
+    }
+  }
+}
+
+async function rollbackIncompleteRegistration(cred, businessId, reason) {
+  console.warn("Registro incompleto. Intentando limpiar usuario recién creado.", {
+    businessId,
+    reason: reason?.code || reason?.message || reason
+  });
+
+  try {
+    if (businessId && localStorage.getItem("activeBusinessId") === businessId) {
+      localStorage.removeItem("activeBusinessId");
+    }
+  } catch (storageError) {
+    console.warn("No se pudo limpiar activeBusinessId local", storageError);
+  }
+
+  try {
+    if (cred?.user) {
+      await deleteUser(cred.user);
+      return;
+    }
+  } catch (deleteError) {
+    console.warn("No se pudo borrar el usuario incompleto. Cerrando sesión.", deleteError);
+  }
+
+  try {
+    await signOut(auth);
+  } catch (signOutError) {
+    console.warn("No se pudo cerrar sesión luego de un registro incompleto", signOutError);
+  }
+}
+
 export async function registerClientAndBusiness(data) {
   const {
     businessName,
@@ -557,7 +629,11 @@ export async function registerClientAndBusiness(data) {
     await setDoc(doc(db, "publicPhoneKeys", identity.phoneKey), {
       businessId,
       phoneKey: identity.phoneKey,
+      ownerUid: uid,
+      ownerEmail: email,
+      businessName,
       active: true,
+      createdAt: now,
       updatedAt: now
     });
 
