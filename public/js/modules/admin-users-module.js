@@ -14,6 +14,7 @@ import {
   updateBusinessBillingPlan,
   updateBusinessBillingStatus,
   setBusinessTestFlag,
+  markExistingBusinessesAsTest,
   deleteTestBusiness,
   archiveBusiness,
   restoreBusiness,
@@ -83,9 +84,13 @@ function businessPhone(row = {}) {
     row.phone,
     row.whatsapp,
     row.ownerPhone,
+    row.phoneKey,
+    row.publicPhoneKey,
+    row.phoneIndex?.phoneKey,
     row.meta?.telefono,
     row.meta?.phone,
     row.meta?.whatsapp,
+    row.meta?.phoneKey,
     row.owner?.telefono,
     row.owner?.phone,
     "Sin teléfono"
@@ -121,15 +126,24 @@ function buildAdminWhatsappUrl(row = {}) {
 }
 
 function renderWhatsappAction(row = {}, label = "📲 WhatsApp") {
-  const disabled = !normalizeAdminWhatsappNumber(businessPhone(row));
+  const phoneNumber = normalizeAdminWhatsappNumber(businessPhone(row));
+  const disabled = !phoneNumber;
+  const isTest = row.isTestBusiness === true || String(row.adminStatus || "").toLowerCase() === "test";
+  const finalLabel = isTest && !disabled && /Escribir/i.test(label) ? label.replace(/Escribir/i, "Escribir TEST") : label;
+  const title = disabled
+    ? "Esta carnicería no tiene WhatsApp válido"
+    : isTest
+      ? "Empresa TEST: verificá que este número sea de prueba antes de enviar"
+      : "Abrir WhatsApp con mensaje base";
+
   return `
     <button
       data-whatsapp-business="${escapeHtml(row.businessId || "")}"
       type="button"
-      class="admin-whatsapp-action${disabled ? " disabled" : ""}"
+      class="admin-whatsapp-action${disabled ? " disabled" : ""}${isTest ? " test" : ""}"
       ${disabled ? "disabled" : ""}
-      title="${disabled ? "Esta carnicería no tiene WhatsApp válido" : "Abrir WhatsApp con mensaje base"}"
-    >${escapeHtml(label)}</button>
+      title="${escapeHtml(title)}"
+    >${escapeHtml(finalLabel)}</button>
   `;
 }
 
@@ -640,6 +654,8 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-client-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:260px;}
       .admin-whatsapp-action{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 11px;border:1px solid #0f8f3d;border-radius:10px;background:#ecfff2;color:#137333;font-weight:1000;cursor:pointer;white-space:nowrap;}
       .admin-whatsapp-action:hover{background:#dffbea;border-color:#137333;}
+      .admin-whatsapp-action.test{border-color:#b7791f;background:#fff7db;color:#7a4b00;}
+      .admin-whatsapp-action.test:hover{background:#fff1bd;border-color:#8a6200;}
       .admin-whatsapp-action.disabled{opacity:.45;cursor:not-allowed;background:#f3f3f3;color:#777;border-color:#ddd;}
       .admin-client-details{border-top:1px solid #f0ebe3;background:#fffaf5;padding:0;}
       .admin-client-details summary{cursor:pointer;padding:10px 14px;font-weight:1000;color:#5f5147;}
@@ -665,6 +681,11 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-status-pill.success{background:#ecfff2;color:#137333;}
       .admin-status-pill.warn{background:#fff7df;color:#8a6200;}
       .admin-help{margin-bottom:12px;padding:12px;border-radius:14px;background:#fff8f4;color:#6b4b3e;font-size:13px;line-height:1.35;}
+      .admin-test-toolbox{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;padding:12px;border:1px solid #ecd7a8;border-radius:14px;background:#fffaf0;color:#5f3d00;}
+      .admin-test-toolbox strong{display:block;color:#3a2a00;margin-bottom:3px;}
+      .admin-test-toolbox small{display:block;line-height:1.35;color:#6d560c;}
+      .admin-test-toolbox button{min-height:38px;padding:0 12px;border:0;border-radius:10px;background:#8a6200;color:#fff;font-weight:1000;cursor:pointer;}
+      .admin-test-toolbox button:disabled{background:#d6ccb1;color:#756747;cursor:not-allowed;}
       .admin-status-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:12px;}
       .admin-status-legend div{padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #eee6dc;font-size:12px;line-height:1.3;color:#5f5147;}
       .admin-status-legend strong{display:block;color:#1f1f1f;margin-bottom:2px;}
@@ -855,6 +876,9 @@ export async function renderAdminUsers(container, options = {}) {
     }
 
     const q = businessSearch.trim().toLowerCase();
+    const testCount = businesses.filter((row) => row.isTestBusiness === true).length;
+    const realCount = Math.max(0, businesses.length - testCount);
+    const canMarkCurrentBaseAsTest = businesses.length > 0 && realCount > 0;
     const visibleBusinesses = businesses.filter((row) => {
       const haystack = [row.name, row.displayName, row.businessId, row.ownerEmail, row.email, row.owner?.email, row.responsable, row.responsibleName, row.telefono, row.phone, row.whatsapp, row.localidad, row.provincia, row.meta?.name, row.meta?.responsable, row.meta?.telefono, row.meta?.localidad, row.meta?.provincia]
         .filter(Boolean)
@@ -880,6 +904,14 @@ export async function renderAdminUsers(container, options = {}) {
     content.innerHTML = `
       <div class="admin-help">
         <strong>Panel operativo:</strong> vista compacta para decidir rápido. La ayuda completa queda en “Ver detalle y acciones”, así la pantalla no se llena de datos todos juntos.
+      </div>
+
+      <div class="admin-test-toolbox">
+        <div>
+          <strong>Base actual: ${testCount} TEST · ${realCount} sin marca TEST</strong>
+          <small>Usar antes del primer cliente real. Marca empresas, usuarios asociados e índices públicos como prueba. No borra nada ni libera WhatsApp/slug.</small>
+        </div>
+        <button data-mark-current-base-test type="button" ${canMarkCurrentBaseAsTest ? "" : "disabled"}>${canMarkCurrentBaseAsTest ? "Marcar base actual como TEST" : "Base actual marcada como TEST"}</button>
       </div>
 
       <div class="admin-toolbar">
@@ -1009,6 +1041,7 @@ export async function renderAdminUsers(container, options = {}) {
                       <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap;">
                         ${renderWhatsappAction(row, "📲 Escribir por WhatsApp")}
                       </div>
+                      ${row.isTestBusiness ? `<div style="margin-top:8px;color:#7a4b00;font-size:12px;line-height:1.35;"><strong>Empresa TEST:</strong> verificá que este número sea de prueba antes de enviar.</div>` : ""}
                       <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
                         Abre WhatsApp con un mensaje base editable. Los mensajes por pago, prueba por vencer o cambio de plan van en el próximo bloque de Control operativo.
                       </div>
@@ -1352,6 +1385,43 @@ export async function renderAdminUsers(container, options = {}) {
         closeAllActionMenus();
       }
     }, { once: true });
+
+    content.querySelector("[data-mark-current-base-test]")?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      if (!button || button.disabled) return;
+
+      const typed = window.prompt(
+        `Esta acción marcará las ${businesses.length} carnicerías actuales como EMPRESAS TEST.\n\nNo borra nada. No toca Auth. No libera WhatsApp ni slug.\n\nPara confirmar escribí: MARCAR TEST`
+      );
+
+      if (typed !== "MARCAR TEST") {
+        alert("Acción cancelada. No se marcó la base como TEST.");
+        return;
+      }
+
+      const previousText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Marcando base...";
+
+      try {
+        const result = await markExistingBusinessesAsTest({
+          reason: "Base actual marcada como TEST desde Panel Admin antes del primer cliente real"
+        });
+        alert(
+          `Base actual marcada como TEST.\n\n` +
+          `Empresas: ${result.businessCount}\n` +
+          `Usuarios asociados: ${result.userCount}\n` +
+          `WhatsApps/index phoneKey: ${result.phoneKeyCount}\n` +
+          `Slugs web: ${result.slugCount}`
+        );
+        await loadData();
+      } catch (error) {
+        console.error("No se pudo marcar base como TEST", error);
+        alert(error?.message || "No se pudo marcar la base como TEST.");
+        button.disabled = false;
+        button.textContent = previousText || "Marcar base actual como TEST";
+      }
+    });
 
     content.querySelectorAll("[data-status-business]").forEach((select) => {
       select.addEventListener("change", async () => {

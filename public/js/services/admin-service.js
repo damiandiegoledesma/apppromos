@@ -96,11 +96,20 @@ export async function listAdminBusinesses() {
   const businessDocs = await readCollection("businesses");
   const usersSnap = await trackedGetDocs(collection(db, "users"), "users");
   const usersByBusiness = new Map();
+  const phoneKeyByBusiness = new Map();
 
   usersSnap.forEach((userSnap) => {
     const user = userSnap.data() || {};
     const businessId = user.businessId || user.primaryBusinessId || (Array.isArray(user.businesses) ? user.businesses[0] : null);
     if (businessId) usersByBusiness.set(String(businessId), { uid: userSnap.id, ...user });
+  });
+
+  const phoneKeysSnap = await safeAdminCollectionSnapshot("publicPhoneKeys");
+  phoneKeysSnap?.forEach((phoneSnap) => {
+    const data = phoneSnap.data() || {};
+    const businessId = String(data.businessId || "").trim();
+    const phoneKey = String(data.phoneKey || phoneSnap.id || "").trim();
+    if (businessId && phoneKey) phoneKeyByBusiness.set(businessId, { id: phoneSnap.id, phoneKey, ...data });
   });
 
   const rows = await Promise.all(businessDocs.map(async (item) => {
@@ -111,6 +120,7 @@ export async function listAdminBusinesses() {
     catch (error) { console.warn("No se pudo leer meta", businessId, error); }
 
     const owner = usersByBusiness.get(businessId) || null;
+    const phoneIndex = phoneKeyByBusiness.get(businessId) || null;
     const normalized = buildBusinessDefaults({
       ...root,
       businessId,
@@ -136,9 +146,12 @@ export async function listAdminBusinesses() {
       restoredAt: root.restoredAt || null,
       clonedFromBusinessId: root.clonedFromBusinessId || null,
       adminStatus: root.adminStatus || null,
-      telefono: root.telefono || root.phone || root.whatsapp || meta?.telefono || meta?.phone || meta?.whatsapp || owner?.telefono || owner?.phone || "",
-      phone: root.phone || root.telefono || root.whatsapp || meta?.phone || meta?.telefono || meta?.whatsapp || owner?.phone || owner?.telefono || "",
-      whatsapp: root.whatsapp || root.telefono || root.phone || meta?.whatsapp || meta?.telefono || meta?.phone || "",
+      telefono: root.telefono || root.phone || root.whatsapp || meta?.telefono || meta?.phone || meta?.whatsapp || owner?.telefono || owner?.phone || phoneIndex?.phoneKey || "",
+      phone: root.phone || root.telefono || root.whatsapp || meta?.phone || meta?.telefono || meta?.whatsapp || owner?.phone || owner?.telefono || phoneIndex?.phoneKey || "",
+      whatsapp: root.whatsapp || root.telefono || root.phone || meta?.whatsapp || meta?.telefono || meta?.phone || phoneIndex?.phoneKey || "",
+      phoneKey: root.phoneKey || meta?.phoneKey || phoneIndex?.phoneKey || "",
+      publicPhoneKey: phoneIndex?.phoneKey || "",
+      phoneIndex,
       localidad: root.localidad || root.city || meta?.localidad || meta?.city || "",
       provincia: root.provincia || root.province || meta?.provincia || meta?.province || "",
       direccion: root.direccion || root.address || meta?.direccion || meta?.address || "",
@@ -284,9 +297,116 @@ export async function setBusinessTestFlag(businessId, isTestBusiness) {
   const before = await readBusinessRoot(businessId);
   await setDoc(doc(db, "businesses", businessId), {
     isTestBusiness: isTestBusiness === true,
+    adminStatus: isTestBusiness === true ? "test" : "real",
+    testMarkedAt: isTestBusiness === true ? new Date().toISOString() : null,
     updatedAt: new Date().toISOString()
   }, { merge: true });
-  await logAdminAction({ action: "business_test_flag_changed", targetBusinessId: businessId, before: { isTestBusiness: before?.isTestBusiness === true }, after: { isTestBusiness: isTestBusiness === true } });
+  await logAdminAction({ action: "business_test_flag_changed", targetBusinessId: businessId, before: { isTestBusiness: before?.isTestBusiness === true, adminStatus: before?.adminStatus || null }, after: { isTestBusiness: isTestBusiness === true, adminStatus: isTestBusiness === true ? "test" : "real" } });
+}
+
+async function safeAdminCollectionSnapshot(collectionName) {
+  try {
+    return await trackedGetDocs(collection(db, collectionName), collectionName);
+  } catch (error) {
+    console.warn(`No se pudo leer ${collectionName} para marcar TEST`, error);
+    return null;
+  }
+}
+
+function userBelongsToAnyBusiness(user = {}, businessIds = new Set()) {
+  const directIds = [user.businessId, user.primaryBusinessId].filter(Boolean).map(String);
+  const arrayIds = Array.isArray(user.businesses) ? user.businesses.filter(Boolean).map(String) : [];
+  return [...directIds, ...arrayIds].some((businessId) => businessIds.has(businessId));
+}
+
+export async function markExistingBusinessesAsTest(options = {}) {
+  await requireAdmin();
+  const now = new Date().toISOString();
+  const reason = String(options.reason || "Base actual marcada como TEST antes del primer cliente real").trim();
+
+  const businessDocs = await readCollection("businesses");
+  const businessIds = new Set(businessDocs.map((item) => String(item.id)).filter(Boolean));
+  const updates = [];
+
+  businessDocs.forEach((item) => {
+    const businessId = String(item.id || "").trim();
+    if (!businessId) return;
+
+    const patch = {
+      isTestBusiness: true,
+      adminStatus: "test",
+      testMarkedAt: now,
+      testReason: reason,
+      updatedAt: now
+    };
+
+    updates.push(setDoc(doc(db, "businesses", businessId), patch, { merge: true }));
+    updates.push(setDoc(doc(db, "businesses", businessId, "core", "meta"), patch, { merge: true }));
+  });
+
+  let userCount = 0;
+  const usersSnap = await safeAdminCollectionSnapshot("users");
+  usersSnap?.forEach((userSnap) => {
+    const data = userSnap.data() || {};
+    if (!userBelongsToAnyBusiness(data, businessIds)) return;
+    userCount += 1;
+    updates.push(setDoc(doc(db, "users", userSnap.id), {
+      isTestUser: true,
+      testMarkedAt: now,
+      testReason: reason,
+      updatedAt: now
+    }, { merge: true }));
+  });
+
+  let phoneKeyCount = 0;
+  const phoneSnap = await safeAdminCollectionSnapshot("publicPhoneKeys");
+  phoneSnap?.forEach((phoneDoc) => {
+    const data = phoneDoc.data() || {};
+    const businessId = String(data.businessId || "").trim();
+    if (!businessIds.has(businessId)) return;
+    phoneKeyCount += 1;
+    updates.push(setDoc(doc(db, "publicPhoneKeys", phoneDoc.id), {
+      isTestBusiness: true,
+      adminStatus: "test",
+      testMarkedAt: now,
+      testReason: reason,
+      updatedAt: now
+    }, { merge: true }));
+  });
+
+  let slugCount = 0;
+  const slugSnap = await safeAdminCollectionSnapshot("publicWebSlugs");
+  slugSnap?.forEach((slugDoc) => {
+    const data = slugDoc.data() || {};
+    const businessId = String(data.businessId || "").trim();
+    if (!businessIds.has(businessId)) return;
+    slugCount += 1;
+    updates.push(setDoc(doc(db, "publicWebSlugs", slugDoc.id), {
+      isTestBusiness: true,
+      adminStatus: "test",
+      testMarkedAt: now,
+      testReason: reason,
+      updatedAt: now
+    }, { merge: true }));
+  });
+
+  await Promise.all(updates);
+
+  const result = {
+    businessCount: businessDocs.length,
+    userCount,
+    phoneKeyCount,
+    slugCount,
+    markedAt: now
+  };
+
+  await logAdminAction({
+    action: "current_base_marked_as_test",
+    before: null,
+    after: result
+  });
+
+  return result;
 }
 
 
