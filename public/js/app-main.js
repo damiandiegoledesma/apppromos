@@ -945,7 +945,13 @@ function ensureCarnizaFloatingLiquidator() {
       }
       body.apppromos-nelly-mode #carnizaFloatingLiquidatorShell,
       body.apppromos-nelly-mode .carniza-root,
-      body.apppromos-nelly-mode .dash-carniza-card {
+      body.apppromos-nelly-mode .dash-carniza-card,
+      body.module-focus-admin #carnizaFloatingLiquidatorShell,
+      body.module-focus-admin .carniza-root,
+      body.module-focus-admin .dash-carniza-card {
+        display: none !important;
+      }
+      body.module-focus-admin #carnizaFloatingLiquidatorOverlay {
         display: none !important;
       }
       #carnizaFloatingLiquidatorFab:hover {
@@ -1124,6 +1130,32 @@ async function renderCarnizaCommercialLayer(container) {
   // El hito Carniza vive en Inicio y el Liquidador sigue disponible sin depender de Python.
 }
 
+
+function renderSuperadminBusinessContextBanner() {
+  if (!dashboardPanel || currentSession?.appMode !== "superadmin") return;
+
+  const businessName =
+    currentPayload?.meta?.name ||
+    currentPayload?.meta?.nombre ||
+    currentPayload?.businessId ||
+    currentBusinessId ||
+    "esta carnicería";
+
+  const banner = document.createElement("div");
+  banner.id = "adminBusinessContextBanner";
+  banner.style.cssText = "margin:0 0 14px;padding:12px 14px;border:1px solid #d8cfc2;border-left:6px solid #1d3b7a;border-radius:16px;background:#f8fbff;color:#1f2f4f;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 8px 20px rgba(0,0,0,.04);";
+  banner.innerHTML = `
+    <div style="display:grid;gap:3px;min-width:220px;">
+      <strong style="font-size:14px;">Modo administrador</strong>
+      <span style="font-size:13px;line-height:1.3;font-weight:800;">Estás viendo <b>${escapeCarnizaHtml(businessName)}</b> como administrador.</span>
+      <span style="font-size:12px;color:#5f6f8f;line-height:1.3;">Esto sirve para revisar soporte sin perder el control del Panel Admin.</span>
+    </div>
+    <button type="button" data-admin-return-panel style="min-height:38px;padding:0 13px;border:none;border-radius:10px;background:#1d3b7a;color:#fff;font-weight:1000;cursor:pointer;">Volver al Panel Admin</button>
+  `;
+  banner.querySelector("[data-admin-return-panel]")?.addEventListener("click", () => goToPanel("usersPanel"));
+  dashboardPanel.prepend(banner);
+}
+
 function renderCurrentDashboard() {
   if (!currentPayload || !dashboardPanel) return;
   renderDashboard(
@@ -1151,6 +1183,7 @@ function renderCurrentDashboard() {
       }
     }
   );
+  renderSuperadminBusinessContextBanner();
   trackCarnizaSignal("carniza_home_seen", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
   void renderCarnizaCommercialLayer(dashboardPanel);
   ensureCarnizaFloatingLiquidator();
@@ -1168,6 +1201,11 @@ function activatePanel(panelId) {
   // Al volver a cualquier otro panel, la navegación superior reaparece.
   document.body.classList.toggle("module-focus-market", panelId === "marketPanel");
   document.body.classList.toggle("module-focus-admin", panelId === "usersPanel");
+  if (panelId === "usersPanel") {
+    // En Administración el foco es gestionar clientes, usuarios y estados.
+    // Carniza se oculta para no tapar información operativa; volverá en módulos comerciales.
+    closeCarnizaUnifiedOverlay();
+  }
   window.dispatchEvent(new CustomEvent("apppromos:panel-changed", { detail: { panelId } }));
   updateCarnizaContext({
     panelId,

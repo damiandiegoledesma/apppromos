@@ -1,4 +1,4 @@
-﻿import {
+import {
   DEFAULT_MODULES,
   MODULE_LABELS,
   BILLING_PLANS,
@@ -10,11 +10,14 @@ import {
   listAdminBusinesses,
   listAdminUsers,
   updateBusinessStatus,
-  updateBusinessModule,
+  updateBusinessModules,
   updateBusinessBillingPlan,
   updateBusinessBillingStatus,
   setBusinessTestFlag,
   deleteTestBusiness,
+  archiveBusiness,
+  restoreBusiness,
+  setUserDisabled,
   ensureBusinessAdminDefaults,
   listAdminActionsForBusiness
 } from "../services/admin-service.js";
@@ -27,6 +30,12 @@ const MODULE_DESCRIPTIONS = {
   webPremium: "Activa la web pública premium de la carnicería.",
   whatsapp: "Habilita herramientas para preparar mensajes comerciales de WhatsApp."
 };
+
+const ADMIN_BILLING_PLANS = Array.from(new Set([
+  ...BILLING_PLANS,
+  "dueno"
+]));
+
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -83,6 +92,47 @@ function businessPhone(row = {}) {
   );
 }
 
+
+function normalizeAdminWhatsappNumber(value = "") {
+  let digits = String(value || "").replace(/\D/g, "");
+  if (!digits) return "";
+  while (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = digits.replace(/^0+/, "");
+  if (digits.startsWith("549")) return digits;
+  if (digits.startsWith("54")) return digits;
+  if (digits.length >= 10) return `549${digits}`;
+  return digits;
+}
+
+function buildAdminWhatsappMessage(row = {}) {
+  const name = businessHumanName(row);
+  return [
+    "Hola, soy Damian de AppPromos.",
+    "",
+    `Te escribo por ${name} en AppPromos.`
+  ].join("\n");
+}
+
+function buildAdminWhatsappUrl(row = {}) {
+  const number = normalizeAdminWhatsappNumber(businessPhone(row));
+  if (!number) return "";
+  const text = encodeURIComponent(buildAdminWhatsappMessage(row));
+  return `https://wa.me/${number}?text=${text}`;
+}
+
+function renderWhatsappAction(row = {}, label = "📲 WhatsApp") {
+  const disabled = !normalizeAdminWhatsappNumber(businessPhone(row));
+  return `
+    <button
+      data-whatsapp-business="${escapeHtml(row.businessId || "")}"
+      type="button"
+      class="admin-whatsapp-action${disabled ? " disabled" : ""}"
+      ${disabled ? "disabled" : ""}
+      title="${disabled ? "Esta carnicería no tiene WhatsApp válido" : "Abrir WhatsApp con mensaje base"}"
+    >${escapeHtml(label)}</button>
+  `;
+}
+
 function businessLocation(row = {}) {
   const city = firstText(row.localidad, row.city, row.meta?.localidad, row.meta?.city);
   const province = firstText(row.provincia, row.province, row.meta?.provincia, row.meta?.province);
@@ -104,6 +154,29 @@ function businessLabel(row = {}) {
   const name = businessHumanName(row);
   const phone = businessPhone(row);
   return `${name}${phone && phone !== "Sin teléfono" ? " · " + phone : ""}`;
+}
+
+
+function isArchivedBusiness(row = {}) {
+  return row.archived === true || String(row.status || "").toLowerCase() === "archived";
+}
+
+function isDisabledUser(user = {}) {
+  return user.disabled === true || String(user.status || "").toLowerCase() === "disabled";
+}
+
+function businessStatusLabel(row = {}) {
+  if (isArchivedBusiness(row)) return "Archivada";
+  const status = String(row.status || "active").toLowerCase();
+  if (status === "suspended") return "Acceso pausado";
+  if (status === "overdue") return "Pago pendiente";
+  if (status === "active") return "Activa";
+  return row.status || "Activa";
+}
+
+function userStatusLabel(user = {}) {
+  if (isDisabledUser(user)) return "Desactivado";
+  return user.status || "active";
 }
 
 function findBusinessForUser(user = {}, businesses = []) {
@@ -180,6 +253,240 @@ function commercialBadge(summary = {}) {
   `;
 }
 
+
+const STATE_TONES = {
+  ok: { bg: "#e9f8ef", color: "#16703a", border: "#bde8cb" },
+  trial: { bg: "#fff8df", color: "#8a6200", border: "#f2d47b" },
+  warn: { bg: "#fff4e5", color: "#b54708", border: "#ffd0a0" },
+  danger: { bg: "#fff1f0", color: "#b42318", border: "#f0b4ae" },
+  neutral: { bg: "#f5f1eb", color: "#5f5147", border: "#e7e1d8" },
+  admin: { bg: "#eef2ff", color: "#1d3b7a", border: "#c7d2fe" }
+};
+
+function toneStyle(tone = "neutral") {
+  return STATE_TONES[tone] || STATE_TONES.neutral;
+}
+
+function planLabel(plan = "trial") {
+  const key = String(plan || "trial").toLowerCase();
+  const map = {
+    trial: "Prueba gratis",
+    basic: "ARRANQUE",
+    arranque: "ARRANQUE",
+    salvador: "SALVADOR",
+    pro: "SALVADOR",
+    dueno: "DUEÑO",
+    dueño: "DUEÑO",
+    owner: "DUEÑO"
+  };
+  return map[key] || String(plan || "Sin plan").toUpperCase();
+}
+
+function getAccessAdminState(row = {}) {
+  if (isArchivedBusiness(row)) {
+    return {
+      label: "Archivada",
+      tone: "neutral",
+      help: "Empresa guardada fuera del uso normal. No está eliminada.",
+      action: "Restaurar si vuelve a operar."
+    };
+  }
+
+  const status = String(row.status || "active").toLowerCase();
+  const map = {
+    active: {
+      label: "Activo",
+      tone: "ok",
+      help: "Puede entrar y usar la app normalmente.",
+      action: "Mantener seguimiento comercial."
+    },
+    trial: {
+      label: "Prueba activa",
+      tone: "trial",
+      help: "Está probando AppPromos con acceso completo.",
+      action: "Acompañar y convertir antes del vencimiento."
+    },
+    suspended: {
+      label: "Suspendido",
+      tone: "danger",
+      help: "El acceso está pausado o limitado. No confundir con archivado.",
+      action: "Revisar pago/acceso y escribir por WhatsApp."
+    },
+    disabled: {
+      label: "Bloqueado",
+      tone: "danger",
+      help: "No debería operar la app hasta revisión administrativa.",
+      action: "Reactivar solo si corresponde."
+    },
+    overdue: {
+      label: "Limitado",
+      tone: "warn",
+      help: "Puede consultar, pero conviene revisar guardados y pago.",
+      action: "Contactar para regularizar."
+    }
+  };
+  return map[status] || {
+    label: row.status || "Sin definir",
+    tone: "neutral",
+    help: "Estado de acceso no reconocido por el panel.",
+    action: "Revisar datos de la empresa."
+  };
+}
+
+function getPaymentAdminState(row = {}) {
+  const billing = row.billing || {};
+  const status = String(billing.status || "active").toLowerCase();
+  const plan = String(billing.plan || "trial").toLowerCase();
+  if (plan === "trial" && status === "active") {
+    return {
+      label: "Prueba / sin pago",
+      tone: "trial",
+      help: "Todavía no es cliente pago. Está en etapa de conversión.",
+      action: "Mirar vencimiento y escribir antes de que termine."
+    };
+  }
+
+  const map = {
+    active: {
+      label: "Al día",
+      tone: "ok",
+      help: "No hay alerta de cobranza cargada.",
+      action: "Mantener activo."
+    },
+    overdue: {
+      label: "Pendiente / vencido",
+      tone: "warn",
+      help: "Hay una situación de pago para resolver.",
+      action: "Enviar WhatsApp de pago pendiente."
+    },
+    suspended: {
+      label: "Suspendido por pago",
+      tone: "danger",
+      help: "La cuenta está pausada por cobranza.",
+      action: "Resolver pago antes de reactivar."
+    }
+  };
+  return map[status] || {
+    label: billing.status || "Sin definir",
+    tone: "neutral",
+    help: "No hay estado de pago claro.",
+    action: "Completar situación de cobranza."
+  };
+}
+
+function getPlanAdminState(row = {}) {
+  const plan = String(row.billing?.plan || "trial").toLowerCase();
+  const map = {
+    trial: {
+      label: "Prueba gratis",
+      tone: "trial",
+      help: "Acceso inicial sin costo. Objetivo: convertir a plan pago.",
+      action: "Revisar uso y ofrecer ARRANQUE/SALVADOR."
+    },
+    basic: {
+      label: "ARRANQUE",
+      tone: "ok",
+      help: "Plan de entrada para vender rápido por WhatsApp.",
+      action: "Empujar uso frecuente."
+    },
+    arranque: {
+      label: "ARRANQUE",
+      tone: "ok",
+      help: "Plan de entrada para vender rápido por WhatsApp.",
+      action: "Empujar uso frecuente."
+    },
+    pro: {
+      label: "SALVADOR",
+      tone: "admin",
+      help: "Plan core para anti-merma y venta urgente.",
+      action: "Cuidar continuidad y uso de Vender urgente."
+    },
+    salvador: {
+      label: "SALVADOR",
+      tone: "admin",
+      help: "Plan core para anti-merma y venta urgente.",
+      action: "Cuidar continuidad y uso de Vender urgente."
+    },
+    dueno: {
+      label: "DUEÑO",
+      tone: "admin",
+      help: "Plan superior con mirada de mercado y web personalizada.",
+      action: "Acompañar como cliente de mayor valor."
+    },
+    dueño: {
+      label: "DUEÑO",
+      tone: "admin",
+      help: "Plan superior con mirada de mercado y web personalizada.",
+      action: "Acompañar como cliente de mayor valor."
+    }
+  };
+  return map[plan] || {
+    label: planLabel(plan),
+    tone: "neutral",
+    help: "Plan no reconocido en la lista comercial actual.",
+    action: "Revisar pricing asignado."
+  };
+}
+
+function getInternalAdminState(row = {}) {
+  if (isArchivedBusiness(row)) {
+    return {
+      label: "Archivada",
+      tone: "neutral",
+      help: "Queda guardada, pero fuera del uso normal. No está borrada.",
+      action: "Restaurar o eliminar solo si corresponde."
+    };
+  }
+  if (row.isTestBusiness === true) {
+    return {
+      label: row.clonedFromBusinessId ? "Test / clon" : "Empresa test",
+      tone: "warn",
+      help: "Empresa para pruebas internas. Puede borrarse si ya no sirve.",
+      action: "Usar para test; eliminar solo con confirmación."
+    };
+  }
+  return {
+    label: "Cliente real",
+    tone: "ok",
+    help: "Empresa real o potencial cliente dentro de AppPromos.",
+    action: "No borrar. Archivar si deja de operar."
+  };
+}
+
+function renderOperationalState(title, state = {}) {
+  const tone = toneStyle(state.tone);
+  return `
+    <div class="admin-oper-state" style="background:${tone.bg};color:${tone.color};border-color:${tone.border};">
+      <div class="admin-oper-title">${escapeHtml(title)}</div>
+      <div class="admin-oper-label">${escapeHtml(state.label || "Sin definir")}</div>
+      <div class="admin-oper-help">${escapeHtml(state.help || "Sin ayuda cargada.")}</div>
+      <div class="admin-oper-action">${escapeHtml(state.action || "Revisar.")}</div>
+    </div>
+  `;
+}
+
+function renderCompactState(title, state = {}) {
+  const tone = toneStyle(state.tone);
+  return `
+    <div class="admin-state-chip" style="background:${tone.bg};color:${tone.color};border-color:${tone.border};">
+      <div class="admin-state-chip-title">${escapeHtml(title)}</div>
+      <div class="admin-state-chip-label">${escapeHtml(state.label || "Sin definir")}</div>
+      <div class="admin-state-chip-help">${escapeHtml(state.help || "Sin ayuda cargada.")}</div>
+    </div>
+  `;
+}
+
+function adminFilterLabel(value = "all") {
+  const map = {
+    all: "Todos",
+    real: "Clientes reales",
+    test: "Empresas TEST",
+    archived: "Archivadas",
+    clone: "Clones"
+  };
+  return map[value] || value;
+}
+
 function moduleToggleHtml(row, moduleKey) {
   const enabled = row.modules?.[moduleKey] === true;
   return `
@@ -204,39 +511,89 @@ function moduleSummaryChip(row, moduleKey) {
 
 function renderMetrics(businesses) {
   const total = businesses.length;
-  const active = businesses.filter((b) => b.status === "active").length;
-  const trial = businesses.filter((b) => b.status === "trial").length;
-  const suspended = businesses.filter((b) => b.status === "suspended").length;
-  const disabled = businesses.filter((b) => b.status === "disabled").length;
+  const archived = businesses.filter((b) => isArchivedBusiness(b)).length;
+  const active = businesses.filter((b) => !isArchivedBusiness(b) && b.status === "active").length;
+  const trial = businesses.filter((b) => !isArchivedBusiness(b) && (b.status === "trial" || b.billing?.plan === "trial")).length;
+  const suspended = businesses.filter((b) => !isArchivedBusiness(b) && b.status === "suspended").length;
+  const disabled = businesses.filter((b) => !isArchivedBusiness(b) && b.status === "disabled").length;
+  const paymentOverdue = businesses.filter((b) => String(b.billing?.status || "active") === "overdue").length;
   const recent = [...businesses]
     .filter((b) => b.lastLoginAt)
     .sort((a, b) => new Date(b.lastLoginAt).getTime() - new Date(a.lastLoginAt).getTime())
     .slice(0, 8);
+  const pending = businesses
+    .filter((b) => isArchivedBusiness(b) || b.status === "suspended" || b.status === "disabled" || String(b.billing?.status || "active") !== "active")
+    .slice(0, 8);
+
+  const cardData = [
+    ["Total", total],
+    ["Activas", active],
+    ["Prueba", trial],
+    ["Pago pendiente", paymentOverdue],
+    ["Suspendidas", suspended],
+    ["Bloqueadas", disabled],
+    ["Archivadas", archived]
+  ];
 
   return `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">
-      ${[
-        ["Total", total], ["Activas", active], ["Prueba", trial], ["Suspendidas", suspended], ["Bloqueadas", disabled]
-      ].map(([label, value]) => `
-        <div style="padding:14px;border:1px solid #e7e1d8;border-radius:16px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.04);">
-          <div style="font-size:12px;color:#6e6e6e;font-weight:800;text-transform:uppercase;">${label}</div>
-          <div style="font-size:28px;font-weight:900;margin-top:4px;">${value}</div>
+    <div class="admin-help">
+      <strong>Control operativo:</strong> esta vista no es solo informativa. Sirve para detectar clientes que requieren acción: pago, acceso, prueba, archivado o seguimiento.
+    </div>
+
+    <div class="admin-control-grid">
+      ${cardData.map(([label, value]) => `
+        <div class="admin-control-card">
+          <div class="admin-control-label">${escapeHtml(label)}</div>
+          <div class="admin-control-value">${escapeHtml(value)}</div>
         </div>
       `).join("")}
     </div>
 
-    <div style="padding:16px;border:1px solid #e7e1d8;border-radius:16px;background:#fff;">
-      <h3 style="margin:0 0 10px;">Últimos accesos</h3>
-      ${recent.length ? `
-        <div style="display:grid;gap:8px;">
-          ${recent.map((b) => `
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #f0ebe3;padding-bottom:8px;">
-              <strong>${escapeHtml(b.name || b.businessId)}</strong>
-              <span style="color:#6e6e6e;font-size:13px;">${fmtDate(b.lastLoginAt)}</span>
-            </div>
-          `).join("")}
-        </div>
-      ` : `<div style="color:#6e6e6e;">Todavía no hay accesos registrados.</div>`}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
+      <div style="padding:16px;border:1px solid #e7e1d8;border-radius:16px;background:#fff;">
+        <h3 style="margin:0 0 10px;">Acciones pendientes</h3>
+        ${pending.length ? `
+          <div class="admin-control-list">
+            ${pending.map((b) => {
+              const access = getAccessAdminState(b);
+              const payment = getPaymentAdminState(b);
+              const admin = getInternalAdminState(b);
+              return `
+                <div class="admin-control-row">
+                  <div>
+                    <strong>${escapeHtml(businessHumanName(b))}</strong>
+                    <div style="font-size:12px;color:#6e6e6e;margin-top:3px;">${escapeHtml(access.label)} · ${escapeHtml(payment.label)} · ${escapeHtml(admin.label)}</div>
+                  </div>
+                  <div class="admin-control-actions">
+                    <button data-enter-business="${escapeHtml(b.businessId)}" type="button" class="admin-action-mini">Entrar</button>
+                    <button data-manage-modules="${escapeHtml(b.businessId)}" type="button" class="admin-action-mini">Módulos</button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        ` : `<div style="color:#6e6e6e;">No hay acciones pendientes detectadas.</div>`}
+      </div>
+
+      <div style="padding:16px;border:1px solid #e7e1d8;border-radius:16px;background:#fff;">
+        <h3 style="margin:0 0 10px;">Últimos accesos</h3>
+        ${recent.length ? `
+          <div class="admin-control-list">
+            ${recent.map((b) => `
+              <div class="admin-control-row">
+                <div>
+                  <strong>${escapeHtml(businessHumanName(b))}</strong>
+                  <div style="font-size:12px;color:#6e6e6e;margin-top:3px;">${fmtDate(b.lastLoginAt)}</div>
+                </div>
+                <div class="admin-control-actions">
+                  <button data-enter-business="${escapeHtml(b.businessId)}" type="button" class="admin-action-mini">Entrar</button>
+                  <button data-manage-modules="${escapeHtml(b.businessId)}" type="button" class="admin-action-mini">Módulos</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div style="color:#6e6e6e;">Todavía no hay accesos registrados.</div>`}
+      </div>
     </div>
   `;
 }
@@ -248,7 +605,7 @@ export async function renderAdminUsers(container, options = {}) {
   container.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
       <div>
-        <h2 style="margin:0;">Panel Admin V11</h2>
+        <h2 style="margin:0;">Panel Admin AppPromos</h2>
         <div style="color:#6e6e6e;font-size:14px;margin-top:4px;">
           Control de carnicerías, módulos, acceso, pago y acciones comerciales.
         </div>
@@ -262,7 +619,7 @@ export async function renderAdminUsers(container, options = {}) {
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
       <button class="admin-tab active" data-admin-tab="businesses" type="button">🏪 Carnicerías</button>
       <button class="admin-tab" data-admin-tab="users" type="button">👤 Usuarios</button>
-      <button class="admin-tab" data-admin-tab="metrics" type="button">📊 Métricas</button>
+      <button class="admin-tab" data-admin-tab="metrics" type="button">📌 Control</button>
     </div>
 
     <style>
@@ -270,7 +627,25 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-tab.active{background:#1f1f1f;color:#fff;}
       .admin-select{min-height:34px;border:1px solid #e7e1d8;border-radius:8px;background:#fff;padding:0 8px;font-weight:800;}
       .admin-status-badge{display:inline-flex;align-items:center;justify-content:center;min-height:26px;padding:0 10px;border-radius:999px;font-weight:900;font-size:12px;white-space:nowrap;}
-      .admin-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 140px 140px 140px;gap:10px;margin-bottom:12px;align-items:end;}
+      .admin-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) repeat(4, minmax(125px, 145px));gap:10px;margin-bottom:12px;align-items:end;}
+      .admin-client-list{display:grid;gap:12px;}
+      .admin-client-card{border:1px solid #eee6dc;border-radius:18px;background:#fff;box-shadow:0 7px 20px rgba(0,0,0,.04);overflow:hidden;}
+      .admin-client-card.archived{background:#fbfaf7;border-color:#ded6ca;}
+      .admin-client-main{display:grid;grid-template-columns:minmax(260px,1.3fr) minmax(420px,2fr) auto;gap:12px;padding:13px 14px;align-items:start;}
+      .admin-state-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+      .admin-state-chip{border:1px solid;border-radius:13px;padding:8px 9px;min-height:68px;}
+      .admin-state-chip-title{font-size:10px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;opacity:.72;}
+      .admin-state-chip-label{margin-top:3px;font-size:13px;font-weight:1000;line-height:1.1;}
+      .admin-state-chip-help{margin-top:4px;font-size:11px;line-height:1.2;font-weight:800;opacity:.9;}
+      .admin-client-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:260px;}
+      .admin-whatsapp-action{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 11px;border:1px solid #0f8f3d;border-radius:10px;background:#ecfff2;color:#137333;font-weight:1000;cursor:pointer;white-space:nowrap;}
+      .admin-whatsapp-action:hover{background:#dffbea;border-color:#137333;}
+      .admin-whatsapp-action.disabled{opacity:.45;cursor:not-allowed;background:#f3f3f3;color:#777;border-color:#ddd;}
+      .admin-client-details{border-top:1px solid #f0ebe3;background:#fffaf5;padding:0;}
+      .admin-client-details summary{cursor:pointer;padding:10px 14px;font-weight:1000;color:#5f5147;}
+      .admin-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:0 14px 14px;}
+      .admin-detail-box{border:1px solid #eee6dc;border-radius:14px;background:#fff;padding:10px;font-size:12px;line-height:1.35;}
+      .admin-detail-box strong{display:block;margin-bottom:4px;color:#1f1f1f;}
       .admin-toolbar label{display:grid;gap:5px;font-size:12px;color:#6e6e6e;font-weight:900;text-transform:uppercase;}
       .admin-toolbar input,.admin-toolbar select{min-height:42px;border:1px solid #e7e1d8;border-radius:12px;background:#fff;padding:0 12px;font-weight:800;}
       .admin-human-card{display:grid;gap:4px;min-width:220px;}
@@ -280,6 +655,15 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-tech-id{margin-top:5px;font-size:11px;color:#8a8178;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;}
       .admin-user-card{display:grid;gap:4px;}
       .admin-user-email{font-weight:1000;color:#1f1f1f;}
+                  .admin-business-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+      .admin-business-actions .admin-action-mini{margin-top:0;}
+      .admin-action-mini{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:10px;padding:7px 10px;font-weight:900;cursor:pointer;background:#f0ebe3;color:#3a2a22;margin-top:6px;}
+      .admin-action-mini.danger{background:#fff0f0;color:#a51616;}
+      .admin-action-mini.success{background:#ecfff2;color:#137333;}
+      .admin-status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:1000;background:#eef2ff;color:#1d3b7a;}
+      .admin-status-pill.danger{background:#fff0f0;color:#a51616;}
+      .admin-status-pill.success{background:#ecfff2;color:#137333;}
+      .admin-status-pill.warn{background:#fff7df;color:#8a6200;}
       .admin-help{margin-bottom:12px;padding:12px;border-radius:14px;background:#fff8f4;color:#6b4b3e;font-size:13px;line-height:1.35;}
       .admin-status-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:12px;}
       .admin-status-legend div{padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #eee6dc;font-size:12px;line-height:1.3;color:#5f5147;}
@@ -289,6 +673,19 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-commercial-desc{font-size:12px;line-height:1.25;font-weight:800;}
       .admin-commercial-grid{display:flex;gap:7px;flex-wrap:wrap;font-size:11px;}
       .admin-commercial-action{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.02em;opacity:.84;}
+      .admin-oper-state{display:grid;gap:5px;min-width:180px;padding:10px;border:1px solid;border-radius:14px;background:#fff;}
+      .admin-oper-title{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.03em;opacity:.78;}
+      .admin-oper-label{font-size:13px;font-weight:1000;line-height:1.15;}
+      .admin-oper-help{font-size:12px;line-height:1.28;font-weight:800;}
+      .admin-oper-action{font-size:11px;line-height:1.25;font-weight:1000;text-transform:uppercase;letter-spacing:.02em;opacity:.86;}
+      .admin-row-archived{background:#fbfaf7;}
+      .admin-control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px;}
+      .admin-control-card{padding:14px;border:1px solid #e7e1d8;border-radius:16px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+      .admin-control-label{font-size:12px;color:#6e6e6e;font-weight:900;text-transform:uppercase;}
+      .admin-control-value{font-size:28px;font-weight:1000;margin-top:4px;}
+      .admin-control-list{display:grid;gap:8px;}
+      .admin-control-row{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid #f0ebe3;padding:9px 0;}
+      .admin-control-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
       .admin-table-wrap{overflow:auto;border:1px solid #eee6dc;border-radius:16px;}
       .admin-actions{position:relative;display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start;}
       .admin-actions button{min-height:32px;padding:0 10px;border:none;border-radius:8px;font-weight:900;cursor:pointer;}
@@ -338,12 +735,112 @@ export async function renderAdminUsers(container, options = {}) {
   let businessStatusFilter = "all";
   let businessBillingFilter = "all";
   let businessPlanFilter = "all";
+  let businessAdminFilter = "all";
   let businessSearchTimer = null;
 
   async function loadData() {
     content.innerHTML = `<div style="padding:18px;color:#6e6e6e;">Cargando datos admin...</div>`;
     try {
       [businesses, users] = await Promise.all([listAdminBusinesses(), listAdminUsers()]);
+  // APPPROMOS V12.10-B2-B FIX4 — Acciones admin visibles
+  if (!content.dataset.safeAdminActionsBound) {
+    content.dataset.safeAdminActionsBound = "true";
+
+    content.addEventListener("click", async (event) => {
+      const archiveButton = event.target.closest("[data-archive-business]");
+      if (archiveButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const businessId = archiveButton.dataset.archiveBusiness;
+        const row = businesses.find((b) => String(b.businessId || "") === String(businessId || ""));
+        const label = businessHumanName(row || { businessId });
+
+        const ok = window.confirm(`Vas a archivar "${label}". La empresa queda guardada, pero fuera del uso normal. ¿Continuar?`);
+        if (!ok) return;
+
+        try {
+          await archiveBusiness(businessId);
+          window.alert("Empresa archivada.");
+          await loadData();
+        } catch (error) {
+          console.error("No se pudo archivar empresa", error);
+          window.alert("No se pudo archivar la empresa. Revisá permisos o consola.");
+        }
+        return;
+      }
+
+      const restoreButton = event.target.closest("[data-restore-business]");
+      if (restoreButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const businessId = restoreButton.dataset.restoreBusiness;
+        const row = businesses.find((b) => String(b.businessId || "") === String(businessId || ""));
+        const label = businessHumanName(row || { businessId });
+
+        const ok = window.confirm(`Vas a restaurar "${label}". ¿Continuar?`);
+        if (!ok) return;
+
+        try {
+          await restoreBusiness(businessId);
+          window.alert("Empresa restaurada.");
+          await loadData();
+        } catch (error) {
+          console.error("No se pudo restaurar empresa", error);
+          window.alert("No se pudo restaurar la empresa. Revisá permisos o consola.");
+        }
+        return;
+      }
+
+      const disableUserButton = event.target.closest("[data-disable-user]");
+      if (disableUserButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const uid = disableUserButton.dataset.disableUser;
+        const user = users.find((u) => String(u.uid || "") === String(uid || ""));
+        const label = user?.email || shortUid(uid);
+
+        const ok = window.confirm(`Vas a desactivar el usuario "${label}". No se borra de Auth; queda marcado como desactivado en AppPromos. ¿Continuar?`);
+        if (!ok) return;
+
+        try {
+          await setUserDisabled(uid, true);
+          window.alert("Usuario desactivado.");
+          await loadData();
+        } catch (error) {
+          console.error("No se pudo desactivar usuario", error);
+          window.alert("No se pudo desactivar el usuario. Revisá permisos o consola.");
+        }
+        return;
+      }
+
+      const enableUserButton = event.target.closest("[data-enable-user]");
+      if (enableUserButton) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const uid = enableUserButton.dataset.enableUser;
+        const user = users.find((u) => String(u.uid || "") === String(uid || ""));
+        const label = user?.email || shortUid(uid);
+
+        const ok = window.confirm(`Vas a reactivar el usuario "${label}". ¿Continuar?`);
+        if (!ok) return;
+
+        try {
+          await setUserDisabled(uid, false);
+          window.alert("Usuario reactivado.");
+          await loadData();
+        } catch (error) {
+          console.error("No se pudo reactivar usuario", error);
+          window.alert("No se pudo reactivar el usuario. Revisá permisos o consola.");
+        }
+        return;
+      }
+    });
+  }
+
       renderActiveTab();
     } catch (error) {
       console.error("Error cargando admin:", error);
@@ -364,22 +861,25 @@ export async function renderAdminUsers(container, options = {}) {
         .join(" ")
         .toLowerCase();
       const matchesSearch = !q || haystack.includes(q);
-      const matchesStatus = businessStatusFilter === "all" || String(row.status || "active") === businessStatusFilter;
+      const archived = isArchivedBusiness(row);
+      const isTest = row.isTestBusiness === true;
+      const isClone = Boolean(row.clonedFromBusinessId);
+      const matchesStatus = businessStatusFilter === "all"
+        || (businessStatusFilter === "archived" && archived)
+        || (businessStatusFilter !== "archived" && !archived && String(row.status || "active") === businessStatusFilter);
       const matchesBilling = businessBillingFilter === "all" || String(row.billing?.status || "active") === businessBillingFilter;
       const matchesPlan = businessPlanFilter === "all" || String(row.billing?.plan || "trial") === businessPlanFilter;
-      return matchesSearch && matchesStatus && matchesBilling && matchesPlan;
+      const matchesAdmin = businessAdminFilter === "all"
+        || (businessAdminFilter === "archived" && archived)
+        || (businessAdminFilter === "test" && isTest && !archived)
+        || (businessAdminFilter === "real" && !isTest && !archived)
+        || (businessAdminFilter === "clone" && isClone);
+      return matchesSearch && matchesStatus && matchesBilling && matchesPlan && matchesAdmin;
     });
 
     content.innerHTML = `
       <div class="admin-help">
-        <strong>Control SaaS:</strong> Acceso define si una carnicería puede operar la app. Pago define la situación de cobranza. El estado comercial traduce esos datos a una acción simple para administrar y vender mejor, no solo bloquear.
-      </div>
-
-      <div class="admin-status-legend">
-        <div><strong>✅ Cliente activo</strong> Entra, consulta y guarda normalmente.</div>
-        <div><strong>⏳ Trial / por vencer</strong> Tiene acceso completo. Es momento de acompañar la venta.</div>
-        <div><strong>⚠️ Pago pendiente</strong> Consulta sí, guardado no. Contacto comercial amable.</div>
-        <div><strong>⛔ Suspendida</strong> Experiencia limitada. Requiere reactivación o revisión.</div>
+        <strong>Panel operativo:</strong> vista compacta para decidir rápido. La ayuda completa queda en “Ver detalle y acciones”, así la pantalla no se llena de datos todos juntos.
       </div>
 
       <div class="admin-toolbar">
@@ -390,7 +890,7 @@ export async function renderAdminUsers(container, options = {}) {
         <label>
           Acceso
           <select id="adminStatusFilter">
-            ${["all","active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${businessStatusFilter === s ? "selected" : ""}>${s === "all" ? "Todos" : accessLabel(s)}</option>`).join("")}
+            ${["all","active","trial","suspended","disabled","archived"].map((s) => `<option value="${s}" ${businessStatusFilter === s ? "selected" : ""}>${s === "all" ? "Todos" : s === "archived" ? "Archivadas" : accessLabel(s)}</option>`).join("")}
           </select>
         </label>
         <label>
@@ -402,96 +902,135 @@ export async function renderAdminUsers(container, options = {}) {
         <label>
           Plan
           <select id="adminPlanFilter">
-            ${["all", ...BILLING_PLANS].map((p) => `<option value="${p}" ${businessPlanFilter === p ? "selected" : ""}>${p === "all" ? "Todos" : p}</option>`).join("")}
+            ${["all", ...ADMIN_BILLING_PLANS].map((p) => `<option value="${p}" ${businessPlanFilter === p ? "selected" : ""}>${p === "all" ? "Todos" : planLabel(p)}</option>`).join("")}
+          </select>
+        </label>
+        <label>
+          Admin
+          <select id="adminAdminFilter">
+            ${["all","real","test","archived","clone"].map((s) => `<option value="${s}" ${businessAdminFilter === s ? "selected" : ""}>${adminFilterLabel(s)}</option>`).join("")}
           </select>
         </label>
       </div>
 
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
         <div style="font-weight:900;">${visibleBusinesses.length} de ${businesses.length} carnicerías</div>
-        <div style="color:#6e6e6e;font-size:13px;">Tip: filtrá por <strong>Pago vencido</strong> para ver clientes con aviso 48 hs.</div>
+        <div style="color:#6e6e6e;font-size:13px;">Tip: el filtro <strong>Empresas TEST</strong> te permite limpiar pruebas sin mezclar clientes reales.</div>
       </div>
 
       ${visibleBusinesses.length ? `
-        <div class="admin-table-wrap">
-          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1320px;">
-            <thead>
-              <tr style="background:#f8f5f0;position:sticky;top:0;z-index:1;">
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Carnicería</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Acceso</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Pago</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Plan</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Estado comercial</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Módulos</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Último acceso</th>
-                <th style="text-align:left;padding:10px;border-bottom:1px solid #e7e1d8;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${visibleBusinesses.map((row) => {
-                const commercial = getBusinessCommercialStatus(row);
-                return `
-                <tr>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    <div class="admin-human-card">
-                      <div class="admin-human-name">${escapeHtml(businessHumanName(row))}</div>
-                      <div class="admin-human-line"><strong>Responsable:</strong> ${escapeHtml(businessOwnerName(row))}</div>
-                      <div class="admin-human-line"><strong>Email:</strong> ${escapeHtml(businessOwnerEmail(row))}</div>
-                      <div class="admin-human-line"><strong>WhatsApp:</strong> ${escapeHtml(businessPhone(row))}</div>
-                      <div class="admin-human-line"><strong>Ubicación:</strong> ${escapeHtml(businessLocation(row))}</div>
-                      ${businessAddress(row) ? `<div class="admin-human-line"><strong>Dirección:</strong> ${escapeHtml(businessAddress(row))}</div>` : ""}
-                      <div class="admin-tech-id">ID técnico: ${escapeHtml(row.businessId)}</div>
+        <div class="admin-client-list">
+          ${visibleBusinesses.map((row) => {
+            const commercial = getBusinessCommercialStatus(row);
+            const accessState = getAccessAdminState(row);
+            const paymentState = getPaymentAdminState(row);
+            const planState = getPlanAdminState(row);
+            const internalState = getInternalAdminState(row);
+            const archived = isArchivedBusiness(row);
+            return `
+              <article class="admin-client-card ${archived ? "archived" : ""}">
+                <div class="admin-client-main">
+                  <div class="admin-human-card">
+                    <div class="admin-human-name">${escapeHtml(businessHumanName(row))}</div>
+                    <div class="admin-human-line"><strong>Responsable:</strong> ${escapeHtml(businessOwnerName(row))}</div>
+                    <div class="admin-human-line"><strong>WhatsApp:</strong> ${escapeHtml(businessPhone(row))}</div>
+                    <div class="admin-human-line"><strong>Email:</strong> ${escapeHtml(businessOwnerEmail(row))}</div>
+                    <div class="admin-human-line"><strong>Ubicación:</strong> ${escapeHtml(businessLocation(row))}</div>
+                    ${row.isTestBusiness ? `<div style="margin-top:6px;color:#8a6200;font-weight:1000;font-size:12px;">EMPRESA TEST</div>` : ""}
+                    <div class="admin-tech-id">ID técnico: ${escapeHtml(shortUid(row.businessId))}</div>
+                  </div>
+
+                  <div class="admin-state-strip">
+                    ${renderCompactState("Acceso", accessState)}
+                    ${renderCompactState("Pago", paymentState)}
+                    ${renderCompactState("Plan", planState)}
+                    ${renderCompactState("Admin", internalState)}
+                  </div>
+
+                  <div class="admin-client-actions">
+                    ${renderWhatsappAction(row, "📲 Escribir")}
+                    <button data-enter-business="${escapeHtml(row.businessId)}" type="button" class="admin-primary-action">Entrar</button>
+                    <button class="admin-manage-modules" data-manage-modules="${escapeHtml(row.businessId)}" type="button">Módulos</button>
+                    ${archived
+                      ? `<button class="admin-action-mini success" data-restore-business="${escapeHtml(row.businessId)}" type="button">Restaurar</button>`
+                      : `<button class="admin-action-mini danger" data-archive-business="${escapeHtml(row.businessId)}" type="button">Archivar</button>`}
+                  </div>
+                </div>
+
+                <details class="admin-client-details">
+                  <summary>Ver detalle, herramientas y acciones</summary>
+                  <div class="admin-detail-grid">
+                    <div class="admin-detail-box">
+                      <strong>Datos del cliente</strong>
+                      <div>Responsable: ${escapeHtml(businessOwnerName(row))}</div>
+                      <div>Email: ${escapeHtml(businessOwnerEmail(row))}</div>
+                      <div>WhatsApp: ${escapeHtml(businessPhone(row))}</div>
+                      <div>Ubicación: ${escapeHtml(businessLocation(row))}</div>
+                      ${businessAddress(row) ? `<div>Dirección: ${escapeHtml(businessAddress(row))}</div>` : ""}
+                      <div class="admin-tech-id">ID técnico completo: ${escapeHtml(row.businessId)}</div>
                     </div>
-                    ${row.isTestBusiness ? `<div style="margin-top:6px;color:#8a6200;font-weight:900;font-size:12px;">TEST</div>` : ""}
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    ${statusBadge(row.status)}
-                    <div style="margin-top:8px;">
-                      <select class="admin-select" data-status-business="${escapeHtml(row.businessId)}">
-                        ${["active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${row.status === s ? "selected" : ""}>${accessLabel(s)}</option>`).join("")}
-                      </select>
+
+                    <div class="admin-detail-box">
+                      <strong>Qué significa</strong>
+                      <div><b>Acceso:</b> ${escapeHtml(accessState.action)}</div>
+                      <div><b>Pago:</b> ${escapeHtml(paymentState.action)}</div>
+                      <div><b>Plan:</b> ${escapeHtml(planState.action)}</div>
+                      <div><b>Admin:</b> ${escapeHtml(internalState.action)}</div>
                     </div>
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    ${billingBadge(row.billing?.status)}
-                    <div style="margin-top:8px;">
-                      <select class="admin-select" data-billing-business="${escapeHtml(row.businessId)}">
-                        ${["active","overdue","suspended"].map((s) => `<option value="${s}" ${row.billing?.status === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
-                      </select>
-                    </div>
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    <select class="admin-select" data-plan-business="${escapeHtml(row.businessId)}">
-                      ${BILLING_PLANS.map((p) => `<option value="${p}" ${row.billing?.plan === p ? "selected" : ""}>${p}</option>`).join("")}
-                    </select>
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    ${commercialBadge(commercial)}
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    <button class="admin-manage-modules" data-manage-modules="${escapeHtml(row.businessId)}" type="button">⚙️ Gestionar módulos</button>
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;color:#6e6e6e;">
-                    <div>Login: ${fmtDate(row.lastLoginAt)}</div>
-                    <div>Actividad: ${fmtDate(row.lastActivityAt)}</div>
-                  </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
-                    <div class="admin-actions">
-                      <button data-enter-business="${escapeHtml(row.businessId)}" type="button" class="admin-primary-action">Entrar como cliente</button>
-                      <button data-action-menu-toggle="${escapeHtml(row.businessId)}" type="button" class="admin-kebab-btn" title="Acciones avanzadas">⋮</button>
-                      <div class="admin-action-menu" data-action-menu="${escapeHtml(row.businessId)}">
-                        <div class="admin-action-menu-title">Acciones avanzadas</div>
-                        <button data-test-business="${escapeHtml(row.businessId)}" data-test-current="${row.isTestBusiness ? "true" : "false"}" type="button">${row.isTestBusiness ? "Quitar marca test" : "Marcar como test"}</button>
-                        <button data-logs-business="${escapeHtml(row.businessId)}" type="button">Ver logs</button>
-                        <button data-defaults-business="${escapeHtml(row.businessId)}" type="button">Establecer defaults</button>
-                        ${row.isTestBusiness ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="danger">Borrar empresa test</button>` : ""}
+
+                    <div class="admin-detail-box">
+                      <strong>Cambiar estados</strong>
+                      <div style="display:grid;gap:8px;">
+                        <label>Acceso<br><select class="admin-select" data-status-business="${escapeHtml(row.businessId)}">
+                          ${["active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${row.status === s ? "selected" : ""}>${accessLabel(s)}</option>`).join("")}
+                        </select></label>
+                        <label>Pago<br><select class="admin-select" data-billing-business="${escapeHtml(row.businessId)}">
+                          ${["active","overdue","suspended"].map((s) => `<option value="${s}" ${row.billing?.status === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
+                        </select></label>
+                        <label>Plan<br><select class="admin-select" data-plan-business="${escapeHtml(row.businessId)}">
+                          ${ADMIN_BILLING_PLANS.map((p) => `<option value="${p}" ${row.billing?.plan === p ? "selected" : ""}>${planLabel(p)}</option>`).join("")}
+                        </select></label>
                       </div>
                     </div>
-                  </td>
-                </tr>
-              `; }).join("")}
-            </tbody>
-          </table>
+
+                    <div class="admin-detail-box">
+                      <strong>Actividad y módulos</strong>
+                      <div>Último login: ${fmtDate(row.lastLoginAt)}</div>
+                      <div>Última actividad: ${fmtDate(row.lastActivityAt)}</div>
+                      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                        ${Object.keys(DEFAULT_MODULES).map((key) => moduleSummaryChip(row, key)).join("")}
+                      </div>
+                      <div style="margin-top:10px;">${commercialBadge(commercial)}</div>
+                    </div>
+
+                    <div class="admin-detail-box">
+                      <strong>Contacto rápido</strong>
+                      <div>WhatsApp registrado: ${escapeHtml(businessPhone(row))}</div>
+                      <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap;">
+                        ${renderWhatsappAction(row, "📲 Escribir por WhatsApp")}
+                      </div>
+                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                        Abre WhatsApp con un mensaje base editable. Los mensajes por pago, prueba por vencer o cambio de plan van en el próximo bloque de Control operativo.
+                      </div>
+                    </div>
+
+                    <div class="admin-detail-box">
+                      <strong>Herramientas de administración</strong>
+                      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                        <button data-test-business="${escapeHtml(row.businessId)}" data-test-current="${row.isTestBusiness ? "true" : "false"}" type="button" class="admin-action-mini">${row.isTestBusiness ? "Quitar TEST" : "Marcar TEST"}</button>
+                        <button data-logs-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Ver logs</button>
+                        <button data-defaults-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Reparar configuración base</button>
+                        ${row.isTestBusiness ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini danger">Borrar TEST</button>` : ""}
+                      </div>
+                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                        “Reparar configuración base” se usa solo si una empresa vieja o de prueba no muestra bien módulos, acceso o datos básicos. No es una acción diaria.
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </article>
+            `;
+          }).join("")}
         </div>
       ` : `<div style="padding:18px;border:1px dashed #e7e1d8;border-radius:14px;color:#6e6e6e;background:#fff;">No hay carnicerías que coincidan con los filtros.</div>`}
     `;
@@ -525,6 +1064,10 @@ export async function renderAdminUsers(container, options = {}) {
       businessPlanFilter = event.target.value || "all";
       renderBusinesses();
     });
+    content.querySelector("#adminAdminFilter")?.addEventListener("change", (event) => {
+      businessAdminFilter = event.target.value || "all";
+      renderBusinesses();
+    });
     bindBusinessActions();
   }
 
@@ -545,6 +1088,7 @@ export async function renderAdminUsers(container, options = {}) {
           <tbody>
             ${users.map((u) => {
               const linkedBusiness = findBusinessForUser(u, businesses);
+              const disabledUser = isDisabledUser(u);
               return `
                 <tr>
                   <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
@@ -566,7 +1110,14 @@ export async function renderAdminUsers(container, options = {}) {
                       <div class="admin-tech-id">${escapeHtml(u.businessId || "—")}</div>
                     `}
                   </td>
-                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">${escapeHtml(u.status || "active")}</td>
+                  <td style="padding:10px;border-bottom:1px solid #f0ebe3;vertical-align:top;">
+                    <div class="admin-status-pill ${disabledUser ? "danger" : "success"}">${escapeHtml(userStatusLabel(u))}</div>
+                    <div>
+                      ${disabledUser
+                        ? `<button class="admin-action-mini success" data-enable-user="${escapeHtml(u.uid)}" type="button">Reactivar usuario</button>`
+                        : `<button class="admin-action-mini danger" data-disable-user="${escapeHtml(u.uid)}" type="button">Desactivar usuario</button>`}
+                    </div>
+                  </td>
                 </tr>
               `;
             }).join("")}
@@ -579,7 +1130,10 @@ export async function renderAdminUsers(container, options = {}) {
   function renderActiveTab() {
     if (activeTab === "businesses") renderBusinesses();
     if (activeTab === "users") renderUsers();
-    if (activeTab === "metrics") content.innerHTML = renderMetrics(businesses);
+    if (activeTab === "metrics") {
+      content.innerHTML = renderMetrics(businesses);
+      bindBusinessActions();
+    }
   }
 
   function openModulesModal(row) {
@@ -640,8 +1194,8 @@ export async function renderAdminUsers(container, options = {}) {
 
       try {
         const changes = Object.keys(DEFAULT_MODULES).filter((key) => nextModules[key] !== (row.modules?.[key] === true));
-        for (const key of changes) {
-          await updateBusinessModule(businessId, key, nextModules[key] === true);
+        if (changes.length) {
+          await updateBusinessModules(businessId, nextModules);
         }
         close();
         await loadData();
@@ -828,6 +1382,16 @@ export async function renderAdminUsers(container, options = {}) {
       });
     });
 
+    content.querySelectorAll("[data-whatsapp-business]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const row = businesses.find((b) => b.businessId === button.dataset.whatsappBusiness);
+        if (!row) return alert("No se encontró la carnicería para escribir por WhatsApp");
+        const url = buildAdminWhatsappUrl(row);
+        if (!url) return alert("Esta carnicería no tiene un WhatsApp válido para contactar.");
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+    });
+
     content.querySelectorAll("[data-enter-business]").forEach((button) => {
       button.addEventListener("click", async () => {
         if (typeof onEnterAsBusiness === "function") await onEnterAsBusiness(button.dataset.enterBusiness);
@@ -836,8 +1400,12 @@ export async function renderAdminUsers(container, options = {}) {
 
     content.querySelectorAll("[data-defaults-business]").forEach((button) => {
       button.addEventListener("click", async () => {
+        const row = businesses.find((b) => b.businessId === button.dataset.defaultsBusiness);
+        const label = businessHumanName(row || { businessId: button.dataset.defaultsBusiness });
+        const ok = window.confirm(`Vas a reparar la configuración base de "${label}". Usalo solo si una empresa vieja o test no muestra bien módulos, acceso o datos básicos. ¿Continuar?`);
+        if (!ok) return;
         try { await ensureBusinessAdminDefaults(button.dataset.defaultsBusiness); await loadData(); }
-        catch (error) { alert(error?.message || "No se pudieron aplicar defaults"); }
+        catch (error) { alert(error?.message || "No se pudo reparar la configuración base"); }
       });
     });
 
@@ -878,4 +1446,9 @@ export async function renderAdminUsers(container, options = {}) {
   reloadBtn?.addEventListener("click", loadData);
   await loadData();
 }
+
+
+
+
+
 

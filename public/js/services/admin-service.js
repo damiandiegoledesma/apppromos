@@ -1,4 +1,4 @@
-﻿import {
+import {
   db,
   doc,
   collection,
@@ -131,6 +131,11 @@ export async function listAdminBusinesses() {
       responsibleName: root.responsibleName || root.responsable || root.ownerName || meta?.responsibleName || meta?.responsable || owner?.displayName || owner?.nombre || "",
       email: root.email || root.ownerEmail || meta?.email || meta?.ownerEmail || owner?.email || "",
       ownerEmail: root.ownerEmail || root.email || owner?.email || meta?.ownerEmail || meta?.email || "",
+      archived: root.archived === true,
+      archivedAt: root.archivedAt || null,
+      restoredAt: root.restoredAt || null,
+      clonedFromBusinessId: root.clonedFromBusinessId || null,
+      adminStatus: root.adminStatus || null,
       telefono: root.telefono || root.phone || root.whatsapp || meta?.telefono || meta?.phone || meta?.whatsapp || owner?.telefono || owner?.phone || "",
       phone: root.phone || root.telefono || root.whatsapp || meta?.phone || meta?.telefono || meta?.whatsapp || owner?.phone || owner?.telefono || "",
       whatsapp: root.whatsapp || root.telefono || root.phone || meta?.whatsapp || meta?.telefono || meta?.phone || "",
@@ -156,7 +161,10 @@ export async function listAdminUsers() {
       email: data.email || "",
       displayName: data.displayName || data.nombre || "",
       role: data.role || "client",
-      status: data.status || "active",
+      disabled: data.disabled === true,
+      status: data.status || (data.disabled === true ? "disabled" : "active"),
+      disabledAt: data.disabledAt || null,
+      restoredAt: data.restoredAt || null,
       businessId: data.businessId || data.primaryBusinessId || (Array.isArray(data.businesses) ? data.businesses[0] : null),
       createdAt: data.createdAt || null,
       updatedAt: data.updatedAt || null
@@ -247,6 +255,30 @@ export async function updateBusinessModule(businessId, moduleKey, enabled) {
   await logAdminAction({ action: "business_module_changed", targetBusinessId: businessId, before: { modules: before?.modules || null }, after: { moduleKey, enabled: enabled === true, modules } });
 }
 
+export async function updateBusinessModules(businessId, nextModules = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const before = await readBusinessRoot(businessId);
+  const modules = { ...DEFAULT_MODULES, ...(before?.modules || {}) };
+
+  Object.keys(DEFAULT_MODULES).forEach((key) => {
+    modules[key] = nextModules[key] === true;
+  });
+
+  await setDoc(doc(db, "businesses", businessId), {
+    modules,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_modules_bulk_changed",
+    targetBusinessId: businessId,
+    before: { modules: before?.modules || null },
+    after: { modules }
+  });
+}
+
 export async function setBusinessTestFlag(businessId, isTestBusiness) {
   await requireAdmin();
   const before = await readBusinessRoot(businessId);
@@ -255,6 +287,91 @@ export async function setBusinessTestFlag(businessId, isTestBusiness) {
     updatedAt: new Date().toISOString()
   }, { merge: true });
   await logAdminAction({ action: "business_test_flag_changed", targetBusinessId: businessId, before: { isTestBusiness: before?.isTestBusiness === true }, after: { isTestBusiness: isTestBusiness === true } });
+}
+
+
+export async function archiveBusiness(businessId) {
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+
+  await setDoc(doc(db, "businesses", businessId), {
+    archived: true,
+    archivedAt: new Date().toISOString(),
+    status: "suspended",
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_archived",
+    targetBusinessId: businessId,
+    before: {
+      archived: before?.archived === true,
+      status: before?.status || null
+    },
+    after: {
+      archived: true,
+      status: "suspended"
+    }
+  });
+}
+
+export async function restoreBusiness(businessId) {
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+  const nextStatus = before?.status === "suspended" || before?.status === "archived"
+    ? "active"
+    : (before?.status || "active");
+
+  await setDoc(doc(db, "businesses", businessId), {
+    archived: false,
+    restoredAt: new Date().toISOString(),
+    status: nextStatus,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_restored",
+    targetBusinessId: businessId,
+    before: {
+      archived: before?.archived === true,
+      status: before?.status || null
+    },
+    after: {
+      archived: false,
+      status: nextStatus
+    }
+  });
+}
+
+export async function setUserDisabled(uid, disabled = true) {
+  if (!uid) throw new Error("uid requerido");
+
+  const userRef = doc(db, "users", uid);
+  const snap = await getDoc(userRef);
+  const before = snap.exists() ? { uid, ...(snap.data() || {}) } : { uid };
+  const isDisabled = disabled === true;
+
+  await setDoc(userRef, {
+    disabled: isDisabled,
+    status: isDisabled ? "disabled" : "active",
+    disabledAt: isDisabled ? new Date().toISOString() : null,
+    restoredAt: isDisabled ? null : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  await logAdminAction({
+    action: isDisabled ? "user_disabled" : "user_restored",
+    targetUserId: uid,
+    targetBusinessId: before.businessId || before.primaryBusinessId || null,
+    before: {
+      disabled: before.disabled === true,
+      status: before.status || null
+    },
+    after: {
+      disabled: isDisabled,
+      status: isDisabled ? "disabled" : "active"
+    }
+  });
 }
 
 export async function deleteTestBusiness(businessId) {
@@ -307,4 +424,6 @@ export function subscribeBusinessControl(businessId, callback) {
     console.warn("Listener business control error", error);
   });
 }
+
+
 

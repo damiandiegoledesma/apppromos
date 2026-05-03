@@ -32,7 +32,7 @@ export function normalizeModules(modules = {}) {
 }
 
 export const BILLING_STATUSES = ["active", "overdue", "suspended"];
-export const BILLING_PLANS = ["trial", "basic", "pro"];
+export const BILLING_PLANS = ["trial", "basic", "pro", "dueno"];
 export const TRIAL_DAYS = 30;
 export const TRIAL_WARNING_DAYS = 5;
 
