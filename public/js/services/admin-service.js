@@ -24,6 +24,55 @@ import { normalizeBusinessControl, DEFAULT_MODULES, BILLING_PLANS, createTrialEn
 
 export const ADMIN_ROLES = ["superadmin", "admin"];
 
+const ADMIN_ALLOWED_BILLING_PLANS = Array.from(new Set([
+  ...BILLING_PLANS,
+  "dueno",
+  "dueño",
+  "owner"
+]));
+
+const ADMIN_ALLOWED_PAYMENT_STATUSES = ["active", "paid", "pending", "overdue", "suspended", "manual", "bonus", "bonificado"];
+
+function normalizeAdminPlan(plan = "trial") {
+  const clean = String(plan || "trial").trim().toLowerCase();
+  const map = {
+    arranque: "basic",
+    basic: "basic",
+    pro: "pro",
+    salvador: "pro",
+    dueno: "dueno",
+    dueño: "dueno",
+    owner: "dueno",
+    trial: "trial"
+  };
+  return map[clean] || clean || "trial";
+}
+
+function normalizeAdminPaymentStatus(status = "active") {
+  const clean = String(status || "active").trim().toLowerCase();
+  const map = {
+    paid: "active",
+    al_dia: "active",
+    al_día: "active",
+    pendiente: "pending",
+    vencido: "overdue",
+    bonificado: "manual",
+    bonus: "manual"
+  };
+  return map[clean] || clean || "active";
+}
+
+function normalizeAdminDateValue(value = null) {
+  if (!value) return null;
+  if (typeof value?.toDate === "function") return value.toDate().toISOString();
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return `${value.trim()}T12:00:00.000Z`;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
 export async function getAdminProfile(uid = null) {
   const cleanUid = uid || getCurrentAuthUser()?.uid;
   if (!cleanUid) return null;
@@ -45,7 +94,8 @@ export async function requireAdmin() {
 
 export function buildBusinessDefaults(partial = {}) {
   const now = new Date().toISOString();
-  return normalizeBusinessControl({
+  const rawBilling = partial.billing && typeof partial.billing === "object" ? partial.billing : {};
+  const normalized = normalizeBusinessControl({
     status: "active",
     modules: { ...DEFAULT_MODULES },
     billing: {
@@ -59,6 +109,16 @@ export function buildBusinessDefaults(partial = {}) {
     updatedAt: partial.updatedAt || now,
     ...partial
   });
+
+  return {
+    ...normalized,
+    billing: {
+      ...(normalized.billing || {}),
+      ...rawBilling,
+      status: normalizeAdminPaymentStatus(rawBilling.status || normalized.billing?.status || "active"),
+      plan: normalizeAdminPlan(rawBilling.plan || normalized.billing?.plan || "trial")
+    }
+  };
 }
 
 export async function readBusinessRoot(businessId) {
@@ -133,6 +193,12 @@ export async function listAdminBusinesses() {
 
     return {
       ...normalized,
+      billing: { ...(normalized.billing || {}), ...(root.billing || {}) },
+      internalNote: root.internalNote || root.adminNote || root.commercialNote || root.notes?.internal || root.admin?.note || "",
+      adminNote: root.adminNote || root.internalNote || root.commercialNote || "",
+      lastPaymentAt: root.lastPaymentAt || root.billing?.lastPaymentAt || null,
+      nextPaymentDueAt: root.nextPaymentDueAt || root.billing?.nextPaymentDueAt || root.billing?.currentPeriodEnd || null,
+      currentPeriodEnd: root.currentPeriodEnd || root.billing?.currentPeriodEnd || null,
       businessId,
       id: businessId,
       name: root.name || meta?.name || normalized.name || businessId,
@@ -232,28 +298,100 @@ export async function updateBusinessStatus(businessId, nextStatus) {
 
 export async function updateBusinessBillingPlan(businessId, nextPlan) {
   await requireAdmin();
-  const cleanPlan = String(nextPlan || "trial").toLowerCase();
-  if (!BILLING_PLANS.includes(cleanPlan)) throw new Error("Plan inválido");
+  const cleanPlan = normalizeAdminPlan(nextPlan || "trial");
+  if (!ADMIN_ALLOWED_BILLING_PLANS.includes(cleanPlan)) throw new Error("Plan inválido");
   const before = await readBusinessRoot(businessId);
-  const billing = { ...(before?.billing || {}), plan: cleanPlan, status: before?.billing?.status || "active" };
+  const now = new Date().toISOString();
+  const billing = {
+    ...(before?.billing || {}),
+    plan: cleanPlan,
+    status: before?.billing?.status || "active",
+    updatedAt: now
+  };
   await setDoc(doc(db, "businesses", businessId), {
     billing,
-    updatedAt: new Date().toISOString()
+    updatedAt: now
   }, { merge: true });
   await logAdminAction({ action: "business_plan_changed", targetBusinessId: businessId, before: { billing: before?.billing || null }, after: { billing } });
 }
 
 export async function updateBusinessBillingStatus(businessId, nextBillingStatus) {
   await requireAdmin();
-  const allowed = ["active", "overdue", "suspended"];
-  if (!allowed.includes(nextBillingStatus)) throw new Error("Estado de billing inválido");
+  const cleanStatus = normalizeAdminPaymentStatus(nextBillingStatus || "active");
+  if (!ADMIN_ALLOWED_PAYMENT_STATUSES.includes(cleanStatus)) throw new Error("Estado de pago inválido");
   const before = await readBusinessRoot(businessId);
-  const billing = { ...(before?.billing || {}), status: nextBillingStatus, plan: before?.billing?.plan || "trial" };
+  const now = new Date().toISOString();
+  const billing = {
+    ...(before?.billing || {}),
+    status: cleanStatus,
+    plan: before?.billing?.plan || "trial",
+    updatedAt: now
+  };
   await setDoc(doc(db, "businesses", businessId), {
     billing,
-    updatedAt: new Date().toISOString()
+    updatedAt: now
   }, { merge: true });
   await logAdminAction({ action: "business_billing_status_changed", targetBusinessId: businessId, before: { billing: before?.billing || null }, after: { billing } });
+}
+
+export async function updateBusinessPaymentDueDate(businessId, nextPaymentDueAt = null) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  const cleanDue = normalizeAdminDateValue(nextPaymentDueAt);
+  const billing = {
+    ...(before?.billing || {}),
+    plan: before?.billing?.plan || "trial",
+    status: before?.billing?.status || "active",
+    nextPaymentDueAt: cleanDue,
+    currentPeriodEnd: cleanDue || before?.billing?.currentPeriodEnd || null,
+    updatedAt: now
+  };
+  await setDoc(doc(db, "businesses", businessId), {
+    billing,
+    nextPaymentDueAt: cleanDue,
+    updatedAt: now
+  }, { merge: true });
+  await logAdminAction({ action: "business_payment_due_changed", targetBusinessId: businessId, before: { billing: before?.billing || null }, after: { billing } });
+}
+
+export async function markBusinessPaymentReceived(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  const cleanDue = normalizeAdminDateValue(options.nextPaymentDueAt || before?.billing?.nextPaymentDueAt || before?.nextPaymentDueAt || null);
+  const billing = {
+    ...(before?.billing || {}),
+    plan: before?.billing?.plan || "trial",
+    status: "active",
+    lastPaymentAt: now,
+    nextPaymentDueAt: cleanDue,
+    currentPeriodEnd: cleanDue || before?.billing?.currentPeriodEnd || null,
+    updatedAt: now
+  };
+  await setDoc(doc(db, "businesses", businessId), {
+    billing,
+    lastPaymentAt: now,
+    nextPaymentDueAt: cleanDue,
+    updatedAt: now
+  }, { merge: true });
+  await logAdminAction({ action: "business_payment_received", targetBusinessId: businessId, before: { billing: before?.billing || null }, after: { billing } });
+}
+
+export async function updateBusinessInternalNote(businessId, internalNote = "") {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  const cleanNote = String(internalNote || "").trim();
+  await setDoc(doc(db, "businesses", businessId), {
+    internalNote: cleanNote,
+    adminNote: cleanNote,
+    updatedAt: now
+  }, { merge: true });
+  await logAdminAction({ action: "business_internal_note_changed", targetBusinessId: businessId, before: { internalNote: before?.internalNote || before?.adminNote || "" }, after: { internalNote: cleanNote } });
 }
 
 export async function updateBusinessModule(businessId, moduleKey, enabled) {

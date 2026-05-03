@@ -13,6 +13,9 @@ import {
   updateBusinessModules,
   updateBusinessBillingPlan,
   updateBusinessBillingStatus,
+  updateBusinessPaymentDueDate,
+  markBusinessPaymentReceived,
+  updateBusinessInternalNote,
   setBusinessTestFlag,
   markExistingBusinessesAsTest,
   cloneBusinessAsTest,
@@ -38,6 +41,7 @@ const ADMIN_BILLING_PLANS = Array.from(new Set([
   "dueno"
 ]));
 
+const ADMIN_PAYMENT_STATUSES = ["active", "pending", "overdue", "suspended", "manual"];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -207,6 +211,43 @@ function fmtDate(value) {
   return date.toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
 }
 
+function fmtDateOnly(value) {
+  if (!value) return "—";
+  const date = value?.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toDateInputValue(value) {
+  if (!value) return "";
+  const date = value?.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function businessBilling(row = {}) {
+  return row.billing && typeof row.billing === "object" ? row.billing : {};
+}
+
+function businessPaymentDueValue(row = {}) {
+  const billing = businessBilling(row);
+  return billing.nextPaymentDueAt || billing.currentPeriodEnd || billing.trialEndsAt || row.nextPaymentDueAt || row.currentPeriodEnd || "";
+}
+
+function businessPaymentDueInput(row = {}) {
+  return toDateInputValue(businessPaymentDueValue(row));
+}
+
+function businessLastPaymentLabel(row = {}) {
+  const billing = businessBilling(row);
+  return fmtDate(billing.lastPaymentAt || row.lastPaymentAt || null);
+}
+
+function businessInternalNote(row = {}) {
+  return firstText(row.internalNote, row.adminNote, row.commercialNote, row.notes?.internal, row.admin?.note, "");
+}
+
 function accessLabel(status) {
   const map = {
     active: "Activo",
@@ -218,12 +259,18 @@ function accessLabel(status) {
 }
 
 function paymentLabel(status) {
+  const key = String(status || "active").toLowerCase();
   const map = {
     active: "Al día",
+    paid: "Al día",
+    pending: "Pendiente",
     overdue: "Vencido",
-    suspended: "Suspendido"
+    suspended: "Suspendido",
+    manual: "Bonificado / manual",
+    bonus: "Bonificado / manual",
+    bonificado: "Bonificado / manual"
   };
-  return map[status] || status || "—";
+  return map[key] || status || "—";
 }
 
 function statusBadge(status) {
@@ -238,12 +285,16 @@ function statusBadge(status) {
 }
 
 function billingBadge(status) {
+  const key = String(status || "active").toLowerCase();
   const map = {
     active: ["#e9f8ef", "#16703a", "Al día"],
+    paid: ["#e9f8ef", "#16703a", "Al día"],
+    pending: ["#fff8df", "#8a6200", "Pendiente"],
     overdue: ["#fff4e5", "#b54708", "Vencido"],
-    suspended: ["#fff1f0", "#b42318", "Suspendido"]
+    suspended: ["#fff1f0", "#b42318", "Suspendido"],
+    manual: ["#eef2ff", "#1d3b7a", "Bonificado / manual"]
   };
-  const [bg, color, label] = map[status] || ["#f2f2f2", "#555", status || "—"];
+  const [bg, color, label] = map[key] || ["#f2f2f2", "#555", status || "—"];
   return `<span class="admin-status-badge" style="background:${bg};color:${color};">${escapeHtml(label)}</span>`;
 }
 
@@ -365,11 +416,23 @@ function getPaymentAdminState(row = {}) {
     active: {
       label: "Al día",
       tone: "ok",
-      help: "No hay alerta de cobranza cargada.",
-      action: "Mantener activo."
+      help: "Pago o situación comercial al día.",
+      action: "Mantener activo y mirar próximo vencimiento."
+    },
+    paid: {
+      label: "Al día",
+      tone: "ok",
+      help: "Pago registrado como recibido.",
+      action: "Mantener activo y mirar próximo vencimiento."
+    },
+    pending: {
+      label: "Pendiente",
+      tone: "warn",
+      help: "Hay un pago o definición comercial pendiente, pero no necesariamente vencido.",
+      action: "Escribir por WhatsApp antes de pausar o limitar."
     },
     overdue: {
-      label: "Pendiente / vencido",
+      label: "Vencido",
       tone: "warn",
       help: "Hay una situación de pago para resolver.",
       action: "Enviar WhatsApp de pago pendiente."
@@ -379,6 +442,18 @@ function getPaymentAdminState(row = {}) {
       tone: "danger",
       help: "La cuenta está pausada por cobranza.",
       action: "Resolver pago antes de reactivar."
+    },
+    manual: {
+      label: "Bonificado / manual",
+      tone: "admin",
+      help: "Caso manejado manualmente por AppPromos.",
+      action: "Revisar nota interna antes de cobrar o pausar."
+    },
+    bonus: {
+      label: "Bonificado / manual",
+      tone: "admin",
+      help: "Caso manejado manualmente por AppPromos.",
+      action: "Revisar nota interna antes de cobrar o pausar."
     }
   };
   return map[status] || {
@@ -929,7 +1004,7 @@ export async function renderAdminUsers(container, options = {}) {
         <label>
           Pago
           <select id="adminBillingFilter">
-            ${["all","active","overdue","suspended"].map((s) => `<option value="${s}" ${businessBillingFilter === s ? "selected" : ""}>${s === "all" ? "Todos" : paymentLabel(s)}</option>`).join("")}
+            ${["all", ...ADMIN_PAYMENT_STATUSES].map((s) => `<option value="${s}" ${businessBillingFilter === s ? "selected" : ""}>${s === "all" ? "Todos" : paymentLabel(s)}</option>`).join("")}
           </select>
         </label>
         <label>
@@ -1018,11 +1093,38 @@ export async function renderAdminUsers(container, options = {}) {
                           ${["active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${row.status === s ? "selected" : ""}>${accessLabel(s)}</option>`).join("")}
                         </select></label>
                         <label>Pago<br><select class="admin-select" data-billing-business="${escapeHtml(row.businessId)}">
-                          ${["active","overdue","suspended"].map((s) => `<option value="${s}" ${row.billing?.status === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
+                          ${ADMIN_PAYMENT_STATUSES.map((s) => `<option value="${s}" ${String(row.billing?.status || "active") === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
                         </select></label>
                         <label>Plan<br><select class="admin-select" data-plan-business="${escapeHtml(row.businessId)}">
-                          ${ADMIN_BILLING_PLANS.map((p) => `<option value="${p}" ${row.billing?.plan === p ? "selected" : ""}>${planLabel(p)}</option>`).join("")}
+                          ${ADMIN_BILLING_PLANS.map((p) => `<option value="${p}" ${String(row.billing?.plan || "trial").toLowerCase() === p ? "selected" : ""}>${planLabel(p)}</option>`).join("")}
                         </select></label>
+                      </div>
+                    </div>
+
+                    <div class="admin-detail-box">
+                      <strong>Gestión comercial</strong>
+                      <div style="display:grid;gap:8px;">
+                        <div><b>Plan actual:</b> ${escapeHtml(planLabel(row.billing?.plan || "trial"))}</div>
+                        <div><b>Pago:</b> ${escapeHtml(paymentLabel(row.billing?.status || "active"))}</div>
+                        <label>Próximo vencimiento / fecha de pago
+                          <input class="admin-input" type="date" data-payment-due-business="${escapeHtml(row.businessId)}" value="${escapeHtml(businessPaymentDueInput(row))}" />
+                        </label>
+                        <div><b>Último pago registrado:</b> ${escapeHtml(businessLastPaymentLabel(row))}</div>
+                        <button data-payment-received-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini success">Marcar pago recibido</button>
+                      </div>
+                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                        Usá esto para seguimiento comercial manual. La automatización de avisos 48/72 hs queda para otro bloque.
+                      </div>
+                    </div>
+
+                    <div class="admin-detail-box">
+                      <strong>Nota interna</strong>
+                      <textarea data-internal-note-business="${escapeHtml(row.businessId)}" rows="4" placeholder="Ej: Lo contacté el 03/05. Quiere pasar a Salvador cuando termine la prueba." style="width:100%;box-sizing:border-box;border:1px solid #e7e1d8;border-radius:12px;padding:10px;font-family:inherit;resize:vertical;">${escapeHtml(businessInternalNote(row))}</textarea>
+                      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                        <button data-save-internal-note="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Guardar nota</button>
+                      </div>
+                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                        Esta nota es solo para administración. No la ve el carnicero.
                       </div>
                     </div>
 
@@ -1532,6 +1634,45 @@ export async function renderAdminUsers(container, options = {}) {
       input.addEventListener("change", async () => {
         try { await updateBusinessBillingPlan(input.dataset.planBusiness, input.value || "trial"); await loadData(); }
         catch (error) { alert(error?.message || "No se pudo cambiar plan"); await loadData(); }
+      });
+    });
+
+    content.querySelectorAll("[data-payment-due-business]").forEach((input) => {
+      input.addEventListener("change", async () => {
+        try { await updateBusinessPaymentDueDate(input.dataset.paymentDueBusiness, input.value || null); await loadData(); }
+        catch (error) { alert(error?.message || "No se pudo guardar el vencimiento"); await loadData(); }
+      });
+    });
+
+    content.querySelectorAll("[data-payment-received-business]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const businessId = button.dataset.paymentReceivedBusiness;
+        const row = businesses.find((b) => b.businessId === businessId);
+        const label = businessHumanName(row || { businessId });
+        const input = content.querySelector(`[data-payment-due-business="${CSS.escape(businessId)}"]`);
+        const nextDue = input?.value || businessPaymentDueInput(row || {});
+        const ok = window.confirm(`Vas a marcar pago recibido para "${label}".\n\nEl estado de pago pasará a Al día y se guardará la fecha de hoy como último pago. ¿Continuar?`);
+        if (!ok) return;
+        try { await markBusinessPaymentReceived(businessId, { nextPaymentDueAt: nextDue || null }); await loadData(); }
+        catch (error) { alert(error?.message || "No se pudo marcar el pago recibido"); await loadData(); }
+      });
+    });
+
+    content.querySelectorAll("[data-save-internal-note]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const businessId = button.dataset.saveInternalNote;
+        const textarea = content.querySelector(`[data-internal-note-business="${CSS.escape(businessId)}"]`);
+        const previousText = button.textContent;
+        button.disabled = true;
+        button.textContent = "Guardando...";
+        try {
+          await updateBusinessInternalNote(businessId, textarea?.value || "");
+          await loadData();
+        } catch (error) {
+          alert(error?.message || "No se pudo guardar la nota interna");
+          button.disabled = false;
+          button.textContent = previousText || "Guardar nota";
+        }
       });
     });
 
