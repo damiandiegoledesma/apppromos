@@ -463,14 +463,18 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function renderQuickFloatingSummary() {
     const count = state.quick.items.length;
     const total = getQuickTotal();
+    const selectedText = count
+      ? state.quick.items.map((item) => `${escapeHtml(item.nombre)} · ${formatQty(item.cantidad)} ${escapeHtml(item.unidad || "kg")}`).join("  |  ")
+      : "Elegí productos para armar la oferta.";
     return `
-      <aside style="position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;max-width:760px;margin:0 auto;background:#eff6ff;border:1px solid #bfdbfe;border-radius:18px;padding:11px;box-shadow:0 14px 34px rgba(15,23,42,.20);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:.72rem;color:#1e40af;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Resumen</div>
-            <strong style="display:block;color:#1e3a8a;">${count} producto${count === 1 ? "" : "s"} · Total $ ${formatMoney(total)}</strong>
+      <aside style="position:sticky;top:8px;z-index:18;margin:10px 0 12px;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:18px;padding:11px;box-shadow:0 10px 24px rgba(15,23,42,.12);">
+        <div style="display:grid;gap:8px;">
+          <div style="min-width:0;">
+            <div style="font-size:.72rem;color:#166534;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Resumen de la oferta</div>
+            <strong style="display:block;color:#14532d;line-height:1.2;">${count} producto${count === 1 ? "" : "s"} · Total estimado $ ${formatMoney(total)}</strong>
+            <div style="margin-top:5px;color:#166534;font-weight:850;font-size:.78rem;white-space:nowrap;overflow:auto;">${selectedText}</div>
           </div>
-          <button id="quickReviewBtn" type="button" style="background:#2563eb;color:#fff;border-color:#2563eb;min-height:44px;${count ? "" : "opacity:.6;"}">Ver oferta lista</button>
+          <button id="quickReviewBtn" type="button" style="width:100%;background:#2563eb;color:#fff;border-color:#2563eb;min-height:48px;${count ? "" : "opacity:.6;"}">Ver oferta lista</button>
         </div>
       </aside>
     `;
@@ -547,15 +551,13 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     container.innerHTML = `
       <section style="display:grid; gap:12px;">
         ${renderTopActions("Oferta rápida", "Arrancá con sugeridos o buscá cualquier producto del catálogo.")}
-        ${renderSelectedStrip(state.quick.items)}
+        ${renderQuickFloatingSummary()}
 
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px 108px; display:grid; gap:12px;">
+        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); display:grid; gap:12px;">
           <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #bfdbfe; border-radius:14px; padding:0 12px; font-weight:900;" />
           ${renderRubroChips("quick", state.quick.rubroFilter)}
           ${renderProductGrid("quick", filteredProducts, state.quick.items)}
         </div>
-
-        ${renderQuickFloatingSummary()}
       </section>
     `;
 
@@ -733,7 +735,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     const whatsappPreview = buildWhatsappText(payload);
 
     container.innerHTML = `
-      <section style="display:grid; gap:12px;">
+      <section style="display:grid; gap:12px; padding-bottom:calc(138px + var(--apppromos-mobile-nav-height, 0px));">
         ${renderTopActions("Oferta lista", "Revisá kilos y mandá por WhatsApp. Esta oferta no se guarda.", "← Productos")}
         <div style="display:grid; gap:10px;">
           ${renderQuantityList(state.quick.items, "quickReview")}
@@ -811,7 +813,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           ${renderRubroChips("discount", state.discount.rubroFilter)}
           ${renderProductGrid("discount", filteredProducts, state.discount.items)}
         </div>
-        <div style="position:sticky; bottom:10px; z-index:6; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:12px; box-shadow:0 12px 28px rgba(15,23,42,.12); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div style="position:sticky; bottom:var(--apppromos-mobile-sticky-bottom, 10px); z-index:6; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:12px; box-shadow:0 12px 28px rgba(15,23,42,.12); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
           <strong>${state.discount.items.length} producto${state.discount.items.length === 1 ? "" : "s"}</strong>
           <button id="discountNextAdjustBtn" type="button" style="background:#f97316; color:#fff; border-color:#f97316;">Ajustar descuentos</button>
         </div>
@@ -831,7 +833,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderDiscountSummary(totals, compact = false, floating = false) {
     const baseStyle = floating
-      ? "position:fixed;left:10px;right:10px;bottom:10px;z-index:9999;max-width:760px;margin:0 auto;"
+      ? "position:fixed;left:10px;right:10px;bottom:var(--apppromos-mobile-floating-bottom, 10px);z-index:2147482400;max-width:760px;margin:0 auto;"
       : "position:sticky;top:0;z-index:5;";
 
     return `
@@ -862,7 +864,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     content.innerHTML = `
       <div style="display:grid; gap:12px;">
         ${renderDiscountSummary(totals, true, true)}
-        <div style="display:grid; gap:10px; padding-bottom:132px;">
+        <div style="display:grid; gap:10px; padding-bottom:calc(152px + var(--apppromos-mobile-nav-height, 0px));">
           ${renderQuantityList(state.discount.items, "discountAdjust", true)}
         </div>
         <div style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:12px; display:grid; gap:8px;">
@@ -948,5 +950,11 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     });
   }
 
-  renderChooser();
+  if (options?.initialMode === "quick") {
+    startQuickMode();
+  } else if (options?.initialMode === "discount") {
+    startDiscountMode();
+  } else {
+    renderChooser();
+  }
 }

@@ -60,6 +60,7 @@ let unsubscribeBusinessControl = null;
 let lazyRenderInProgress = null;
 let currentPanelId = "dashboardPanel";
 let currentActiveProducts = [];
+let pendingBuilderInitialMode = null;
 
 function normalizeActiveProductCatalog(products = []) {
   return (Array.isArray(products) ? products : [])
@@ -1002,6 +1003,17 @@ function ensureCarnizaFloatingLiquidator() {
         box-shadow: 0 22px 46px rgba(15, 76, 129, .34);
         filter: brightness(1.04);
       }
+      @media (max-width: 760px) {
+        body.app-mobile-nav-ready #carnizaFloatingLiquidatorFab {
+          bottom: var(--apppromos-mobile-floating-bottom, 104px);
+        }
+        body.app-mobile-nav-ready #carnizaFloatingLiquidatorOverlay {
+          padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+        }
+        body.app-mobile-nav-ready #carnizaFloatingLiquidatorModal {
+          max-height: calc(100vh - 126px - env(safe-area-inset-bottom, 0px));
+        }
+      }
       #carnizaFloatingLiquidatorFab .fab-avatar {
         width: 48px;
         height: 48px;
@@ -1021,7 +1033,7 @@ function ensureCarnizaFloatingLiquidator() {
       @media (max-width: 520px) {
         #carnizaFloatingLiquidatorFab {
           right: 14px;
-          bottom: 14px;
+          bottom: var(--apppromos-mobile-floating-bottom, 104px);
           min-width: 72px;
           width: 72px;
           height: 72px;
@@ -1266,17 +1278,26 @@ function activatePanel(panelId) {
   document.querySelectorAll("button[data-panel]").forEach((button) => {
     button.classList.toggle("active", button.dataset.panel === panelId);
   });
+
+  updateMobileBottomNavActive();
 }
 
 function resetBuilderPanelForNewSale() {
   if (!builderPanel || !currentBusinessId || !currentPayload?.state) return;
 
   const products = getActiveProductCatalog();
+  const initialMode = pendingBuilderInitialMode === "quick" || pendingBuilderInitialMode === "discount"
+    ? pendingBuilderInitialMode
+    : null;
+  pendingBuilderInitialMode = null;
 
   renderBuilder(builderPanel, products, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);
-  }, getBuilderOptions());
+  }, {
+    ...getBuilderOptions(),
+    initialMode
+  });
 }
 
 function goToPanel(panelId, options = {}) {
@@ -1290,6 +1311,293 @@ function goToPanel(panelId, options = {}) {
   setMoreLinksVisible(Boolean(options.keepMoreOpen));
   window.scrollTo({ top: 0, behavior: "smooth" });
   void renderLazyPanel(panelId);
+}
+
+
+const MOBILE_NAV_ID = "appMobileBottomNav";
+const MOBILE_MENU_ID = "appMobileBottomMenu";
+const MOBILE_STYLE_ID = "appMobileBottomNavStyle";
+
+function injectMobileBottomNavStyles() {
+  if (document.getElementById(MOBILE_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = MOBILE_STYLE_ID;
+  style.textContent = `
+    .app-mobile-bottom-nav,
+    .app-mobile-bottom-menu { display: none; }
+
+    @media (max-width: 760px) {
+      body.app-mobile-nav-ready {
+        --apppromos-mobile-nav-height: 86px;
+        --apppromos-mobile-nav-gap: 12px;
+        --apppromos-mobile-floating-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+        --apppromos-mobile-quick-summary-bottom: calc(184px + env(safe-area-inset-bottom, 0px));
+        --apppromos-mobile-sticky-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      }
+      body.app-mobile-nav-ready .app { padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px)); }
+      body.app-mobile-nav-ready .topbar .nav-shell { display: none; }
+
+      .app-mobile-bottom-nav {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+        z-index: 2147482500;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+        padding: 7px;
+        border: 1px solid rgba(15, 23, 42, .10);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+        backdrop-filter: blur(14px);
+      }
+
+      .app-mobile-bottom-nav button {
+        min-width: 0;
+        min-height: 54px;
+        border: 0;
+        border-radius: 17px;
+        background: transparent;
+        color: #334155;
+        font-weight: 1000;
+        font-size: 11px;
+        line-height: 1.1;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 3px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .app-mobile-bottom-nav button .app-mobile-nav-icon { font-size: 20px; line-height: 1; }
+      .app-mobile-bottom-nav button.is-active {
+        background: linear-gradient(135deg, #fff7ed, #fee2e2);
+        color: #9f1239;
+        box-shadow: inset 0 0 0 1px rgba(196, 30, 58, .18);
+      }
+      .app-mobile-bottom-nav button.is-primary {
+        background: linear-gradient(135deg, #c41e3a, #9f1239);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(196, 30, 58, .22);
+      }
+
+      .app-mobile-bottom-menu {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+        z-index: 2147482499;
+        display: none;
+        border-radius: 24px;
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, .10);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+        padding: 12px;
+      }
+      .app-mobile-bottom-menu.is-open { display: block; }
+      .app-mobile-bottom-menu__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .app-mobile-bottom-menu__title {
+        margin: 0;
+        color: #7f1d1d;
+        font-size: 15px;
+        font-weight: 1000;
+      }
+      .app-mobile-bottom-menu__hint {
+        margin: 2px 0 0;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .app-mobile-bottom-menu__close {
+        min-width: 40px;
+        min-height: 40px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #fff;
+        color: #334155;
+        font-size: 20px;
+        font-weight: 1000;
+        cursor: pointer;
+      }
+      .app-mobile-bottom-menu__grid {
+        display: grid;
+        gap: 8px;
+      }
+      .app-mobile-bottom-menu__grid.two { grid-template-columns: 1fr 1fr; }
+      .app-mobile-bottom-menu__grid button {
+        min-height: 52px;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #fff;
+        color: #1f2937;
+        font-weight: 1000;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+        line-height: 1.15;
+      }
+      .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
+      .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
+      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #9f1239; }
+      .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+      .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function closeMobileBottomMenu() {
+  document.getElementById(MOBILE_MENU_ID)?.classList.remove("is-open");
+}
+
+function updateMobileBottomNavActive() {
+  const nav = document.getElementById(MOBILE_NAV_ID);
+  if (!nav) return;
+  const map = {
+    dashboardPanel: "home",
+    pricesPanel: "prices",
+    builderPanel: "sell",
+    whatsappPanel: "whatsapp",
+    savedPanel: "more",
+    marketPanel: "more",
+    webPanel: "more",
+    usersPanel: "more"
+  };
+  const activeKey = map[currentPanelId] || "home";
+  nav.querySelectorAll("[data-mobile-nav]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.mobileNav === activeKey);
+  });
+}
+
+function openMobileBottomMenu(kind) {
+  const menu = document.getElementById(MOBILE_MENU_ID);
+  if (!menu) return;
+
+  const isSuperadmin = currentSession?.appMode === "superadmin";
+  const title = kind === "sell" ? "Vender" : "Más";
+  const hint = kind === "sell"
+    ? "Elegí cómo querés vender ahora."
+    : "Cuenta, web, módulos y salida de la app.";
+
+  const sellButtons = `
+    <div class="app-mobile-bottom-menu__grid">
+      <button type="button" class="green" data-mobile-action="quick-offer"><strong>⚡ Oferta rápida</strong><span>Armar y mandar ya.</span></button>
+      <button type="button" class="orange" data-mobile-action="discount-offer"><strong>🏷️ Oferta con descuentos</strong><span>Ajustar mejor la promo.</span></button>
+      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Vender urgente</strong><span>Mover mercadería rápido.</span></button>
+    </div>
+  `;
+
+  const moreButtons = `
+    <div class="app-mobile-bottom-menu__grid two">
+      <button type="button" data-mobile-action="account"><strong>👤 Mi cuenta</strong><span>Datos y estado.</span></button>
+      <button type="button" data-mobile-action="web"><strong>🌐 Mi web</strong><span>Ver vidriera.</span></button>
+      <button type="button" data-mobile-action="saved"><strong>⭐ Guardadas</strong><span>Promos para repetir.</span></button>
+      <button type="button" data-mobile-action="market"><strong>📊 Competencia</strong><span>Mirar mercado.</span></button>
+      <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
+      ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
+      <button type="button" class="primary" data-mobile-action="logout"><strong>🚪 ${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
+    </div>
+  `;
+
+  menu.innerHTML = `
+    <div class="app-mobile-bottom-menu__head">
+      <div>
+        <h3 class="app-mobile-bottom-menu__title">${title}</h3>
+        <p class="app-mobile-bottom-menu__hint">${hint}</p>
+      </div>
+      <button type="button" class="app-mobile-bottom-menu__close" data-mobile-menu-close aria-label="Cerrar">×</button>
+    </div>
+    ${kind === "sell" ? sellButtons : moreButtons}
+  `;
+  menu.classList.add("is-open");
+}
+
+async function handleMobileBottomAction(action) {
+  if (!action) return;
+  closeMobileBottomMenu();
+
+  if (action === "home" || action === "account") return goToPanel("dashboardPanel");
+  if (action === "prices") return goToPanel("pricesPanel");
+  if (action === "whatsapp") return goToPanel("whatsappPanel");
+  if (action === "saved") return goToPanel("savedPanel");
+  if (action === "market") return goToPanel("marketPanel");
+  if (action === "web") return goToPanel("webPanel");
+  if (action === "admin") return goToPanel("usersPanel");
+
+  if (action === "quick-offer") {
+    pendingBuilderInitialMode = "quick";
+    trackCarnizaSignal("mobile_nav_quick_offer", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
+    return goToPanel("builderPanel");
+  }
+
+  if (action === "discount-offer") {
+    pendingBuilderInitialMode = "discount";
+    trackCarnizaSignal("mobile_nav_discount_offer", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
+    return goToPanel("builderPanel");
+  }
+
+  if (action === "urgent-sale") {
+    trackCarnizaSignal("mobile_nav_urgent_sale", { businessId: currentPayload?.businessId || currentBusinessId || null, panelId: currentPanelId, appMode: currentSession?.appMode || "client" });
+    ensureCarnizaFloatingLiquidator();
+    document.getElementById("carnizaFloatingLiquidatorFab")?.click();
+    return;
+  }
+
+  if (action === "help") {
+    const message = currentPanelId === "builderPanel"
+      ? "Estás en Crear oferta. Elegí productos, revisá la oferta y mandala por WhatsApp."
+      : "Usá Vender para armar una oferta, Precios para actualizar valores o WhatsApp para enviar una promo lista.";
+    window.alert(message);
+    return;
+  }
+
+  if (action === "logout") {
+    if (currentSession?.isDemo) {
+      window.location.href = "./index.html";
+      return;
+    }
+    try { await logoutUser(); } catch (_) {}
+    window.location.href = "./index.html";
+  }
+}
+
+function ensureMobileBottomNavigation() {
+  injectMobileBottomNavStyles();
+  document.body.classList.add("app-mobile-nav-ready");
+
+  if (!document.getElementById(MOBILE_NAV_ID)) {
+    const nav = document.createElement("nav");
+    nav.id = MOBILE_NAV_ID;
+    nav.className = "app-mobile-bottom-nav";
+    nav.setAttribute("aria-label", "Navegación principal mobile");
+    nav.innerHTML = `
+      <button type="button" data-mobile-nav="home" data-mobile-action="home"><span class="app-mobile-nav-icon">🏠</span><span>Inicio</span></button>
+      <button type="button" data-mobile-nav="prices" data-mobile-action="prices"><span class="app-mobile-nav-icon">💲</span><span>Precios</span></button>
+      <button type="button" class="is-primary" data-mobile-nav="sell" data-mobile-menu="sell"><span class="app-mobile-nav-icon">🥩</span><span>Vender</span></button>
+      <button type="button" data-mobile-nav="whatsapp" data-mobile-action="whatsapp"><span class="app-mobile-nav-icon">📲</span><span>WhatsApp</span></button>
+      <button type="button" data-mobile-nav="more" data-mobile-menu="more"><span class="app-mobile-nav-icon">☰</span><span>Más</span></button>
+    `;
+    document.body.appendChild(nav);
+  }
+
+  if (!document.getElementById(MOBILE_MENU_ID)) {
+    const menu = document.createElement("div");
+    menu.id = MOBILE_MENU_ID;
+    menu.className = "app-mobile-bottom-menu";
+    document.body.appendChild(menu);
+  }
+
+  updateMobileBottomNavActive();
 }
 
 
@@ -1395,6 +1703,24 @@ function bindNav() {
     const toggle = event.target.closest("[data-toggle-more]");
     if (!toggle) return;
     setMoreLinksVisible(!moreLinks?.classList.contains("open"));
+  });
+
+  document.addEventListener("click", (event) => {
+    const close = event.target.closest("[data-mobile-menu-close]");
+    if (close) {
+      closeMobileBottomMenu();
+      return;
+    }
+
+    const menuButton = event.target.closest("[data-mobile-menu]");
+    if (menuButton) {
+      openMobileBottomMenu(menuButton.dataset.mobileMenu);
+      return;
+    }
+
+    const action = event.target.closest("[data-mobile-action]");
+    if (!action) return;
+    void handleMobileBottomAction(action.dataset.mobileAction);
   });
 }
 
@@ -1671,11 +1997,13 @@ async function boot() {
   try {
     bindNav();
     setupTopbarAutoHide();
+    ensureMobileBottomNavigation();
     // Carniza visual unificado vive en ensureCarnizaFloatingLiquidator(). Evitamos segundo botón flotante legacy.
     // initCarniza({ onNavigate: goToPanel });
 
     const session = await resolveSession();
     currentSession = session;
+    ensureMobileBottomNavigation();
     updateCarnizaContext({ appMode: currentSession?.appMode || "client" });
 
     if (session.appMode === "guest") {

@@ -1,42 +1,30 @@
 # AppPromos — Versión actual
 
-## V12.12-A — Especificación mobile-first AppPromos
+## V12.12-B-FIX4 — Oferta rápida: acción visible arriba del listado
 
 Base de trabajo:
 
-- V12.11-B crea Web de Arranque desde el registro.
-- V12.11-D1 deja la guía de precios dentro de Cambiar precios.
-- V12.11-D2 suma navegación segura en Carniza.
-- V12.11-D3 mejora el acceso mobile en landing.
+- V12.12-A definió la especificación mobile-first.
+- V12.12-B implementó la botonera inferior base.
+- V12.12-B-FIX1 corrigió Carniza y varios solapamientos.
+- V12.12-B-FIX2 intentó separar Oferta rápida de la botonera inferior.
+- V12.12-B-FIX3 movió el resumen al flujo, pero el test mostró que faltaba la acción visible.
 
 ## Objetivo
 
-Definir el rediseño mobile-first integral antes de enviar a `dev`.
-
-La app debe diseñarse para el celular real del carnicero argentino:
-
-- Android gama media / entrada.
-- Samsung Galaxy A06 / A15 como referencia principal.
-- Xiaomi Redmi 14c / Moto G04s como alternativas frecuentes.
-- Pantalla vertical.
-- Uso con una mano.
-- Mostrador, apuro y necesidad de vender ya.
-
-## Decisión principal
-
-La navegación mobile base será:
+Dejar Oferta rápida usable en mobile:
 
 ```txt
-[Inicio] [Precios] [Vender] [WhatsApp] [Más]
+Elegís productos → ves el resumen → tocás Ver oferta lista → mandás WhatsApp.
 ```
 
-Con esta lógica:
+## Incluye
 
-- **Inicio:** tablero principal.
-- **Precios:** cambiar precios.
-- **Vender:** Oferta rápida / Oferta con descuentos / Vender urgente.
-- **WhatsApp:** salida comercial / última oferta / ayuda si no hay oferta lista.
-- **Más:** Mi cuenta, Mi web, Ofertas guardadas, Competencia, Ayuda, Panel Admin si corresponde y Cerrar sesión.
+- El resumen de Oferta rápida queda arriba del listado de productos.
+- El botón **Ver oferta lista** queda visible junto al resumen.
+- Se evita que la botonera inferior tape la acción principal.
+- Mantiene Carniza por encima de la botonera inferior.
+- Mantiene la botonera inferior mobile.
 
 ## Regla UX
 
@@ -44,34 +32,17 @@ Con esta lógica:
 La botonera mueve.
 Carniza orienta.
 El cuerpo vende.
+Oferta rápida no puede esconder su acción principal.
 ```
-
-## Incluye
-
-- Documento `V12.12-A_ESPECIFICACION_MOBILE_FIRST.md`.
-- Definición de botonera inferior.
-- Definición de rol de Carniza en mobile.
-- Definición de rol de La Nelly en mobile.
-- Criterio de header compacto y modo foco.
-- Checklist de aceptación mobile.
-- Plan de implementación por etapas V12.12-B a V12.12-F.
 
 ## No toca
 
-- Código de navegación.
-- App interna funcional.
+- Registro.
 - Web de Arranque.
-- Registro/Login.
-- Cambiar precios.
-- Crear oferta.
+- Web pública.
+- Lógica de precios.
+- Lógica de WhatsApp.
 - Vender urgente.
-- WhatsApp.
-- Panel Admin.
+- Oferta con descuentos.
+- Panel Admin profundo.
 - Firebase/Auth.
-- Backend Python.
-
-## Pendiente siguiente
-
-### V12.12-B — Botonera inferior base
-
-Implementar la primera botonera mobile sin romper navegación actual ni flujos comerciales.

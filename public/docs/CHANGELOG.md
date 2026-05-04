@@ -1,5 +1,50 @@
 # CHANGELOG AppPromos
 
+## V12.12-B-FIX4 — Oferta rápida: acción visible arriba del listado
+
+- Corrige que en mobile el resumen de Oferta rápida aparezca sin la acción principal visible.
+- Ubica **Ver oferta lista** junto al resumen, antes del buscador y la grilla de productos.
+- Evita que el carnicero tenga que scrollear o buscar el botón para avanzar.
+- Mantiene intactos la botonera inferior, Carniza, Oferta con descuentos, Vender urgente y WhatsApp.
+- No toca registro, Web de Arranque, Panel Admin ni Firebase/Auth.
+
+## V12.12-B-FIX3 — Oferta rápida: resumen en flujo visible
+
+- Corrige que el resumen de **Oferta rápida** siga quedando tapado por la botonera inferior mobile.
+- Cambia el resumen de Oferta rápida de barra fija inferior a tarjeta sticky dentro del flujo.
+- Deja **Ver oferta lista** visible y accesible sin competir con la botonera.
+- Mantiene intactos la botonera inferior, Carniza, Oferta con descuentos, Vender urgente y WhatsApp.
+- No toca registro, Web de Arranque, Panel Admin ni Firebase/Auth.
+
+## V12.12-B-FIX2 — Oferta rápida sobre botonera mobile
+
+- Corrige que la botonera inferior mobile tape el botón **Ver oferta lista** de Oferta rápida.
+- Sube el resumen flotante de Oferta rápida por encima de la botonera inferior.
+- Agrega variable mobile específica para separar el resumen rápido de la botonera.
+- Aumenta el padding inferior del listado de Oferta rápida para que no quede contenido tapado.
+- Agrega margen inferior a la pantalla final de Oferta rápida para que **Enviar por WhatsApp** quede accesible.
+- Mantiene intactos Vender urgente, Oferta con descuentos, Web de Arranque, registro, Panel Admin y lógica de WhatsApp.
+
+## V12.12-B-FIX1 — Ajuste solapamientos mobile
+
+- Corrige que Carniza quede debajo de la botonera inferior mobile.
+- Define variables mobile compartidas para la altura de la botonera, margen flotante y margen sticky.
+- Aumenta el padding inferior de la app en mobile para que el contenido no quede tapado.
+- Reubica los resúmenes flotantes de Oferta rápida y Oferta con descuentos por encima de la botonera.
+- Ajusta barras sticky inferiores dentro de Crear oferta para respetar la navegación mobile.
+- No toca registro, Web de Arranque, Web pública, lógica de ofertas, lógica de WhatsApp ni Panel Admin profundo.
+
+## V12.12-B — Botonera inferior base
+
+- Implementa la primera botonera inferior mobile-first: Inicio, Precios, Vender, WhatsApp y Más.
+- En mobile, oculta la navegación superior de módulos para evitar duplicación y llevar la navegación al pulgar.
+- Agrega menú **Vender** con Oferta rápida, Oferta con descuentos y Vender urgente.
+- Permite abrir Crear oferta directamente en modo rápido o modo descuentos desde la botonera.
+- Agrega menú **Más** con Mi cuenta, Mi web, Ofertas guardadas, Competencia, Ayuda, Panel Admin si corresponde y Salir/Cerrar sesión.
+- Mantiene la navegación actual en desktop/tablet grande.
+- No toca registro, Web de Arranque, Web pública, lógica de WhatsApp, Panel Admin profundo ni Firebase/Auth.
+
+
 ## V12.12-A — Especificación mobile-first AppPromos
 
 - Agrega documento de especificación mobile-first integral.
