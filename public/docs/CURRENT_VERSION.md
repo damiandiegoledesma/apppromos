@@ -1,65 +1,51 @@
 # AppPromos — Versión actual
 
-## V12.11-B — Web de Arranque desde registro
+## V12.11-C2 — Card simple de Web de Arranque en Inicio
 
 Base de trabajo:
 
-- V12.10-B2 cerrado con Panel Admin operativo, empresas TEST, planes/pagos y documentación de funcionamiento.
-- Último punto local previo: `c665ed2 — Docs panel admin funcionamiento V12.10-B2`.
-- Próximo foco comercial: convertir la web propia automática en gancho del trial.
+- V12.11-B ya crea una Web de Arranque desde el registro.
+- La web pública abre con identidad real y no publica precios demo ni productos sin precio válido.
+- El primer intento V12.11-C quedó descartado porque generaba una capa/overlay bloqueante en Inicio.
 
 ## Objetivo
 
-Crear una **Web de Arranque** automáticamente cuando una carnicería se registra gratis.
+Mostrar en Inicio una card simple de Carniza para que el carnicero vea el efecto wow de la Web de Arranque sin bloquear la pantalla.
 
-La web debe generar efecto wow sin publicar datos incompletos:
+Mensaje central:
 
-- muestra identidad real de la carnicería;
-- muestra WhatsApp real;
-- usa slug público propio;
-- no publica precios demo;
-- no publica ofertas demo;
-- no publica productos con precio 0 o sin precio válido.
+- “Ya tenés tu web propia”.
+- “La dejamos preparada con tu nombre y tu WhatsApp”.
+- “Ahora actualizá tus precios reales y salís vendiendo”.
 
 ## Incluye
 
-- Documento `V12.11-A_DIAGNOSTICO_WEB_AUTOMATICA_REGISTRO.md`.
-- Registro con web starter creada desde el alta.
-- `publicWebSlugs` activo desde el registro.
-- `publicPhoneKeys` mantiene la unicidad de WhatsApp.
-- Estado web:
-  - `enabled: true`;
-  - `published: true`;
-  - `active: true`;
-  - `mode: "starter"`;
-  - `priceListStatus: "pending_real_prices"`.
-- Web pública con aviso seguro mientras faltan precios reales.
-- Web pública filtrando productos sin precio válido.
+- Card normal dentro del módulo Inicio.
+- Botón **Actualizar mis precios** que abre Cambiar precios.
+- Botón **Ver mi web** que abre la web pública generada.
+- Botón **Ocultar por ahora** que oculta la card durante la sesión.
+- Documento `V12.11-C2_CARD_WEB_ARRANQUE_INICIO.md`.
 
 ## No toca
 
+- Registro.
+- Web pública.
 - Crear oferta.
 - Oferta rápida.
 - Oferta con descuentos.
 - Vender urgente.
 - WhatsApp.
+- Panel Admin.
+- Carniza flotante / overlays.
 - Backend Python.
 - SQLite.
-- Borrado real Auth.
-- Panel Admin salvo documentación indirecta.
 
 ## Pendiente siguiente
 
-### V12.11-C — Carniza efecto wow primer ingreso
-
-- Mostrar mensaje de Carniza: “Ya tenés tu web propia”.
-- Botón principal: Actualizar mis precios.
-- Botón secundario: Ver mi web.
-
 ### V12.11-D — Confirmación de precios reales
 
-- Cuando el carnicero actualiza precios, marcar web como lista o confirmar precios.
-- Permitir que la web muestre productos válidos.
+- Cuando el carnicero actualiza precios, marcar la web como lista o confirmar precios.
+- Permitir que la web pública empiece a mostrar productos válidos.
 
 ### V12.11-E — Estado web en Panel Admin
 

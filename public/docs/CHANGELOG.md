@@ -1,5 +1,14 @@
 # Changelog
 
+## V12.11-C2 — Card simple de Web de Arranque en Inicio
+
+- Se agrega una card simple de Carniza en Inicio para empresas con Web de Arranque pendiente de precios reales.
+- La card muestra el mensaje “Ya tenés tu web propia” sin usar overlay, modal ni capa oscura.
+- Se agrega botón “Actualizar mis precios” hacia el módulo de precios.
+- Se agrega botón “Ver mi web” para abrir la URL pública generada.
+- Se agrega botón “Ocultar por ahora” para ocultar la card durante la sesión.
+- No se toca registro, web pública, Crear oferta, Vender urgente, WhatsApp ni Panel Admin.
+
 ## V12.11-B — Web de Arranque desde registro
 
 - Se documenta el diagnóstico V12.11-A para Web automática desde registro.

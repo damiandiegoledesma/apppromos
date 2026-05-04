@@ -96,6 +96,75 @@ function renderBusinessEditForm(businessId, meta = {}, state = {}) {
   `;
 }
 
+
+function getStarterWebDismissKey(businessId = "") {
+  return `apppromos:web-starter-card-hidden:${businessId || "default"}`;
+}
+
+function wasStarterWebCardHidden(businessId = "") {
+  try {
+    return window.sessionStorage?.getItem(getStarterWebDismissKey(businessId)) === "1";
+  } catch (error) {
+    return false;
+  }
+}
+
+function hideStarterWebCardForSession(businessId = "") {
+  try {
+    window.sessionStorage?.setItem(getStarterWebDismissKey(businessId), "1");
+  } catch (error) {
+    // Si el navegador bloquea sessionStorage, la card simplemente vuelve a aparecer.
+  }
+}
+
+function shouldShowStarterWebCard(state = {}, businessId = "") {
+  if (wasStarterWebCardHidden(businessId)) return false;
+  const web = state?.web || {};
+  return Boolean(
+    web.enabled !== false &&
+    web.active !== false &&
+    (
+      web.mode === "starter" ||
+      web.priceListStatus === "pending_real_prices" ||
+      web.createdFrom === "registration_auto"
+    ) &&
+    web.priceListStatus !== "confirmed" &&
+    web.priceListStatus !== "ready"
+  );
+}
+
+function getStarterWebUrl(businessId = "", state = {}) {
+  const web = state?.web || {};
+  if (web.publicUrl) return web.publicUrl;
+  if (web.slug) return getPublicWebUrl(businessId, web.slug);
+  return "";
+}
+
+function renderStarterWebCard(businessId, meta = {}, state = {}) {
+  if (!shouldShowStarterWebCard(state, businessId)) return "";
+  const url = getStarterWebUrl(businessId, state);
+  const fields = getBusinessFields(meta);
+  const businessName = fields.name || "tu carnicería";
+  const hasWebUrl = Boolean(url);
+
+  return `
+    <div class="dash-starter-web-card" data-starter-web-card>
+      <div class="dash-starter-web-text">
+        <div class="dash-starter-web-kicker">Carniza te dejó algo listo</div>
+        <h3>🎉 Ya tenés tu web propia</h3>
+        <p>La dejamos preparada para <strong>${escapeHtml(businessName)}</strong> con tu nombre y tu WhatsApp.</p>
+        <p>Ahora actualizá tus precios reales y salís vendiendo con datos tuyos.</p>
+        <small>Solo se publican productos con precio válido. Lo que no cargues, no aparece.</small>
+      </div>
+      <div class="dash-starter-web-actions">
+        <button type="button" class="dash-starter-web-btn primary" data-action-panel="pricesPanel">Actualizar mis precios</button>
+        <button type="button" class="dash-starter-web-btn" data-open-starter-web ${hasWebUrl ? "" : "disabled"}>Ver mi web</button>
+        <button type="button" class="dash-starter-web-btn light" data-hide-starter-web-card>Ocultar por ahora</button>
+      </div>
+    </div>
+  `;
+}
+
 export function renderDashboard(container, businessId, meta, state, options = {}) {
   const products = normalizeProductsFromState(state);
   const savedCombos = normalizeSavedCombosFromState(state);
@@ -132,6 +201,16 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-carniza-btn { min-height:46px; border-radius:999px; padding:0 16px; border:1px solid #fed7aa; background:#fff; color:#7c2d12; font-weight:1000; cursor:pointer; box-shadow:0 5px 14px rgba(124,45,18,.07); }
       .dash-carniza-btn.primary { background:#c2410c; color:#fff; border-color:#c2410c; }
       .dash-carniza-btn.fire { background:#c41e3a; color:#fff; border-color:#c41e3a; box-shadow:0 8px 18px rgba(196,30,58,.18); }
+      .dash-starter-web-card { border:1px solid #fed7aa; border-radius:24px; padding:18px; background:linear-gradient(135deg,#fff7ed,#ffffff 56%,#eff6ff); box-shadow:0 14px 30px rgba(194,65,12,.10); display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:center; }
+      .dash-starter-web-kicker { font-size:12px; font-weight:1000; color:#c2410c; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+      .dash-starter-web-text h3 { margin:0 0 8px; color:#7c2d12; font-size:28px; line-height:1.05; font-weight:1000; }
+      .dash-starter-web-text p { margin:0 0 6px; color:#6b4b3e; font-size:14px; line-height:1.4; font-weight:800; }
+      .dash-starter-web-text small { display:block; color:#9a3412; font-size:12px; line-height:1.35; font-weight:900; margin-top:4px; }
+      .dash-starter-web-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+      .dash-starter-web-btn { min-height:44px; border-radius:999px; padding:0 15px; border:1px solid #fed7aa; background:#fff; color:#7c2d12; font-weight:1000; cursor:pointer; box-shadow:0 5px 14px rgba(124,45,18,.07); }
+      .dash-starter-web-btn.primary { background:#c2410c; border-color:#c2410c; color:#fff; }
+      .dash-starter-web-btn.light { background:#fffaf7; color:#9a3412; }
+      .dash-starter-web-btn:disabled { opacity:.55; cursor:not-allowed; }
       .dash-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
       .dash-card { border:1px solid #ece7df; border-radius:16px; padding:16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
       .dash-card h3 { margin:0; font-size:14px; color:#6b7280; }
@@ -162,8 +241,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-link-preview small { color:#9a3412; }
       .dash-form-error { min-height:18px; color:#b42318; font-weight:800; font-size:13px; }
       .dash-form-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
-      @media (max-width: 900px) { .dash-actions, .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card { grid-template-columns:1fr; } .dash-carniza-actions { justify-content:stretch; } .dash-carniza-btn { flex:1; min-width:150px; } }
-      @media (max-width: 640px) { .dash-main-card { padding:18px; } .dash-main-title { font-size:30px; } .dash-value { font-size:26px; } .dash-action-btn { min-height:auto; padding:16px; } .dash-carniza-title { font-size:24px; } .dash-carniza-actions { flex-direction:column; } .dash-carniza-btn { width:100%; } .dash-business-head { align-items:flex-start; flex-direction:column; } .dash-list-item { flex-direction:column; gap:4px; } .dash-list-item strong { text-align:left; } .dash-form-actions { flex-direction:column-reverse; } .dash-mini-btn, .dash-save-btn { width:100%; } }
+      @media (max-width: 900px) { .dash-actions, .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card, .dash-starter-web-card { grid-template-columns:1fr; } .dash-carniza-actions, .dash-starter-web-actions { justify-content:stretch; } .dash-carniza-btn, .dash-starter-web-btn { flex:1; min-width:150px; } }
+      @media (max-width: 640px) { .dash-main-card { padding:18px; } .dash-main-title { font-size:30px; } .dash-value { font-size:26px; } .dash-action-btn { min-height:auto; padding:16px; } .dash-carniza-title, .dash-starter-web-text h3 { font-size:24px; } .dash-carniza-actions, .dash-starter-web-actions { flex-direction:column; } .dash-carniza-btn, .dash-starter-web-btn { width:100%; } .dash-business-head { align-items:flex-start; flex-direction:column; } .dash-list-item { flex-direction:column; gap:4px; } .dash-list-item strong { text-align:left; } .dash-form-actions { flex-direction:column-reverse; } .dash-mini-btn, .dash-save-btn { width:100%; } }
     </style>
 
     <div class="dash-shell">
@@ -177,6 +256,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
           <button class="dash-action-btn" data-action-panel="whatsappPanel"><strong>📤 Enviar WhatsApp</strong><span>Elegí una oferta guardada, personalizá cliente y enviá.</span></button>
         </div>
       </div>
+
+      ${renderStarterWebCard(businessId, meta, state)}
 
       <div class="dash-two">
         <div class="dash-card">
@@ -215,6 +296,17 @@ export function renderDashboard(container, businessId, meta, state, options = {}
   };
 
   container.querySelector("[data-business-edit]")?.addEventListener("click", toEditMode);
+
+  container.querySelector("[data-open-starter-web]")?.addEventListener("click", () => {
+    const url = getStarterWebUrl(businessId, state);
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  container.querySelector("[data-hide-starter-web-card]")?.addEventListener("click", () => {
+    hideStarterWebCardForSession(businessId);
+    container.querySelector("[data-starter-web-card]")?.remove();
+  });
 }
 
 function bindBusinessForm(card, businessId, meta, state, options) {
