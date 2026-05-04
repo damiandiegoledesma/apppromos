@@ -1,5 +1,14 @@
 # CHANGELOG AppPromos
 
+## V12.12-C — Header compacto + modo foco mobile
+
+- Compacta el header en mobile para teléfonos Android gama media/entrada.
+- Mantiene la botonera inferior como navegación principal mobile.
+- Oculta el header en pantallas de acción concreta: Cambiar precios, Crear oferta y WhatsApp.
+- Libera espacio útil para que Oferta rápida, Oferta con descuentos y precios no queden aplastados por el encabezado.
+- Mantiene Carniza arriba de la botonera inferior.
+- No toca registro, Web de Arranque, Web pública, lógica de ofertas, lógica de WhatsApp, Panel Admin profundo ni Firebase/Auth.
+
 ## V12.12-B-FIX4 — Oferta rápida: acción visible arriba del listado
 
 - Corrige que en mobile el resumen de Oferta rápida aparezca sin la acción principal visible.

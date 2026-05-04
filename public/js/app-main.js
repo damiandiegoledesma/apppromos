@@ -62,6 +62,14 @@ let currentPanelId = "dashboardPanel";
 let currentActiveProducts = [];
 let pendingBuilderInitialMode = null;
 
+const MOBILE_ACTION_FOCUS_PANELS = new Set(["pricesPanel", "builderPanel", "whatsappPanel"]);
+
+function updateMobileActionFocus(panelId = currentPanelId) {
+  const isActionFocus = MOBILE_ACTION_FOCUS_PANELS.has(panelId);
+  document.body.classList.toggle("app-mobile-action-focus", isActionFocus);
+  document.body.classList.toggle("app-mobile-dashboard-focus", panelId === "dashboardPanel");
+}
+
 function normalizeActiveProductCatalog(products = []) {
   return (Array.isArray(products) ? products : [])
     .filter((product) => {
@@ -1258,6 +1266,7 @@ function activatePanel(panelId) {
   // Al volver a cualquier otro panel, la navegación superior reaparece.
   document.body.classList.toggle("module-focus-market", panelId === "marketPanel");
   document.body.classList.toggle("module-focus-admin", panelId === "usersPanel");
+  updateMobileActionFocus(panelId);
   if (panelId === "usersPanel") {
     // En Administración el foco es gestionar clientes, usuarios y estados.
     // Carniza se oculta para no tapar información operativa; volverá en módulos comerciales.
@@ -1336,6 +1345,79 @@ function injectMobileBottomNavStyles() {
       }
       body.app-mobile-nav-ready .app { padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px)); }
       body.app-mobile-nav-ready .topbar .nav-shell { display: none; }
+
+      body.app-mobile-nav-ready .topbar-frame {
+        padding: 2px 0;
+        box-shadow: 0 3px 8px rgba(15, 23, 42, .10);
+      }
+
+      body.app-mobile-nav-ready .topbar {
+        top: 2px;
+        padding: 7px 0;
+        margin-bottom: 10px;
+        border-bottom: 0;
+      }
+
+      body.app-mobile-nav-ready .topbar-inner {
+        padding: 0 10px;
+        gap: 7px;
+      }
+
+      body.app-mobile-nav-ready .brand {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 16px;
+      }
+
+      body.app-mobile-nav-ready .brand-left {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      body.app-mobile-nav-ready .app-brand-logo-box {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+      }
+
+      body.app-mobile-nav-ready .brand-copy { min-width: 0; }
+      body.app-mobile-nav-ready .brand h1 { font-size: 1.02rem; margin: 0; line-height: 1.05; }
+      body.app-mobile-nav-ready .brand p {
+        font-size: .66rem;
+        line-height: 1.12;
+        max-height: 1.45rem;
+        overflow: hidden;
+      }
+
+      body.app-mobile-nav-ready .brand-right {
+        min-width: 124px;
+        max-width: 146px;
+        flex: 0 0 146px;
+        gap: 4px;
+        align-items: stretch;
+      }
+
+      body.app-mobile-nav-ready #accessGate,
+      body.app-mobile-nav-ready #businessSwitcher {
+        justify-content: stretch;
+      }
+
+      body.app-mobile-nav-ready.app-mobile-action-focus .topbar-frame,
+      body.app-mobile-nav-ready.app-mobile-action-focus .topbar {
+        display: none !important;
+      }
+
+      body.app-mobile-nav-ready.app-mobile-action-focus .app {
+        padding-top: 8px;
+      }
+
+      body.app-mobile-nav-ready.app-mobile-action-focus .panel.active {
+        margin-top: 0;
+      }
 
       .app-mobile-bottom-nav {
         position: fixed;
@@ -1622,6 +1704,14 @@ function setupTopbarAutoHide() {
     const current = window.scrollY || 0;
     const delta = current - lastScrollY;
     const moreIsOpen = moreLinks?.classList.contains("open");
+
+    // Regla mobile-first:
+    // En acciones concretas el centro manda y el header no debe robar pantalla.
+    if (document.body.classList.contains("app-mobile-action-focus")) {
+      setTopbarHidden(true);
+      lastScrollY = current;
+      return;
+    }
 
     // Regla especial Admin:
     // En Panel Admin el header grande queda siempre oculto.
