@@ -1,5 +1,16 @@
 # Changelog
 
+## V12.11-B — Web de Arranque desde registro
+
+- Se documenta el diagnóstico V12.11-A para Web automática desde registro.
+- El registro crea Web de Arranque en modo `starter`.
+- La web nace publicada de forma segura con identidad real, WhatsApp y slug propio.
+- `publicWebSlugs` queda activo desde el alta para permitir URL pública.
+- La web pública no muestra productos sin precio válido o con precio 0.
+- La web pública no muestra lista de precios cuando `priceListStatus` está en `pending_real_prices`.
+- Se evita publicar precios/ofertas demo como si fueran datos reales de la carnicería.
+- No se toca Crear oferta, Vender urgente, WhatsApp, backend ni SQLite.
+
 ## V12.7.2-A — Demo fuerte + combos precargados
 
 - Se excluye `Pollo entero` de la demo para evitar confusión pieza/kg.

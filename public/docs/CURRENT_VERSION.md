@@ -1,42 +1,40 @@
-﻿# AppPromos — Versión actual
+# AppPromos — Versión actual
 
-## V12.10-A1 — Landing + Pricing + Conversión
+## V12.11-B — Web de Arranque desde registro
 
 Base de trabajo:
 
-- V12.9.7 deploy estable.
-- main = dev = deploy al iniciar el hito.
-- Demo fuerte validada.
-- WhatsApp validado.
-- Límites demo funcionando.
+- V12.10-B2 cerrado con Panel Admin operativo, empresas TEST, planes/pagos y documentación de funcionamiento.
+- Último punto local previo: `c665ed2 — Docs panel admin funcionamiento V12.10-B2`.
+- Próximo foco comercial: convertir la web propia automática en gancho del trial.
 
 ## Objetivo
 
-Mejorar la conversión de la landing sin tocar la app interna.
+Crear una **Web de Arranque** automáticamente cuando una carnicería se registra gratis.
 
-La prioridad de esta versión es:
+La web debe generar efecto wow sin publicar datos incompletos:
 
-- que el carnicero pruebe la demo;
-- que entienda rápido el valor;
-- que vea los planes reales;
-- que se registre gratis si le sirve.
+- muestra identidad real de la carnicería;
+- muestra WhatsApp real;
+- usa slug público propio;
+- no publica precios demo;
+- no publica ofertas demo;
+- no publica productos con precio 0 o sin precio válido.
 
 ## Incluye
 
-- Bloque de pricing con:
-  - Prueba gratis 30 días;
-  - ARRANQUE;
-  - SALVADOR;
-  - DUEÑO.
-- SALVADOR destacado como plan recomendado.
-- Mensaje claro:
-  - todos los planes tienen web propia;
-  - DUEÑO tiene web personalizada.
-- CTA final:
-  - Probar demo;
-  - Crear mi carnicería gratis.
-- Footer social más visible en celular.
-- Limpieza de scripts duplicados en landing.
+- Documento `V12.11-A_DIAGNOSTICO_WEB_AUTOMATICA_REGISTRO.md`.
+- Registro con web starter creada desde el alta.
+- `publicWebSlugs` activo desde el registro.
+- `publicPhoneKeys` mantiene la unicidad de WhatsApp.
+- Estado web:
+  - `enabled: true`;
+  - `published: true`;
+  - `active: true`;
+  - `mode: "starter"`;
+  - `priceListStatus: "pending_real_prices"`.
+- Web pública con aviso seguro mientras faltan precios reales.
+- Web pública filtrando productos sin precio válido.
 
 ## No toca
 
@@ -45,41 +43,24 @@ La prioridad de esta versión es:
 - Oferta con descuentos.
 - Vender urgente.
 - WhatsApp.
-- Catálogo.
-- Límites demo.
-- Firebase/Auth profundo.
-- BusinessStore.
-- Web automática.
-- Tracking.
 - Backend Python.
-- Bot WhatsApp.
+- SQLite.
+- Borrado real Auth.
+- Panel Admin salvo documentación indirecta.
 
 ## Pendiente siguiente
 
-### V12.10-A2 — Carniza contextual landing
+### V12.11-C — Carniza efecto wow primer ingreso
 
-- Hacer el botón flotante de Carniza un poco más protagonista.
-- Cambiar el mensaje según sección.
-- Hero → Probar demo.
-- Pricing → Crear mi carnicería gratis.
-- Web Premium → volver foco a demo/registro.
-- No abrir WhatsApp desde Carniza landing.
+- Mostrar mensaje de Carniza: “Ya tenés tu web propia”.
+- Botón principal: Actualizar mis precios.
+- Botón secundario: Ver mi web.
 
-### V12.10-B — Registro/Login humano
+### V12.11-D — Confirmación de precios reales
 
-- Login fallido sin errores técnicos.
-- Repetir contraseña en registro.
+- Cuando el carnicero actualiza precios, marcar web como lista o confirmar precios.
+- Permitir que la web muestre productos válidos.
 
-### V12.11 — Web automática
+### V12.11-E — Estado web en Panel Admin
 
-- Registro crea web propia.
-- Nombre/slug normalizados.
-- Efecto wow primer ingreso.
-
-### V12.12 — Tracking mínimo
-
-- demo_started.
-- demo_offer_created.
-- demo_whatsapp_clicked.
-- demo_register_clicked.
-- trial_registered.
+- Mostrar link público, slug, estado starter/lista y último cambio.

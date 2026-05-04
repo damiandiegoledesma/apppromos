@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Web Premium · AppPromos</title>
+  <title>Web de Arranque · AppPromos</title>
   <style>
     :root{--red:#b63b2b;--dark:#17110f;--muted:#6b7280;--line:#eadfd8;--soft:#fff8f4;--gold:#d4af37}
     *{box-sizing:border-box}
@@ -21,7 +21,7 @@
     .offer-title{font-weight:950;font-size:1.15rem;color:#8b1f1f}.items{margin:10px 0;color:#374151;line-height:1.55}
     .price{font-size:1.9rem;font-weight:950;color:#b63b2b;margin:8px 0}.price-list{display:grid;gap:12px}
     .rubro h3{margin:0 0 8px;color:#111827}.product{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #f1ece7}.product:first-of-type{border-top:none}.product strong{white-space:nowrap;color:#8b1f1f}
-    .empty{padding:20px;border:1px dashed #d6c6bd;border-radius:18px;background:#fff;color:#6b7280}.disabled{text-align:center;max-width:620px;margin:80px auto;background:#fff;border-radius:24px;padding:28px;border:1px solid var(--line)}
+    .empty{padding:20px;border:1px dashed #d6c6bd;border-radius:18px;background:#fff;color:#6b7280}.starter-note{border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;border-radius:20px;padding:18px;font-weight:850;line-height:1.45}.starter-note strong{display:block;color:#8b1f1f;font-size:1.15rem;margin-bottom:6px}.disabled{text-align:center;max-width:620px;margin:80px auto;background:#fff;border-radius:24px;padding:28px;border:1px solid var(--line)}
     .legal{color:#6b7280;font-size:.9rem;text-align:center;margin:18px 0 0}.sticky-wa{position:fixed;left:14px;right:14px;bottom:14px;max-width:1060px;margin:0 auto}.sticky-wa a{width:100%;box-shadow:0 12px 28px rgba(34,197,94,.28)}
     @media(max-width:640px){.page{padding:12px 10px 82px}.hero{border-radius:20px;padding:24px 18px}.price{font-size:1.6rem}.sticky-wa{left:10px;right:10px}.btn{width:100%}}
   </style>
@@ -44,6 +44,8 @@
     function normalizePhone(v=""){let p=String(v||"").replace(/\D/g,""); if(!p) return ""; if(p.startsWith("54")) return p; if(p.startsWith("0")) p=p.slice(1); return "54"+p}
     function waLink(meta={},text=""){const phone=normalizePhone(meta.telefono||meta.phone||""); return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`}
     function normalizeSlug(value=""){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)}
+    function publicBusinessName(value=""){const clean=String(value||"").trim().replace(/\s+/g," "); const without=clean.replace(/^(carnicer[ií]a\s*)+/i,"").trim(); const base=without||clean||"Carnicería"; return (/^carnicer[ií]a\b/i.test(base)?base:`Carnicería ${base}`).trim().replace(/\s+/g," ");}
+    function validPublicPrice(product={}){const value=Number(product.precio ?? product.price ?? 0); return Number.isFinite(value)&&value>0;}
     function getSlugFromPath(){const parts=location.pathname.split("/").filter(Boolean); const last=parts[parts.length-1]||""; if(!last||last.includes(".")||["app","admin","index"].includes(last)) return ""; return normalizeSlug(last)}
 
     async function resolveBusinessId(){
@@ -61,7 +63,7 @@
         if(!legacyId){
           throw new Error(
             `No encontramos una carnicería publicada con el link "${slug}". ` +
-            `Si sos el dueño: entrá a la app, abrí Mi Web Premium y presioná Guardar una vez para activar el link público.`
+            `Si sos el dueño: entrá a la app y revisá la sección Mi Web.`
           );
         }
       }
@@ -76,38 +78,43 @@
         const businessId=await resolveBusinessId();
         const [meta,state]=await Promise.all([readPath(getBusinessMetaPath(businessId)), readPath(getBusinessStatePath(businessId))]);
         const web=state?.web||{};
-        if(!meta?.webPremiumEnabled || !web.enabled){app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene Web Premium activa.</p></div>'; return;}
+        if(!meta?.webPremiumEnabled || !web.enabled){app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene su web activa.</p></div>'; return;}
 
-        const name=meta.name||meta.nombre||"Carnicería";
+        const rawName=web.publicDisplayName||meta.publicDisplayName||meta.publicName||meta.name||meta.nombre||"Carnicería";
+        const name=publicBusinessName(rawName);
+        const isStarter=web.mode==="starter" || web.priceListStatus==="pending_real_prices";
+        const canShowRealPrices=!isStarter && (!web.priceListStatus || web.priceListStatus==="confirmed" || web.priceListStatus==="ready");
         const city=meta.ciudad||meta.city||"";
         const address=meta.direccion||meta.address||"";
         const phone=meta.telefono||meta.phone||"";
         const selected=new Set(Array.isArray(web.selectedOffers)?web.selectedOffers:[]);
         const allCombos=Array.isArray(state?.savedCombos)?state.savedCombos:[];
-        const combos=allCombos.filter(c=>selected.has(c.id));
+        const combos=isStarter ? [] : allCombos.filter(c=>selected.has(c.id));
         const visibleRubros=new Set(Array.isArray(web.visibleRubros)?web.visibleRubros:[]);
-        const products=(Array.isArray(state?.products)?state.products:[]).filter(p=>p.active!==false);
+        const products=(Array.isArray(state?.products)?state.products:[]).filter(p=>p.active!==false && validPublicPrice(p));
         const rubros=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].filter(r=>visibleRubros.has(r)).sort((a,b)=>a.localeCompare(b,"es"));
         const baseMessage=`Hola! Quiero consultar ofertas de ${name}`;
         const mainWa=waLink(meta,baseMessage);
 
-        const offersHtml=combos.length?`<div class="grid">${combos.map(c=>{
+        const offersHtml=isStarter
+          ? `<div class="starter-note"><strong>Web de arranque lista</strong>Estamos preparando las ofertas con precios reales. Pedí la promo de hoy por WhatsApp.</div>`
+          : combos.length?`<div class="grid">${combos.map(c=>{
           const items=Array.isArray(c.items)?c.items:[];
           const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
           return `<div class="card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink(meta,msg)}" target="_blank">📲 Pedir por WhatsApp</a></div>`;
         }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas.</div>`;
 
-        const pricesHtml=(web.showPriceList&&rubros.length)?`<div class="price-list">${rubros.map(r=>{
+        const pricesHtml=(web.showPriceList&&canShowRealPrices&&rubros.length)?`<div class="price-list">${rubros.map(r=>{
           const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-          return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map(p=>`<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio)}</strong></div>`).join("")}</div>`;
+          return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map(p=>`<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong></div>`).join("")}</div>`;
         }).join("")}</div>`:"";
 
-        const headerName = esc(String(name).replace(/^Carnicería\s+/i,"").toUpperCase());
+        const headerName = esc(String(name).replace(/^Carnicer[ií]a\s+/i,"").toUpperCase());
         const locationHtml = (address || city) ? `<p>📍 ${[address,city].filter(Boolean).map(esc).join(" — ")}</p>` : "";
         const phoneHtml = phone ? `<p>📞 ${esc(phone)}</p>` : "";
         const pricesSection = pricesHtml
           ? `<section class="section" id="precios"><h2>🧾 Lista de precios</h2>${pricesHtml}<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p></section>`
-          : `<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p>`;
+          : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido.</div></section>`;
 
         app.innerHTML=`<section class="hero"><h1>CARNICERÍA ${headerName}</h1>${locationHtml}${phoneHtml}<div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><h2>🔥 Ofertas activas</h2>${offersHtml}</section>${pricesSection}<div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank">📲 Consultar por WhatsApp</a></div>`;
       }catch(e){console.error(e);app.innerHTML=`<div class="disabled"><h1>Error cargando web</h1><p>${esc(e.message||"No se pudo cargar")}</p></div>`}

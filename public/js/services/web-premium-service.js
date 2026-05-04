@@ -21,6 +21,17 @@ export function normalizeSlug(value = "") {
     .slice(0, 60) || `web-${Date.now()}`;
 }
 
+
+export function buildPublicBusinessName(value = "") {
+  const clean = String(value || "").trim().replace(/\s+/g, " ");
+  const withoutPrefix = clean.replace(/^(carnicer[ií]a\s*)+/i, "").trim();
+  const base = withoutPrefix || clean || "Carnicería";
+  if (/^carnicer[ií]a\b/i.test(base)) {
+    return base.trim().replace(/\s+/g, " ");
+  }
+  return `Carnicería ${base}`.trim().replace(/\s+/g, " ");
+}
+
 export function getPhoneKey(phone = "") {
   let digits = String(phone || "").replace(/\D/g, "");
 
@@ -59,7 +70,8 @@ export function formatPhoneForSlug(phone = "") {
 }
 
 export function buildBusinessSlug(meta = {}, businessId = "") {
-  const nameSlug = normalizeSlug(meta.name || meta.nombre || businessId);
+  const publicName = buildPublicBusinessName(meta.name || meta.nombre || businessId);
+  const nameSlug = normalizeSlug(publicName || businessId);
   const phoneSlug = formatPhoneForSlug(meta.telefono || meta.phone || "");
   if (!phoneSlug) {
     throw new Error("Teléfono / WhatsApp válido requerido para generar el link público");
@@ -87,6 +99,27 @@ export function buildDefaultWebConfig(meta = {}, businessId = "") {
     showPriceList: false,
     visibleRubros: [],
     updatedAt: new Date().toISOString()
+  };
+}
+
+
+export function buildStarterWebConfig(meta = {}, businessId = "", now = new Date().toISOString()) {
+  const slug = buildBusinessSlug(meta, businessId);
+  return {
+    enabled: true,
+    published: true,
+    active: true,
+    mode: "starter",
+    priceListStatus: "pending_real_prices",
+    offersStatus: "empty",
+    slug,
+    publicUrl: getPublicWebUrl(businessId, slug),
+    selectedOffers: [],
+    showPriceList: false,
+    visibleRubros: [],
+    createdFrom: "registration_auto",
+    createdAt: now,
+    updatedAt: now
   };
 }
 

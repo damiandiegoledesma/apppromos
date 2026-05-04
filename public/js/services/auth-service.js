@@ -14,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { app, trackedGetDoc } from "../core/firebase-core.js";
-import { buildBusinessSlug, getPhoneKey } from "./web-premium-service.js";
+import { buildBusinessSlug, buildPublicBusinessName, buildStarterWebConfig, getPhoneKey } from "./web-premium-service.js";
 import { createTrialEndsAt } from "./access-control-service.js";
 import { buildBusinessIdentity } from "./normalization-service.js";
 
@@ -510,7 +510,9 @@ export async function registerClientAndBusiness(data) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const uid = cred.user.uid;
   const businessId = `biz_${Date.now()}`;
-  const slug = buildBusinessSlug({ name: businessName, telefono: identity.phone }, businessId);
+  const publicBusinessName = buildPublicBusinessName(businessName);
+  const slug = buildBusinessSlug({ name: publicBusinessName, telefono: identity.phone }, businessId);
+  const starterWeb = buildStarterWebConfig({ name: publicBusinessName, telefono: identity.phone }, businessId, now);
 
   try {
     const { demoMeta, demoState, templateProducts } = await loadDemoTemplate();
@@ -538,6 +540,10 @@ export async function registerClientAndBusiness(data) {
       name: businessName,
       businessName,
       displayName: businessName,
+      publicDisplayName: publicBusinessName,
+      publicName: publicBusinessName,
+      webPremiumEnabled: true,
+      webPremiumUpdatedAt: now,
       ownerUid: uid,
       ownerEmail: email,
       email,
@@ -571,6 +577,10 @@ export async function registerClientAndBusiness(data) {
       name: businessName,
       businessName,
       displayName: businessName,
+      publicDisplayName: publicBusinessName,
+      publicName: publicBusinessName,
+      webPremiumEnabled: true,
+      webPremiumUpdatedAt: now,
       ownerUid: uid,
       email,
       direccion: identity.address,
@@ -604,25 +614,21 @@ export async function registerClientAndBusiness(data) {
       products: templateProducts,
       savedCombos: [],
       dashboard: {},
-      web: {
-        enabled: false,
-        slug,
-        selectedOffers: [],
-        showPriceList: false,
-        visibleRubros: [],
-        updatedAt: now
-      },
+      web: starterWeb,
       updatedAt: now
     });
 
     await setDoc(doc(db, "publicWebSlugs", slug), {
       businessId,
       slug,
-      businessName,
+      businessName: publicBusinessName,
+      publicDisplayName: publicBusinessName,
       ownerUid: uid,
       phoneKey: identity.phoneKey,
-      active: false,
-      plan: "web_premium",
+      active: true,
+      plan: "web_starter",
+      mode: "starter",
+      createdFrom: "registration_auto",
       updatedAt: now
     });
 
@@ -631,7 +637,9 @@ export async function registerClientAndBusiness(data) {
       phoneKey: identity.phoneKey,
       ownerUid: uid,
       ownerEmail: email,
-      businessName,
+      businessName: publicBusinessName,
+      publicDisplayName: publicBusinessName,
+      slug,
       active: true,
       createdAt: now,
       updatedAt: now
