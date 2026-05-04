@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## V12.13-A — Web pública autogenerada mobile-first
+
+- Rediseña `public/web.html` como vidriera pública mobile-first.
+- Mejora la estética de la Web de Arranque creada desde el alta de carnicerías.
+- Compacta el hero, CTA WhatsApp, ofertas activas y lista de precios para celulares Android gama media/entrada.
+- Mejora el estado “Lista de precios en preparación” con mensaje humano y CTA a WhatsApp.
+- Mantiene la regla: no publicar productos sin precio válido y no mostrar datos demo como propios.
+- Mantiene compatibilidad con `web.html?slug=...`, `publicWebSlugs`, ofertas seleccionadas y lista de precios real cuando esté confirmada.
+- No toca registro, Auth, precios, ofertas, Vender urgente, Panel Admin ni Firebase rules.
+- FIX1: la web pública por slug renderiza desde `publicWebSlugs/{slug}` con datos sanitizados, sin leer `businesses/...` para visitantes anónimos.
+- FIX1: `Mi Web` y el registro generan payload público seguro con ofertas/productos publicables y sin datos internos.
+
 ## V12.13-B-FIX1 — Resumen de descuentos sobre Carniza
 
 - Corrige un solapamiento mobile donde Carniza podía tapar el total con descuento del resumen flotante.

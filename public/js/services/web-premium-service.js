@@ -123,6 +123,132 @@ export function buildStarterWebConfig(meta = {}, businessId = "", now = new Date
   };
 }
 
+
+function toPublicText(value = "") {
+  return String(value ?? "").trim().replace(/\s+/g, " ");
+}
+
+function publicNumber(value = 0) {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function validPublicPrice(product = {}) {
+  const price = publicNumber(product?.precio ?? product?.price ?? 0);
+  return price > 0;
+}
+
+function comboPublicTotal(combo = {}) {
+  return publicNumber(
+    combo?.total ??
+    combo?.finalTotal ??
+    combo?.snapshot?.totals?.total_redondeado ??
+    combo?.snapshot?.totals?.total ??
+    combo?.price ??
+    combo?.precio ??
+    0
+  );
+}
+
+function sanitizePublicOffer(combo = {}) {
+  const id = toPublicText(combo.id || combo.comboId || combo.name || combo.nombre);
+  const name = toPublicText(combo.name || combo.nombre || "Oferta");
+  const total = comboPublicTotal(combo);
+  const items = Array.isArray(combo.items) ? combo.items : [];
+
+  return {
+    id,
+    name,
+    total,
+    items: items.map((item = {}) => ({
+      nombre: toPublicText(item.nombre || item.name || "Producto"),
+      rubro: toPublicText(item.rubro || item.category || ""),
+      cantidad: publicNumber(item.cantidad ?? item.qty ?? 1) || 1,
+      unidad: toPublicText(item.unidad || item.unit || "kg") || "kg"
+    })).filter((item) => item.nombre)
+  };
+}
+
+function sanitizePublicProduct(product = {}) {
+  const price = publicNumber(product.precio ?? product.price ?? 0);
+  return {
+    id: toPublicText(product.id || product.productId || product.nombre || product.name),
+    nombre: toPublicText(product.nombre || product.name || "Producto"),
+    rubro: toPublicText(product.rubro || product.category || "Sin rubro") || "Sin rubro",
+    precio: price
+  };
+}
+
+export function buildPublicWebPayload({
+  businessId = "",
+  slug = "",
+  meta = {},
+  state = {},
+  web = {},
+  phoneKey = "",
+  plan = "web_premium",
+  createdFrom = "web_config",
+  updatedAt = new Date().toISOString()
+} = {}) {
+  const publicName = buildPublicBusinessName(
+    web?.publicDisplayName ||
+    meta?.publicDisplayName ||
+    meta?.publicName ||
+    meta?.name ||
+    meta?.nombre ||
+    meta?.businessName ||
+    "Carnicería"
+  );
+  const cleanSlug = normalizeSlug(slug || web?.slug || "");
+  const cleanPhoneKey = getPhoneKey(phoneKey || meta?.phoneKey || meta?.telefono || meta?.phone || "");
+  const mode = toPublicText(web?.mode || "web_premium") || "web_premium";
+  const priceListStatus = toPublicText(web?.priceListStatus || "");
+  const isStarter = mode === "starter" || priceListStatus === "pending_real_prices";
+  const canShowRealPrices = !isStarter && (!priceListStatus || priceListStatus === "confirmed" || priceListStatus === "ready");
+  const selected = new Set(Array.isArray(web?.selectedOffers) ? web.selectedOffers.map(String) : []);
+  const visibleRubros = new Set(Array.isArray(web?.visibleRubros) ? web.visibleRubros.map((r) => toPublicText(r)).filter(Boolean) : []);
+  const savedCombos = Array.isArray(state?.savedCombos) ? state.savedCombos : [];
+  const publicOffers = isStarter ? [] : savedCombos
+    .filter((combo = {}) => selected.has(String(combo.id || combo.comboId || "")))
+    .map(sanitizePublicOffer)
+    .filter((combo) => combo.name && combo.items.length);
+
+  const publicProducts = (web?.showPriceList && canShowRealPrices)
+    ? (Array.isArray(state?.products) ? state.products : [])
+      .filter((product = {}) => product.active !== false && validPublicPrice(product))
+      .map(sanitizePublicProduct)
+      .filter((product) => product.nombre && (!visibleRubros.size || visibleRubros.has(product.rubro)))
+      .sort((a, b) => String(a.rubro).localeCompare(String(b.rubro), "es") || String(a.nombre).localeCompare(String(b.nombre), "es"))
+    : [];
+
+  return {
+    businessId,
+    slug: cleanSlug,
+    active: Boolean(web?.enabled) && web?.active !== false && web?.published !== false && meta?.webPremiumEnabled !== false,
+    enabled: Boolean(web?.enabled),
+    published: web?.published !== false,
+    mode,
+    priceListStatus,
+    offersStatus: publicOffers.length ? "ready" : (web?.offersStatus || "empty"),
+    plan,
+    createdFrom,
+    businessName: publicName,
+    publicDisplayName: publicName,
+    address: toPublicText(meta?.direccion || meta?.address || ""),
+    city: toPublicText(meta?.localidad || meta?.ciudad || meta?.city || meta?.locality || ""),
+    province: toPublicText(meta?.provincia || meta?.province || ""),
+    phone: toPublicText(meta?.telefono || meta?.phone || ""),
+    phoneKey: cleanPhoneKey,
+    whatsapp: cleanPhoneKey,
+    showPriceList: Boolean(web?.showPriceList) && canShowRealPrices,
+    visibleRubros: [...visibleRubros],
+    publicOffers,
+    publicProducts,
+    publicUrl: getPublicWebUrl(businessId, cleanSlug),
+    updatedAt
+  };
+}
+
 export async function setWebPremiumEnabled(businessId, enabled) {
   if (!businessId) throw new Error("businessId requerido");
   await assertBusinessCanWrite(businessId, "activar o desactivar Web Premium");
@@ -209,22 +335,24 @@ export async function saveWebConfig(businessId, configPatch = {}) {
 
   const batch = writeBatch(db);
   batch.set(pathDoc(getBusinessStatePath(businessId)), nextState);
-  batch.set(doc(db, "publicWebSlugs", nextWeb.slug), {
+  batch.set(doc(db, "publicWebSlugs", nextWeb.slug), buildPublicWebPayload({
     businessId,
     slug: nextWeb.slug,
-    businessName: meta?.name || meta?.nombre || "",
-    ownerUid: meta?.ownerUid || null,
+    meta,
+    state: nextState,
+    web: nextWeb,
     phoneKey,
-    active: Boolean(nextWeb.enabled),
     plan: "web_premium",
+    createdFrom: nextWeb.createdFrom || "web_config",
     updatedAt
-  });
+  }));
   batch.set(doc(db, "publicPhoneKeys", phoneKey), {
     businessId,
     phoneKey,
     slug: nextWeb.slug,
-    businessName: meta?.name || meta?.nombre || "",
-    ownerUid: meta?.ownerUid || null,
+    businessName: buildPublicBusinessName(meta?.publicDisplayName || meta?.publicName || meta?.name || meta?.nombre || ""),
+    publicDisplayName: buildPublicBusinessName(meta?.publicDisplayName || meta?.publicName || meta?.name || meta?.nombre || ""),
+    active: Boolean(nextWeb.enabled) && nextWeb.active !== false && nextWeb.published !== false,
     updatedAt
   });
 
@@ -307,27 +435,29 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   batch.set(pathDoc(getBusinessMetaPath(businessId)), nextMeta);
   batch.set(pathDoc(getBusinessStatePath(businessId)), nextState);
 
-  if (shouldChangeSlug) {
-    batch.set(doc(db, "publicWebSlugs", nextSlug), {
+  if (nextSlug) {
+    batch.set(doc(db, "publicWebSlugs", nextSlug), buildPublicWebPayload({
       businessId,
       slug: nextSlug,
-      businessName: nextName,
-      ownerUid: nextMeta?.ownerUid || null,
+      meta: nextMeta,
+      state: nextState,
+      web: nextWeb,
       phoneKey: nextPhoneKey,
-      active: Boolean(nextWeb.enabled),
       plan: "web_premium",
+      createdFrom: nextWeb.createdFrom || "business_data_update",
       updatedAt
-    });
-    if (previousSlug && previousSlug !== nextSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
+    }));
   }
+  if (shouldChangeSlug && previousSlug && previousSlug !== nextSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
 
   if (phoneChanged || !previousPhoneKey || shouldChangeSlug) {
     batch.set(doc(db, "publicPhoneKeys", nextPhoneKey), {
       businessId,
       phoneKey: nextPhoneKey,
       slug: nextSlug,
-      businessName: nextName,
-      ownerUid: nextMeta?.ownerUid || null,
+      businessName: buildPublicBusinessName(nextName),
+      publicDisplayName: buildPublicBusinessName(nextName),
+      active: Boolean(nextWeb.enabled) && nextWeb.active !== false && nextWeb.published !== false,
       updatedAt
     });
     if (previousPhoneKey && previousPhoneKey !== nextPhoneKey) batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));

@@ -2,32 +2,241 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Web de Arranque · AppPromos</title>
   <style>
-    :root{--red:#b63b2b;--dark:#17110f;--muted:#6b7280;--line:#eadfd8;--soft:#fff8f4;--gold:#d4af37}
+    :root{
+      --red:#b63b2b;
+      --red-2:#8b1f1f;
+      --red-3:#5f1512;
+      --dark:#17110f;
+      --ink:#171717;
+      --muted:#6b7280;
+      --line:#eadfd8;
+      --soft:#fff8f4;
+      --paper:#fffdfb;
+      --green:#22c55e;
+      --green-dark:#0f6b32;
+      --gold:#d4af37;
+      --shadow:0 18px 50px rgba(47,22,14,.14);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f7f1ea;color:#161616}
-    .page{max-width:1060px;margin:0 auto;padding:18px 14px 78px}
-    .hero{background:linear-gradient(135deg,#270b07,#8b1f1f);color:#fff;border-radius:26px;padding:30px 24px;box-shadow:0 18px 50px rgba(0,0,0,.18)}
-    .hero h1{margin:0 0 10px;font-size:clamp(2rem,7vw,4rem);letter-spacing:-.06em;line-height:.95;text-transform:uppercase}
-    .hero p{margin:5px 0;color:rgba(255,255,255,.9);font-size:1.05rem;font-weight:700}
-    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-    .btn{min-height:46px;border-radius:14px;padding:0 16px;font-weight:950;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer}
-    .btn-primary{background:#22c55e;color:#08230f}.btn-light{background:#fff;color:#8b1f1f}
-    .section{margin-top:18px}.section h2{margin:0 0 10px;color:#8b1f1f;font-size:1.55rem}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 6px 18px rgba(17,24,39,.05)}
-    .offer-title{font-weight:950;font-size:1.15rem;color:#8b1f1f}.items{margin:10px 0;color:#374151;line-height:1.55}
-    .price{font-size:1.9rem;font-weight:950;color:#b63b2b;margin:8px 0}.price-list{display:grid;gap:12px}
-    .rubro h3{margin:0 0 8px;color:#111827}.product{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #f1ece7}.product:first-of-type{border-top:none}.product strong{white-space:nowrap;color:#8b1f1f}
-    .empty{padding:20px;border:1px dashed #d6c6bd;border-radius:18px;background:#fff;color:#6b7280}.starter-note{border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;border-radius:20px;padding:18px;font-weight:850;line-height:1.45}.starter-note strong{display:block;color:#8b1f1f;font-size:1.15rem;margin-bottom:6px}.disabled{text-align:center;max-width:620px;margin:80px auto;background:#fff;border-radius:24px;padding:28px;border:1px solid var(--line)}
-    .legal{color:#6b7280;font-size:.9rem;text-align:center;margin:18px 0 0}.sticky-wa{position:fixed;left:14px;right:14px;bottom:14px;max-width:1060px;margin:0 auto}.sticky-wa a{width:100%;box-shadow:0 12px 28px rgba(34,197,94,.28)}
-    @media(max-width:640px){.page{padding:12px 10px 82px}.hero{border-radius:20px;padding:24px 18px}.price{font-size:1.6rem}.sticky-wa{left:10px;right:10px}.btn{width:100%}}
+    html,body{width:100%;max-width:100%;overflow-x:hidden}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(182,59,43,.16), transparent 34%),
+        linear-gradient(180deg,#fff8f2 0%,#f5ede6 58%,#f1e6dc 100%);
+      color:var(--ink);
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    .page{
+      width:min(100%,1080px);
+      margin:0 auto;
+      padding:12px 10px calc(98px + var(--safe-bottom));
+    }
+    .hero{
+      position:relative;
+      overflow:hidden;
+      color:#fff;
+      border-radius:24px;
+      padding:22px 16px 18px;
+      background:
+        linear-gradient(135deg,rgba(38,10,7,.96),rgba(139,31,31,.96)),
+        radial-gradient(circle at 88% 15%,rgba(255,255,255,.2),transparent 28%);
+      box-shadow:var(--shadow);
+      isolation:isolate;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -120px auto;
+      width:220px;
+      height:220px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      z-index:-1;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.13);
+      border:1px solid rgba(255,255,255,.18);
+      color:rgba(255,255,255,.92);
+      font-size:.78rem;
+      font-weight:900;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+    }
+    .hero h1{
+      margin:13px 0 8px;
+      font-size:clamp(2.05rem,13vw,4.5rem);
+      letter-spacing:-.075em;
+      line-height:.9;
+      text-transform:uppercase;
+      text-wrap:balance;
+      max-width:12ch;
+    }
+    .hero p{
+      margin:6px 0;
+      color:rgba(255,255,255,.9);
+      font-size:1rem;
+      font-weight:780;
+      line-height:1.35;
+    }
+    .hero-meta{
+      display:grid;
+      gap:8px;
+      margin-top:14px;
+    }
+    .hero-meta p{
+      margin:0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-height:34px;
+      padding:8px 10px;
+      border-radius:14px;
+      background:rgba(255,255,255,.11);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:.94rem;
+    }
+    .hero-actions{
+      display:grid;
+      gap:10px;
+      margin-top:18px;
+    }
+    .btn{
+      min-height:48px;
+      border-radius:15px;
+      padding:0 16px;
+      font-weight:950;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:none;
+      cursor:pointer;
+      text-align:center;
+      line-height:1.1;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,#29d66e,#16a34a);
+      color:#062711;
+      box-shadow:0 12px 26px rgba(34,197,94,.26);
+    }
+    .btn-light{background:#fff;color:var(--red-2)}
+    .btn-ghost{background:#fff7ed;color:#7c2d12;border:1px solid #fed7aa}
+    .section{margin-top:16px}
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin:0 2px 10px;
+    }
+    .section h2{
+      margin:0;
+      color:var(--red-2);
+      font-size:clamp(1.3rem,6vw,1.85rem);
+      letter-spacing:-.035em;
+      line-height:1;
+    }
+    .section small{color:var(--muted);font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .card{
+      background:rgba(255,255,255,.94);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:15px;
+      box-shadow:0 8px 22px rgba(47,22,14,.055);
+    }
+    .offer-title{
+      font-weight:950;
+      font-size:1.08rem;
+      color:var(--red-2);
+      line-height:1.15;
+    }
+    .items{margin:10px 0;color:#374151;line-height:1.55;font-weight:680}
+    .price{font-size:1.75rem;font-weight:950;color:var(--red);margin:9px 0 12px;letter-spacing:-.04em}
+    .price-list{display:grid;gap:12px}
+    .rubro h3{margin:0 0 9px;color:#111827;font-size:1.05rem}
+    .product{
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:12px;
+      padding:10px 0;
+      border-top:1px solid #f1ece7;
+      min-width:0;
+    }
+    .product:first-of-type{border-top:none}
+    .product span{min-width:0;overflow-wrap:anywhere;font-weight:720;color:#2b2724}
+    .product strong{white-space:nowrap;color:var(--red-2);font-size:1.02rem}
+    .empty,.starter-note{
+      border-radius:22px;
+      padding:17px;
+      line-height:1.45;
+      box-shadow:0 8px 22px rgba(47,22,14,.045);
+    }
+    .empty{border:1px dashed #d6c6bd;background:#fff;color:#6b7280;font-weight:800}
+    .starter-note{
+      border:1px solid #fed7aa;
+      background:linear-gradient(180deg,#fffaf2,#fff7ed);
+      color:#7c2d12;
+      font-weight:820;
+    }
+    .starter-note strong{display:block;color:var(--red-2);font-size:1.12rem;margin-bottom:6px;letter-spacing:-.02em}
+    .starter-actions{display:grid;gap:9px;margin-top:12px}
+    .disabled{
+      text-align:center;
+      max-width:620px;
+      margin:72px auto;
+      background:#fff;
+      border-radius:24px;
+      padding:28px 18px;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+    .disabled h1{margin:0 0 8px;color:var(--red-2);letter-spacing:-.04em}
+    .disabled p{margin:0;color:#4b5563;font-weight:720;line-height:1.45}
+    .legal{color:#6b7280;font-size:.88rem;text-align:center;margin:18px 0 0;font-weight:720}
+    .powered{margin:18px 0 0;text-align:center;color:#8a7a70;font-size:.84rem;font-weight:800}
+    .sticky-wa{
+      position:fixed;
+      left:10px;
+      right:10px;
+      bottom:calc(10px + var(--safe-bottom));
+      z-index:40;
+      max-width:520px;
+      margin:0 auto;
+      pointer-events:none;
+    }
+    .sticky-wa a{width:100%;box-shadow:0 14px 30px rgba(34,197,94,.28);pointer-events:auto}
+    @media(min-width:720px){
+      .page{padding:24px 18px 96px}
+      .hero{border-radius:30px;padding:36px 34px 30px}
+      .hero h1{font-size:clamp(3rem,7vw,5.4rem)}
+      .hero p{font-size:1.12rem}
+      .hero-meta{grid-template-columns:repeat(2,minmax(0,1fr));max-width:720px}
+      .hero-actions{display:flex;flex-wrap:wrap}.btn{width:auto;min-width:170px}.grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.sticky-wa{left:18px;right:18px;max-width:1060px}.sticky-wa a{max-width:420px;margin-left:auto}
+    }
+    @media(max-width:380px){
+      .hero{padding:20px 14px;border-radius:20px}.hero h1{font-size:2rem}.card,.starter-note,.empty{border-radius:18px;padding:14px}.btn{min-height:46px;padding:0 12px}.product{grid-template-columns:1fr;gap:4px}.product strong{white-space:normal}
+    }
   </style>
 </head>
 <body>
-  <div id="app" class="page"><div class="disabled">Cargando web...</div></div>
+  <div id="app" class="page"><div class="disabled"><h1>Cargando web...</h1><p>Estamos preparando la vidriera online.</p></div></div>
 
   <script type="module">
     import "./js/services/auth-service.js";
@@ -42,22 +251,21 @@
     function getTotal(c={}){return Number(c.total||c.finalTotal||c?.snapshot?.totals?.total_redondeado||c?.snapshot?.totals?.total||0)}
     function icon(rubro="",name=""){const t=(rubro+" "+name).toLowerCase(); if(t.includes("pollo")) return "🐔"; if(t.includes("cerdo")) return "🐖"; if(t.includes("novillo")||t.includes("vaca")) return "🐄"; return "🥩"}
     function normalizePhone(v=""){let p=String(v||"").replace(/\D/g,""); if(!p) return ""; if(p.startsWith("54")) return p; if(p.startsWith("0")) p=p.slice(1); return "54"+p}
-    function waLink(meta={},text=""){const phone=normalizePhone(meta.telefono||meta.phone||""); return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`}
+    function waLink(meta={},text=""){const phone=normalizePhone(meta.telefono||meta.phone||meta.whatsapp||meta.phoneKey||""); return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`}
     function normalizeSlug(value=""){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)}
     function publicBusinessName(value=""){const clean=String(value||"").trim().replace(/\s+/g," "); const without=clean.replace(/^(carnicer[ií]a\s*)+/i,"").trim(); const base=without||clean||"Carnicería"; return (/^carnicer[ií]a\b/i.test(base)?base:`Carnicería ${base}`).trim().replace(/\s+/g," ");}
+    function businessShortName(value=""){return String(publicBusinessName(value)).replace(/^Carnicer[ií]a\s+/i,"").trim()||"Carnicería"}
     function validPublicPrice(product={}){const value=Number(product.precio ?? product.price ?? 0); return Number.isFinite(value)&&value>0;}
     function getSlugFromPath(){const parts=location.pathname.split("/").filter(Boolean); const last=parts[parts.length-1]||""; if(!last||last.includes(".")||["app","admin","index"].includes(last)) return ""; return normalizeSlug(last)}
 
-    async function resolveBusinessId(){
+    async function resolveWebSource(){
       const legacyId=params.get("biz")||params.get("businessId")||"";
       const slug=normalizeSlug(params.get("slug")||getSlugFromPath()||"");
 
-      // V10.4: resolución directa por índice público.
-      // Nunca recorrer businesses/ desde la web pública: escala mal y dispara lecturas.
       if(slug){
         const indexed=await getDoc(doc(db,"publicWebSlugs",slug));
         if(indexed.exists() && indexed.data()?.businessId){
-          return indexed.data().businessId;
+          return { type:"public", slug, data:{ slug, ...(indexed.data()||{}) } };
         }
 
         if(!legacyId){
@@ -68,55 +276,106 @@
         }
       }
 
-      // Compatibilidad temporal para links viejos con ?biz=...
-      if(legacyId) return legacyId;
+      if(legacyId) return { type:"legacy", businessId:legacyId };
       throw new Error("Falta identificar la carnicería. Usá un link público válido.");
+    }
+
+    function buildPayloadFromPrivateData(meta={},state={},businessId=""){
+      const web=state?.web||{};
+      const rawName=web.publicDisplayName||meta.publicDisplayName||meta.publicName||meta.name||meta.nombre||"Carnicería";
+      const isStarter=web.mode==="starter" || web.priceListStatus==="pending_real_prices";
+      const canShowRealPrices=!isStarter && (!web.priceListStatus || web.priceListStatus==="confirmed" || web.priceListStatus==="ready");
+      const selected=new Set(Array.isArray(web.selectedOffers)?web.selectedOffers.map(String):[]);
+      const allCombos=Array.isArray(state?.savedCombos)?state.savedCombos:[];
+      const publicOffers=isStarter ? [] : allCombos.filter(c=>selected.has(String(c.id||c.comboId||""))).map(c=>({
+        id:String(c.id||c.comboId||c.name||""),
+        name:c.name||c.nombre||"Oferta",
+        total:getTotal(c),
+        items:Array.isArray(c.items)?c.items.map(i=>({nombre:i.nombre||i.name||"Producto",rubro:i.rubro||"",cantidad:i.cantidad||1,unidad:i.unidad||"kg"})):[]
+      }));
+      const visibleRubros=new Set(Array.isArray(web.visibleRubros)?web.visibleRubros:[]);
+      const products=(web.showPriceList&&canShowRealPrices&&Array.isArray(state?.products)?state.products:[])
+        .filter(p=>p.active!==false && validPublicPrice(p))
+        .map(p=>({id:p.id||p.nombre||p.name||"",nombre:p.nombre||p.name||"Producto",rubro:String(p.rubro||"Sin rubro").trim()||"Sin rubro",precio:Number(p.precio ?? p.price ?? 0)}))
+        .filter(p=>!visibleRubros.size || visibleRubros.has(p.rubro));
+
+      return {
+        businessId,
+        slug:web.slug||"",
+        active:Boolean(meta?.webPremiumEnabled) && Boolean(web.enabled) && web.active!==false && web.published!==false,
+        enabled:Boolean(web.enabled),
+        published:web.published!==false,
+        mode:web.mode||"web_premium",
+        priceListStatus:web.priceListStatus||"",
+        businessName:rawName,
+        publicDisplayName:rawName,
+        address:meta.direccion||meta.address||"",
+        city:meta.localidad||meta.ciudad||meta.city||meta.locality||"",
+        province:meta.provincia||meta.province||"",
+        phone:meta.telefono||meta.phone||"",
+        phoneKey:meta.phoneKey||"",
+        whatsapp:meta.phoneKey||meta.telefono||meta.phone||"",
+        showPriceList:Boolean(web.showPriceList)&&canShowRealPrices,
+        publicOffers,
+        publicProducts:products
+      };
+    }
+
+    async function loadPayload(source){
+      if(source.type==="public") return source.data;
+      const [meta,state]=await Promise.all([readPath(getBusinessMetaPath(source.businessId)), readPath(getBusinessStatePath(source.businessId))]);
+      return buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
+    }
+
+    function renderWeb(data={}){
+      if(data.active===false || data.enabled===false || data.published===false){
+        app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene su web activa.</p></div>';
+        return;
+      }
+
+      const rawName=data.publicDisplayName||data.businessName||data.publicName||data.name||data.nombre||"Carnicería";
+      const name=publicBusinessName(rawName);
+      const shortName=businessShortName(rawName);
+      const isStarter=data.mode==="starter" || data.priceListStatus==="pending_real_prices";
+      const city=data.city||data.localidad||data.ciudad||data.locality||"";
+      const province=data.province||data.provincia||"";
+      const address=data.address||data.direccion||"";
+      const phone=data.phone||data.telefono||data.whatsapp||data.phoneKey||"";
+      const combos=Array.isArray(data.publicOffers)?data.publicOffers:[];
+      const products=(Array.isArray(data.publicProducts)?data.publicProducts:[]).filter(p=>validPublicPrice(p));
+      const rubroNames=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].sort((a,b)=>a.localeCompare(b,"es"));
+      const baseMessage=`Hola! Quiero consultar ofertas de ${name}`;
+      const mainWa=waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},baseMessage);
+      const location=[address,city,province].filter(Boolean).map(esc).join(" — ");
+
+      const offersHtml=isStarter
+        ? `<div class="starter-note"><strong>Web de arranque lista</strong>Esta carnicería está preparando sus primeras ofertas. Consultá la promo de hoy por WhatsApp.</div>`
+        : combos.length?`<div class="grid">${combos.map(c=>{
+        const items=Array.isArray(c.items)?c.items:[];
+        const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
+        return `<div class="card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
+      }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
+
+      const pricesHtml=(data.showPriceList&&products.length)?`<div class="price-list">${rubroNames.map(r=>{
+        const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
+        return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map(p=>`<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong></div>`).join("")}</div>`;
+      }).join("")}</div>`:"";
+
+      const headerName = esc(String(shortName).toUpperCase());
+      const locationHtml = location ? `<p>📍 ${location}</p>` : "";
+      const phoneHtml = phone ? `<p>📞 ${esc(phone)}</p>` : "";
+      const pricesSection = pricesHtml
+        ? `<section class="section" id="precios"><div class="section-head"><h2>Lista de precios</h2><small>Actualizada por la carnicería</small></div>${pricesHtml}<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p></section>`
+        : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido. Si necesitás algo, consultá por WhatsApp.<div class="starter-actions"><a class="btn btn-ghost" href="${mainWa}" target="_blank" rel="noopener">Consultar disponibilidad</a></div></div></section>`;
+
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<p class="powered">Web simple creada con AppPromos</p><div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Consultar por WhatsApp</a></div>`;
     }
 
     async function boot(){
       try{
-        const businessId=await resolveBusinessId();
-        const [meta,state]=await Promise.all([readPath(getBusinessMetaPath(businessId)), readPath(getBusinessStatePath(businessId))]);
-        const web=state?.web||{};
-        if(!meta?.webPremiumEnabled || !web.enabled){app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene su web activa.</p></div>'; return;}
-
-        const rawName=web.publicDisplayName||meta.publicDisplayName||meta.publicName||meta.name||meta.nombre||"Carnicería";
-        const name=publicBusinessName(rawName);
-        const isStarter=web.mode==="starter" || web.priceListStatus==="pending_real_prices";
-        const canShowRealPrices=!isStarter && (!web.priceListStatus || web.priceListStatus==="confirmed" || web.priceListStatus==="ready");
-        const city=meta.ciudad||meta.city||"";
-        const address=meta.direccion||meta.address||"";
-        const phone=meta.telefono||meta.phone||"";
-        const selected=new Set(Array.isArray(web.selectedOffers)?web.selectedOffers:[]);
-        const allCombos=Array.isArray(state?.savedCombos)?state.savedCombos:[];
-        const combos=isStarter ? [] : allCombos.filter(c=>selected.has(c.id));
-        const visibleRubros=new Set(Array.isArray(web.visibleRubros)?web.visibleRubros:[]);
-        const products=(Array.isArray(state?.products)?state.products:[]).filter(p=>p.active!==false && validPublicPrice(p));
-        const rubros=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].filter(r=>visibleRubros.has(r)).sort((a,b)=>a.localeCompare(b,"es"));
-        const baseMessage=`Hola! Quiero consultar ofertas de ${name}`;
-        const mainWa=waLink(meta,baseMessage);
-
-        const offersHtml=isStarter
-          ? `<div class="starter-note"><strong>Web de arranque lista</strong>Estamos preparando las ofertas con precios reales. Pedí la promo de hoy por WhatsApp.</div>`
-          : combos.length?`<div class="grid">${combos.map(c=>{
-          const items=Array.isArray(c.items)?c.items:[];
-          const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
-          return `<div class="card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink(meta,msg)}" target="_blank">📲 Pedir por WhatsApp</a></div>`;
-        }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas.</div>`;
-
-        const pricesHtml=(web.showPriceList&&canShowRealPrices&&rubros.length)?`<div class="price-list">${rubros.map(r=>{
-          const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-          return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map(p=>`<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong></div>`).join("")}</div>`;
-        }).join("")}</div>`:"";
-
-        const headerName = esc(String(name).replace(/^Carnicer[ií]a\s+/i,"").toUpperCase());
-        const locationHtml = (address || city) ? `<p>📍 ${[address,city].filter(Boolean).map(esc).join(" — ")}</p>` : "";
-        const phoneHtml = phone ? `<p>📞 ${esc(phone)}</p>` : "";
-        const pricesSection = pricesHtml
-          ? `<section class="section" id="precios"><h2>🧾 Lista de precios</h2>${pricesHtml}<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p></section>`
-          : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido.</div></section>`;
-
-        app.innerHTML=`<section class="hero"><h1>CARNICERÍA ${headerName}</h1>${locationHtml}${phoneHtml}<div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><h2>🔥 Ofertas activas</h2>${offersHtml}</section>${pricesSection}<div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank">📲 Consultar por WhatsApp</a></div>`;
+        const source=await resolveWebSource();
+        const payload=await loadPayload(source);
+        renderWeb(payload);
       }catch(e){console.error(e);app.innerHTML=`<div class="disabled"><h1>Error cargando web</h1><p>${esc(e.message||"No se pudo cargar")}</p></div>`}
     }
     boot();

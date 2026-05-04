@@ -14,7 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { app, trackedGetDoc } from "../core/firebase-core.js";
-import { buildBusinessSlug, buildPublicBusinessName, buildStarterWebConfig, getPhoneKey } from "./web-premium-service.js";
+import { buildBusinessSlug, buildPublicBusinessName, buildPublicWebPayload, buildStarterWebConfig, getPhoneKey } from "./web-premium-service.js";
 import { createTrialEndsAt } from "./access-control-service.js";
 import { buildBusinessIdentity } from "./normalization-service.js";
 
@@ -535,6 +535,33 @@ export async function registerClientAndBusiness(data) {
       updatedBy: "system:self_register"
     };
 
+    const publicMeta = {
+      businessId,
+      name: businessName,
+      businessName,
+      displayName: businessName,
+      publicDisplayName: publicBusinessName,
+      publicName: publicBusinessName,
+      webPremiumEnabled: true,
+      direccion: identity.address,
+      address: identity.address,
+      telefono: identity.phone,
+      phone: identity.phone,
+      phoneKey: identity.phoneKey,
+      ciudad: identity.locality,
+      locality: identity.locality,
+      localidad: identity.locality,
+      provincia: identity.province,
+      province: identity.province
+    };
+
+    const publicState = {
+      businessId,
+      products: templateProducts,
+      savedCombos: [],
+      web: starterWeb
+    };
+
     await setDoc(doc(db, "businesses", businessId), {
       businessId,
       name: businessName,
@@ -618,33 +645,6 @@ export async function registerClientAndBusiness(data) {
       updatedAt: now
     });
 
-    await setDoc(doc(db, "publicWebSlugs", slug), {
-      businessId,
-      slug,
-      businessName: publicBusinessName,
-      publicDisplayName: publicBusinessName,
-      ownerUid: uid,
-      phoneKey: identity.phoneKey,
-      active: true,
-      plan: "web_starter",
-      mode: "starter",
-      createdFrom: "registration_auto",
-      updatedAt: now
-    });
-
-    await setDoc(doc(db, "publicPhoneKeys", identity.phoneKey), {
-      businessId,
-      phoneKey: identity.phoneKey,
-      ownerUid: uid,
-      ownerEmail: email,
-      businessName: publicBusinessName,
-      publicDisplayName: publicBusinessName,
-      slug,
-      active: true,
-      createdAt: now,
-      updatedAt: now
-    });
-
     await setDoc(doc(db, "users", uid), {
       uid,
       email,
@@ -652,6 +652,29 @@ export async function registerClientAndBusiness(data) {
       role: "client",
       businessId,
       status: "active",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await setDoc(doc(db, "publicWebSlugs", slug), buildPublicWebPayload({
+      businessId,
+      slug,
+      meta: publicMeta,
+      state: publicState,
+      web: starterWeb,
+      phoneKey: identity.phoneKey,
+      plan: "web_starter",
+      createdFrom: "registration_auto",
+      updatedAt: now
+    }));
+
+    await setDoc(doc(db, "publicPhoneKeys", identity.phoneKey), {
+      businessId,
+      phoneKey: identity.phoneKey,
+      businessName: publicBusinessName,
+      publicDisplayName: publicBusinessName,
+      slug,
+      active: true,
       createdAt: now,
       updatedAt: now
     });
