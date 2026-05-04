@@ -179,6 +179,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       searchTerm: "",
       rubroFilter: "",
       productLimit: PRODUCT_RENDER_BATCH,
+      searchDebounceTimer: null,
     };
   }
 
@@ -189,6 +190,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       searchTerm: "",
       rubroFilter: "",
       productLimit: PRODUCT_RENDER_BATCH,
+      searchDebounceTimer: null,
       globalDiscount: 0,
       offerName: "OFERTA DEL DIA",
     };
@@ -200,10 +202,12 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   };
 
   function resetQuickState() {
+    if (state.quick?.searchDebounceTimer) clearTimeout(state.quick.searchDebounceTimer);
     state.quick = createQuickState();
   }
 
   function resetDiscountState() {
+    if (state.discount?.searchDebounceTimer) clearTimeout(state.discount.searchDebounceTimer);
     state.discount = createDiscountState();
   }
 
@@ -358,14 +362,21 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     root.querySelectorAll("[data-back-mode]").forEach((button) => button.addEventListener("click", backHandler));
   }
 
-  function renderRubroChips(scope, activeRubro) {
+  function renderRubroSelector(scope, activeRubro) {
     const rubros = getUniqueRubros();
+    const accent = scope === "discount" ? "#f97316" : "#2563eb";
+    const border = scope === "discount" ? "#fed7aa" : "#bfdbfe";
+    const soft = scope === "discount" ? "#fff7ed" : "#eff6ff";
+
     return `
-      <div style="display:flex; gap:7px; overflow:auto; padding:2px 0 4px; scrollbar-width:thin;">
-        <button type="button" data-${scope}-rubro="" style="white-space:nowrap; border-radius:999px; padding:9px 12px; font-weight:1000; border:1px solid ${!activeRubro ? "#2563eb" : "#dbeafe"}; background:${!activeRubro ? "#dbeafe" : "#fff"}; color:#172554;">Todos</button>
-        ${rubros.map((rubro) => `
-          <button type="button" data-${scope}-rubro="${escapeHtml(rubro)}" style="white-space:nowrap; border-radius:999px; padding:9px 12px; font-weight:1000; border:1px solid ${rubro === activeRubro ? "#2563eb" : "#dbeafe"}; background:${rubro === activeRubro ? "#dbeafe" : "#fff"}; color:#172554;">${escapeHtml(rubro)}</button>
-        `).join("")}
+      <div style="display:grid; gap:6px; min-width:0;">
+        <label for="${scope}RubroSelect" style="font-size:.72rem; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:${accent};">Rubro opcional</label>
+        <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:#172554; padding:0 12px; font-weight:1000;">
+          <option value="">Todos los productos</option>
+          ${rubros.map((rubro) => `
+            <option value="${escapeHtml(rubro)}" ${rubro === activeRubro ? "selected" : ""}>${escapeHtml(rubro)}</option>
+          `).join("")}
+        </select>
       </div>
     `;
   }
@@ -400,9 +411,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           : "Catálogo";
 
     const headerHelp = isQuickSuggestions
-      ? "Buscá o tocá un rubro para encontrar cualquier producto."
+      ? "Buscá por nombre o elegí rubro solo si hace falta."
       : hiddenCount
-        ? "Hay más resultados. Usá buscar, rubros o ver más."
+        ? "Hay más resultados. Usá buscar, rubro o ver más."
         : "Catálogo listo.";
 
     return `
@@ -508,9 +519,43 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     container.querySelector("#discountModeBtn")?.addEventListener("click", startDiscountMode);
   }
 
+  function restoreSearchFocus(inputId, start, end) {
+    requestAnimationFrame(() => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
+      if (typeof start === "number" && typeof end === "number") {
+        try {
+          const safeStart = Math.min(start, input.value.length);
+          const safeEnd = Math.min(end, input.value.length);
+          input.setSelectionRange(safeStart, safeEnd);
+        } catch (_) {}
+      }
+    });
+  }
+
   function bindProductSelection(root, scope, list, localState, rerender) {
     root.querySelector(`#${scope}SearchInput`)?.addEventListener("input", (event) => {
-      localState.searchTerm = event.target.value.trim().toLowerCase();
+      const input = event.target;
+      localState.searchTerm = input.value || "";
+      localState.productLimit = PRODUCT_RENDER_BATCH;
+      if (localState.searchDebounceTimer) clearTimeout(localState.searchDebounceTimer);
+      const inputId = input.id;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      localState.searchDebounceTimer = setTimeout(() => {
+        localState.searchDebounceTimer = null;
+        rerender();
+        restoreSearchFocus(inputId, start, end);
+      }, 220);
+    });
+
+    root.querySelector(`[data-${scope}-rubro-select]`)?.addEventListener("change", (event) => {
+      if (localState.searchDebounceTimer) {
+        clearTimeout(localState.searchDebounceTimer);
+        localState.searchDebounceTimer = null;
+      }
+      localState.rubroFilter = event.target.value || "";
       localState.productLimit = PRODUCT_RENDER_BATCH;
       rerender();
     });
@@ -555,7 +600,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); display:grid; gap:12px;">
           <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #bfdbfe; border-radius:14px; padding:0 12px; font-weight:900;" />
-          ${renderRubroChips("quick", state.quick.rubroFilter)}
+          ${renderRubroSelector("quick", state.quick.rubroFilter)}
           ${renderProductGrid("quick", filteredProducts, state.quick.items)}
         </div>
       </section>
@@ -810,7 +855,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         ${renderSelectedStrip(state.discount.items)}
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
           <input id="discountSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.discount.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #fed7aa; border-radius:14px; padding:0 12px; font-weight:900;" />
-          ${renderRubroChips("discount", state.discount.rubroFilter)}
+          ${renderRubroSelector("discount", state.discount.rubroFilter)}
           ${renderProductGrid("discount", filteredProducts, state.discount.items)}
         </div>
         <div style="position:sticky; bottom:var(--apppromos-mobile-sticky-bottom, 10px); z-index:6; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:12px; box-shadow:0 12px 28px rgba(15,23,42,.12); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">

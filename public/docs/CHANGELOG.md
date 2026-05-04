@@ -1,4 +1,33 @@
+# Changelog AppPromos
+
+## V12.12-E-FIX2 — Vender urgente sobre resúmenes flotantes
+
+- Corrige un problema mobile donde un resumen flotante podía quedar por encima del modal de Carniza.
+- Eleva el overlay de Carniza para que Vender urgente no quede tapado por la botonera inferior ni por resúmenes de otros flujos.
+- Al abrir Vender urgente directo desde la botonera, el modal se posiciona correctamente.
+- Al armar oferta urgente, la pantalla final **Oferta lista** queda visible para llegar al botón WhatsApp.
+- No toca Oferta rápida, Oferta con descuentos, cálculo, redondeo, guardado, registro, web ni Panel Admin.
+
 # CHANGELOG AppPromos
+
+## V12.12-E-FIX1 — Restaurar Vender urgente + buscadores fluidos
+
+- Corrige el bloque V12.12-E antes de commit.
+- Restaura **Vender urgente** desde la botonera mobile para que abra directo el flujo urgente de Carniza.
+- Al generar oferta urgente, desplaza la vista hacia la pantalla final para llegar mejor a **Enviar por WhatsApp**.
+- Evita que los buscadores de **Oferta rápida** y **Oferta con descuentos** pierdan foco al escribir en mobile.
+- Mantiene buscador primero, selector de rubro compacto, Oferta rápida, Oferta con descuentos, redondeo, guardado y WhatsApp.
+- No toca registro, Web de Arranque, Web pública, Precios ni Panel Admin profundo.
+
+
+## V12.12-E — Ofertas mobile: búsqueda primero, rubros sin amontonar
+
+- Mejora la selección de productos en **Oferta rápida** y **Oferta con descuentos** para celulares.
+- Reemplaza los chips horizontales de rubro por un selector compacto de rubro opcional.
+- Prioriza el buscador como camino principal para encontrar cortes/productos.
+- Mantiene productos sugeridos para arrancar en Oferta rápida.
+- Evita que los rubros se amontonen o empujen el ancho de pantalla en mobile.
+- Mantiene intactos cálculo, redondeo, WhatsApp, guardado, Vender urgente, Mi cuenta, Web de Arranque y Panel Admin profundo.
 
 ## V12.12-D-FIX1 — Inicio autoresponsive mobile
 

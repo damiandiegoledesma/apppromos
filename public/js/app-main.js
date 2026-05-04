@@ -823,6 +823,12 @@ function renderCarnizaUrgentStockCard(container) {
     });
     refresh();
     resultEl.style.display = "block";
+    requestAnimationFrame(() => {
+      const modal = document.getElementById("carnizaFloatingLiquidatorModal");
+      if (modal) modal.scrollTop = 0;
+      try { resultEl.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
+      nameInput?.focus?.({ preventScroll: true });
+    });
   }
   renderProductButtons(); renderDiscountButtons(); container.prepend(card);
 }
@@ -861,6 +867,7 @@ function closeCarnizaUnifiedOverlay() {
   const overlay = document.getElementById("carnizaFloatingLiquidatorOverlay");
   overlay?.classList.remove("open");
   overlay?.setAttribute("aria-hidden", "true");
+  document.body?.classList.remove("apppromos-carniza-overlay-open");
 }
 
 function getCarnizaExitLabel() {
@@ -965,6 +972,19 @@ function renderCarnizaUnifiedUrgentFlow() {
   renderCarnizaUrgentStockCard(slot);
 }
 
+function openCarnizaUrgentFlowDirect() {
+  ensureCarnizaFloatingLiquidator();
+  const overlay = document.getElementById("carnizaFloatingLiquidatorOverlay");
+  renderCarnizaUnifiedUrgentFlow();
+  document.body?.classList.add("apppromos-carniza-overlay-open");
+  overlay?.classList.add("open");
+  overlay?.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => {
+    const modal = document.getElementById("carnizaFloatingLiquidatorModal");
+    if (modal) modal.scrollTop = 0;
+  });
+}
+
 function ensureCarnizaFloatingLiquidator() {
   if (!currentPayload) return;
 
@@ -976,7 +996,7 @@ function ensureCarnizaFloatingLiquidator() {
         position: fixed;
         right: 18px;
         bottom: 18px;
-        z-index: 9997;
+        z-index: 2147482498;
         min-width: 128px;
         height: 68px;
         border: none;
@@ -1059,7 +1079,7 @@ function ensureCarnizaFloatingLiquidator() {
       #carnizaFloatingLiquidatorOverlay {
         position: fixed;
         inset: 0;
-        z-index: 9998;
+        z-index: 2147483200;
         display: none;
         align-items: flex-end;
         justify-content: center;
@@ -1143,6 +1163,8 @@ function ensureCarnizaFloatingLiquidator() {
       #carnizaFloatingLiquidatorBody #carnizaUrgentStockCard { margin:0 !important; border:1px solid #e2e8f0 !important; border-radius:20px !important; background:#ffffff !important; box-shadow:0 16px 42px rgba(15, 23, 42, .08) !important; }
       #carnizaFloatingLiquidatorBody input { border-color:#cbd5e1 !important; background:#fff !important; }
       #carnizaFloatingLiquidatorBody [data-carniza-liquidate] { background:linear-gradient(135deg,#16a34a,#15803d) !important; box-shadow:0 12px 24px rgba(22,163,74,.22) !important; }
+      body.apppromos-carniza-overlay-open .app-mobile-bottom-menu,
+      body.apppromos-carniza-overlay-open .app-mobile-bottom-nav { pointer-events:none; }
     `;
     document.head.appendChild(style);
   }
@@ -1178,6 +1200,7 @@ function ensureCarnizaFloatingLiquidator() {
     shell.querySelector("#carnizaFloatingLiquidatorFab")?.addEventListener("click", () => {
       trackCarnizaSignal("carniza_unificado_abierto", { businessId: currentPayload?.businessId || currentBusinessId || null, panelId: currentPanelId, appMode: currentSession?.appMode || "client" });
       renderCarnizaUnifiedMenu();
+      document.body?.classList.add("apppromos-carniza-overlay-open");
       overlay?.classList.add("open");
       overlay?.setAttribute("aria-hidden", "false");
     });
@@ -1865,8 +1888,7 @@ async function handleMobileBottomAction(action) {
 
   if (action === "urgent-sale") {
     trackCarnizaSignal("mobile_nav_urgent_sale", { businessId: currentPayload?.businessId || currentBusinessId || null, panelId: currentPanelId, appMode: currentSession?.appMode || "client" });
-    ensureCarnizaFloatingLiquidator();
-    document.getElementById("carnizaFloatingLiquidatorFab")?.click();
+    openCarnizaUrgentFlowDirect();
     return;
   }
 
