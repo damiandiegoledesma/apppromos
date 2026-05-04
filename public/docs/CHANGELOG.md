@@ -1,5 +1,23 @@
 # CHANGELOG AppPromos
 
+## V12.12-D-FIX1 — Inicio autoresponsive mobile
+
+- Corrige que al volver a **Inicio** en mobile el contenido pueda desbordar el ancho de pantalla.
+- Ajusta app, paneles y body para evitar overflow horizontal en celulares.
+- Limita la botonera inferior al ancho real del viewport para que no quede más ancha que la pantalla.
+- Reubica Carniza dentro del área visible y arriba de la botonera inferior.
+- Compacta Inicio en mobile: cards, acciones rápidas, recorrido sugerido y resumen operativo se adaptan sin empujar elementos fuera de pantalla.
+- Mantiene intactos Mi cuenta, Precios, Crear oferta, Oferta rápida, Oferta con descuentos, Vender urgente, WhatsApp, Web de Arranque y Panel Admin profundo.
+
+## V12.12-D — Inicio limpio + Mi cuenta en Más
+
+- Saca la ficha grande de **Datos del negocio activo** del cuerpo de Inicio.
+- Mantiene Inicio enfocado en vender: acciones rápidas, recorrido sugerido y resumen operativo.
+- Agrega **Más → Mi cuenta** como lugar natural para datos del negocio y cuenta.
+- Muestra en Mi cuenta datos humanos: carnicería, responsable, email, WhatsApp, dirección, localidad, plan, estado y web.
+- Permite editar datos básicos del negocio desde Mi cuenta sin volver a ensuciar Inicio.
+- Mantiene intactos botonera inferior, header compacto, Precios, Crear oferta, WhatsApp, Vender urgente, Web de Arranque y Panel Admin profundo.
+
 ## V12.12-C — Header compacto + modo foco mobile
 
 - Compacta el header en mobile para teléfonos Android gama media/entrada.

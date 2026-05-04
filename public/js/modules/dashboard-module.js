@@ -96,9 +96,6 @@ function renderBusinessEditForm(businessId, meta = {}, state = {}) {
   `;
 }
 
-
-
-
 export function renderDashboard(container, businessId, meta, state, options = {}) {
   const products = normalizeProductsFromState(state);
   const savedCombos = normalizeSavedCombosFromState(state);
@@ -115,13 +112,14 @@ export function renderDashboard(container, businessId, meta, state, options = {}
 
   container.innerHTML = `
     <style>
-      .dash-shell { display:flex; flex-direction:column; gap:18px; }
-      .dash-main-card { border:1px solid #ece7df; border-radius:24px; padding:26px; background:linear-gradient(180deg,#fff,#fff7f4); box-shadow:0 10px 26px rgba(139,31,31,.08); }
+      .dash-shell { display:flex; flex-direction:column; gap:18px; width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box; }
+      .dash-shell *, .dash-shell *::before, .dash-shell *::after { box-sizing:border-box; min-width:0; }
+      .dash-main-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:24px; padding:26px; background:linear-gradient(180deg,#fff,#fff7f4); box-shadow:0 10px 26px rgba(139,31,31,.08); }
       .dash-kicker { font-size:12px; font-weight:950; color:#9f1d20; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
       .dash-main-title { margin:0 0 8px; font-size:38px; line-height:1.05; color:#8b1f1f; }
       .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:15px; }
       .dash-actions { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; }
-      .dash-action-btn { border:1px solid #eadfd6; border-radius:22px; padding:22px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.04); text-align:left; cursor:pointer; transition:all .2s ease; min-height:118px; }
+      .dash-action-btn { width:100%; max-width:100%; border:1px solid #eadfd6; border-radius:22px; padding:22px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.04); text-align:left; cursor:pointer; transition:all .2s ease; min-height:118px; }
       .dash-action-btn:hover { transform:translateY(-1px); border-color:#c23b28; box-shadow:0 8px 18px rgba(139,31,31,.08); }
       .dash-action-btn strong { display:block; font-size:21px; color:#8b1f1f; margin-bottom:7px; }
       .dash-action-btn span { color:#6b7280; font-size:14px; line-height:1.45; }
@@ -136,7 +134,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-carniza-btn.primary { background:#c2410c; color:#fff; border-color:#c2410c; }
       .dash-carniza-btn.fire { background:#c41e3a; color:#fff; border-color:#c41e3a; box-shadow:0 8px 18px rgba(196,30,58,.18); }
       .dash-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
-      .dash-card { border:1px solid #ece7df; border-radius:16px; padding:16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+      .dash-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:16px; padding:16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
       .dash-card h3 { margin:0; font-size:14px; color:#6b7280; }
       .dash-value { font-size:30px; font-weight:900; color:#111827; line-height:1.1; }
       .dash-note { margin-top:6px; color:#6b7280; font-size:13px; }
@@ -166,7 +164,30 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-form-error { min-height:18px; color:#b42318; font-weight:800; font-size:13px; }
       .dash-form-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
       @media (max-width: 900px) { .dash-actions, .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card { grid-template-columns:1fr; } .dash-carniza-actions { justify-content:stretch; } .dash-carniza-btn { flex:1; min-width:150px; } }
-      @media (max-width: 640px) { .dash-main-card { padding:18px; } .dash-main-title { font-size:30px; } .dash-value { font-size:26px; } .dash-action-btn { min-height:auto; padding:16px; } .dash-carniza-title { font-size:24px; } .dash-carniza-actions { flex-direction:column; } .dash-carniza-btn { width:100%; } .dash-business-head { align-items:flex-start; flex-direction:column; } .dash-list-item { flex-direction:column; gap:4px; } .dash-list-item strong { text-align:left; } .dash-form-actions { flex-direction:column-reverse; } .dash-mini-btn, .dash-save-btn { width:100%; } }
+      @media (max-width: 640px) {
+        .dash-shell { gap:12px; }
+        .dash-main-card { padding:14px; border-radius:20px; }
+        .dash-main-title { font-size:26px; line-height:1.08; }
+        .dash-main-subtitle { font-size:13px; margin-bottom:12px; }
+        .dash-value { font-size:24px; }
+        .dash-actions { grid-template-columns:1fr; gap:10px; }
+        .dash-action-btn { min-height:auto; padding:14px; border-radius:18px; }
+        .dash-action-btn strong { font-size:18px; margin-bottom:4px; }
+        .dash-action-btn span { font-size:13px; line-height:1.32; }
+        .dash-card { padding:14px; border-radius:16px; }
+        .dash-two { gap:12px; }
+        .dash-step-btn { padding:12px; }
+        .dash-secondary-actions { display:grid; grid-template-columns:1fr; gap:8px; }
+        .dash-secondary-actions button { width:100%; min-width:0; }
+        .dash-carniza-title { font-size:24px; }
+        .dash-carniza-actions { flex-direction:column; }
+        .dash-carniza-btn { width:100%; }
+        .dash-business-head { align-items:flex-start; flex-direction:column; }
+        .dash-list-item { flex-direction:column; gap:4px; }
+        .dash-list-item strong { text-align:left; }
+        .dash-form-actions { flex-direction:column-reverse; }
+        .dash-mini-btn, .dash-save-btn { width:100%; }
+      }
     </style>
 
     <div class="dash-shell">
@@ -180,7 +201,6 @@ export function renderDashboard(container, businessId, meta, state, options = {}
           <button class="dash-action-btn" data-action-panel="whatsappPanel"><strong>📤 Enviar WhatsApp</strong><span>Elegí una oferta guardada, personalizá cliente y enviá.</span></button>
         </div>
       </div>
-
 
       <div class="dash-two">
         <div class="dash-card">
@@ -205,20 +225,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         </div>
       </div>
 
-      <div class="dash-card" data-business-card>
-        ${renderBusinessView(meta, state, updatedAt)}
-      </div>
     </div>
   `;
-
-  const businessCard = container.querySelector("[data-business-card]");
-  const toEditMode = () => {
-    if (!businessCard) return;
-    businessCard.innerHTML = renderBusinessEditForm(businessId, meta, state);
-    bindBusinessForm(businessCard, businessId, meta, state, options);
-  };
-
-  container.querySelector("[data-business-edit]")?.addEventListener("click", toEditMode);
 
 }
 

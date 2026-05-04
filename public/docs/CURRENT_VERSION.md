@@ -1,31 +1,34 @@
 # AppPromos — Versión actual
 
-## V12.12-C — Header compacto + modo foco mobile
+## V12.12-D-FIX1 — Inicio autoresponsive mobile
 
 Base de trabajo:
 
 - V12.12-A definió la especificación mobile-first.
 - V12.12-B implementó la botonera inferior mobile-first.
-- V12.12-C compacta el header y activa modo foco en pantallas de acción.
+- V12.12-C compactó el header y activó modo foco mobile.
+- V12.12-D limpió Inicio y llevó datos del negocio a **Más → Mi cuenta**.
+- V12.12-D-FIX1 corrige el ancho/responsive de Inicio, la botonera inferior y Carniza en mobile.
 
 ## Objetivo
 
-Liberar pantalla útil en celulares Android de gama media/entrada, especialmente en acciones concretas del mostrador.
+Asegurar que Inicio se adapte bien a celulares Android gama media/entrada, sin desbordar el viewport ni dejar Carniza fuera de pantalla.
 
 ```txt
-Arriba menos ruido.
-Abajo navegación.
-Centro acción.
+Inicio entra completo.
+Botonera entra completa.
+Carniza queda adentro.
+El centro sigue vendiendo.
 ```
 
 ## Incluye
 
-- Header mobile más compacto.
-- Navegación superior de módulos oculta en mobile.
-- Modo foco mobile para Cambiar precios, Crear oferta y WhatsApp.
-- Más espacio de trabajo para Oferta rápida / Oferta con descuentos.
-- Botonera inferior V12.12-B intacta.
-- Carniza se mantiene por arriba de la botonera.
+- Ajustes mobile para evitar overflow horizontal en app, paneles y body.
+- Botonera inferior limitada al ancho real del viewport.
+- Carniza ajustado para quedar dentro del área visible y arriba de la botonera.
+- Inicio con cards y acciones fluidas en pantallas chicas.
+- Resumen operativo y acciones secundarias sin min-width que provoque desborde.
+- Mantiene **Más → Mi cuenta** como lugar de datos del negocio.
 
 ## No toca
 
@@ -37,4 +40,4 @@ Centro acción.
 - Lógica de WhatsApp.
 - Vender urgente.
 - Panel Admin profundo.
-- Firebase/Auth.
+- Firebase/Auth profundo.

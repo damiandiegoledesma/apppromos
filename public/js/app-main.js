@@ -1012,8 +1012,14 @@ function ensureCarnizaFloatingLiquidator() {
         filter: brightness(1.04);
       }
       @media (max-width: 760px) {
+        body.app-mobile-nav-ready #carnizaFloatingLiquidatorShell {
+          max-width: 100vw;
+          overflow: visible;
+        }
         body.app-mobile-nav-ready #carnizaFloatingLiquidatorFab {
+          right: max(12px, env(safe-area-inset-right, 0px));
           bottom: var(--apppromos-mobile-floating-bottom, 104px);
+          max-width: calc(100vw - 24px);
         }
         body.app-mobile-nav-ready #carnizaFloatingLiquidatorOverlay {
           padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
@@ -1254,6 +1260,199 @@ function renderCurrentDashboard() {
   ensureCarnizaFloatingLiquidator();
 }
 
+function getBusinessAccountFields() {
+  const meta = currentPayload?.meta || {};
+  const state = currentPayload?.state || {};
+  const web = state?.web || meta?.web || {};
+  const access = getAccessState(currentBusinessControl || {});
+  const city = meta?.ciudad || meta?.city || meta?.localidad || meta?.locality || "";
+  const province = meta?.provincia || meta?.province || "";
+  const slug = web?.slug || state?.webSlug || meta?.webSlug || "";
+  const publicUrl = web?.publicUrl || web?.url || (slug ? `web.html?slug=${slug}` : "");
+
+  return {
+    name: meta?.name || meta?.nombre || "Sin nombre cargado",
+    responsible: meta?.responsable || meta?.ownerName || meta?.contactName || meta?.titular || "",
+    email: meta?.email || currentSession?.email || currentSession?.user?.email || "",
+    phone: meta?.telefono || meta?.phone || meta?.whatsapp || "",
+    address: meta?.direccion || meta?.address || "",
+    city,
+    province,
+    location: [city, province].filter(Boolean).join(", "),
+    slug,
+    publicUrl,
+    plan: currentBusinessControl?.plan || currentBusinessControl?.billing?.plan || state?.plan || "",
+    paymentStatus: currentBusinessControl?.paymentStatus || currentBusinessControl?.billing?.status || "",
+    accessLabel: access?.label || access?.title || "",
+    updatedAt: state?.updatedAt || meta?.updatedAt || ""
+  };
+}
+
+function renderAccountRow(label, value, fallback = "Sin cargar") {
+  const safeValue = value ? escapeCarnizaHtml(value) : `<span style="color:#94a3b8;">${escapeCarnizaHtml(fallback)}</span>`;
+  return `<div class="app-account-row"><span>${escapeCarnizaHtml(label)}</span><strong>${safeValue}</strong></div>`;
+}
+
+function renderAccountViewHtml() {
+  const fields = getBusinessAccountFields();
+  const webLink = fields.publicUrl
+    ? `<a href="${escapeCarnizaHtml(fields.publicUrl)}" target="_blank" rel="noopener">${escapeCarnizaHtml(fields.publicUrl)}</a>`
+    : `<span style="color:#94a3b8;">Todavía sin link visible</span>`;
+
+  return `
+    <div class="app-account-card">
+      <div class="app-account-kicker">Mi cuenta</div>
+      <h3>Datos de tu carnicería</h3>
+      <p>Estos datos viven en Más para que Inicio quede limpio y enfocado en vender.</p>
+      <div class="app-account-list">
+        ${renderAccountRow("Carnicería", fields.name)}
+        ${renderAccountRow("Responsable", fields.responsible)}
+        ${renderAccountRow("Email de acceso", fields.email)}
+        ${renderAccountRow("WhatsApp", fields.phone)}
+        ${renderAccountRow("Dirección", fields.address)}
+        ${renderAccountRow("Localidad", fields.location)}
+        ${renderAccountRow("Plan", fields.plan)}
+        ${renderAccountRow("Estado", fields.accessLabel || fields.paymentStatus)}
+        <div class="app-account-row"><span>Mi web</span><strong>${webLink}</strong></div>
+      </div>
+      <div class="app-account-actions">
+        <button type="button" class="primary" data-account-edit>Editar datos</button>
+        ${fields.publicUrl ? '<button type="button" data-account-web>Ver mi web</button>' : ''}
+      </div>
+      <small class="app-account-footnote">Para vender rápido, usá la botonera inferior. Para datos y cuenta, entrá por Más.</small>
+    </div>
+  `;
+}
+
+function renderAccountEditHtml() {
+  const fields = getBusinessAccountFields();
+  return `
+    <form class="app-account-card app-account-form" data-account-form>
+      <div class="app-account-kicker">Mi cuenta</div>
+      <h3>Editar datos del negocio</h3>
+      <p>Usamos estos datos para tu app, tu WhatsApp y tu web de arranque.</p>
+      <label><span>Nombre comercial *</span><input name="name" required value="${escapeCarnizaHtml(fields.name === "Sin nombre cargado" ? "" : fields.name)}" placeholder="Carnicería Sur" /></label>
+      <label><span>Teléfono / WhatsApp *</span><input name="telefono" required value="${escapeCarnizaHtml(fields.phone)}" placeholder="3462 555555" /></label>
+      <label><span>Dirección *</span><input name="direccion" required value="${escapeCarnizaHtml(fields.address)}" placeholder="Patagonia 28" /></label>
+      <label><span>Ciudad *</span><input name="ciudad" required value="${escapeCarnizaHtml(fields.city)}" placeholder="Venado Tuerto" /></label>
+      <div class="app-account-error" data-account-error></div>
+      <div class="app-account-actions">
+        <button type="submit" class="primary">Guardar cambios</button>
+        <button type="button" data-account-view>Cancelar</button>
+      </div>
+    </form>
+  `;
+}
+
+function openAccountSheet(mode = "view") {
+  if (!currentPayload) return;
+  document.getElementById("appAccountSheet")?.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "appAccountSheet";
+  overlay.className = "app-account-sheet";
+  overlay.innerHTML = `
+    <style>
+      .app-account-sheet { position:fixed; inset:0; z-index:12000; display:flex; align-items:flex-end; justify-content:center; padding:16px; background:rgba(15,23,42,.42); box-sizing:border-box; }
+      .app-account-panel { width:min(560px,100%); max-height:calc(92vh - env(safe-area-inset-bottom,0px)); overflow:auto; border-radius:24px; background:#fff; box-shadow:0 28px 80px rgba(15,23,42,.28); border:1px solid #e2e8f0; padding:18px; box-sizing:border-box; }
+      .app-account-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+      .app-account-head strong { font-size:15px; color:#0f172a; }
+      .app-account-close { width:42px; height:42px; border-radius:14px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-size:20px; font-weight:1000; cursor:pointer; }
+      .app-account-card { display:grid; gap:12px; }
+      .app-account-kicker { color:#b91c1c; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; }
+      .app-account-card h3 { margin:0; font-size:24px; line-height:1.05; color:#7f1d1d; }
+      .app-account-card p { margin:0; color:#64748b; font-weight:800; line-height:1.35; }
+      .app-account-list { display:grid; gap:8px; }
+      .app-account-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
+      .app-account-row span { color:#64748b; font-size:13px; font-weight:900; }
+      .app-account-row strong { text-align:right; color:#0f172a; font-size:14px; overflow-wrap:anywhere; }
+      .app-account-row a { color:#b91c1c; text-decoration:none; overflow-wrap:anywhere; }
+      .app-account-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:4px; }
+      .app-account-actions button { min-height:46px; border-radius:15px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-weight:1000; cursor:pointer; }
+      .app-account-actions button.primary { background:#b91c1c; border-color:#b91c1c; color:#fff; }
+      .app-account-footnote { color:#64748b; font-weight:800; line-height:1.35; }
+      .app-account-form label { display:grid; gap:6px; color:#475569; font-size:13px; font-weight:900; }
+      .app-account-form input { width:100%; min-height:46px; border:1px solid #cbd5e1; border-radius:14px; padding:0 12px; font-size:15px; font-weight:800; box-sizing:border-box; }
+      .app-account-form input:focus { outline:3px solid rgba(185,28,28,.12); border-color:#b91c1c; }
+      .app-account-error { min-height:18px; color:#b42318; font-size:13px; font-weight:900; }
+      @media (max-width:640px) { .app-account-sheet { padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px)); } .app-account-panel { border-radius:22px; max-height:calc(86vh - env(safe-area-inset-bottom,0px)); } .app-account-actions { grid-template-columns:1fr; } .app-account-row { flex-direction:column; gap:4px; } .app-account-row strong { text-align:left; } }
+    </style>
+    <div class="app-account-panel" role="dialog" aria-modal="true" aria-label="Mi cuenta AppPromos">
+      <div class="app-account-head">
+        <strong>Más / Mi cuenta</strong>
+        <button type="button" class="app-account-close" data-account-close aria-label="Cerrar">×</button>
+      </div>
+      <div data-account-content>${mode === "edit" ? renderAccountEditHtml() : renderAccountViewHtml()}</div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector("[data-account-close]")?.addEventListener("click", close);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) close();
+  });
+
+  const renderMode = (nextMode) => {
+    const content = overlay.querySelector("[data-account-content]");
+    if (!content) return;
+    content.innerHTML = nextMode === "edit" ? renderAccountEditHtml() : renderAccountViewHtml();
+  };
+
+  overlay.addEventListener("click", (event) => {
+    const edit = event.target.closest("[data-account-edit]");
+    if (edit) {
+      renderMode("edit");
+      return;
+    }
+    const view = event.target.closest("[data-account-view]");
+    if (view) {
+      renderMode("view");
+      return;
+    }
+    const web = event.target.closest("[data-account-web]");
+    if (web) {
+      const url = getBusinessAccountFields().publicUrl;
+      if (url) window.open(url, "_blank", "noopener");
+    }
+  });
+
+  overlay.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-account-form]");
+    if (!form) return;
+    event.preventDefault();
+    const errorEl = form.querySelector("[data-account-error]");
+    const fd = new FormData(form);
+    const formData = {
+      name: String(fd.get("name") || "").trim(),
+      telefono: String(fd.get("telefono") || "").trim(),
+      direccion: String(fd.get("direccion") || "").trim(),
+      ciudad: String(fd.get("ciudad") || "").trim()
+    };
+    if (!formData.name || !formData.telefono || !formData.direccion || !formData.ciudad) {
+      if (errorEl) errorEl.textContent = "Completá nombre, WhatsApp, dirección y ciudad para guardar.";
+      return;
+    }
+    try {
+      const result = await updateBusinessBasicData(
+        currentPayload.businessId,
+        formData,
+        currentPayload.meta,
+        currentPayload.state
+      );
+      currentPayload = { ...currentPayload, meta: result.meta, state: result.state };
+      renderCurrentDashboard();
+      renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
+      markLazyPanelsDirty();
+      renderMode("view");
+      trackCarnizaSignal("account_data_saved", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
+    } catch (error) {
+      if (errorEl) errorEl.textContent = error?.message || "No pudimos guardar. Revisá los datos y volvé a intentar.";
+    }
+  });
+}
+
 function setMoreLinksVisible(visible) {
   if (!moreLinks) return;
   moreLinks.classList.toggle("open", Boolean(visible));
@@ -1336,14 +1535,46 @@ function injectMobileBottomNavStyles() {
     .app-mobile-bottom-menu { display: none; }
 
     @media (max-width: 760px) {
+      html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
       body.app-mobile-nav-ready {
         --apppromos-mobile-nav-height: 86px;
         --apppromos-mobile-nav-gap: 12px;
         --apppromos-mobile-floating-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
         --apppromos-mobile-quick-summary-bottom: calc(184px + env(safe-area-inset-bottom, 0px));
         --apppromos-mobile-sticky-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
       }
-      body.app-mobile-nav-ready .app { padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px)); }
+
+      body.app-mobile-nav-ready *,
+      body.app-mobile-nav-ready *::before,
+      body.app-mobile-nav-ready *::after {
+        min-width: 0;
+      }
+
+      body.app-mobile-nav-ready .app {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px));
+        box-sizing: border-box;
+      }
+
+      body.app-mobile-nav-ready .panel {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        padding: 12px;
+        box-sizing: border-box;
+      }
       body.app-mobile-nav-ready .topbar .nav-shell { display: none; }
 
       body.app-mobile-nav-ready .topbar-frame {
@@ -1421,8 +1652,10 @@ function injectMobileBottomNavStyles() {
 
       .app-mobile-bottom-nav {
         position: fixed;
-        left: 10px;
-        right: 10px;
+        left: max(8px, env(safe-area-inset-left, 0px));
+        right: max(8px, env(safe-area-inset-right, 0px));
+        width: auto;
+        max-width: calc(100vw - 16px);
         bottom: calc(8px + env(safe-area-inset-bottom, 0px));
         z-index: 2147482500;
         display: grid;
@@ -1434,6 +1667,7 @@ function injectMobileBottomNavStyles() {
         background: rgba(255, 255, 255, .96);
         box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
         backdrop-filter: blur(14px);
+        box-sizing: border-box;
       }
 
       .app-mobile-bottom-nav button {
@@ -1608,7 +1842,8 @@ async function handleMobileBottomAction(action) {
   if (!action) return;
   closeMobileBottomMenu();
 
-  if (action === "home" || action === "account") return goToPanel("dashboardPanel");
+  if (action === "home") return goToPanel("dashboardPanel");
+  if (action === "account") return openAccountSheet("view");
   if (action === "prices") return goToPanel("pricesPanel");
   if (action === "whatsapp") return goToPanel("whatsappPanel");
   if (action === "saved") return goToPanel("savedPanel");
