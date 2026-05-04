@@ -501,6 +501,10 @@ export function renderPrices(container, products = [], businessId = null, option
       .prices-header { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
       .prices-title h2 { margin:0 0 6px; font-size:30px; color:#8b1f1f; line-height:1.1; }
       .prices-title p { margin:0; color:#6b7280; font-size:15px; }
+      .prices-web-tip { display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border:1px solid #fed7aa; border-radius:18px; background:linear-gradient(135deg,#fff7ed,#ffffff); color:#7c2d12; box-shadow:0 8px 20px rgba(194,65,12,.08); }
+      .prices-web-tip-icon { width:38px; height:38px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:#ffedd5; color:#c2410c; font-weight:1000; flex:0 0 auto; }
+      .prices-web-tip strong { display:block; margin-bottom:4px; font-size:14px; font-weight:1000; }
+      .prices-web-tip p { margin:0; color:#7c2d12; line-height:1.38; font-size:13px; font-weight:850; }
       .prices-toolbar {
         position: sticky; top: 72px; z-index: 8; background:#fff9f7; border:1px solid #f0d7d1;
         border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:12px;
@@ -576,6 +580,14 @@ export function renderPrices(container, products = [], businessId = null, option
       </div>
 
       ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #93c5fd;border-radius:16px;background:#eff6ff;color:#1d4ed8;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
+
+      <div class="prices-web-tip">
+        <div class="prices-web-tip-icon">🌐</div>
+        <div>
+          <strong>Tip para tu web</strong>
+          <p>Cargá precio solo en los productos que vendés. Si no vendés un producto, ponelo en 0 y no aparecerá publicado.</p>
+        </div>
+      </div>
 
       <div class="prices-toolbar">
         <div class="prices-toolbar-row">

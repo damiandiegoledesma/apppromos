@@ -1,30 +1,26 @@
 # AppPromos — Versión actual
 
-## V12.11-C2 — Card simple de Web de Arranque en Inicio
+## V12.11-D1 — Activación Web de Arranque: guía para precios
 
 Base de trabajo:
 
-- V12.11-B ya crea una Web de Arranque desde el registro.
-- La web pública abre con identidad real y no publica precios demo ni productos sin precio válido.
-- El primer intento V12.11-C quedó descartado porque generaba una capa/overlay bloqueante en Inicio.
+- V12.11-B crea una Web de Arranque desde el registro.
+- V12.11-C2 validó el aviso de Web de Arranque, pero se decide no dejarlo como bloque permanente del cuerpo de Inicio.
+- La web pública no publica precios demo ni productos sin precio válido.
 
 ## Objetivo
 
-Mostrar en Inicio una card simple de Carniza para que el carnicero vea el efecto wow de la Web de Arranque sin bloquear la pantalla.
+Bajar la fricción del primer paso importante después del registro: actualizar precios reales.
 
-Mensaje central:
+Mensaje clave:
 
-- “Ya tenés tu web propia”.
-- “La dejamos preparada con tu nombre y tu WhatsApp”.
-- “Ahora actualizá tus precios reales y salís vendiendo”.
+> A los productos que no vendés, poneles 0. AppPromos no los muestra en tu web.
 
 ## Incluye
 
-- Card normal dentro del módulo Inicio.
-- Botón **Actualizar mis precios** que abre Cambiar precios.
-- Botón **Ver mi web** que abre la web pública generada.
-- Botón **Ocultar por ahora** que oculta la card durante la sesión.
-- Documento `V12.11-C2_CARD_WEB_ARRANQUE_INICIO.md`.
+- Tip claro dentro del módulo **Cambiar precios**.
+- Retiro del aviso/card de Web de Arranque del cuerpo principal de Inicio para no quitar foco al flujo de venta.
+- Documentación `V12.11-D1_ACTIVACION_WEB_ARRANQUE_PRECIOS.md`.
 
 ## No toca
 
@@ -42,11 +38,13 @@ Mensaje central:
 
 ## Pendiente siguiente
 
-### V12.11-D — Confirmación de precios reales
+### V12.11-D2 — Carniza navegación segura y aviso contextual
 
-- Cuando el carnicero actualiza precios, marcar la web como lista o confirmar precios.
-- Permitir que la web pública empiece a mostrar productos válidos.
+- Llevar los avisos de Web de Arranque dentro de Carniza, sin overlay bloqueante.
+- Agregar en Carniza: Volver a Inicio y Salir/Cerrar sesión.
+- Mantener la app mobile-first y sin bloques que roben foco al cuerpo principal.
 
-### V12.11-E — Estado web en Panel Admin
+### V12.12 — Navegación mobile-first
 
-- Mostrar link público, slug, estado starter/lista y último cambio.
+- Evaluar botonera inferior para Android gama media/entrada.
+- Priorizar: Inicio, Precios, Vender/Crear, WhatsApp y Más.
