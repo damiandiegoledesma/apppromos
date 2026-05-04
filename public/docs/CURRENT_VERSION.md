@@ -1,46 +1,31 @@
 # AppPromos — Versión actual
 
-## V12.12-E-FIX2 — Vender urgente sobre resúmenes flotantes
+## V12.13-B-FIX1 — Resumen de descuentos sobre Carniza
 
 Base de trabajo:
 
-- V12.12-A definió la especificación mobile-first.
-- V12.12-B implementó la botonera inferior mobile-first.
-- V12.12-C compactó el header y activó modo foco mobile.
-- V12.12-D limpió Inicio y llevó datos del negocio a **Más → Mi cuenta**.
-- V12.12-E mejoró la selección de productos en Crear oferta para mobile.
-- V12.12-E-FIX1 restauró Vender urgente y buscadores fluidos.
-- V12.12-E-FIX2 asegura que Vender urgente quede por encima de resúmenes flotantes y llegue a WhatsApp.
+- V12.13-B compactó **Oferta con descuentos** para mobile.
+- En test mobile, el flujo quedó funcional, pero Carniza podía tapar el total con descuento del resumen flotante.
 
 ## Objetivo
 
-Cerrar el bloque de ofertas mobile sin romper el camino sagrado:
-
-```txt
-Elegir producto
-↓
-Armar oferta urgente
-↓
-Oferta lista
-↓
-WhatsApp
-```
+Evitar que Carniza tape el resumen de **Oferta con descuentos** en celulares, especialmente el total final.
 
 ## Incluye
 
-- Overlay de Carniza por encima de navegación mobile y resúmenes flotantes.
-- Estado visual seguro mientras Carniza está abierto.
-- Scroll/posición del modal ajustado para que **Oferta lista** quede visible.
-- Mantiene buscadores fluidos y rubro compacto.
+- Reubica el resumen flotante de descuento por encima de Carniza.
+- Agrega más espacio inferior en la pantalla de ajuste de descuentos.
+- Mantiene visible el total final sin scroll horizontal.
 
 ## No toca
 
-- Registro.
-- Web de Arranque.
-- Web pública.
-- Lógica de precios.
+- Oferta rápida.
+- Vender urgente.
+- WhatsApp.
 - Cálculo de descuentos.
 - Redondeo.
 - Guardado.
-- Panel Admin profundo.
+- Registro/Login.
+- Web pública/Web de Arranque.
+- Panel Admin.
 - Firebase/Auth profundo.

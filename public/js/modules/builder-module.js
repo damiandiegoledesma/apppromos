@@ -627,37 +627,49 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
       if (includeDiscount) {
         return `
-          <article style="background:#fff; border:1px solid #fed7aa; border-radius:14px; padding:8px 10px; overflow-x:auto; box-shadow:0 4px 14px rgba(15,23,42,.04);">
-            <div style="display:grid; grid-template-columns:minmax(150px,1.25fr) 116px 112px 156px 128px 74px; gap:8px; align-items:center; min-width:740px;">
+          <article style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:11px; box-shadow:0 6px 16px rgba(15,23,42,.05); display:grid; gap:10px; min-width:0; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; min-width:0;">
               <div style="min-width:0;">
-                <strong style="display:block; font-size:.95rem; color:#431407; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
-                <span style="display:block; margin-top:2px; font-size:.74rem; color:#64748b; font-weight:900; white-space:nowrap;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+                <strong style="display:block; font-size:1rem; color:#431407; line-height:1.15; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
+                <span style="display:block; margin-top:3px; font-size:.77rem; color:#64748b; font-weight:900;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+              </div>
+              <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 10px; border-radius:10px; flex:0 0 auto;">Quitar</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; align-items:stretch;">
+              <div style="display:grid; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:8px; min-width:0;">
+                <span style="font-size:.68rem; font-weight:1000; color:#475569; text-transform:uppercase; letter-spacing:.04em;">Cantidad</span>
+                <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                  <button type="button" data-${scope}-minus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">−</button>
+                  <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:58px; min-height:36px; text-align:center; font-weight:1000; padding:0 4px;" />
+                  <button type="button" data-${scope}-plus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">+</button>
+                </div>
               </div>
 
-              <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#f8fafc; border-radius:12px; padding:5px;">
-                <button type="button" data-${scope}-minus="${index}" style="min-width:30px; min-height:32px; padding:0;">−</button>
-                <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:48px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
-                <button type="button" data-${scope}-plus="${index}" style="min-width:30px; min-height:32px; padding:0;">+</button>
+              <div style="display:grid; gap:5px; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:8px; min-width:0;">
+                <span style="font-size:.68rem; font-weight:1000; color:#9a3412; text-transform:uppercase; letter-spacing:.04em;">Desc. producto</span>
+                <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                  <button type="button" data-${scope}-discount-minus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">−</button>
+                  <input type="number" min="0" max="100" step="1" value="${calc.descuento}" data-${scope}-percent="${index}" style="width:54px; min-height:36px; text-align:center; font-weight:1000; padding:0 4px;" />
+                  <button type="button" data-${scope}-discount-plus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">+</button>
+                  <span style="font-weight:1000;color:#7c2d12;">%</span>
+                </div>
               </div>
+            </div>
 
-              <div style="font-size:.78rem; color:#334155; font-weight:950; text-align:center; white-space:nowrap;">
-                Base<br><strong>$ ${formatMoney(calc.bruto)}</strong>
+            <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px;">
+              <div style="background:#f8fafc; border-radius:12px; padding:8px; min-width:0;">
+                <span style="display:block; font-size:.68rem; color:#64748b; font-weight:900;">Sin descuento</span>
+                <strong style="display:block; margin-top:3px; color:#334155; font-size:.88rem; white-space:nowrap;">$ ${formatMoney(calc.bruto)}</strong>
               </div>
-
-              <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#fff7ed; border-radius:12px; padding:5px;">
-                <span style="font-size:.72rem; font-weight:1000; color:#7c2d12;">Desc.</span>
-                <button type="button" data-${scope}-discount-minus="${index}" style="min-width:28px; min-height:32px; padding:0;">−</button>
-                <input type="number" min="0" max="100" step="1" value="${calc.descuento}" data-${scope}-percent="${index}" style="width:44px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
-                <button type="button" data-${scope}-discount-plus="${index}" style="min-width:28px; min-height:32px; padding:0;">+</button>
-                <span style="font-weight:1000;color:#7c2d12;">%</span>
+              <div style="background:#fff7ed; border-radius:12px; padding:8px; min-width:0;">
+                <span style="display:block; font-size:.68rem; color:#92400e; font-weight:900;">Descuento</span>
+                <strong data-${scope}-line-discount="${index}" style="display:block; margin-top:3px; color:#92400e; font-size:.88rem; white-space:nowrap;">-$ ${formatMoney(lineDiscount)}</strong>
               </div>
-
-              <div style="text-align:right; white-space:nowrap;">
-                <span data-${scope}-line-discount="${index}" style="display:block; font-size:.72rem; color:#92400e; font-weight:900;">Desc. -$ ${formatMoney(lineDiscount)}</span>
-                <strong data-${scope}-line-final="${index}" style="display:block; color:#c2410c; font-size:.98rem;">Queda $ ${formatMoney(calc.neto)}</strong>
+              <div style="background:#ffedd5; border:1px solid #fed7aa; border-radius:12px; padding:8px; min-width:0;">
+                <span style="display:block; font-size:.68rem; color:#9a3412; font-weight:1000;">Queda</span>
+                <strong data-${scope}-line-final="${index}" style="display:block; margin-top:3px; color:#c2410c; font-size:.94rem; white-space:nowrap;">$ ${formatMoney(calc.neto)}</strong>
               </div>
-
-              <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 9px; border-radius:10px;">Quitar</button>
             </div>
           </article>
         `;
@@ -878,7 +890,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderDiscountSummary(totals, compact = false, floating = false) {
     const baseStyle = floating
-      ? "position:fixed;left:10px;right:10px;bottom:var(--apppromos-mobile-floating-bottom, 10px);z-index:2147482400;max-width:760px;margin:0 auto;"
+      ? "position:fixed;left:10px;right:10px;bottom:calc(var(--apppromos-mobile-floating-bottom, 10px) + 82px);z-index:2147482400;max-width:760px;margin:0 auto;"
       : "position:sticky;top:0;z-index:5;";
 
     return `
@@ -909,14 +921,19 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     content.innerHTML = `
       <div style="display:grid; gap:12px;">
         ${renderDiscountSummary(totals, true, true)}
-        <div style="display:grid; gap:10px; padding-bottom:calc(152px + var(--apppromos-mobile-nav-height, 0px));">
+        <div style="display:grid; gap:10px; padding-bottom:calc(238px + var(--apppromos-mobile-nav-height, 0px));">
           ${renderQuantityList(state.discount.items, "discountAdjust", true)}
         </div>
-        <div style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:12px; display:grid; gap:8px;">
-          <label style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; font-weight:1000; color:#7c2d12;">
-            Descuento general
-            <span><input id="discountGlobalInput" type="number" min="0" max="100" step="1" value="${state.discount.globalDiscount}" style="width:80px; text-align:center; font-weight:1000;" /> %</span>
-          </label>
+        <div style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:12px; display:grid; gap:9px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; font-weight:1000; color:#7c2d12;">
+            <span>Descuento general</span>
+            <div style="display:flex; align-items:center; gap:7px; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:6px;">
+              <button id="discountGlobalMinusBtn" type="button" style="min-width:38px; min-height:38px; padding:0; font-weight:1000;">−</button>
+              <input id="discountGlobalInput" type="number" min="0" max="100" step="1" value="${state.discount.globalDiscount}" style="width:62px; min-height:38px; text-align:center; font-weight:1000; padding:0 4px;" />
+              <button id="discountGlobalPlusBtn" type="button" style="min-width:38px; min-height:38px; padding:0; font-weight:1000;">+</button>
+              <span style="font-weight:1000;">%</span>
+            </div>
+          </div>
           <p class="muted" style="margin:0;">Se aplica al final. El cliente no ve estos descuentos: recibe una oferta limpia.</p>
         </div>
         <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
@@ -935,6 +952,16 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     content.querySelector("#discountGlobalInput")?.addEventListener("change", (event) => {
       state.discount.globalDiscount = clampPercent(event.target.value);
+      renderDiscountStepAdjust(content, calculateDiscountTotals(state.discount.items, state.discount.globalDiscount));
+    });
+
+    content.querySelector("#discountGlobalMinusBtn")?.addEventListener("click", () => {
+      state.discount.globalDiscount = Math.max(0, clampPercent(state.discount.globalDiscount || 0) - 1);
+      renderDiscountStepAdjust(content, calculateDiscountTotals(state.discount.items, state.discount.globalDiscount));
+    });
+
+    content.querySelector("#discountGlobalPlusBtn")?.addEventListener("click", () => {
+      state.discount.globalDiscount = Math.min(100, clampPercent(state.discount.globalDiscount || 0) + 1);
       renderDiscountStepAdjust(content, calculateDiscountTotals(state.discount.items, state.discount.globalDiscount));
     });
 

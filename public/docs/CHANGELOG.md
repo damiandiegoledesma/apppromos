@@ -1,3 +1,23 @@
+# CHANGELOG
+
+## V12.13-B-FIX1 — Resumen de descuentos sobre Carniza
+
+- Corrige un solapamiento mobile donde Carniza podía tapar el total con descuento del resumen flotante.
+- Eleva el resumen flotante de **Oferta con descuentos** para que el total final quede visible.
+- Agrega más espacio inferior a la pantalla de ajuste de descuentos.
+- No toca cálculo, redondeo, WhatsApp, Oferta rápida, Vender urgente, Registro, Web ni Panel Admin.
+
+
+## V12.13-B — Oferta con descuentos mobile compacta
+
+- Compacta la pantalla mobile de **Oferta con descuentos**.
+- Reemplaza la grilla ancha de productos con descuento por cards mobile-first.
+- Deja visibles cantidad, descuento individual, descuento aplicado y precio final por producto.
+- Agrega botones `−` y `+` para descuento individual por producto.
+- Agrega botones `−` y `+` al descuento general.
+- Mantiene resumen vivo, cálculo, redondeo, guardado y WhatsApp sin cambios de lógica.
+- No toca Oferta rápida, Vender urgente, Registro, Web ni Panel Admin.
+
 # Changelog AppPromos
 
 ## V12.12-E-FIX2 — Vender urgente sobre resúmenes flotantes
