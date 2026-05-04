@@ -1,50 +1,56 @@
 # AppPromos — Versión actual
 
-## V12.11-D1 — Activación Web de Arranque: guía para precios
+## V12.11-D2 — Carniza navegación segura
 
 Base de trabajo:
 
 - V12.11-B crea una Web de Arranque desde el registro.
-- V12.11-C2 validó el aviso de Web de Arranque, pero se decide no dejarlo como bloque permanente del cuerpo de Inicio.
-- La web pública no publica precios demo ni productos sin precio válido.
+- V12.11-D1 deja la guía de precios dentro de **Cambiar precios** y retira la card grande del cuerpo de Inicio.
+- La app debe seguir orientada a mobile-first para Android gama media/entrada.
 
 ## Objetivo
 
-Bajar la fricción del primer paso importante después del registro: actualizar precios reales.
+Mejorar el menú de Carniza para que no sea solo un acceso comercial, sino también un salvavidas de navegación.
 
-Mensaje clave:
+Carniza debe ayudar a vender, pero también permitir:
 
-> A los productos que no vendés, poneles 0. AppPromos no los muestra en tu web.
+- volver a Inicio;
+- salir de la demo;
+- cerrar sesión en cuenta real.
 
 ## Incluye
 
-- Tip claro dentro del módulo **Cambiar precios**.
-- Retiro del aviso/card de Web de Arranque del cuerpo principal de Inicio para no quitar foco al flujo de venta.
-- Documentación `V12.11-D1_ACTIVACION_WEB_ARRANQUE_PRECIOS.md`.
+- Nuevas acciones en Carniza:
+  - **Volver a Inicio**.
+  - **Salir de la demo** cuando el usuario está probando.
+  - **Cerrar sesión** cuando el usuario está logueado.
+- Mantiene:
+  - **Armar oferta**.
+  - **Vender urgente**.
+  - **Ir a WhatsApp**.
+- Documentación `V12.11-D2_CARNIZA_NAVEGACION_SEGURA.md`.
 
 ## No toca
 
 - Registro.
+- Web de Arranque.
 - Web pública.
+- Cambiar precios.
 - Crear oferta.
-- Oferta rápida.
-- Oferta con descuentos.
 - Vender urgente.
 - WhatsApp.
 - Panel Admin.
-- Carniza flotante / overlays.
 - Backend Python.
 - SQLite.
 
 ## Pendiente siguiente
 
-### V12.11-D2 — Carniza navegación segura y aviso contextual
-
-- Llevar los avisos de Web de Arranque dentro de Carniza, sin overlay bloqueante.
-- Agregar en Carniza: Volver a Inicio y Salir/Cerrar sesión.
-- Mantener la app mobile-first y sin bloques que roben foco al cuerpo principal.
-
 ### V12.12 — Navegación mobile-first
 
-- Evaluar botonera inferior para Android gama media/entrada.
-- Priorizar: Inicio, Precios, Vender/Crear, WhatsApp y Más.
+Evaluar rediseño mobile para Android gama media/entrada:
+
+- botonera inferior;
+- navegación al pulgar;
+- header más compacto;
+- Carniza contextual sin competir con la navegación;
+- cuerpo principal enfocado en vender.

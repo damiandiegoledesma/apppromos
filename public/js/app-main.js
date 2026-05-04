@@ -4,7 +4,7 @@ import {
   getResolvedBusinessId
 } from "./services/business-service.js";
 
-import { resolveSession } from "./services/auth-service.js";
+import { resolveSession, logoutUser } from "./services/auth-service.js";
 
 import { renderDashboard } from "./modules/dashboard-module.js";
 import { renderPrices } from "./modules/prices-module.js";
@@ -854,6 +854,32 @@ function closeCarnizaUnifiedOverlay() {
   overlay?.setAttribute("aria-hidden", "true");
 }
 
+function getCarnizaExitLabel() {
+  return currentSession?.isDemo ? "🚪 Salir de la demo" : "🚪 Cerrar sesión";
+}
+
+async function handleCarnizaExitApp() {
+  closeCarnizaUnifiedOverlay();
+  trackCarnizaSignal("carniza_exit_app", {
+    businessId: currentPayload?.businessId || currentBusinessId || null,
+    panelId: currentPanelId,
+    appMode: currentSession?.appMode || "client",
+    isDemo: currentSession?.isDemo === true
+  });
+
+  if (currentSession?.isDemo) {
+    window.location.href = "./index.html";
+    return;
+  }
+
+  try {
+    await logoutUser();
+  } catch (error) {
+    console.warn("No se pudo cerrar sesión desde Carniza", error);
+  }
+  window.location.replace("./index.html");
+}
+
 function renderCarnizaUnifiedMenu() {
   const body = document.getElementById("carnizaFloatingLiquidatorBody");
   if (!body || !currentPayload) return;
@@ -876,8 +902,16 @@ function renderCarnizaUnifiedMenu() {
           <strong>📲 Ir a WhatsApp</strong>
           <span>Mandá una oferta guardada o lista.</span>
         </button>
+        <button type="button" class="carniza-unified-action nav" data-carniza-unified-action="home">
+          <strong>🏠 Volver a Inicio</strong>
+          <span>Volvé al panel principal sin perderte.</span>
+        </button>
+        <button type="button" class="carniza-unified-action exit" data-carniza-unified-action="exit">
+          <strong>${escapeCarnizaHtml(getCarnizaExitLabel())}</strong>
+          <span>${currentSession?.isDemo ? "Volvé a la landing cuando termines de probar." : "Salí de la app de forma segura."}</span>
+        </button>
       </div>
-      <div class="carniza-unified-foot">Carniza no viene a charlar: viene a ayudarte a vender.</div>
+      <div class="carniza-unified-foot">Carniza ayuda a vender y también te deja volver o salir rápido.</div>
     </div>
   `;
   body.querySelectorAll("[data-carniza-unified-action]").forEach((button) => {
@@ -892,6 +926,15 @@ function renderCarnizaUnifiedMenu() {
       if (action === "whatsapp") {
         closeCarnizaUnifiedOverlay();
         goToPanel("whatsappPanel");
+        return;
+      }
+      if (action === "home") {
+        closeCarnizaUnifiedOverlay();
+        goToPanel("dashboardPanel");
+        return;
+      }
+      if (action === "exit") {
+        void handleCarnizaExitApp();
         return;
       }
       if (action === "urgent") {
@@ -1067,6 +1110,8 @@ function ensureCarnizaFloatingLiquidator() {
       .carniza-unified-action span { color:#64748b; font-size:13px; font-weight:800; line-height:1.3; }
       .carniza-unified-action.primary { border-color:#93c5fd; background:linear-gradient(135deg,#eff6ff,#ffffff); }
       .carniza-unified-action.urgent { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#ffffff); }
+      .carniza-unified-action.nav { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#ffffff); }
+      .carniza-unified-action.exit { border-color:#fecaca; background:linear-gradient(135deg,#fff1f2,#ffffff); }
       .carniza-unified-foot { margin-top:12px; color:#64748b; font-size:12px; font-weight:900; }
       .carniza-unified-back { width:100%; min-height:44px; border:1px solid #cbd5e1; border-radius:14px; background:#fff; color:#0f172a; font-weight:1000; cursor:pointer; margin-bottom:12px; }
       #carnizaFloatingLiquidatorBody #carnizaUrgentStockCard { margin:0 !important; border:1px solid #e2e8f0 !important; border-radius:20px !important; background:#ffffff !important; box-shadow:0 16px 42px rgba(15, 23, 42, .08) !important; }

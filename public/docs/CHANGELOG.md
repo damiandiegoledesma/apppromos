@@ -1,5 +1,18 @@
 # CHANGELOG AppPromos
 
+## V12.11-D2 — Carniza navegación segura
+
+- Agrega en el menú de Carniza la acción **Volver a Inicio**.
+- Agrega salida segura desde Carniza:
+  - **Salir de la demo** cuando el usuario está en modo demo.
+  - **Cerrar sesión** cuando el usuario está logueado.
+- Mantiene en Carniza las acciones comerciales:
+  - Armar oferta.
+  - Vender urgente.
+  - Ir a WhatsApp.
+- Refuerza el criterio UX: Carniza ayuda a vender, pero también debe evitar que el carnicero se pierda.
+- No toca registro, Web de Arranque, Cambiar precios, Crear oferta, Vender urgente, WhatsApp ni Panel Admin.
+
 ## V12.11-D1 — Activación Web de Arranque: guía para precios
 
 - Agrega un tip dentro de **Cambiar precios** para explicar que solo los productos con precio real se publican.
@@ -7,8 +20,6 @@
 - Retira el aviso/card de Web de Arranque del cuerpo principal de Inicio para no tapar el foco de venta.
 - Deja pendiente llevar ese aviso a Carniza como mensaje contextual seguro, sin overlay bloqueante.
 - No toca registro, web pública, Crear oferta, Vender urgente, WhatsApp ni Panel Admin.
-
-# Changelog
 
 ## V12.11-C2 — Card simple de Web de Arranque en Inicio
 
@@ -29,12 +40,3 @@
 - La web pública no muestra lista de precios cuando `priceListStatus` está en `pending_real_prices`.
 - Se evita publicar precios/ofertas demo como si fueran datos reales de la carnicería.
 - No se toca Crear oferta, Vender urgente, WhatsApp, backend ni SQLite.
-
-## V12.7.2-A — Demo fuerte + combos precargados
-
-- Se excluye `Pollo entero` de la demo para evitar confusión pieza/kg.
-- Se excluyen hamburguesas de los combos y del catálogo demo sembrado.
-- Se agregan 8 combos precargados demo.
-- Se actualiza la pantalla de combos/ofertas para mostrar mejor los combos precargados.
-- Se cambia el tab visible de `Guardados` a `Combos`.
-- No se toca registro, web automática, tracking ni backend.
