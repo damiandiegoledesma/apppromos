@@ -1,52 +1,77 @@
 # AppPromos — Versión actual
 
-## V12.11-D3 — Landing mobile acceso visible
+## V12.12-A — Especificación mobile-first AppPromos
 
 Base de trabajo:
 
 - V12.11-B crea Web de Arranque desde el registro.
 - V12.11-D1 deja la guía de precios dentro de Cambiar precios.
 - V12.11-D2 suma navegación segura en Carniza.
-- La app debe diseñarse para mobile-first Android gama media/entrada.
+- V12.11-D3 mejora el acceso mobile en landing.
 
 ## Objetivo
 
-Mejorar la primera vista mobile de la landing para que el carnicero vea rápido las acciones principales sin buscar:
+Definir el rediseño mobile-first integral antes de enviar a `dev`.
 
-- Probar demo.
-- Empezar gratis.
-- Iniciar sesión.
+La app debe diseñarse para el celular real del carnicero argentino:
+
+- Android gama media / entrada.
+- Samsung Galaxy A06 / A15 como referencia principal.
+- Xiaomi Redmi 14c / Moto G04s como alternativas frecuentes.
+- Pantalla vertical.
+- Uso con una mano.
+- Mostrador, apuro y necesidad de vender ya.
+
+## Decisión principal
+
+La navegación mobile base será:
+
+```txt
+[Inicio] [Precios] [Vender] [WhatsApp] [Más]
+```
+
+Con esta lógica:
+
+- **Inicio:** tablero principal.
+- **Precios:** cambiar precios.
+- **Vender:** Oferta rápida / Oferta con descuentos / Vender urgente.
+- **WhatsApp:** salida comercial / última oferta / ayuda si no hay oferta lista.
+- **Más:** Mi cuenta, Mi web, Ofertas guardadas, Competencia, Ayuda, Panel Admin si corresponde y Cerrar sesión.
+
+## Regla UX
+
+```txt
+La botonera mueve.
+Carniza orienta.
+El cuerpo vende.
+```
 
 ## Incluye
 
-- En mobile, el botón **Iniciar sesión** deja de ocultarse en la barra superior.
-- Se oculta solo **Cómo funciona** para ahorrar espacio.
-- Se compacta el header mobile para celulares tipo Android gama media/entrada.
-- Se agrega enlace claro bajo los CTA del hero: “¿Ya tenés cuenta? Iniciar sesión”.
-- Se mantiene **Probar demo** como CTA principal.
-- Se mantiene **Empezá gratis ahora** como CTA fuerte de registro.
+- Documento `V12.12-A_ESPECIFICACION_MOBILE_FIRST.md`.
+- Definición de botonera inferior.
+- Definición de rol de Carniza en mobile.
+- Definición de rol de La Nelly en mobile.
+- Criterio de header compacto y modo foco.
+- Checklist de aceptación mobile.
+- Plan de implementación por etapas V12.12-B a V12.12-F.
 
 ## No toca
 
-- App interna.
+- Código de navegación.
+- App interna funcional.
 - Web de Arranque.
+- Registro/Login.
 - Cambiar precios.
 - Crear oferta.
 - Vender urgente.
 - WhatsApp.
 - Panel Admin.
-- Registro/Login profundo.
 - Firebase/Auth.
 - Backend Python.
 
 ## Pendiente siguiente
 
-### V12.12 — Navegación mobile-first
+### V12.12-B — Botonera inferior base
 
-Evaluar rediseño mobile para Android gama media/entrada:
-
-- botonera inferior;
-- navegación al pulgar;
-- header más compacto dentro de la app;
-- Carniza contextual sin competir con la navegación;
-- cuerpo principal enfocado en vender.
+Implementar la primera botonera mobile sin romper navegación actual ni flujos comerciales.

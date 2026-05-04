@@ -1,5 +1,16 @@
 # CHANGELOG AppPromos
 
+## V12.12-A — Especificación mobile-first AppPromos
+
+- Agrega documento de especificación mobile-first integral.
+- Define como referencia de diseño celulares Android gama media/entrada usados por carniceros argentinos.
+- Define botonera inferior base: Inicio, Precios, Vender, WhatsApp y Más.
+- Define que Vender debe abrir: Oferta rápida, Oferta con descuentos y Vender urgente.
+- Define que Más agrupa: Mi cuenta, Mi web, Ofertas guardadas, Competencia, Ayuda, Panel Admin si corresponde y Cerrar sesión.
+- Define la regla UX: “La botonera mueve. Carniza orienta. El cuerpo vende.”
+- Define criterios de header compacto, modo foco, Carniza contextual y La Nelly sin competencia visual.
+- No implementa código ni toca flujos existentes.
+
 ## V12.11-D3 — Landing mobile acceso visible
 
 - Mejora la primera vista mobile de la landing.
