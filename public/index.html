@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es-AR">
 <head>
   <meta charset="utf-8" />
@@ -101,6 +101,8 @@
     .lead { margin: 0 0 24px; color: #dbeafe; font-size: clamp(18px, 2.4vw, 23px); line-height: 1.35; max-width: 660px; font-weight: 700; }
     .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
     .microcopy { color: #eff6ff; font-size: 13px; font-weight: 900; margin-top: -16px; opacity: .92; }
+    .hero-login-line { margin: -14px 0 18px; color: #dbeafe; font-size: 14px; font-weight: 850; }
+    .hero-login-line a { color: #fff; font-weight: 1000; text-decoration: underline; text-underline-offset: 3px; }
     .trust { display: flex; flex-wrap: wrap; gap: 10px; color: #eff6ff; font-size: 14px; font-weight: 900; }
     .pill { background: rgba(255,255,255,.10); border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; }
     .hero-card { background: rgba(2,8,23,.62); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
@@ -294,7 +296,8 @@
       .hero .wrap, .split, .web-card { grid-template-columns: 1fr; }
       .hero::before { background: linear-gradient(180deg, rgba(2,8,23,.96), rgba(2,8,23,.74)), url('/assets/product/landing/hero-app-promos.webp') center/cover no-repeat; }
       .nav { min-height: 74px; }
-      .nav-actions .btn-light { display: none; }
+      .nav-actions .nav-link-how { display: none; }
+      .nav-actions .nav-link-login { display: inline-flex; }
       .brand { font-size: 20px; }
       .brand-logo-box { width: 62px; height: 62px; border-radius: 16px; }
       .steps, .benefits { grid-template-columns: 1fr; }
@@ -318,6 +321,19 @@
     }
 
     @media (max-width: 640px) {
+      .wrap { width: min(var(--max), calc(100% - 20px)); }
+      .nav { min-height: 66px; gap: 8px; }
+      .brand { gap: 8px; flex: 0 0 auto; }
+      .brand-logo-box { width: 48px; height: 48px; border-radius: 14px; }
+      .brand-name { display: none; }
+      .nav-actions { margin-left: auto; gap: 6px; }
+      .nav-actions .nav-link-how { display: none !important; }
+      .nav-actions .nav-link-login,
+      .nav-actions .nav-link-demo { display: inline-flex !important; }
+      .nav-actions .btn { min-height: 38px; padding: 0 10px; font-size: 12.5px; }
+      .hero { padding-top: 30px; }
+      .hero-login-line { text-align: center; margin: -8px 0 16px; }
+
       .auth-section {
         padding-left: 14px !important;
         padding-right: 14px !important;
@@ -388,6 +404,10 @@
     }
 
     @media (max-width: 380px) {
+      .brand-logo-box { width: 44px; height: 44px; }
+      .nav-actions { gap: 5px; }
+      .nav-actions .btn { min-height: 36px; padding: 0 8px; font-size: 12px; }
+
       .auth-section {
         padding-left: 10px !important;
         padding-right: 10px !important;
@@ -493,12 +513,12 @@
     <div class="wrap nav">
       <a class="brand" href="#top" aria-label="AppPromos inicio">
         <span class="brand-logo-box"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" /></span>
-        <span>App<b>Promos</b></span>
+        <span class="brand-name">App<b>Promos</b></span>
       </a>
       <nav class="nav-actions" aria-label="Acciones principales">
-        <a class="btn btn-light" href="#como-funciona">Cómo funciona</a>
-        <a class="btn btn-light" href="#login">Iniciar sesión</a>
-        <a class="btn btn-primary" href="/app.html?demo=1">Probar demo</a>
+        <a class="btn btn-light nav-link-how" href="#como-funciona">Cómo funciona</a>
+        <a class="btn btn-light nav-link-login" href="#login">Iniciar sesión</a>
+        <a class="btn btn-primary nav-link-demo" href="/app.html?demo=1">Probar demo</a>
       </nav>
     </div>
   </header>
@@ -514,6 +534,7 @@
             <a class="btn btn-green btn-big" href="/app.html?demo=1">📲 Probar demo</a>
             <a class="btn btn-primary btn-big" href="#signup">🚀 EMPEZÁ GRATIS AHORA</a>
           </div>
+          <p class="hero-login-line">¿Ya tenés cuenta? <a href="#login">Iniciar sesión</a></p>
           <div class="microcopy">Te lleva 1 minuto</div>
           <div class="trust">
             <span class="pill">✅ Sin tarjeta</span>

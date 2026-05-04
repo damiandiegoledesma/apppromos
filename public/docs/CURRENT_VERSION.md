@@ -1,47 +1,43 @@
 # AppPromos — Versión actual
 
-## V12.11-D2 — Carniza navegación segura
+## V12.11-D3 — Landing mobile acceso visible
 
 Base de trabajo:
 
-- V12.11-B crea una Web de Arranque desde el registro.
-- V12.11-D1 deja la guía de precios dentro de **Cambiar precios** y retira la card grande del cuerpo de Inicio.
-- La app debe seguir orientada a mobile-first para Android gama media/entrada.
+- V12.11-B crea Web de Arranque desde el registro.
+- V12.11-D1 deja la guía de precios dentro de Cambiar precios.
+- V12.11-D2 suma navegación segura en Carniza.
+- La app debe diseñarse para mobile-first Android gama media/entrada.
 
 ## Objetivo
 
-Mejorar el menú de Carniza para que no sea solo un acceso comercial, sino también un salvavidas de navegación.
+Mejorar la primera vista mobile de la landing para que el carnicero vea rápido las acciones principales sin buscar:
 
-Carniza debe ayudar a vender, pero también permitir:
-
-- volver a Inicio;
-- salir de la demo;
-- cerrar sesión en cuenta real.
+- Probar demo.
+- Empezar gratis.
+- Iniciar sesión.
 
 ## Incluye
 
-- Nuevas acciones en Carniza:
-  - **Volver a Inicio**.
-  - **Salir de la demo** cuando el usuario está probando.
-  - **Cerrar sesión** cuando el usuario está logueado.
-- Mantiene:
-  - **Armar oferta**.
-  - **Vender urgente**.
-  - **Ir a WhatsApp**.
-- Documentación `V12.11-D2_CARNIZA_NAVEGACION_SEGURA.md`.
+- En mobile, el botón **Iniciar sesión** deja de ocultarse en la barra superior.
+- Se oculta solo **Cómo funciona** para ahorrar espacio.
+- Se compacta el header mobile para celulares tipo Android gama media/entrada.
+- Se agrega enlace claro bajo los CTA del hero: “¿Ya tenés cuenta? Iniciar sesión”.
+- Se mantiene **Probar demo** como CTA principal.
+- Se mantiene **Empezá gratis ahora** como CTA fuerte de registro.
 
 ## No toca
 
-- Registro.
+- App interna.
 - Web de Arranque.
-- Web pública.
 - Cambiar precios.
 - Crear oferta.
 - Vender urgente.
 - WhatsApp.
 - Panel Admin.
+- Registro/Login profundo.
+- Firebase/Auth.
 - Backend Python.
-- SQLite.
 
 ## Pendiente siguiente
 
@@ -51,6 +47,6 @@ Evaluar rediseño mobile para Android gama media/entrada:
 
 - botonera inferior;
 - navegación al pulgar;
-- header más compacto;
+- header más compacto dentro de la app;
 - Carniza contextual sin competir con la navegación;
 - cuerpo principal enfocado en vender.

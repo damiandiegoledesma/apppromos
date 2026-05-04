@@ -1,5 +1,15 @@
 # CHANGELOG AppPromos
 
+## V12.11-D3 — Landing mobile acceso visible
+
+- Mejora la primera vista mobile de la landing.
+- Mantiene visible **Iniciar sesión** en mobile.
+- Oculta solo **Cómo funciona** en la barra superior mobile para ahorrar espacio.
+- Compacta el header para celulares Android gama media/entrada.
+- Agrega enlace bajo el hero: “¿Ya tenés cuenta? Iniciar sesión”.
+- Mantiene **Probar demo** y **Empezá gratis ahora** como acciones principales.
+- No toca app interna, Web de Arranque, Crear oferta, Vender urgente, WhatsApp ni Panel Admin.
+
 ## V12.11-D2 — Carniza navegación segura
 
 - Agrega en el menú de Carniza la acción **Volver a Inicio**.
