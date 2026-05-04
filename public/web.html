@@ -160,7 +160,7 @@
       padding:15px;
       box-shadow:0 8px 22px rgba(47,22,14,.055);
     }
-    /* V12.13-C2-FIX2 â€” Web Arranque assets */
+    /* V12.13-C2-FIX2 - Web Arranque assets */
     .hero{
       background-image:
         linear-gradient(135deg,rgba(95,21,18,.94),rgba(139,31,31,.78),rgba(182,59,43,.72)),
@@ -257,6 +257,89 @@
       pointer-events:none;
     }
     .sticky-wa a{width:100%;box-shadow:0 14px 30px rgba(34,197,94,.28);pointer-events:auto}
+
+    /* V12.13-C3 - AppPromos visible + Carniza contextual */
+    .page{padding-bottom:calc(138px + var(--safe-bottom));}
+    .powered-card{
+      max-width:520px;
+      margin:28px auto 0;
+      padding:14px 18px;
+      border-radius:999px;
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(138,55,45,.2);
+      box-shadow:0 14px 34px rgba(47,22,14,.10);
+    }
+    .powered-card img{width:40px;height:40px;}
+    .powered-card span{
+      color:#7f1d1d;
+      font-size:1rem;
+      line-height:1.16;
+      font-weight:950;
+    }
+    .carniza-web{
+      position:fixed;
+      right:14px;
+      bottom:calc(14px + var(--safe-bottom));
+      z-index:45;
+      width:min(360px,calc(100vw - 28px));
+      display:grid;
+      grid-template-columns:52px 1fr;
+      align-items:center;
+      gap:11px;
+      padding:10px;
+      border-radius:24px;
+      background:rgba(255,255,255,.97);
+      border:1px solid rgba(138,55,45,.18);
+      box-shadow:0 18px 42px rgba(47,22,14,.18);
+    }
+    .carniza-web > img{
+      width:52px;
+      height:52px;
+      border-radius:999px;
+      object-fit:cover;
+      border:2px solid rgba(255,255,255,.95);
+      box-shadow:0 9px 20px rgba(127,29,29,.18);
+      background:#fff8f4;
+    }
+    .carniza-web strong{
+      display:block;
+      color:#7f1d1d;
+      font-size:1rem;
+      font-weight:950;
+      line-height:1.12;
+      margin-bottom:2px;
+    }
+    .carniza-web small{
+      display:block;
+      color:#5b3a32;
+      font-size:.78rem;
+      font-weight:800;
+      line-height:1.22;
+      margin-bottom:8px;
+    }
+    .carniza-web a{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 13px;
+      border-radius:999px;
+      text-decoration:none;
+      color:#062711;
+      font-weight:950;
+      background:linear-gradient(135deg,#29d66e,#16a34a);
+      box-shadow:0 10px 22px rgba(34,197,94,.22);
+      font-size:.84rem;
+    }
+    @media(max-width:520px){
+      .page{padding-bottom:calc(140px + var(--safe-bottom));}
+      .carniza-web{
+        left:10px;
+        right:10px;
+        bottom:calc(10px + var(--safe-bottom));
+        width:auto;
+      }
+    }
     @media(min-width:720px){
       .page{padding:24px 18px 96px}
       .hero{border-radius:30px;padding:36px 34px 30px}
@@ -362,7 +445,7 @@
       return buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
     }
 
-    // V12.13-C2-FIX2 â€” imagen generica por titulo de combo/oferta
+    // V12.13-C2-FIX2 - imagen generica por titulo de combo/oferta
     function comboCover(combo={}){
       const items = Array.isArray(combo.items) ? combo.items : [];
       const text = `${combo.name||combo.nombre||""} ${items.map(i=>`${i.nombre||i.name||""} ${i.rubro||""}`).join(" ")}`
@@ -377,7 +460,7 @@
       if(/cerdo|bondiola|matambrito|pechito/.test(text)) return base+"combo-cerdo.webp";
       if(/pollo|suprema|pata|muslo|alita/.test(text)) return base+"combo-pollo.webp";
       if(/picada/.test(text)) return base+"combo-picada.webp";
-      if(/novillo|vacio|entrana|entraÃ±a|marucha|matambre|nalga|cuadrada|roast/.test(text)) return base+"combo-novillo.webp";
+      if(/novillo|vacio|entrana|entrana|marucha|matambre|nalga|cuadrada|roast/.test(text)) return base+"combo-novillo.webp";
       if(/oferta|promo|combo|dia|hoy|salvaventas/.test(text)) return base+"combo-oferta-dia.webp";
       return base+"combo-default.webp";
     }
@@ -422,7 +505,14 @@
         ? `<section class="section" id="precios"><div class="section-head"><h2>Lista de precios</h2><small>Actualizada por la carnicería</small></div>${pricesHtml}<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p></section>`
         : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido. Si necesitás algo, consultá por WhatsApp.<div class="starter-actions"><a class="btn btn-ghost" href="${mainWa}" target="_blank" rel="noopener">Consultar disponibilidad</a></div></div></section>`;
 
-      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/web-arranque/branding/powered-by-apppromos.svg" alt="AppPromos" loading="lazy"><span>Sitio desarrollado por AppPromos</span></div><div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Consultar por WhatsApp</a></div>`;
+      // V12.13-C3 - Carniza contextual en Web Arranque
+      const hasOffersForCarniza = !isStarter && combos.length > 0;
+      const hasPricesForCarniza = Boolean(data.showPriceList && products.length);
+      const carnizaTitle = hasOffersForCarniza ? "Mirá las promos de hoy" : (hasPricesForCarniza ? "¿No ves lo que buscás?" : "Pedí la promo del día");
+      const carnizaSub = hasOffersForCarniza ? "Carniza te ayuda a pedir rápido." : (hasPricesForCarniza ? "Consultá disponibilidad por WhatsApp." : "Te pasamos con la carnicería.");
+      const carnizaCta = hasOffersForCarniza ? "📲 Pedir por WhatsApp" : (hasPricesForCarniza ? "📲 Consultar" : "📲 Pedir promo");
+
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/web-arranque/branding/powered-by-apppromos.svg" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></div><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
     }
 
     async function boot(){
