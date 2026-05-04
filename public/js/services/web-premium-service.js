@@ -319,11 +319,18 @@ export async function saveWebConfig(businessId, configPatch = {}) {
   }
 
   let shouldDeletePreviousSlug = false;
+  let shouldDeletePreviousPhoneKey = false;
   let previousPhoneKey = "";
   if (previousSlug && previousSlug !== nextWeb.slug) {
     const previousIndex = await readPath(`publicWebSlugs/${previousSlug}`);
-    shouldDeletePreviousSlug = !previousIndex?.businessId || previousIndex.businessId === businessId;
-    previousPhoneKey = previousIndex?.phoneKey || "";
+    // Solo borrar índices anteriores si existen y pertenecen a esta carnicería.
+    // Borrar un documento inexistente puede fallar por reglas porque no hay resource.data.
+    shouldDeletePreviousSlug = previousIndex?.businessId === businessId;
+    previousPhoneKey = shouldDeletePreviousSlug ? (previousIndex?.phoneKey || "") : "";
+    if (previousPhoneKey && previousPhoneKey !== phoneKey) {
+      const previousPhoneIndex = await readPath(`publicPhoneKeys/${previousPhoneKey}`);
+      shouldDeletePreviousPhoneKey = previousPhoneIndex?.businessId === businessId;
+    }
   }
 
   const updatedAt = new Date().toISOString();
@@ -358,7 +365,7 @@ export async function saveWebConfig(businessId, configPatch = {}) {
 
   if (shouldDeletePreviousSlug) {
     batch.delete(doc(db, "publicWebSlugs", previousSlug));
-    if (previousPhoneKey && previousPhoneKey !== phoneKey) {
+    if (shouldDeletePreviousPhoneKey) {
       batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
     }
   }
@@ -411,9 +418,11 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   const shouldChangeSlug = nameChanged || phoneChanged || !previousSlug;
   const nextSlug = shouldChangeSlug ? buildBusinessSlug(nextMeta, businessId) : previousSlug;
 
-  const [existingPhone, existingSlug] = await Promise.all([
+  const [existingPhone, existingSlug, previousSlugIndex, previousPhoneIndex] = await Promise.all([
     phoneChanged ? readPath(`publicPhoneKeys/${nextPhoneKey}`) : Promise.resolve(null),
-    (shouldChangeSlug && nextSlug !== previousSlug) ? readPath(`publicWebSlugs/${nextSlug}`) : Promise.resolve(null)
+    (shouldChangeSlug && nextSlug !== previousSlug) ? readPath(`publicWebSlugs/${nextSlug}`) : Promise.resolve(null),
+    (shouldChangeSlug && previousSlug && previousSlug !== nextSlug) ? readPath(`publicWebSlugs/${previousSlug}`) : Promise.resolve(null),
+    (phoneChanged && previousPhoneKey && previousPhoneKey !== nextPhoneKey) ? readPath(`publicPhoneKeys/${previousPhoneKey}`) : Promise.resolve(null)
   ]);
 
   if (existingPhone?.businessId && existingPhone.businessId !== businessId) {
@@ -422,6 +431,9 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   if (existingSlug?.businessId && existingSlug.businessId !== businessId) {
     throw new Error(`El link "${nextSlug}" ya está usado por otra carnicería.`);
   }
+
+  const canDeletePreviousSlug = previousSlugIndex?.businessId === businessId;
+  const canDeletePreviousPhoneKey = previousPhoneIndex?.businessId === businessId;
 
   const updatedAt = new Date().toISOString();
   const nextWeb = {
@@ -448,7 +460,7 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
       updatedAt
     }));
   }
-  if (shouldChangeSlug && previousSlug && previousSlug !== nextSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
+  if (canDeletePreviousSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
 
   if (phoneChanged || !previousPhoneKey || shouldChangeSlug) {
     batch.set(doc(db, "publicPhoneKeys", nextPhoneKey), {
@@ -460,7 +472,7 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
       active: Boolean(nextWeb.enabled) && nextWeb.active !== false && nextWeb.published !== false,
       updatedAt
     });
-    if (previousPhoneKey && previousPhoneKey !== nextPhoneKey) batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
+    if (canDeletePreviousPhoneKey) batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
   }
 
   await batch.commit();

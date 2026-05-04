@@ -11,6 +11,8 @@
 - No toca registro, Auth, precios, ofertas, Vender urgente, Panel Admin ni Firebase rules.
 - FIX1: la web pública por slug renderiza desde `publicWebSlugs/{slug}` con datos sanitizados, sin leer `businesses/...` para visitantes anónimos.
 - FIX1: `Mi Web` y el registro generan payload público seguro con ofertas/productos publicables y sin datos internos.
+- FIX2: al cambiar nombre o teléfono desde **Mi cuenta**, se recalcula el slug/phoneKey y se regeneran los índices públicos seguros.
+- FIX2: evita `Missing or insufficient permissions` por intentar borrar `publicWebSlugs` o `publicPhoneKeys` viejos inexistentes o desincronizados.
 
 ## V12.13-B-FIX1 — Resumen de descuentos sobre Carniza
 

@@ -22,6 +22,7 @@ Mejorar la estética y experiencia mobile-first de `public/web.html`, para que l
 - Botón fijo inferior de WhatsApp adaptado a safe-area mobile.
 - Protección de ancho para evitar scroll horizontal.
 - FIX1: lectura pública segura por slug desde `publicWebSlugs/{slug}` sin depender de `businesses/...` para visitantes anónimos.
+- FIX2: cambio seguro de nombre/teléfono en **Mi cuenta**, recalculando slug y phoneKey sin intentar borrar índices inexistentes.
 
 ## Reglas mantenidas
 
