@@ -160,6 +160,41 @@
       padding:15px;
       box-shadow:0 8px 22px rgba(47,22,14,.055);
     }
+    /* V12.13-C2-FIX2 â€” Web Arranque assets */
+    .hero{
+      background-image:
+        linear-gradient(135deg,rgba(95,21,18,.94),rgba(139,31,31,.78),rgba(182,59,43,.72)),
+        url('/assets/web-arranque/headers/header-mostrador-carniceria.webp');
+      background-size:cover;
+      background-position:center;
+    }
+    .offer-card{overflow:hidden;}
+    .offer-cover{
+      display:block;
+      width:calc(100% + 30px);
+      height:152px;
+      margin:-15px -15px 13px;
+      object-fit:cover;
+      object-position:center;
+      background:#f8eadf;
+      border-radius:22px 22px 14px 14px;
+    }
+    .powered-card{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:fit-content;
+      max-width:100%;
+      margin:18px auto 0;
+      padding:10px 13px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.86);
+      box-shadow:0 8px 22px rgba(47,22,14,.055);
+    }
+    .powered-card img{width:26px;height:26px;object-fit:contain;display:block;}
+    .powered-card span{color:#8a372d;font-size:.86rem;font-weight:950;}
     .offer-title{
       font-weight:950;
       font-size:1.08rem;
@@ -327,6 +362,25 @@
       return buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
     }
 
+    // V12.13-C2-FIX2 â€” imagen generica por titulo de combo/oferta
+    function comboCover(combo={}){
+      const items = Array.isArray(combo.items) ? combo.items : [];
+      const text = `${combo.name||combo.nombre||""} ${items.map(i=>`${i.nombre||i.name||""} ${i.rubro||""}`).join(" ")}`
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .toLowerCase();
+      const base = "/assets/web-arranque/combo-covers/";
+      if(/mila|milanesa/.test(text)) return base+"combo-milanesas.webp";
+      if(/achura|morcilla|chinchulin|chinchu/.test(text)) return base+"combo-achuras.webp";
+      if(/parrilla|parrillero|asado|fuego|finde/.test(text)) return base+"combo-parrilla.webp";
+      if(/familiar|familia/.test(text)) return base+"combo-familiar.webp";
+      if(/cerdo|bondiola|matambrito|pechito/.test(text)) return base+"combo-cerdo.webp";
+      if(/pollo|suprema|pata|muslo|alita/.test(text)) return base+"combo-pollo.webp";
+      if(/picada/.test(text)) return base+"combo-picada.webp";
+      if(/novillo|vacio|entrana|entraÃ±a|marucha|matambre|nalga|cuadrada|roast/.test(text)) return base+"combo-novillo.webp";
+      if(/oferta|promo|combo|dia|hoy|salvaventas/.test(text)) return base+"combo-oferta-dia.webp";
+      return base+"combo-default.webp";
+    }
     function renderWeb(data={}){
       if(data.active===false || data.enabled===false || data.published===false){
         app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene su web activa.</p></div>';
@@ -353,7 +407,7 @@
         : combos.length?`<div class="grid">${combos.map(c=>{
         const items=Array.isArray(c.items)?c.items:[];
         const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
-        return `<div class="card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
+        return `<div class="card offer-card"><img class="offer-cover" src="${comboCover(c)}" alt="" loading="lazy"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
       }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
 
       const pricesHtml=(data.showPriceList&&products.length)?`<div class="price-list">${rubroNames.map(r=>{
@@ -368,7 +422,7 @@
         ? `<section class="section" id="precios"><div class="section-head"><h2>Lista de precios</h2><small>Actualizada por la carnicería</small></div>${pricesHtml}<p class="legal">Precios sujetos a cambios · Consultar disponibilidad</p></section>`
         : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido. Si necesitás algo, consultá por WhatsApp.<div class="starter-actions"><a class="btn btn-ghost" href="${mainWa}" target="_blank" rel="noopener">Consultar disponibilidad</a></div></div></section>`;
 
-      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<p class="powered">Web simple creada con AppPromos</p><div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Consultar por WhatsApp</a></div>`;
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/web-arranque/branding/powered-by-apppromos.svg" alt="AppPromos" loading="lazy"><span>Sitio desarrollado por AppPromos</span></div><div class="sticky-wa"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Consultar por WhatsApp</a></div>`;
     }
 
     async function boot(){
