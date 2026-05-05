@@ -406,7 +406,21 @@
     @media(max-width:380px){
       .hero{padding:20px 14px;border-radius:20px}.hero h1{font-size:2rem}.card,.starter-note,.empty{border-radius:18px;padding:14px}.btn{min-height:46px;padding:0 12px}.product{grid-template-columns:1fr;gap:4px}.product strong{white-space:normal}
     }
-  </style>
+
+    /* APPPROMOS V12.13-C6-FIX3-WEB-LIMPIA - cards sin fotos + sello clickeable */
+    .offer-card{
+      padding-top:18px;
+    }
+    .powered.powered-card{
+      text-decoration:none;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .powered.powered-card:hover span{
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+</style>
 </head>
 <body>
   <div id="app" class="page"><div class="disabled"><h1>Cargando web...</h1><p>Estamos preparando la vidriera online.</p></div></div>
@@ -570,7 +584,7 @@
         : combos.length?`<div class="grid">${combos.map(c=>{
         const items=Array.isArray(c.items)?c.items:[];
         const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
-        return `<div class="card offer-card"><img class="offer-cover" src="${comboCover(c)}" alt="" loading="lazy"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
+        return `<div class="card offer-card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
       }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
 
       const pricesHtml=(data.showPriceList&&products.length)?`<div class="price-list">${rubroNames.map(r=>{
@@ -592,7 +606,7 @@
       const carnizaSub = hasOffersForCarniza ? "Carniza te ayuda a pedir rápido." : (hasPricesForCarniza ? "Consultá disponibilidad por WhatsApp." : "Te pasamos con la carnicería.");
       const carnizaCta = hasOffersForCarniza ? "📲 Pedir por WhatsApp" : (hasPricesForCarniza ? "📲 Consultar" : "📲 Pedir promo");
 
-      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></div><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<a class="powered powered-card" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
     }
 
     async function boot(){
