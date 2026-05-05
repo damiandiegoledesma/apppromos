@@ -4,10 +4,36 @@ import {
   updateProductPricesBatch
 } from "../services/data-service.js";
 
+function parsePriceInputValue(value) {
+  const cleaned = String(value ?? "")
+    .replace(/[^0-9]/g, "");
+  const numeric = Number(cleaned || 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatPriceInputValue(value) {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+  return "$ " + Math.round(numeric).toLocaleString("es-AR");
+}
+
 function roundUpTo100(value) {
   const numeric = Number(value || 0);
   if (numeric <= 0) return 0;
   return Math.ceil(numeric / 100) * 100;
+}
+
+function roundPriceForMassAdjustment(value, percent = 0) {
+  const numeric = Number(value || 0);
+  const adjustment = Number(percent || 0);
+
+  if (numeric <= 0) return 0;
+
+  if (adjustment < 0) {
+    return Math.max(100, Math.floor(numeric / 100) * 100);
+  }
+
+  return roundUpTo100(numeric);
 }
 
 function formatCurrency(value) {
@@ -43,6 +69,7 @@ export function renderPrices(container, products = [], businessId = null, option
   let statusMode = "idle";
   let statusMessage = "Sin cambios";
   let lastSavedAt = "";
+  let lastMassAdjustment = null;
 
   function updateLocalProducts(updatedProducts = []) {
     safeProducts.splice(0, safeProducts.length, ...updatedProducts);
@@ -118,13 +145,29 @@ export function renderPrices(container, products = [], businessId = null, option
     return "🏷️";
   }
 
+  function getProductUnitLabel(product = {}) {
+    const raw = String(
+      product.unidad ||
+      product.unit ||
+      product.medida ||
+      product.priceUnit ||
+      product.tipoVenta ||
+      ""
+    ).toLowerCase();
+
+    if (raw.includes("un") || raw.includes("unidad") || raw.includes("pieza")) return "/un";
+    return "/kg";
+  }
+
   function setStatus(mode = "idle", message = "") {
     statusMode = mode;
     statusMessage = message || statusMessage;
 
     const badge = container.querySelector("#pricePendingStatus");
-    const saveAllBtn = container.querySelector("#saveAllBtn");
-    const summary = container.querySelector("#pricesSummary");
+    const saveAllBtn = container.querySelector("#saveAllBtn");    const summary = container.querySelector("#pricesSummary");
+    const undoMassBtn = container.querySelector("#undoMassAdjustmentBtn");
+    const massNote = container.querySelector("#massAdjustmentNote");
+    const massText = container.querySelector("#massAdjustmentText");
     const pendingCount = getPendingCount();
 
     if (badge) {
@@ -150,6 +193,24 @@ export function renderPrices(container, products = [], businessId = null, option
         <strong>${pendingCount}</strong> cambio${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"}
         ${lastSavedAt ? ` · Último guardado: ${lastSavedAt}` : ""}
       `;
+    }
+    
+    const canUndoMassAdjustment = !!lastMassAdjustment && pendingCount > 0 && !isSaving;
+    if (massNote) massNote.hidden = !canUndoMassAdjustment;
+    if (undoMassBtn) {
+      undoMassBtn.hidden = !canUndoMassAdjustment;
+      undoMassBtn.disabled = !canUndoMassAdjustment;
+      undoMassBtn.textContent = "Deshacer";
+    }
+    if (massText) {
+      if (lastMassAdjustment) {
+        const sign = lastMassAdjustment.percent > 0 ? "+" : "";
+        const label = sign + lastMassAdjustment.percent + "%";
+        const count = lastMassAdjustment.count || 0;
+        massText.textContent = label + " aplicado a " + lastMassAdjustment.rubroLabel + " · " + count + " producto" + (count === 1 ? "" : "s");
+      } else {
+        massText.textContent = "";
+      }
     }
   }
 
@@ -186,6 +247,8 @@ export function renderPrices(container, products = [], businessId = null, option
     Object.keys(changes).forEach((id) => {
       delete pendingChanges[id];
     });
+
+    lastMassAdjustment = null;
 
     lastSavedAt = new Date().toLocaleTimeString("es-AR", {
       hour: "2-digit",
@@ -279,14 +342,58 @@ export function renderPrices(container, products = [], businessId = null, option
       return;
     }
 
+    const previousValues = {};
+    const targetKeys = [];
+
     targetItems.forEach((p) => {
       const key = p.id ?? p.productKey;
-      const basePrice = pendingChanges[key] !== undefined ? Number(pendingChanges[key] || 0) : Number(p.precio || 0);
-      pendingChanges[key] = roundUpTo100(basePrice * (1 + percent / 100));
+      if (!key) return;
+      targetKeys.push(String(key));
+      previousValues[key] = pendingChanges[key] !== undefined ? Number(pendingChanges[key] || 0) : Number(p.precio || 0);
     });
+
+    targetItems.forEach((p) => {
+      const key = p.id ?? p.productKey;
+      if (!key) return;
+      const basePrice = pendingChanges[key] !== undefined ? Number(pendingChanges[key] || 0) : Number(p.precio || 0);
+      pendingChanges[key] = roundPriceForMassAdjustment(basePrice * (1 + percent / 100), percent);
+    });
+
+    lastMassAdjustment = {
+      percent,
+      rubroLabel: rubroFilter || "todos los rubros",
+      previousValues,
+      targetKeys,
+      count: targetKeys.length
+    };
 
     draw();
     showToast(`Ajuste aplicado: ${percent > 0 ? "+" : ""}${percent}%`, "ok");
+  }
+
+  function undoMassAdjustment() {
+    if (!lastMassAdjustment || !lastMassAdjustment.previousValues) {
+      showToast("No hay ajuste para deshacer", "warn");
+      return;
+    }
+
+    Object.entries(lastMassAdjustment.previousValues).forEach(([key, oldValue]) => {
+      const product = safeProducts.find((p) => String(p.id ?? p.productKey) === String(key));
+      const original = Number(product?.precio || 0);
+      const value = Number(oldValue || 0);
+
+      if (!Number.isFinite(value) || value < 0 || value === original) {
+        delete pendingChanges[key];
+      } else {
+        pendingChanges[key] = value;
+      }
+    });
+
+    const percent = lastMassAdjustment.percent;
+    const sign = percent > 0 ? "+" : "";
+    lastMassAdjustment = null;
+    draw();
+    showToast("Ajuste " + sign + percent + "% deshecho", "ok");
   }
 
   function syncDirtyInputState(input, isDirty) {
@@ -333,13 +440,14 @@ export function renderPrices(container, products = [], businessId = null, option
             <div class="price-name">${p.nombre}</div>
           </div>
 
-          <label class="price-input-wrap" aria-label="Precio para ${p.nombre}">
-            <span>Precio</span>
-            <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
+          <label class="price-input-wrap price-input-wrap-compact" aria-label="Precio para ${p.nombre}">
+            <input type="text" inputmode="numeric" value="${formatPriceInputValue(currentValue)}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
           </label>
 
           <div class="price-actions price-actions-simple">
-            <button data-del="${key}" class="price-no-use-btn" title="Marcar como No uso" ${canPersistPrices ? "" : "disabled"}>No uso</button>
+            <button data-del="${key}" class="price-no-use-btn price-no-use-check price-use-only-check" title="Marcar como No uso" aria-label="Marcar como No uso" ${canPersistPrices ? "" : "disabled"}>
+              <span class="price-no-use-box" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
       `;
@@ -354,7 +462,7 @@ export function renderPrices(container, products = [], businessId = null, option
           return;
         }
         const id = input.dataset.id;
-        const value = Number(input.value || 0);
+        const value = parsePriceInputValue(input.value);
         const original = Number(safeProducts.find((p) => String(p.id ?? p.productKey) === String(id))?.precio || 0);
 
         if (!Number.isFinite(value) || value < 0 || value === original) {
@@ -407,7 +515,7 @@ export function renderPrices(container, products = [], businessId = null, option
         const input = container.querySelector(`input[data-id="${id}"]`);
         if (!input) return;
 
-        const value = Number(input.value || 0);
+        const value = parsePriceInputValue(input.value);
         if (!value) {
           showToast("Ingresá un precio válido", "warn");
           return;
@@ -469,7 +577,7 @@ export function renderPrices(container, products = [], businessId = null, option
           return;
         }
         const id = btn.dataset.del;
-        const ok = confirm('¿Marcar este producto como "No uso"?');
+        const ok = confirm('¿Marcar este producto como "No uso"?\n\nNo aparecerá en ofertas ni en tu web.\nNo borra el producto.');
         if (!ok) return;
 
         try {
@@ -646,6 +754,225 @@ export function renderPrices(container, products = [], businessId = null, option
   opacity: .45;
   cursor: not-allowed;
 }
+/* APPPROMOS C6 FIX4 - deshacer ajuste masivo */
+.prices-mass-undo {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 10px;
+  border:1px solid rgba(245, 158, 11, .35);
+  border-radius:13px;
+  background:#fffbeb;
+  color:#7c2d12;
+  font-size:12px;
+  font-weight:900;
+}
+.prices-mass-undo[hidden] {
+  display:none !important;
+}
+.prices-undo-btn {
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid rgba(180, 83, 9, .32);
+  border-radius:999px;
+  background:#fff;
+  color:#92400e;
+  font-size:12px;
+  font-weight:1000;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.prices-undo-btn:disabled {
+  opacity:.45;
+  cursor:not-allowed;
+}
+/* APPPROMOS C6 FIX6 - filas precios mobile legibles */
+.price-name {
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  word-break:break-word;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.price-input-wrap-compact {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:2px;
+  justify-items:end;
+  align-content:center;
+}
+.price-input-wrap-compact .price-input {
+  text-align:right;
+  font-weight:950;
+}
+.price-input-unit {
+  display:block;
+  width:100%;
+  text-align:right;
+  color:#64748b;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  margin-top:1px;
+}
+.price-no-use-check {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:34px;
+  padding:0 8px;
+  border-radius:999px;
+}
+.price-no-use-box {
+  width:13px;
+  height:13px;
+  border:2px solid rgba(153,27,27,.45);
+  border-radius:4px;
+  background:#fff;
+  flex:0 0 auto;
+}
+.price-no-use-label {
+  font-size:10px;
+  font-weight:950;
+  line-height:1;
+}
+@media (max-width: 768px) {
+  .price-row {
+    grid-template-columns:minmax(0,1fr) 84px 74px !important;
+    gap:7px !important;
+    align-items:center !important;
+    min-height:54px !important;
+  }
+  .price-name {
+    font-size:13.5px !important;
+    line-height:1.15 !important;
+    font-weight:780 !important;
+  }
+  .price-input {
+    min-height:36px !important;
+    font-size:14px !important;
+    padding:0 7px !important;
+  }
+  .price-no-use-check {
+    min-width:0;
+    width:100%;
+    padding:0 6px;
+  }
+}
+/* APPPROMOS C6 FIX6B - filas precios simples producto precio uso */
+.prices-kg-note {
+  margin:6px 0 8px;
+  padding:7px 9px;
+  border:1px solid rgba(15, 23, 42, .08);
+  border-radius:12px;
+  background:#f8fafc;
+  color:#334155;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.25;
+}
+.price-input-unit {
+  display:none !important;
+}
+.price-no-use-label {
+  display:none !important;
+}
+.price-use-only-check,
+.price-no-use-check {
+  width:38px !important;
+  min-width:38px !important;
+  max-width:38px !important;
+  min-height:36px !important;
+  padding:0 !important;
+  border-radius:14px !important;
+  gap:0 !important;
+}
+.price-no-use-box {
+  width:16px !important;
+  height:16px !important;
+  border-radius:5px !important;
+  margin:0 !important;
+}
+.price-name,
+.price-row .price-name,
+.price-row strong,
+.price-row b {
+  white-space:normal !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+  display:-webkit-box !important;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical !important;
+  word-break:break-word !important;
+  overflow-wrap:anywhere !important;
+  line-height:1.15 !important;
+}
+@media (max-width: 768px) {
+  .price-row {
+    grid-template-columns:minmax(0,1fr) 88px 44px !important;
+    gap:8px !important;
+    min-height:56px !important;
+    align-items:center !important;
+  }
+  .price-name,
+  .price-row .price-name,
+  .price-row strong,
+  .price-row b {
+    font-size:13px !important;
+    font-weight:760 !important;
+  }
+  .price-input-wrap,
+  .price-input-wrap-compact {
+    width:88px !important;
+    min-width:88px !important;
+  }
+  .price-input {
+    width:88px !important;
+    min-height:37px !important;
+    text-align:right !important;
+    font-size:14px !important;
+    font-weight:950 !important;
+    padding:0 7px !important;
+  }
+  .price-actions,
+  .price-actions-simple {
+    width:44px !important;
+    min-width:44px !important;
+    justify-content:center !important;
+  }
+}
+/* APPPROMOS C6 FIX6C - precio moneda y uso claro */
+.prices-tip {
+  display:none !important;
+}
+.prices-kg-note {
+  margin:6px 0 8px !important;
+  padding:7px 9px !important;
+  border:1px solid rgba(15, 23, 42, .08) !important;
+  border-radius:12px !important;
+  background:#f8fafc !important;
+  color:#334155 !important;
+  font-size:10.5px !important;
+  font-weight:850 !important;
+  line-height:1.25 !important;
+}
+.price-input {
+  font-variant-numeric: tabular-nums;
+}
+/* APPPROMOS C6 FIX6C - uso checkbox mas claro */
+.price-use-only-check,
+.price-no-use-check {
+  background:#fff7f7 !important;
+  border:1px solid rgba(185, 28, 28, .22) !important;
+}
+.price-use-only-check:hover,
+.price-no-use-check:hover {
+  background:#fee2e2 !important;
+}
 </style>
 
     <div class="prices-shell">
@@ -658,15 +985,7 @@ export function renderPrices(container, products = [], businessId = null, option
 
       ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #93c5fd;border-radius:16px;background:#eff6ff;color:#1d4ed8;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
-      <div class="prices-web-tip">
-        <div class="prices-web-tip-icon">🌐</div>
-        <div>
-          <strong>Tip para tu web</strong>
-          <p>Poné precio solo a lo que vendés. Lo que queda en 0 no aparece en tu web.</p>
-        </div>
-      </div>
-
-      <div class="prices-toolbar prices-toolbar-lite">
+<div class="prices-toolbar prices-toolbar-lite">
         <div class="prices-toolbar-row prices-search-row">
           <input id="searchInput" class="prices-search" placeholder="Buscar producto..." />
           <select id="rubroFilter" class="prices-select"></select>
@@ -678,6 +997,11 @@ export function renderPrices(container, products = [], businessId = null, option
           <div id="pricePendingStatus" class="prices-status" data-mode="idle">Sin cambios</div>
           <div id="pricesSummary" class="prices-summary"></div>
           <button id="saveAllBtn" class="prices-btn primary">Guardar</button>
+        </div>
+
+        <div id="massAdjustmentNote" class="prices-mass-undo" hidden>
+          <span id="massAdjustmentText"></span>
+          <button id="undoMassAdjustmentBtn" class="prices-undo-btn" type="button" hidden>Deshacer</button>
         </div>
 
         <details class="prices-advanced">
@@ -709,6 +1033,21 @@ export function renderPrices(container, products = [], businessId = null, option
   });
 
   container.querySelector("#saveAllBtn").onclick = saveAllPendingChanges;
+
+  // APPPROMOS C6 FIX6C - input moneda listeners
+  container.querySelectorAll(".price-input").forEach((input) => {
+    input.addEventListener("focus", () => {
+      const numeric = parsePriceInputValue(input.value);
+      input.value = numeric > 0 ? String(numeric) : "";
+      setTimeout(() => input.select && input.select(), 0);
+    });
+
+    input.addEventListener("blur", () => {
+      const numeric = parsePriceInputValue(input.value);
+      input.value = formatPriceInputValue(numeric);
+    });
+  });
+  container.querySelector("#undoMassAdjustmentBtn").onclick = undoMassAdjustment;
 
   container.querySelector("#sortNombre").onclick = () => {
     if (sortField === "nombre") {

@@ -2581,3 +2581,115 @@ async function boot() {
 }
 
 boot();
+
+
+// APPPROMOS C6 FIX5 - inicio y mas mas limpios
+(function installC6Fix5InicioMasLimpio() {
+  if (window.__APPPROMOS_C6_FIX5_INICIO_MAS_LIMPIO__) return;
+  window.__APPPROMOS_C6_FIX5_INICIO_MAS_LIMPIO__ = true;
+
+  const SHOW_ROUTE_FLAG = "apppromos_show_recorrido_sugerido_v1";
+
+  function normalizeText(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isDemoContext() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
+
+      const bodyText = document.body ? document.body.innerText || "" : "";
+      if (/@demo\.com\b/i.test(bodyText)) return true;
+      if (normalizeText(bodyText).includes("estas probando apppromos")) return true;
+
+      return Object.keys(localStorage || {}).some((key) => {
+        const raw = String(localStorage.getItem(key) || "");
+        return /demo/i.test(key) && /demo/i.test(raw);
+      });
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function shouldShowSuggestedRoute() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      return (
+        params.get("recorrido") === "1" ||
+        params.get("onboarding") === "1" ||
+        localStorage.getItem(SHOW_ROUTE_FLAG) === "1"
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function removeSmallestBlockContaining(phrases, options = {}) {
+    const normalizedPhrases = phrases.map(normalizeText);
+    const exclude = (options.exclude || []).map(normalizeText);
+    const maxLength = options.maxLength || 900;
+
+    const candidates = Array.from(document.querySelectorAll("div, section, article, aside, button"))
+      .filter((el) => {
+        if (!el || !el.textContent) return false;
+        const text = normalizeText(el.textContent);
+        if (!normalizedPhrases.every((phrase) => text.includes(phrase))) return false;
+        if (exclude.some((phrase) => text.includes(phrase))) return false;
+        if (text.length > maxLength) return false;
+        return true;
+      })
+      .sort((a, b) => String(a.textContent || "").length - String(b.textContent || "").length);
+
+    const target = candidates[0];
+    if (target && target.parentElement) {
+      target.remove();
+      return true;
+    }
+
+    return false;
+  }
+
+  function cleanInicioAndMas() {
+    // Inicio: sacar "Recorrido sugerido" del uso diario.
+    // Queda disponible solo para onboarding explícito / primer uso real.
+    if (!shouldShowSuggestedRoute()) {
+      removeSmallestBlockContaining(["Recorrido sugerido"], {
+        maxLength: 900
+      });
+    }
+
+    // Más: sacar Ayuda si solo dice "Volver al camino".
+    // La guía vive desde Carniza.
+    removeSmallestBlockContaining(["Ayuda", "Volver al camino"], {
+      maxLength: 260,
+      exclude: ["Mi cuenta", "Mi web", "Cerrar sesión", "Competencia"]
+    });
+  }
+
+  let rafId = 0;
+  function scheduleClean() {
+    window.cancelAnimationFrame(rafId);
+    rafId = window.requestAnimationFrame(cleanInicioAndMas);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", scheduleClean, { once: true });
+  } else {
+    scheduleClean();
+  }
+
+  const observerTarget = document.body || document.documentElement;
+  if (observerTarget) {
+    const observer = new MutationObserver(scheduleClean);
+    observer.observe(observerTarget, { childList: true, subtree: true });
+  }
+
+  window.addEventListener("hashchange", scheduleClean);
+  window.addEventListener("popstate", scheduleClean);
+})();
