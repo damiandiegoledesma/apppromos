@@ -1,0 +1,90 @@
+<svg width="100%" viewBox="0 0 680 620" role="img">
+  <title>Flujo de cobranzas — V12.11</title>
+  <desc>El administrador ve la bandeja de morosos, selecciona empresa, copia mensaje y link MP, y confirma pago cuando llega.</desc>
+  
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Título -->
+  <text class="th" x="340" y="40" text-anchor="middle" style="font-size:18px;font-weight:500">Flujo de cobranzas — Bandeja de morosos</text>
+
+  <!-- Paso 1: Admin ve bandeja -->
+  <g>
+    <rect x="40" y="80" width="240" height="80" rx="8" stroke-width="0.5" fill="#E1F5EE" stroke="#0F6E56"/>
+    <text x="160" y="110" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#085041">Admin entra al Panel</text>
+    <text x="160" y="130" text-anchor="middle" style="font-size:12px;fill:#085041">Ve bandeja de morosos</text>
+    <text x="160" y="150" text-anchor="middle" style="font-size:12px;fill:#085041">Filtra: Pago = Vencido</text>
+  </g>
+
+  <!-- Flecha 1 -->
+  <line x1="280" y1="120" x2="360" y2="120" stroke="#5F5E5A" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Paso 2: Selecciona empresa -->
+  <g>
+    <rect x="360" y="80" width="260" height="80" rx="8" stroke-width="0.5" fill="#E6F1FB" stroke="#185FA5"/>
+    <text x="490" y="110" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#0C447C">Selecciona empresa</text>
+    <text x="490" y="130" text-anchor="middle" style="font-size:12px;fill:#0C447C">Ej: Carnicería La Estancia</text>
+    <text x="490" y="150" text-anchor="middle" style="font-size:12px;fill:#0C447C">Juan G. | 3462543210 | $25k vencido</text>
+  </g>
+
+  <!-- Flecha 2 -->
+  <line x1="160" y1="160" x2="160" y2="200" stroke="#5F5E5A" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Paso 3: Acciones pre-armadas -->
+  <g>
+    <rect x="40" y="200" width="240" height="100" rx="8" stroke-width="0.5" fill="#EEEDFE" stroke="#534AB7"/>
+    <text x="160" y="230" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#3C3489">Acciones listas</text>
+    <text x="160" y="250" text-anchor="middle" style="font-size:12px;fill:#3C3489">Clic en WhatsApp →</text>
+    <text x="160" y="267" text-anchor="middle" style="font-size:12px;fill:#3C3489">Abre chat con msg +</text>
+    <text x="160" y="284" text-anchor="middle" style="font-size:12px;fill:#3C3489">link MP prearmado</text>
+  </g>
+
+  <!-- Flecha 3 -->
+  <line x1="280" y1="250" x2="360" y2="250" stroke="#5F5E5A" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Paso 4: Carnicero paga -->
+  <g>
+    <rect x="360" y="200" width="260" height="100" rx="8" stroke-width="0.5" fill="#FAECE7" stroke="#993C1D"/>
+    <text x="490" y="230" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#712B13">Carnicero recibe aviso</text>
+    <text x="490" y="250" text-anchor="middle" style="font-size:12px;fill:#712B13">Abre link MP</text>
+    <text x="490" y="267" text-anchor="middle" style="font-size:12px;fill:#712B13">Confirma pago</text>
+    <text x="490" y="284" text-anchor="middle" style="font-size:12px;fill:#712B13">La Nelly se lo avisa</text>
+  </g>
+
+  <!-- Flecha 4 -->
+  <line x1="160" y1="300" x2="160" y2="340" stroke="#5F5E5A" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Paso 5: Admin marca pago -->
+  <g>
+    <rect x="40" y="340" width="240" height="100" rx="8" stroke-width="0.5" fill="#EAF3DE" stroke="#3B6D11"/>
+    <text x="160" y="370" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#27500A">Admin confirma</text>
+    <text x="160" y="390" text-anchor="middle" style="font-size:12px;fill:#27500A">Clic: "Marcar pago"</text>
+    <text x="160" y="407" text-anchor="middle" style="font-size:12px;fill:#27500A">Sistema actualiza:</text>
+    <text x="160" y="424" text-anchor="middle" style="font-size:12px;fill:#27500A">estado, fecha vto</text>
+  </g>
+
+  <!-- Flecha 5 -->
+  <line x1="280" y1="390" x2="360" y2="390" stroke="#5F5E5A" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Paso 6: Sistema actualiza -->
+  <g>
+    <rect x="360" y="340" width="260" height="100" rx="8" stroke-width="0.5" fill="#FAEEDA" stroke="#854F0B"/>
+    <text x="490" y="370" text-anchor="middle" style="font-size:14px;font-weight:500;fill:#633806">Sistema actualiza</text>
+    <text x="490" y="390" text-anchor="middle" style="font-size:12px;fill:#633806">pago.estado = "Al día"</text>
+    <text x="490" y="407" text-anchor="middle" style="font-size:12px;fill:#633806">proximoVencimiento +30 días</text>
+    <text x="490" y="424" text-anchor="middle" style="font-size:12px;fill:#633806">Carnicero recupera acceso</text>
+  </g>
+
+  <!-- Flecha de retorno a inicio (ciclo) -->
+  <path d="M 280 540 L 280 560 Q 340 580 400 580 Q 460 580 460 540" fill="none" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="370" y="595" text-anchor="middle" style="font-size:12px;fill:#888780">Ciclo se repite con otros morosos</text>
+
+  <!-- Leyenda de tiempo -->
+  <g>
+    <text x="40" y="540" style="font-size:12px;fill:#888780">Tiempo típico:</text>
+    <text x="40" y="560" style="font-size:12px;fill:#888780">Envío msg: 10 seg | Pago: 2-5 min | Confirmación: 1 min</text>
+  </g>
+</svg>
