@@ -277,6 +277,60 @@
       line-height:1.16;
       font-weight:950;
     }
+
+    /* V12.13-C5-FIX2 - pulido visual Web Arranque */
+    .powered.powered-card{
+      gap:14px;
+      padding:16px 22px;
+      min-height:76px;
+      align-items:center;
+    }
+    .powered.powered-card img{
+      width:78px;
+      height:78px;
+      object-fit:contain;
+      flex:0 0 auto;
+    }
+    .powered.powered-card span{
+      font-size:1.04rem;
+      line-height:1.18;
+      letter-spacing:-.01em;
+    }
+    .price-list{gap:18px;}
+    .rubro{padding-top:18px;}
+    .rubro h3{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      margin:0 0 13px;
+      padding:7px 13px;
+      border-radius:999px;
+      background:rgba(182,59,43,.08);
+      color:var(--red-2);
+      border:1px solid rgba(182,59,43,.16);
+      font-size:1.18rem;
+      font-weight:950;
+      line-height:1.08;
+      letter-spacing:-.015em;
+    }
+    .rubro h3::before{
+      content:"🥩";
+      font-size:1rem;
+      line-height:1;
+    }
+    .product span{font-size:.99rem;}
+    @media (max-width:640px){
+      .powered.powered-card{
+        width:calc(100% - 28px);
+        max-width:360px;
+        padding:14px 16px;
+        gap:12px;
+      }
+      .powered.powered-card img{width:68px;height:68px;}
+      .powered.powered-card span{font-size:.98rem;}
+      .rubro h3{font-size:1.12rem;padding:7px 12px;}
+    }
+
     .carniza-web{
       position:fixed;
       right:14px;
@@ -538,7 +592,7 @@
       const carnizaSub = hasOffersForCarniza ? "Carniza te ayuda a pedir rápido." : (hasPricesForCarniza ? "Consultá disponibilidad por WhatsApp." : "Te pasamos con la carnicería.");
       const carnizaCta = hasOffersForCarniza ? "📲 Pedir por WhatsApp" : (hasPricesForCarniza ? "📲 Consultar" : "📲 Pedir promo");
 
-      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/web-arranque/branding/powered-by-apppromos.svg" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></div><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<div class="powered powered-card"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></div><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
     }
 
     async function boot(){

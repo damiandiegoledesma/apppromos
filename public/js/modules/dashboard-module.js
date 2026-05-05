@@ -212,17 +212,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
           </div>
         </div>
 
-        <div class="dash-card">
-          <h3>Resumen operativo</h3>
-          <div class="dash-grid" style="grid-template-columns:1fr 1fr;">
-            <div><div class="dash-value">${activeProducts.length}</div><div class="dash-note">productos activos</div></div>
-            <div><div class="dash-value">${savedCombos.length}</div><div class="dash-note">ofertas guardadas</div></div>
-          </div>
-          <div class="dash-secondary-actions">
-            <button data-action-panel="savedPanel">💾 Ver guardados</button>
-            <button data-action-panel="marketPanel">📊 Ver competencia</button>
-          </div>
-        </div>
+
       </div>
 
     </div>

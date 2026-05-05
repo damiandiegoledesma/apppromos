@@ -41,7 +41,7 @@ export function renderPrices(container, products = [], businessId = null, option
   let sortDirection = "asc";
   let isSaving = false;
   let statusMode = "idle";
-  let statusMessage = "Sin cambios pendientes";
+  let statusMessage = "Sin cambios";
   let lastSavedAt = "";
 
   function updateLocalProducts(updatedProducts = []) {
@@ -140,7 +140,7 @@ export function renderPrices(container, products = [], businessId = null, option
           ? "⏳ Guardando..."
           : pendingCount > 0
             ? `💾 Guardar ${pendingCount} cambio${pendingCount === 1 ? "" : "s"}`
-            : "💾 Sin cambios";
+            : "Guardar";
     }
 
     if (summary) {
@@ -162,7 +162,7 @@ export function renderPrices(container, products = [], businessId = null, option
     } else if (isDemoPriceSession) {
       setStatus("idle", "Estás probando AppPromos. Estos cambios quedan solo en esta demo.");
     } else {
-      setStatus("idle", "Sin cambios pendientes");
+      setStatus("idle", "Sin cambios");
     }
   }
 
@@ -338,10 +338,8 @@ export function renderPrices(container, products = [], businessId = null, option
             <input type="number" value="${currentValue}" data-id="${key}" class="price-input" ${canPersistPrices ? "" : "readonly"} />
           </label>
 
-          <div class="price-actions">
-            <button data-save="${key}" class="mini-action save" title="Guardar" ${canPersistPrices ? "" : "disabled"}>💾</button>
-            <button data-edit="${key}" class="mini-action" title="Editar" ${canPersistPrices ? "" : "disabled"}>✏️</button>
-            <button data-del="${key}" class="mini-action danger" title="Desactivar" ${canPersistPrices ? "" : "disabled"}>🗑️</button>
+          <div class="price-actions price-actions-simple">
+            <button data-del="${key}" class="price-no-use-btn" title="Marcar como No uso" ${canPersistPrices ? "" : "disabled"}>No uso</button>
           </div>
         </div>
       `;
@@ -471,7 +469,7 @@ export function renderPrices(container, products = [], businessId = null, option
           return;
         }
         const id = btn.dataset.del;
-        const ok = confirm("¿Desactivar producto?");
+        const ok = confirm('¿Marcar este producto como "No uso"?');
         if (!ok) return;
 
         try {
@@ -484,10 +482,10 @@ export function renderPrices(container, products = [], businessId = null, option
           updateLocalProducts(updatedProducts);
           delete pendingChanges[id];
           draw();
-          showToast("Producto desactivado", "ok");
+          showToast("Producto marcado como No uso", "ok");
         } catch (error) {
           console.error(error);
-          showToast("No se pudo desactivar", "error");
+          showToast("No se pudo marcar como No uso", "error");
         }
       };
     });
@@ -569,13 +567,92 @@ export function renderPrices(container, products = [], businessId = null, option
         .price-actions { justify-content:flex-end; }
         .mini-action { min-height:34px; min-width:30px; }
       }
-    </style>
+
+      /* V12.13-C6-FIX2 - Cambiar Precios: más aire, menos planilla */
+      .prices-shell { gap:10px; }
+      .prices-title h2 { margin-bottom:4px; font-size:26px; letter-spacing:-.03em; }
+      .prices-title p { font-size:13px; line-height:1.28; font-weight:800; }
+      .prices-web-tip { padding:9px 11px; border-radius:14px; gap:9px; align-items:center; box-shadow:0 5px 12px rgba(194,65,12,.06); }
+      .prices-web-tip-icon { width:28px; height:28px; font-size:15px; }
+      .prices-web-tip strong { margin-bottom:2px; font-size:12px; }
+      .prices-web-tip p { font-size:12px; line-height:1.25; font-weight:850; }
+      .prices-toolbar-lite { top:8px; padding:9px; gap:8px; border-radius:16px; background:rgba(255,249,247,.96); box-shadow:0 8px 18px rgba(15,23,42,.06); }
+      .prices-search-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(116px,.48fr); gap:8px; }
+      .prices-search, .prices-select { width:100%; min-height:42px; border-radius:13px; font-size:13px; font-weight:850; box-sizing:border-box; }
+      .prices-rubro-scroll { display:flex; gap:7px; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; padding:1px 0 4px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+      .prices-rubro-scroll::-webkit-scrollbar { display:none; }
+      .price-chip { flex:0 0 auto; min-height:34px; padding:0 12px; font-size:12px; border-radius:999px; white-space:nowrap; box-shadow:0 4px 10px rgba(15,23,42,.04); }
+      .prices-statusbar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; }
+      .prices-status { min-height:34px; padding:0 10px; font-size:12px; border-radius:999px; }
+      .prices-summary { font-size:12px; line-height:1.2; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .prices-btn { min-height:38px; padding:0 11px; border-radius:12px; font-size:12px; font-weight:1000; }
+      .prices-btn.primary { min-width:92px; }
+      .prices-advanced { border:1px solid #e5e7eb; border-radius:13px; background:#fff; overflow:hidden; }
+      .prices-advanced summary { min-height:36px; display:flex; align-items:center; padding:0 12px; cursor:pointer; color:#7f1d1d; font-size:12px; font-weight:1000; list-style:none; }
+      .prices-advanced summary::-webkit-details-marker { display:none; }
+      .prices-advanced summary::after { content:"+"; margin-left:auto; font-size:16px; line-height:1; color:#b91c1c; }
+      .prices-advanced[open] summary::after { content:"−"; }
+      .prices-quick-adjust { padding:0 9px 9px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+      .prices-list { gap:7px; }
+      .price-row { min-height:48px; padding:8px 9px; border-radius:14px; gap:8px; }
+      .price-name { font-size:14px; line-height:1.15; }
+      .price-input { min-height:38px; font-size:14px; }
+      .mini-action { min-height:36px; min-width:31px; }
+      @media (max-width: 768px) {
+        .prices-title h2 { font-size:22px; }
+        .prices-header { gap:6px; }
+        .prices-toolbar-lite { position:sticky; top:8px; padding:8px; }
+        .prices-search-row { grid-template-columns:1fr; }
+        .prices-statusbar { grid-template-columns:1fr auto; }
+        .prices-statusbar .prices-summary { grid-column:1 / -1; order:3; }
+        .prices-statusbar #saveAllBtn { min-width:94px; }
+        .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .price-row { grid-template-columns:minmax(0,1fr) 92px 94px; min-height:50px; padding:8px; }
+        .price-actions { gap:4px; }
+        .mini-action { min-width:29px; }
+      }
+
+      /* V12.13-C6-FIX2A - Precios limpio: sin chips duplicados ni ordenamientos */
+      #rubroButtons.prices-rubro-scroll { display:none !important; }
+      .prices-hidden-control { display:none !important; }
+      .prices-advanced summary { color:#7f1d1d; font-weight:1000; }
+      .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+      .prices-quick-adjust .prices-btn { min-height:40px; font-size:13px; }
+      .prices-toolbar-lite { gap:7px; }
+      .prices-statusbar { margin-top:0; }
+      @media (max-width: 768px) {
+        .prices-advanced summary { min-height:34px; }
+        .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+      }
+    /* APPPROMOS C6 FIX2B - precios acciones simples */
+.price-actions-simple {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.price-no-use-btn {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(185, 28, 28, .22);
+  border-radius: 14px;
+  background: #fff7f7;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.price-no-use-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+</style>
 
     <div class="prices-shell">
       <div class="prices-header">
         <div class="prices-title">
           <h2>⚡ Cambiar precios</h2>
-          <p>Buscá, editá y guardá. La app te avisa siempre qué quedó pendiente.</p>
+          <p>Buscá, tocá el precio y guardá.</p>
         </div>
       </div>
 
@@ -585,32 +662,35 @@ export function renderPrices(container, products = [], businessId = null, option
         <div class="prices-web-tip-icon">🌐</div>
         <div>
           <strong>Tip para tu web</strong>
-          <p>Cargá precio solo en los productos que vendés. Si no vendés un producto, ponelo en 0 y no aparecerá publicado.</p>
+          <p>Poné precio solo a lo que vendés. Lo que queda en 0 no aparece en tu web.</p>
         </div>
       </div>
 
-      <div class="prices-toolbar">
-        <div class="prices-toolbar-row">
-          <button id="saveAllBtn" class="prices-btn primary">💾 Guardar cambios</button>
-          <div id="pricePendingStatus" class="prices-status" data-mode="idle">Sin cambios pendientes</div>
-          <div id="pricesSummary" class="prices-summary"></div>
-        </div>
-
-        <div id="rubroButtons" class="prices-toolbar-row"></div>
-
-        <div class="prices-toolbar-row">
-          <input id="searchInput" class="prices-search" placeholder="Buscar producto o rubro..." />
+      <div class="prices-toolbar prices-toolbar-lite">
+        <div class="prices-toolbar-row prices-search-row">
+          <input id="searchInput" class="prices-search" placeholder="Buscar producto..." />
           <select id="rubroFilter" class="prices-select"></select>
         </div>
 
-        <div class="prices-toolbar-row">
-          <button id="sortNombre" class="prices-btn secondary">🔤 Nombre</button>
-          <button id="sortPrecio" class="prices-btn secondary">💲 Precio</button>
-          <button id="adjustRubroBtn" class="prices-btn secondary">📊 Ajustar rubro actual</button>
-          <button data-adjust-rubro="5" class="prices-btn secondary">+5%</button>
-          <button data-adjust-rubro="10" class="prices-btn secondary">+10%</button>
-          <button data-adjust-rubro="-5" class="prices-btn secondary">-5%</button>
+        <div id="rubroButtons" class="prices-rubro-scroll" aria-label="Rubros"></div>
+
+        <div class="prices-toolbar-row prices-statusbar">
+          <div id="pricePendingStatus" class="prices-status" data-mode="idle">Sin cambios</div>
+          <div id="pricesSummary" class="prices-summary"></div>
+          <button id="saveAllBtn" class="prices-btn primary">Guardar</button>
         </div>
+
+        <details class="prices-advanced">
+          <summary>Ajustar rubro seleccionado</summary>
+          <div class="prices-toolbar-row prices-quick-adjust">
+            <button id="sortNombre" class="prices-btn secondary prices-hidden-control" type="button" tabindex="-1" aria-hidden="true">🔤 Nombre</button>
+            <button id="sortPrecio" class="prices-btn secondary prices-hidden-control" type="button" tabindex="-1" aria-hidden="true">💲 Precio</button>
+            <button id="adjustRubroBtn" class="prices-btn secondary prices-hidden-control" type="button" tabindex="-1" aria-hidden="true">📊 Rubro seleccionado</button>
+            <button data-adjust-rubro="5" class="prices-btn secondary">+5%</button>
+            <button data-adjust-rubro="10" class="prices-btn secondary">+10%</button>
+            <button data-adjust-rubro="-5" class="prices-btn secondary">-5%</button>
+          </div>
+        </details>
       </div>
 
       <div id="list" class="prices-list"></div>

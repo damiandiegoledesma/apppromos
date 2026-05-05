@@ -1,4 +1,4 @@
-import {
+﻿import {
   openBusiness,
   setActiveBusinessId,
   getResolvedBusinessId
@@ -158,6 +158,7 @@ function restartBusinessControlListener(businessId) {
       appMode: currentSession?.appMode || "client"
     });
     publishAccessStatus();
+    updateMobileCompactHeader();
     const next = JSON.stringify(control || {});
     if (previous !== next && currentPayload) {
       markLazyPanelsDirty();
@@ -1225,6 +1226,85 @@ async function renderCarnizaCommercialLayer(container) {
 }
 
 
+
+/* V12.13-C6 - Header mobile compacto: Inicio vende, Mi cuenta administra */
+function compactHeaderNormalizeKey(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function compactHeaderClamp(value = "", max = 30) {
+  const clean = String(value || "").replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  return clean.length > max ? clean.slice(0, Math.max(0, max - 1)).trim() + "…" : clean;
+}
+
+function getCompactHeaderBusinessName() {
+  const meta = currentPayload?.meta || {};
+  const raw =
+    meta?.publicDisplayName ||
+    meta?.publicName ||
+    meta?.name ||
+    meta?.nombre ||
+    currentBusinessControl?.name ||
+    currentPayload?.businessId ||
+    "Mi carnicería";
+
+  const clean = String(raw || "")
+    .replace(/\s+/g, " ")
+    .replace(/^(carnicer[ií]a\s*){2,}/i, "Carnicería ")
+    .trim();
+
+  return compactHeaderClamp(clean || "Mi carnicería", 28);
+}
+
+function getCompactHeaderStatusLabel() {
+  const access = getAccessState(currentBusinessControl || {});
+  const accessLabel = String(access?.label || access?.title || "").trim();
+  const plan =
+    currentBusinessControl?.plan ||
+    currentBusinessControl?.billing?.plan ||
+    currentPayload?.state?.plan ||
+    currentPayload?.meta?.plan ||
+    "";
+
+  const planKey = compactHeaderNormalizeKey(plan);
+  const accessKey = compactHeaderNormalizeKey(accessLabel);
+
+  if (currentSession?.isDemo || planKey === "demo") return "Prueba activa";
+  if (["trial", "free", "gratis", "gratuito", "prueba", "prueba_gratis"].includes(planKey)) return "Prueba activa";
+
+  if (accessKey && /(prueba|pendiente|vencid|suspend|pausad|bloquead|regulariz)/.test(accessKey)) {
+    return compactHeaderClamp(accessLabel, 20);
+  }
+
+  const planLabel = typeof formatAccountPlanLabel === "function"
+    ? formatAccountPlanLabel(plan)
+    : String(plan || "").toUpperCase();
+
+  if (planLabel && planLabel !== "Sin plan asignado") return compactHeaderClamp(planLabel, 20);
+  if (accessLabel) return compactHeaderClamp(accessLabel, 20);
+  return "Activa";
+}
+
+function updateMobileCompactHeader() {
+  const copy = document.querySelector(".brand-copy");
+  if (!copy) return;
+
+  const title = getCompactHeaderBusinessName();
+  const subtitle = getCompactHeaderStatusLabel();
+
+  copy.dataset.mobileTitle = title;
+  copy.dataset.mobileSubtitle = subtitle;
+
+  document.body?.classList.add("app-compact-brand-ready");
+}
+
 function renderSuperadminBusinessContextBanner() {
   if (!dashboardPanel || currentSession?.appMode !== "superadmin") return;
 
@@ -1356,7 +1436,7 @@ function renderAccountViewHtml() {
     <div class="app-account-card">
       <div class="app-account-kicker">Mi cuenta</div>
       <h3>Datos de tu carnicería</h3>
-      <p>Estos datos viven en Más para que Inicio quede limpio y enfocado en vender.</p>
+
       <div class="app-account-list">
         ${renderAccountRow("Carnicería", fields.name)}
         ${renderAccountRow("Responsable", fields.responsible)}
@@ -1694,6 +1774,56 @@ function injectMobileBottomNavStyles() {
         justify-content: stretch;
       }
 
+      /* V12.13-C6 - Header mobile compacto: [logo] Carnicería · estado */
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand {
+        min-height: 52px;
+        padding: 7px 10px;
+        border-radius: 16px;
+        gap: 8px;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-right {
+        display: none !important;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-left {
+        width: 100%;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .app-brand-logo-box {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 12px;
+        padding: 2px;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy h1,
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy p {
+        display: none !important;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy::before {
+        content: attr(data-mobile-title) " · " attr(data-mobile-subtitle);
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #061a35;
+        font-size: .9rem;
+        line-height: 1.15;
+        font-weight: 1000;
+        letter-spacing: -0.02em;
+      }
+
       body.app-mobile-nav-ready.app-mobile-action-focus .topbar-frame,
       body.app-mobile-nav-ready.app-mobile-action-focus .topbar {
         display: none !important;
@@ -1746,6 +1876,17 @@ function injectMobileBottomNavStyles() {
       }
 
       .app-mobile-bottom-nav button .app-mobile-nav-icon { font-size: 20px; line-height: 1; }
+      .app-mobile-bottom-nav button .app-mobile-whatsapp-icon {
+        display: grid;
+        place-items: center;
+        font-size: 0;
+      }
+      .app-mobile-bottom-nav button .app-mobile-whatsapp-icon svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+        filter: drop-shadow(0 1px 1px rgba(15, 23, 42, .16));
+      }
       .app-mobile-bottom-nav button.is-active {
         background: linear-gradient(135deg, #fff7ed, #fee2e2);
         color: #9f1239;
@@ -1957,7 +2098,7 @@ function ensureMobileBottomNavigation() {
       <button type="button" data-mobile-nav="home" data-mobile-action="home"><span class="app-mobile-nav-icon">🏠</span><span>Inicio</span></button>
       <button type="button" data-mobile-nav="prices" data-mobile-action="prices"><span class="app-mobile-nav-icon">💲</span><span>Precios</span></button>
       <button type="button" class="is-primary" data-mobile-nav="sell" data-mobile-menu="sell"><span class="app-mobile-nav-icon">🥩</span><span>Vender</span></button>
-      <button type="button" data-mobile-nav="whatsapp" data-mobile-action="whatsapp"><span class="app-mobile-nav-icon">📲</span><span>WhatsApp</span></button>
+      <button type="button" data-mobile-nav="whatsapp" data-mobile-action="whatsapp"><span class="app-mobile-nav-icon app-mobile-whatsapp-icon" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22" focusable="false" role="img"><path fill="#25D366" d="M16.03 3C8.85 3 3 8.85 3 16.03c0 2.3.6 4.55 1.75 6.53L3.1 29l6.61-1.6a13 13 0 0 0 6.32 1.63h.01C23.21 29.03 29 23.18 29 16.03S23.2 3 16.03 3Zm0 23.82a10.74 10.74 0 0 1-5.48-1.5l-.39-.23-3.92.94 1.05-3.82-.25-.4a10.77 10.77 0 1 1 8.99 5.01Zm5.9-8.06c-.32-.16-1.9-.94-2.2-1.04-.3-.1-.51-.16-.73.16-.21.32-.84 1.04-1.03 1.25-.19.21-.38.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.6-1.9-1.8-2.23-.19-.32-.02-.5.14-.66.15-.15.32-.38.48-.57.16-.19.21-.32.32-.54.1-.21.05-.4-.03-.57-.08-.16-.73-1.76-1-2.41-.26-.63-.53-.54-.73-.55h-.62c-.21 0-.57.08-.86.4-.3.32-1.13 1.1-1.13 2.68s1.16 3.12 1.32 3.33c.16.21 2.28 3.49 5.52 4.89.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg></span><span>WhatsApp</span></button>
       <button type="button" data-mobile-nav="more" data-mobile-menu="more"><span class="app-mobile-nav-icon">☰</span><span>Más</span></button>
     `;
     document.body.appendChild(nav);
@@ -2287,6 +2428,7 @@ async function renderBusinessWorkspace(options = {}) {
     appMode: currentSession?.appMode || "client"
   });
   publishAccessStatus();
+  updateMobileCompactHeader();
 
   if (!payload.meta || !payload.state) {
     dashboardPanel.innerHTML = `
