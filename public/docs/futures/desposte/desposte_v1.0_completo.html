@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desposte V1.0 - AppPromos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: #f5f5f5;
+            color: #1a1a1a;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header h1 { font-size: 24px; font-weight: 600; margin: 0; color: #1f4e78; }
+        .tabs { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+        .tab-btn { 
+            padding: 12px 20px; 
+            border: none;
+            background: none;
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #1f4e78; }
+        .tab-btn.active { color: #1f4e78; border-bottom-color: #1f4e78; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section { 
+            background: white; 
+            border: 1px solid #e0e0e0;
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .section h3 { 
+            font-size: 16px; 
+            font-weight: 600; 
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+        .form-group { margin-bottom: 15px; }
+        label { 
+            display: block; 
+            font-size: 12px; 
+            color: #666; 
+            margin-bottom: 6px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        input[type="text"], select { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 14px;
+            background: white;
+            color: #1a1a1a;
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #1f4e78;
+            box-shadow: 0 0 0 3px rgba(31, 78, 120, 0.1);
+        }
+        .grid-2 { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+        }
+        .calc-box { 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+            margin: 15px 0;
+        }
+        .calc-item { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+            margin-bottom: 10px;
+        }
+        .calc-item:last-child { margin-bottom: 0; }
+        .calc-label { color: #666; }
+        .calc-value { 
+            font-weight: 600; 
+            color: #1f4e78; 
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* MONITOR */
+        .monitor-peso { 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+            margin: 15px 0;
+        }
+        .monitor-titulo { 
+            font-size: 14px; 
+            font-weight: 600; 
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+        .monitor-stats { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-bottom: 15px;
+        }
+        .monitor-stat { 
+            text-align: center; 
+            padding: 12px; 
+            background: white;
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+        }
+        .monitor-stat-label { 
+            font-size: 11px; 
+            color: #666; 
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .monitor-stat-valor { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #1f4e78;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .progress-bar { 
+            height: 24px; 
+            background: #e0e0e0;
+            border-radius: 8px; 
+            border: 1px solid #ddd;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: #4caf50;
+            transition: width 0.3s ease, background 0.3s ease;
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-end; 
+            padding-right: 10px;
+        }
+        .progress-fill.warning { background: #ff9800; }
+        .progress-fill.danger { background: #f44336; }
+        .progress-text { 
+            font-size: 11px; 
+            color: white; 
+            font-weight: 600;
+        }
+        
+        .alert { 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            border-left: 3px solid;
+            font-size: 13px; 
+            margin-top: 10px; 
+            display: none;
+        }
+        .alert.show { display: block; }
+        .alert.warning { 
+            background: #fff3cd; 
+            border-left-color: #ff9800;
+            color: #856404;
+        }
+        .alert.danger { 
+            background: #f8d7da; 
+            border-left-color: #f44336;
+            color: #721c24;
+        }
+        
+        /* RUBRO */
+        .rubro-section {
+            margin-bottom: 20px;
+        }
+        .rubro-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f4e78;
+            padding: 10px;
+            background: #f0f4f8;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #1f4e78;
+        }
+        
+        /* CORTE CARD */
+        .corte-card { 
+            background: #f9f9f9; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            border: 1px solid #e0e0e0;
+        }
+        .corte-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .corte-info {
+            flex: 1;
+        }
+        .corte-nombre { 
+            font-weight: 500; 
+            font-size: 13px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+        .corte-rend {
+            font-size: 11px;
+            color: #999;
+        }
+        .corte-kg-display { 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #1f4e78;
+            font-family: 'Courier New', monospace;
+            text-align: right;
+        }
+        .corte-inputs { 
+            display: grid; 
+            grid-template-columns: 1.5fr 1fr; 
+            gap: 8px; 
+            margin-bottom: 10px;
+        }
+        .corte-input { 
+            padding: 8px 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            background: white;
+            color: #1a1a1a;
+            font-family: 'Courier New', monospace;
+        }
+        .corte-ingreso { 
+            font-size: 12px; 
+            color: #1f4e78; 
+            font-weight: 600;
+            text-align: right; 
+            padding-top: 8px; 
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .resumen-box { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px;
+        }
+        .resumen-card { 
+            background: #f9f9f9; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+        }
+        .resumen-label { 
+            font-size: 11px; 
+            color: #666; 
+            margin-bottom: 6px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .resumen-valor { 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: #1f4e78;
+            font-family: 'Courier New', monospace;
+        }
+        .resumen-card.success .resumen-valor { color: #4caf50; }
+        
+        .btn-group { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            margin: 15px 0;
+        }
+        button { 
+            padding: 10px 16px; 
+            border: 1px solid #ddd; 
+            background: white;
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 500; 
+            transition: all 0.2s;
+            flex: 1;
+            min-height: 36px;
+        }
+        button:hover { 
+            background: #f5f5f5; 
+            border-color: #999;
+        }
+        button.primary { 
+            background: #1f4e78; 
+            color: white; 
+            border-color: #1f4e78;
+        }
+        button.primary:hover { 
+            background: #163a54;
+        }
+        
+        .toast { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #1f4e78; 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            opacity: 0; 
+            transition: opacity 0.3s; 
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .toast.show { opacity: 1; }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px;
+        }
+        .stats-card { 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .stats-label { 
+            font-size: 11px; 
+            color: #666; 
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .stats-value { 
+            font-size: 20px; 
+            font-weight: 600; 
+            color: #1f4e78;
+            font-family: 'Courier New', monospace;
+        }
+
+        .cortes-scroll {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🥩 Desposte V1.0</h1>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="cambiarTab('nuevo')">Nuevo</button>
+            <button class="tab-btn" onclick="cambiarTab('historico')">Histórico</button>
+            <button class="tab-btn" onclick="cambiarTab('stats')">Stats</button>
+        </div>
+        
+        <div id="tab-nuevo" class="tab-content active">
+            <div class="section">
+                <h3>Datos de la Media Res</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Peso (kg)</label>
+                        <input type="text" id="peso" value="100" oninput="recalcularTodo()">
+                    </div>
+                    <div class="form-group">
+                        <label>$/kg</label>
+                        <input type="text" id="costokilo" value="18000" oninput="recalcularTodo()">
+                    </div>
+                </div>
+                
+                <div class="calc-box">
+                    <div class="calc-item">
+                        <span class="calc-label">Peso neto:</span>
+                        <span class="calc-value" id="pesoNeto">100 kg</span>
+                    </div>
+                    <div class="calc-item">
+                        <span class="calc-label">Costo total:</span>
+                        <span class="calc-value" id="costoTotal">$1.800.000</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="monitor-peso">
+                    <div class="monitor-titulo">📊 Monitor de Peso</div>
+                    <div class="monitor-stats">
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Ingresado</div>
+                            <div class="monitor-stat-valor" id="kgIngresados">0.0 kg</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Disponible</div>
+                            <div class="monitor-stat-valor" id="kgDisponible">100.0 kg</div>
+                        </div>
+                        <div class="monitor-stat">
+                            <div class="monitor-stat-label">Cobertura</div>
+                            <div class="monitor-stat-valor" id="porcentajeCob">0%</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%;">
+                            <span class="progress-text" id="progressText"></span>
+                        </div>
+                    </div>
+                    <div class="alert warning" id="alertaWarning">⚠️ Llegas al 80% del peso neto</div>
+                    <div class="alert danger" id="alertaDanger">🚨 EXCEDISTE el peso neto</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Desposte</h3>
+                <div class="btn-group">
+                    <button onclick="limpiarTodos()">Limpiar</button>
+                    <button onclick="distribuirParejo()">Repartir parejo</button>
+                </div>
+                <div class="cortes-scroll" id="cortesContainer"></div>
+            </div>
+            
+            <div class="section">
+                <h3>Resumen Financiero</h3>
+                <div class="resumen-box">
+                    <div class="resumen-card">
+                        <div class="resumen-label">Ingreso Total</div>
+                        <div class="resumen-valor" id="ingresoTotal">$0</div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-label">Costo</div>
+                        <div class="resumen-valor" id="costoResumen">$0</div>
+                    </div>
+                    <div class="resumen-card success">
+                        <div class="resumen-label">Ganancia</div>
+                        <div class="resumen-valor" id="gananciaResumen">$0</div>
+                    </div>
+                    <div class="resumen-card">
+                        <div class="resumen-label">Margen</div>
+                        <div class="resumen-valor" id="margenResumen">0%</div>
+                    </div>
+                </div>
+                <div class="btn-group" style="margin-top: 15px;">
+                    <button class="primary" onclick="guardarDesposte()">Guardar</button>
+                    <button onclick="limpiarForm()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-historico" class="tab-content">
+            <div class="section">
+                <h3>Histórico</h3>
+                <div id="historicoContainer"></div>
+            </div>
+        </div>
+        
+        <div id="tab-stats" class="tab-content">
+            <div class="section">
+                <h3>Estadísticas</h3>
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <div class="stats-label">Despostes</div>
+                        <div class="stats-value" id="totalDespostes">0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">Ganancia Total</div>
+                        <div class="stats-value" id="gananciaTotalStats">$0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">Ganancia Prom</div>
+                        <div class="stats-value" id="gananciaPromStats">$0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">Margen Prom</div>
+                        <div class="stats-value" id="margenPromStats">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        let cortes = [
+            // 1. Gran Costillar
+            { rubro: 'Gran Costillar', nombre: 'Asado (Tira)', rendimiento: 10.0, precio: 18000, kg: 0, ingreso: 0 },
+            { rubro: 'Gran Costillar', nombre: 'Vacío', rendimiento: 6.0, precio: 18000, kg: 0, ingreso: 0 },
+            { rubro: 'Gran Costillar', nombre: 'Matambre', rendimiento: 1.5, precio: 18000, kg: 0, ingreso: 0 },
+            // 2. Mocho
+            { rubro: 'Mocho', nombre: 'Nalga', rendimiento: 6.5, precio: 18500, kg: 0, ingreso: 0 },
+            { rubro: 'Mocho', nombre: 'Cuadril (c/ Colita)', rendimiento: 5.0, precio: 18500, kg: 0, ingreso: 0 },
+            { rubro: 'Mocho', nombre: 'Bola de Lomo', rendimiento: 5.0, precio: 18500, kg: 0, ingreso: 0 },
+            { rubro: 'Mocho', nombre: 'Cuadrada', rendimiento: 4.5, precio: 18500, kg: 0, ingreso: 0 },
+            { rubro: 'Mocho', nombre: 'Tortuguita', rendimiento: 2.0, precio: 18500, kg: 0, ingreso: 0 },
+            { rubro: 'Mocho', nombre: 'Peceto', rendimiento: 1.5, precio: 18500, kg: 0, ingreso: 0 },
+            // 3. Pulpas Delanteras
+            { rubro: 'Pulpas Delanteras', nombre: 'Roast Beef (Aguja)', rendimiento: 5.0, precio: 17000, kg: 0, ingreso: 0 },
+            { rubro: 'Pulpas Delanteras', nombre: 'Paleta (Corazón)', rendimiento: 3.5, precio: 17000, kg: 0, ingreso: 0 },
+            { rubro: 'Pulpas Delanteras', nombre: 'Azotillo', rendimiento: 3.0, precio: 17000, kg: 0, ingreso: 0 },
+            { rubro: 'Pulpas Delanteras', nombre: 'Cogote', rendimiento: 2.5, precio: 17000, kg: 0, ingreso: 0 },
+            { rubro: 'Pulpas Delanteras', nombre: 'Marucha (Bife Amer.)', rendimiento: 2.0, precio: 17000, kg: 0, ingreso: 0 },
+            { rubro: 'Pulpas Delanteras', nombre: 'Palomita', rendimiento: 1.5, precio: 17000, kg: 0, ingreso: 0 },
+            // 4. Costeletero
+            { rubro: 'Costeletero', nombre: 'Bife Angosto c/h', rendimiento: 5.5, precio: 18250, kg: 0, ingreso: 0 },
+            { rubro: 'Costeletero', nombre: 'Bife Ancho c/h', rendimiento: 3.5, precio: 18250, kg: 0, ingreso: 0 },
+            { rubro: 'Costeletero', nombre: 'Lomo', rendimiento: 2.0, precio: 18250, kg: 0, ingreso: 0 },
+            // 5. Osobucos
+            { rubro: 'Osobucos', nombre: 'Osobuco Delantero', rendimiento: 3.0, precio: 12500, kg: 0, ingreso: 0 },
+            { rubro: 'Osobucos', nombre: 'Osobuco Trasero', rendimiento: 2.0, precio: 12500, kg: 0, ingreso: 0 },
+            // 6. Pucheros
+            { rubro: 'Pucheros', nombre: 'Espinazo', rendimiento: 4.0, precio: 9000, kg: 0, ingreso: 0 },
+            { rubro: 'Pucheros', nombre: 'Pecho (c/ hueso)', rendimiento: 3.0, precio: 9000, kg: 0, ingreso: 0 },
+            { rubro: 'Pucheros', nombre: 'Falda', rendimiento: 2.5, precio: 9000, kg: 0, ingreso: 0 },
+            // 7. Mermas
+            { rubro: 'Mermas', nombre: 'Grasa de Pella', rendimiento: 6.0, precio: 0, kg: 0, ingreso: 0 },
+            { rubro: 'Mermas', nombre: 'Hueso Blanco/Limpieza', rendimiento: 7.5, precio: 0, kg: 0, ingreso: 0 },
+            { rubro: 'Mermas', nombre: 'Oreo (Evaporación)', rendimiento: 1.5, precio: 0, kg: 0, ingreso: 0 }
+        ];
+        
+        let historial = [];
+        
+        function recalcularTodo() {
+            const peso = parseFloat(document.getElementById('peso').value) || 100;
+            const costokilo = parseFloat(document.getElementById('costokilo').value) || 18000;
+            const costoTotal = peso * costokilo;
+            
+            document.getElementById('pesoNeto').textContent = peso + ' kg';
+            document.getElementById('costoTotal').textContent = '$' + Math.round(costoTotal).toLocaleString();
+            document.getElementById('costoResumen').textContent = '$' + Math.round(costoTotal).toLocaleString();
+            
+            renderCortes();
+            calcularIngresos(costoTotal);
+        }
+        
+        function renderCortes() {
+            const pesoNeto = parseFloat(document.getElementById('pesoNeto').textContent) || 100;
+            let html = '';
+            let rubroActual = '';
+            
+            cortes.forEach((c, i) => {
+                if (c.rubro !== rubroActual) {
+                    if (rubroActual !== '') html += '</div>';
+                    rubroActual = c.rubro;
+                    html += `<div class="rubro-section"><div class="rubro-title">${c.rubro}</div><div>`;
+                }
+                
+                html += `
+                    <div class="corte-card">
+                        <div class="corte-header">
+                            <div class="corte-info">
+                                <div class="corte-nombre">${c.nombre}</div>
+                                <div class="corte-rend">${c.rendimiento}% (${(pesoNeto * c.rendimiento / 100).toFixed(1)} kg esperado)</div>
+                            </div>
+                            <div class="corte-kg-display">${c.kg.toFixed(1)} kg</div>
+                        </div>
+                        <div class="corte-inputs">
+                            <input type="text" class="corte-input" value="${c.kg}" onchange="actualizarCorte(${i}, 'kg', this.value)" style="font-size: 14px; padding: 10px;">
+                            <input type="text" class="corte-input" value="${c.precio}" onchange="actualizarCorte(${i}, 'precio', this.value)">
+                        </div>
+                        <div class="corte-ingreso">$${Math.round(c.ingreso).toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            if (rubroActual !== '') html += '</div></div>';
+            
+            document.getElementById('cortesContainer').innerHTML = html;
+        }
+        
+        function actualizarCorte(idx, prop, val) {
+            const pesoNeto = parseFloat(document.getElementById('pesoNeto').textContent) || 100;
+            const valor = parseFloat(val) || 0;
+            if (prop === 'kg') cortes[idx].kg = Math.min(valor, pesoNeto);
+            else cortes[idx].precio = valor;
+            const costoTotal = (parseFloat(document.getElementById('peso').value) || 100) * (parseFloat(document.getElementById('costokilo').value) || 18000);
+            actualizarMonitorPeso();
+            calcularIngresos(costoTotal);
+        }
+        
+        function limpiarTodos() {
+            cortes.forEach(c => c.kg = 0);
+            const costoTotal = (parseFloat(document.getElementById('peso').value) || 100) * (parseFloat(document.getElementById('costokilo').value) || 18000);
+            actualizarMonitorPeso();
+            calcularIngresos(costoTotal);
+            renderCortes();
+        }
+        
+        function distribuirParejo() {
+            const pesoNeto = parseFloat(document.getElementById('pesoNeto').textContent) || 100;
+            cortes.forEach(c => c.kg = Math.round((pesoNeto * c.rendimiento / 100) * 10) / 10);
+            const costoTotal = (parseFloat(document.getElementById('peso').value) || 100) * (parseFloat(document.getElementById('costokilo').value) || 18000);
+            actualizarMonitorPeso();
+            calcularIngresos(costoTotal);
+            renderCortes();
+        }
+        
+        function actualizarMonitorPeso() {
+            const pesoNeto = parseFloat(document.getElementById('pesoNeto').textContent) || 100;
+            const kgIngresados = cortes.reduce((sum, c) => sum + c.kg, 0);
+            const kgDisponible = pesoNeto - kgIngresados;
+            const porcentaje = (kgIngresados / pesoNeto) * 100;
+            
+            document.getElementById('kgIngresados').textContent = kgIngresados.toFixed(1) + ' kg';
+            document.getElementById('kgDisponible').textContent = kgDisponible.toFixed(1) + ' kg';
+            document.getElementById('porcentajeCob').textContent = Math.round(porcentaje) + '%';
+            
+            let clase = 'success', texto = Math.round(porcentaje) + '%';
+            if (porcentaje >= 100) { clase = 'danger'; texto = '❌'; }
+            else if (porcentaje >= 80) { clase = 'warning'; texto = '⚠️'; }
+            
+            const fill = document.getElementById('progressFill');
+            fill.className = 'progress-fill ' + clase;
+            fill.style.width = Math.min(porcentaje, 100) + '%';
+            document.getElementById('progressText').textContent = texto;
+            
+            document.getElementById('alertaWarning').classList.toggle('show', porcentaje >= 80 && porcentaje < 100);
+            document.getElementById('alertaDanger').classList.toggle('show', porcentaje > 100);
+        }
+        
+        function calcularIngresos(costoTotal) {
+            let ingresoTotal = 0;
+            cortes.forEach(c => { c.ingreso = c.kg * c.precio; ingresoTotal += c.ingreso; });
+            const ganancia = ingresoTotal - costoTotal;
+            const margen = ingresoTotal > 0 ? ((ganancia / ingresoTotal) * 100).toFixed(1) : 0;
+            
+            document.getElementById('ingresoTotal').textContent = '$' + Math.round(ingresoTotal).toLocaleString();
+            document.getElementById('gananciaResumen').textContent = '$' + Math.round(ganancia).toLocaleString();
+            document.getElementById('margenResumen').textContent = margen + '%';
+            renderCortes();
+        }
+        
+        function guardarDesposte() {
+            const pesoNeto = parseFloat(document.getElementById('pesoNeto').textContent) || 100;
+            const kgIngresados = cortes.reduce((sum, c) => sum + c.kg, 0);
+            if (kgIngresados > pesoNeto) { mostrarToast('❌ Excediste el peso neto'); return; }
+            if (kgIngresados === 0) { mostrarToast('❌ Ingresa al menos 1 corte'); return; }
+            
+            const peso = parseFloat(document.getElementById('peso').value) || 100;
+            const costokilo = parseFloat(document.getElementById('costokilo').value) || 18000;
+            const costoTotal = peso * costokilo;
+            let ingresoTotal = 0;
+            cortes.forEach(c => ingresoTotal += c.kg * c.precio);
+            const ganancia = ingresoTotal - costoTotal;
+            
+            historial.unshift({
+                fecha: new Date().toLocaleDateString('es-AR'),
+                peso,
+                ganancia: Math.round(ganancia),
+                margen: ((ganancia / ingresoTotal) * 100).toFixed(1)
+            });
+            
+            mostrarToast('✅ Guardado | Ganancia: $' + Math.round(ganancia).toLocaleString());
+            limpiarForm();
+            actualizarHistorico();
+            actualizarStats();
+        }
+        
+        function limpiarForm() {
+            document.getElementById('peso').value = 100;
+            document.getElementById('costokilo').value = 18000;
+            recalcularTodo();
+        }
+        
+        function actualizarHistorico() {
+            const html = historial.length === 0 ? '<p style="text-align:center;color:#666;padding:20px;">Sin despostes guardados</p>' :
+                historial.map(h => `<div style="padding:12px;background:#f9f9f9;border-radius:8px;margin-bottom:8px;border:1px solid #e0e0e0;"><div style="display:flex;justify-content:space-between;"><div><strong>${h.fecha}</strong> ${h.peso}kg</div><div style="color:#1f4e78;font-weight:600;">$${h.ganancia.toLocaleString()}</div></div><div style="font-size:12px;color:#666;margin-top:4px;">Margen: ${h.margen}%</div></div>`).join('');
+            document.getElementById('historicoContainer').innerHTML = html;
+        }
+        
+        function actualizarStats() {
+            if (historial.length === 0) { 
+                document.querySelectorAll('.stats-value').forEach(el => el.textContent = '0'); 
+                return; 
+            }
+            const totalGanancia = historial.reduce((s, h) => s + h.ganancia, 0);
+            const margenProm = (historial.reduce((s, h) => s + parseFloat(h.margen), 0) / historial.length).toFixed(1);
+            document.getElementById('totalDespostes').textContent = historial.length;
+            document.getElementById('gananciaTotalStats').textContent = '$' + totalGanancia.toLocaleString();
+            document.getElementById('gananciaPromStats').textContent = '$' + Math.round(totalGanancia / historial.length).toLocaleString();
+            document.getElementById('margenPromStats').textContent = margenProm + '%';
+        }
+        
+        function cambiarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.target.classList.add('active');
+            if (tab === 'historico') actualizarHistorico();
+            if (tab === 'stats') actualizarStats();
+        }
+        
+        function mostrarToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+        
+        recalcularTodo();
+    </script>
+</body>
+</html>
