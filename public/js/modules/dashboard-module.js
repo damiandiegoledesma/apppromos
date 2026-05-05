@@ -29,7 +29,7 @@ function renderBusinessView(meta, state, updatedAt) {
   const address = fields.direccion || "Sin dirección";
   const phone = fields.telefono || "Sin teléfono";
   const city = fields.ciudad || "Sin ciudad";
-  const currentSlug = state?.web?.slug || "Sin link activo";
+  const currentWebStatus = state?.web?.slug ? "Vidriera activa" : "Todavía sin vidriera activa";
 
   return `
     <div class="dash-business-head">
@@ -41,7 +41,7 @@ function renderBusinessView(meta, state, updatedAt) {
       <div class="dash-list-item"><span class="dash-muted">Dirección</span><strong>${escapeHtml(address)}</strong></div>
       <div class="dash-list-item"><span class="dash-muted">Teléfono</span><strong>${escapeHtml(phone)}</strong></div>
       <div class="dash-list-item"><span class="dash-muted">Ciudad</span><strong>${escapeHtml(city)}</strong></div>
-      <div class="dash-list-item"><span class="dash-muted">Link público</span><strong>${escapeHtml(currentSlug)}</strong></div>
+      <div class="dash-list-item"><span class="dash-muted">Mi web</span><strong>${escapeHtml(currentWebStatus)}</strong></div>
       <div class="dash-list-item"><span class="dash-muted">Última actualización</span><strong>${escapeHtml(updatedAt)}</strong></div>
     </div>
   `;
@@ -83,9 +83,9 @@ function renderBusinessEditForm(businessId, meta = {}, state = {}) {
         <input name="ciudad" required value="${escapeHtml(fields.ciudad)}" placeholder="Viedma" />
       </label>
       <div class="dash-link-preview">
-        <span>Link público generado</span>
+        <span>Enlace de tu vidriera</span>
         <strong data-slug-preview>${escapeHtml(preview.url)}</strong>
-        <small>Si cambia nombre o teléfono, este link cambia y el anterior deja de funcionar.</small>
+        <small>Si cambiás nombre o WhatsApp, cambia el enlace de tu vidriera y el anterior deja de funcionar.</small>
       </div>
       <div class="dash-form-error" data-business-error></div>
       <div class="dash-form-actions">
@@ -279,7 +279,7 @@ function bindBusinessForm(card, businessId, meta, state, options) {
 
     if (slugWillChange) {
       const ok = window.confirm(
-        "⚠️ Cambiar el nombre o teléfono cambiará el link público de tu Web Premium.\n\n" +
+        "⚠️ Cambiar el nombre o WhatsApp cambiará el enlace de tu vidriera.\n\n" +
         "El link anterior dejará de funcionar.\n\n" +
         "¿Querés continuar?"
       );

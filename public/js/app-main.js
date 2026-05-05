@@ -1291,7 +1291,7 @@ function getBusinessAccountFields() {
   const city = meta?.ciudad || meta?.city || meta?.localidad || meta?.locality || "";
   const province = meta?.provincia || meta?.province || "";
   const slug = web?.slug || state?.webSlug || meta?.webSlug || "";
-  const publicUrl = web?.publicUrl || web?.url || (slug ? `web.html?slug=${slug}` : "");
+  const publicUrl = web?.publicUrl || web?.url || (slug ? `${window.location.origin}/${slug}` : "");
 
   return {
     name: meta?.name || meta?.nombre || "Sin nombre cargado",
@@ -1316,11 +1316,41 @@ function renderAccountRow(label, value, fallback = "Sin cargar") {
   return `<div class="app-account-row"><span>${escapeCarnizaHtml(label)}</span><strong>${safeValue}</strong></div>`;
 }
 
+function formatAccountPlanLabel(plan = "") {
+  const raw = String(plan || "").trim();
+  if (!raw) return "Sin plan asignado";
+  const key = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const labels = {
+    trial: "Prueba gratis",
+    free: "Prueba gratis",
+    gratis: "Prueba gratis",
+    gratuito: "Prueba gratis",
+    prueba: "Prueba gratis",
+    prueba_gratis: "Prueba gratis",
+    basic: "ARRANQUE",
+    arranque: "ARRANQUE",
+    impulso: "ARRANQUE",
+    salvador: "SALVADOR",
+    pro: "SALVADOR",
+    dueno: "DUEÑO",
+    duenio: "DUEÑO",
+    owner: "DUEÑO",
+    premium: "DUEÑO"
+  };
+
+  return labels[key] || raw.toUpperCase();
+}
 function renderAccountViewHtml() {
   const fields = getBusinessAccountFields();
-  const webLink = fields.publicUrl
-    ? `<a href="${escapeCarnizaHtml(fields.publicUrl)}" target="_blank" rel="noopener">${escapeCarnizaHtml(fields.publicUrl)}</a>`
-    : `<span style="color:#94a3b8;">Todavía sin link visible</span>`;
+  const webStatus = fields.publicUrl
+    ? `<span class="app-account-web-status active">Vidriera activa</span>`
+    : `<span class="app-account-web-status pending">Todavía sin vidriera activa</span>`;
 
   return `
     <div class="app-account-card">
@@ -1334,13 +1364,13 @@ function renderAccountViewHtml() {
         ${renderAccountRow("WhatsApp", fields.phone)}
         ${renderAccountRow("Dirección", fields.address)}
         ${renderAccountRow("Localidad", fields.location)}
-        ${renderAccountRow("Plan", fields.plan)}
+        ${renderAccountRow("Plan", formatAccountPlanLabel(fields.plan))}
         ${renderAccountRow("Estado", fields.accessLabel || fields.paymentStatus)}
-        <div class="app-account-row"><span>Mi web</span><strong>${webLink}</strong></div>
+        <div class="app-account-row app-account-web-row"><span>Mi web</span><strong>${webStatus}</strong></div>
       </div>
       <div class="app-account-actions">
         <button type="button" class="primary" data-account-edit>Editar datos</button>
-        ${fields.publicUrl ? '<button type="button" data-account-web>Ver mi web</button>' : ''}
+        ${fields.publicUrl ? '<button type="button" data-account-web>Ver mi web</button><button type="button" data-account-copy-web>Copiar enlace</button>' : ''}
       </div>
       <small class="app-account-footnote">Para vender rápido, usá la botonera inferior. Para datos y cuenta, entrá por Más.</small>
     </div>
@@ -1398,6 +1428,10 @@ function openAccountSheet(mode = "view") {
       .app-account-form input { width:100%; min-height:46px; border:1px solid #cbd5e1; border-radius:14px; padding:0 12px; font-size:15px; font-weight:800; box-sizing:border-box; }
       .app-account-form input:focus { outline:3px solid rgba(185,28,28,.12); border-color:#b91c1c; }
       .app-account-error { min-height:18px; color:#b42318; font-size:13px; font-weight:900; }
+      .app-account-web-status { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:950; }
+      .app-account-web-status.active { color:#166534; background:#dcfce7; border:1px solid #86efac; }
+      .app-account-web-status.pending { color:#92400e; background:#fef3c7; border:1px solid #fcd34d; }
+      .app-account-web-row strong { word-break:normal; }
       @media (max-width:640px) { .app-account-sheet { padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px)); } .app-account-panel { border-radius:22px; max-height:calc(86vh - env(safe-area-inset-bottom,0px)); } .app-account-actions { grid-template-columns:1fr; } .app-account-row { flex-direction:column; gap:4px; } .app-account-row strong { text-align:left; } }
     </style>
     <div class="app-account-panel" role="dialog" aria-modal="true" aria-label="Mi cuenta AppPromos">

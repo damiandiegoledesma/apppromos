@@ -25,7 +25,7 @@ function uniqueRubros(products = []) {
 
 export async function renderWebPremium(container, businessId) {
   if (!container) return;
-  container.innerHTML = `<div style="padding:18px;color:#6b7280;">Cargando Mi Web...</div>`;
+  container.innerHTML = `<div style="padding:18px;color:#6b7280;">Cargando tu vidriera...</div>`;
 
   try {
     const data = await loadActiveBusinessData(businessId);
@@ -54,10 +54,10 @@ export async function renderWebPremium(container, businessId) {
       container.innerHTML = `
         <style>.wp-card{border:1px solid #eadbd4;border-radius:20px;background:#fff;padding:22px}.wp-btn{min-height:44px;border:none;border-radius:12px;padding:0 16px;font-weight:900;cursor:pointer}.wp-muted{color:#6b7280}</style>
         <div class="wp-card" style="background:linear-gradient(180deg,#fff,#fff7f4);">
-          <h2 style="margin:0 0 8px;color:#8b1f1f;">🌐 Mi Web Premium</h2>
+          <h2 style="margin:0 0 8px;color:#8b1f1f;">🌐 Mi Web / Vidriera online</h2>
           <p class="wp-muted" style="margin:0 0 16px;">Este módulo todavía no está habilitado para esta carnicería.</p>
           <div style="padding:16px;border:1px dashed #d8b4a8;border-radius:16px;background:#fff;">
-            🔒 Disponible como upgrade. El administrador debe activar <strong>Web Premium</strong> para esta cuenta.
+            🔒 Disponible como upgrade. El administrador debe activar <strong>Mi Web</strong> para esta cuenta.
           </div>
         </div>`;
       return;
@@ -66,11 +66,17 @@ export async function renderWebPremium(container, businessId) {
     container.innerHTML = `
       <style>
         .wp-shell{display:flex;flex-direction:column;gap:16px}.wp-card{border:1px solid #ece7df;border-radius:20px;background:#fff;padding:18px;box-shadow:0 4px 14px rgba(17,24,39,.04)}.wp-head{background:linear-gradient(180deg,#fff,#fff7f4)}.wp-head h2{margin:0 0 6px;color:#8b1f1f;font-size:28px}.wp-muted{color:#6b7280}.wp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.wp-field label{display:block;font-weight:900;margin-bottom:8px}.wp-input{width:100%;min-height:48px;border:1px solid #d7d7d7;border-radius:14px;padding:0 12px;font-size:16px;box-sizing:border-box}.wp-input[readonly]{background:#f9fafb;color:#374151}.wp-btn{min-height:46px;border:none;border-radius:14px;padding:0 16px;font-weight:950;cursor:pointer}.wp-primary{background:#b63b2b;color:#fff}.wp-secondary{background:#fff;border:1px solid #d1d5db;color:#111827}.wp-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wp-check{border:1px solid #eee;border-radius:14px;padding:10px;background:#fffaf7}.wp-offer{display:flex;justify-content:space-between;gap:10px;align-items:center}.wp-price{font-weight:950;color:#b63b2b}.wp-actions{display:flex;gap:10px;flex-wrap:wrap}.wp-url{background:#f8f5f0;border:1px solid #e7e1d8;border-radius:14px;padding:12px;word-break:break-all;font-weight:800}.wp-warning{margin-top:10px;padding:10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-weight:800}@media(max-width:760px){.wp-grid,.wp-checks{grid-template-columns:1fr}.wp-head h2{font-size:24px}.wp-actions{flex-direction:column}.wp-btn{width:100%}}
+      .wp-vidriera-ready{margin-top:12px;padding:14px 16px;border:1px solid #bbf7d0;border-radius:16px;background:#f0fdf4;color:#14532d;display:grid;gap:4px;}
+      .wp-vidriera-ready span{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#166534;}
+      .wp-vidriera-ready strong{font-size:1.05rem;font-weight:950;color:#14532d;}
+      .wp-vidriera-ready small{font-size:13px;color:#3f6212;line-height:1.35;}
+      .wp-technical-link-field{display:none!important;}
+      .wp-url{display:none!important;}
       </style>
       <div class="wp-shell">
         <div class="wp-card wp-head">
-          <h2>🌐 Mi Web Premium</h2>
-          <p class="wp-muted" style="margin:0;">Publicá una web simple con ofertas activas y, si querés, tu lista de precios por rubro.</p>
+          <h2>🌐 Mi Web / Vidriera online</h2>
+          <p class="wp-muted" style="margin:0;">Tu vidriera muestra ofertas, precios y pedidos por WhatsApp.</p>
         </div>
 
         <div class="wp-card">
@@ -82,17 +88,21 @@ export async function renderWebPremium(container, businessId) {
                 <option value="false" ${!config.enabled ? "selected" : ""}>Desactivada</option>
               </select>
             </div>
-            <div class="wp-field">
-              <label>Link automático</label>
+            <div class="wp-vidriera-ready">
+              <span>Estado de tu vidriera</span>
+              <strong>${config.enabled ? "Vidriera activa" : "Vidriera pausada"}</strong>
+              <small>Tu enlace está listo. Podés verlo o copiarlo para compartirlo.</small>
+            </div>
+            <div class="wp-field wp-technical-link-field" hidden aria-hidden="true">
+              <label>Enlace técnico interno</label>
               <input id="wpSlug" class="wp-input" value="${escapeHtml(generatedSlug)}" readonly />
-              <div class="wp-muted" style="margin-top:6px;font-size:13px;">Se genera con nombre comercial + teléfono. No se edita manualmente.</div>
             </div>
           </div>
-          <div style="margin-top:12px;" class="wp-url" id="wpUrl">${escapeHtml(publicUrl)}</div>
+          <div style="margin-top:12px;display:none;" class="wp-url" id="wpUrl" aria-hidden="true">${escapeHtml(publicUrl)}</div>
           ${slugWarning ? `<div class="wp-warning">⚠️ ${escapeHtml(slugWarning)}</div>` : ""}
           <div class="wp-actions" style="margin-top:12px;">
-            <button id="wpCopy" class="wp-btn wp-secondary">📋 Copiar link</button>
-            <button id="wpOpen" class="wp-btn wp-secondary">👁️ Ver web</button>
+            <button id="wpCopy" class="wp-btn wp-secondary">📋 Copiar enlace</button>
+            <button id="wpOpen" class="wp-btn wp-secondary">👁️ Ver mi web</button>
           </div>
         </div>
 
@@ -142,10 +152,10 @@ export async function renderWebPremium(container, businessId) {
       try {
         if (config.slug && slugInput.value && config.slug !== slugInput.value) {
           const ok = confirm(
-            `Atención: al guardar cambiará el link público.\n\n` +
-            `Link anterior: ${config.slug}\n` +
-            `Link nuevo: ${slugInput.value}\n\n` +
-            `Los links anteriores dejarán de funcionar. ¿Guardar igual?`
+            `Atención: al guardar cambiará el enlace de tu vidriera.\n\n` +
+            `Enlace anterior: ${config.slug}\n` +
+            `Enlace nuevo: ${slugInput.value}\n\n` +
+            `Los enlaces anteriores dejarán de funcionar. ¿Guardar igual?`
           );
           if (!ok) {
             status.textContent = "Guardado cancelado";
@@ -172,6 +182,6 @@ export async function renderWebPremium(container, businessId) {
     });
   } catch (error) {
     console.error("Error renderWebPremium", error);
-    container.innerHTML = `<div style="padding:18px;color:#b42318;">Error cargando Mi Web: ${escapeHtml(error?.message || "desconocido")}</div>`;
+    container.innerHTML = `<div style="padding:18px;color:#b42318;">No pudimos cargar Mi Web: ${escapeHtml(error?.message || "desconocido")}</div>`;
   }
 }
