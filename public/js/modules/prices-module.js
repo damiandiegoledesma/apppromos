@@ -359,7 +359,7 @@ export function renderPrices(container, products = [], businessId = null, option
         const value = Number(input.value || 0);
         const original = Number(safeProducts.find((p) => String(p.id ?? p.productKey) === String(id))?.precio || 0);
 
-        if (!value || value === original) {
+        if (!Number.isFinite(value) || value < 0 || value === original) {
           delete pendingChanges[id];
         } else {
           pendingChanges[id] = value;

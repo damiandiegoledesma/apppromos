@@ -269,7 +269,8 @@
       border:1px solid rgba(138,55,45,.2);
       box-shadow:0 14px 34px rgba(47,22,14,.10);
     }
-    .powered-card img{width:40px;height:40px;}
+    /* V12.13-C4-FIX1 - sello AppPromos más visible */
+    .powered-card img{width:58px;height:58px;}
     .powered-card span{
       color:#7f1d1d;
       font-size:1rem;
@@ -376,6 +377,7 @@
     function validPublicPrice(product={}){const value=Number(product.precio ?? product.price ?? 0); return Number.isFinite(value)&&value>0;}
     function getSlugFromPath(){const parts=location.pathname.split("/").filter(Boolean); const last=parts[parts.length-1]||""; if(!last||last.includes(".")||["app","admin","index"].includes(last)) return ""; return normalizeSlug(last)}
 
+    // V12.13-C4-FIX1 - slug como índice: la web lee precios vivos desde meta/state
     async function resolveWebSource(){
       const legacyId=params.get("biz")||params.get("businessId")||"";
       const slug=normalizeSlug(params.get("slug")||getSlugFromPath()||"");
@@ -383,7 +385,13 @@
       if(slug){
         const indexed=await getDoc(doc(db,"publicWebSlugs",slug));
         if(indexed.exists() && indexed.data()?.businessId){
-          return { type:"public", slug, data:{ slug, ...(indexed.data()||{}) } };
+          const publicIndex = indexed.data() || {};
+          return {
+            type:"public",
+            slug,
+            businessId: publicIndex.businessId,
+            data:{ slug, ...publicIndex }
+          };
         }
 
         if(!legacyId){
@@ -440,7 +448,25 @@
     }
 
     async function loadPayload(source){
-      if(source.type==="public") return source.data;
+      if(source.type==="public"){
+        // El documento publicWebSlugs queda como índice público (slug -> businessId).
+        // La vidriera se reconstruye desde core/meta + core/state para mostrar precios actuales.
+        if(source.businessId){
+          try{
+            const [meta,state]=await Promise.all([
+              readPath(getBusinessMetaPath(source.businessId)),
+              readPath(getBusinessStatePath(source.businessId))
+            ]);
+            if(meta && state){
+              const livePayload = buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
+              return { ...(source.data||{}), ...livePayload, slug: livePayload.slug || source.slug || source.data?.slug || "" };
+            }
+          }catch(error){
+            console.warn("No se pudo cargar la web viva; uso snapshot público como respaldo", error);
+          }
+        }
+        return source.data;
+      }
       const [meta,state]=await Promise.all([readPath(getBusinessMetaPath(source.businessId)), readPath(getBusinessStatePath(source.businessId))]);
       return buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
     }

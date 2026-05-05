@@ -438,7 +438,7 @@ function normalizeBatchUpdates(updates) {
       if (!item || typeof item !== "object") return;
       const id = String(item.id ?? item.productKey ?? item.productId ?? "").trim();
       const price = Number(item.precio ?? item.price ?? item.newPrice ?? item.value ?? 0);
-      if (id && Number.isFinite(price) && price > 0) {
+      if (id && Number.isFinite(price) && price >= 0) {
         map.set(id, price);
       }
     });
@@ -452,7 +452,7 @@ function normalizeBatchUpdates(updates) {
           ? value.precio ?? value.price ?? value.newPrice ?? value.value ?? 0
           : value
       );
-      if (id && Number.isFinite(price) && price > 0) {
+      if (id && Number.isFinite(price) && price >= 0) {
         map.set(String(id), price);
       }
     });
@@ -556,7 +556,7 @@ export async function updateProductPrice(productId, newPrice, businessId = null)
     throw new Error("updateProductPrice: productId requerido");
   }
 
-  if (isNaN(newPrice) || Number(newPrice) <= 0) {
+  if (isNaN(newPrice) || Number(newPrice) < 0) {
     throw new Error("updateProductPrice: precio inválido");
   }
 
