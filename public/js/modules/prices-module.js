@@ -70,6 +70,7 @@ export function renderPrices(container, products = [], businessId = null, option
   let statusMessage = "Sin cambios";
   let lastSavedAt = "";
   let lastMassAdjustment = null;
+  let usageFilter = "active";
 
   function updateLocalProducts(updatedProducts = []) {
     safeProducts.splice(0, safeProducts.length, ...updatedProducts);
@@ -96,19 +97,34 @@ export function renderPrices(container, products = [], businessId = null, option
     return Object.keys(pendingChanges).length;
   }
 
+  function isProductVisibleByUsage(product = {}) {
+    const isActive = product.active !== false;
+    if (usageFilter === "inactive") return !isActive;
+    if (usageFilter === "all") return true;
+    return isActive;
+  }
+
   function getRubros() {
     const set = new Set();
     safeProducts.forEach((p) => {
-      if (p.active === false) return;
+      if (!isProductVisibleByUsage(p)) return;
       const rubro = String(p.rubro || "").trim();
       if (rubro) set.add(rubro);
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }
 
+  function updateUsageFilterButtons() {
+    container.querySelectorAll("[data-use-filter]").forEach((btn) => {
+      const active = btn.dataset.useFilter === usageFilter;
+      btn.classList.toggle("active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
   function getVisibleItems() {
     const items = safeProducts.filter((p) => {
-      if (p.active === false) return false;
+      if (!isProductVisibleByUsage(p)) return false;
 
       const nombre = String(p.nombre || "").toLowerCase();
       const rubro = String(p.rubro || "").toLowerCase();
@@ -422,6 +438,7 @@ export function renderPrices(container, products = [], businessId = null, option
     if (sortPrecioBtn) sortPrecioBtn.textContent = getSortLabel("precio");
 
     renderRubroButtons();
+    updateUsageFilterButtons();
 
     if (!items.length) {
       list.innerHTML = `<div class="prices-empty">No hay productos para mostrar.</div>`;
@@ -433,9 +450,12 @@ export function renderPrices(container, products = [], businessId = null, option
       const key = p.id ?? p.productKey;
       const currentValue = pendingChanges[key] !== undefined ? pendingChanges[key] : p.precio;
       const isDirty = pendingChanges[key] !== undefined;
+      const isActive = p.active !== false;
+      const usageActionLabel = isActive ? "No uso" : "Usar";
+      const usageActionTitle = isActive ? "Marcar como No uso" : "Volver a usar este producto";
 
       return `
-        <div class="price-row ${isDirty ? "dirty" : ""}" title="${p.rubro || "Sin rubro"}">
+        <div class="price-row ${isDirty ? "dirty" : ""} ${isActive ? "" : "price-row-inactive"}" title="${p.rubro || "Sin rubro"}${isActive ? "" : " · No usado"}">
           <div class="price-row-main">
             <div class="price-name">${p.nombre}</div>
           </div>
@@ -445,8 +465,9 @@ export function renderPrices(container, products = [], businessId = null, option
           </label>
 
           <div class="price-actions price-actions-simple">
-            <button data-del="${key}" class="price-no-use-btn price-no-use-check price-use-only-check" title="Marcar como No uso" aria-label="Marcar como No uso" ${canPersistPrices ? "" : "disabled"}>
+            <button data-del="${key}" class="price-no-use-btn price-no-use-check price-use-only-check ${isActive ? "" : "is-inactive"}" title="${usageActionTitle}" aria-label="${usageActionTitle}" ${canPersistPrices ? "" : "disabled"}>
               <span class="price-no-use-box" aria-hidden="true"></span>
+              <span class="price-no-use-label">${usageActionLabel}</span>
             </button>
           </div>
         </div>
@@ -576,24 +597,53 @@ export function renderPrices(container, products = [], businessId = null, option
           blockWriteAttempt();
           return;
         }
+
         const id = btn.dataset.del;
-        const ok = confirm('¿Marcar este producto como "No uso"?\n\nNo aparecerá en ofertas ni en tu web.\nNo borra el producto.');
+        const product = safeProducts.find((item) => String(item.id ?? item.productKey) === String(id));
+        if (!product) return;
+
+        const isCurrentlyActive = product.active !== false;
+
+        if (isCurrentlyActive) {
+          const ok = confirm('¿Marcar este producto como "No uso"?\n\nNo aparecerá en ofertas ni en tu web.\nNo se borra y después podés volver a usarlo.');
+          if (!ok) return;
+
+          try {
+            await disableProduct(id, businessId);
+            const updatedProducts = safeProducts.map((item) =>
+              String(item.id ?? item.productKey) === String(id)
+                ? { ...item, active: false }
+                : item
+            );
+            updateLocalProducts(updatedProducts);
+            delete pendingChanges[id];
+            draw();
+            showToast("Producto marcado como No uso. Podés verlo en No usados.", "ok");
+          } catch (error) {
+            console.error(error);
+            showToast("No se pudo marcar como No uso", "error");
+          }
+
+          return;
+        }
+
+        const ok = confirm("¿Volver a usar este producto?\n\nVa a estar disponible en AppPromos. Si tiene precio válido, también puede aparecer en tu web.");
         if (!ok) return;
 
         try {
-          await disableProduct(id, businessId);
+          await updateProduct(id, { active: true }, businessId);
           const updatedProducts = safeProducts.map((item) =>
             String(item.id ?? item.productKey) === String(id)
-              ? { ...item, active: false }
+              ? { ...item, active: true }
               : item
           );
           updateLocalProducts(updatedProducts);
-          delete pendingChanges[id];
+          usageFilter = "active";
           draw();
-          showToast("Producto marcado como No uso", "ok");
+          showToast("Producto activado otra vez", "ok");
         } catch (error) {
           console.error(error);
-          showToast("No se pudo marcar como No uso", "error");
+          showToast("No se pudo volver a usar el producto", "error");
         }
       };
     });
@@ -973,6 +1023,93 @@ export function renderPrices(container, products = [], businessId = null, option
 .price-no-use-check:hover {
   background:#fee2e2 !important;
 }
+      /* APPPROMOS V12.13-C6-FIX2-USO-NO-USO - uso claro y reversible */
+      .prices-usage-filter {
+        display:flex;
+        gap:7px;
+        align-items:center;
+        overflow-x:auto;
+        padding:1px 0 2px;
+        scrollbar-width:none;
+      }
+      .prices-usage-filter::-webkit-scrollbar { display:none; }
+      .price-use-filter {
+        flex:0 0 auto;
+        min-height:34px;
+        padding:0 12px;
+        border:1px solid #e5e7eb;
+        border-radius:999px;
+        background:#fff;
+        color:#374151;
+        font-size:12px;
+        font-weight:1000;
+        cursor:pointer;
+        white-space:nowrap;
+      }
+      .price-use-filter.active {
+        background:#7f1d1d;
+        border-color:#7f1d1d;
+        color:#fff;
+      }
+      .prices-usage-help {
+        padding:7px 9px;
+        border:1px solid rgba(15,23,42,.08);
+        border-radius:12px;
+        background:#f8fafc;
+        color:#334155;
+        font-size:11px;
+        line-height:1.28;
+        font-weight:850;
+      }
+      .price-row-inactive {
+        opacity:.72;
+        background:#f8fafc !important;
+        border-style:dashed !important;
+      }
+      .price-row-inactive .price-name::after {
+        content:" · No usado";
+        color:#991b1b;
+        font-size:11px;
+        font-weight:1000;
+      }
+      .price-no-use-label {
+        display:inline-block !important;
+        font-size:10px;
+        font-weight:1000;
+        line-height:1;
+      }
+      .price-use-only-check,
+      .price-no-use-check {
+        width:72px !important;
+        min-width:72px !important;
+        max-width:72px !important;
+        gap:5px !important;
+      }
+      .price-no-use-check.is-inactive {
+        background:#ecfdf5 !important;
+        border-color:rgba(22,101,52,.28) !important;
+        color:#166534 !important;
+      }
+      .price-no-use-check.is-inactive .price-no-use-box {
+        border-color:rgba(22,101,52,.55) !important;
+        background:#dcfce7 !important;
+      }
+      @media (max-width: 768px) {
+        .price-row {
+          grid-template-columns:minmax(0,1fr) 88px 76px !important;
+        }
+        .price-actions,
+        .price-actions-simple {
+          width:76px !important;
+          min-width:76px !important;
+        }
+        .price-use-only-check,
+        .price-no-use-check {
+          width:76px !important;
+          min-width:76px !important;
+          max-width:76px !important;
+        }
+      }
 </style>
 
     <div class="prices-shell">
@@ -989,6 +1126,16 @@ export function renderPrices(container, products = [], businessId = null, option
         <div class="prices-toolbar-row prices-search-row">
           <input id="searchInput" class="prices-search" placeholder="Buscar producto..." />
           <select id="rubroFilter" class="prices-select"></select>
+        </div>
+
+        <div class="prices-usage-filter" role="group" aria-label="Filtrar productos por uso">
+          <button type="button" class="price-use-filter active" data-use-filter="active">Usados</button>
+          <button type="button" class="price-use-filter" data-use-filter="inactive">No usados</button>
+          <button type="button" class="price-use-filter" data-use-filter="all">Todos</button>
+        </div>
+
+        <div class="prices-usage-help">
+          Marcado = lo uso en AppPromos. <strong>No uso</strong> = no aparece en ofertas ni en mi web. Podés volver a activarlo cuando quieras.
         </div>
 
         <div id="rubroButtons" class="prices-rubro-scroll" aria-label="Rubros"></div>
@@ -1030,6 +1177,16 @@ export function renderPrices(container, products = [], businessId = null, option
   container.querySelector("#rubroFilter").addEventListener("change", (e) => {
     rubroFilter = String(e.target.value || "").trim();
     draw();
+  });
+
+  container.querySelectorAll("[data-use-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      usageFilter = btn.dataset.useFilter || "active";
+      rubroFilter = "";
+      const rubroSelect = container.querySelector("#rubroFilter");
+      if (rubroSelect) rubroSelect.dataset.loaded = "";
+      draw();
+    });
   });
 
   container.querySelector("#saveAllBtn").onclick = saveAllPendingChanges;
