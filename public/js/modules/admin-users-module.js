@@ -735,6 +735,14 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-whatsapp-action.disabled{opacity:.45;cursor:not-allowed;background:#f3f3f3;color:#777;border-color:#ddd;}
       .admin-client-details{border-top:1px solid #f0ebe3;background:#fffaf5;padding:0;}
       .admin-client-details summary{cursor:pointer;padding:10px 14px;font-weight:1000;color:#5f5147;}
+      .admin-detail-sections{display:grid;gap:12px;padding:0 14px 14px;}
+      .admin-detail-section{border:1px solid #eee6dc;border-radius:16px;background:#fffdf9;padding:12px;}
+      .admin-detail-section-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;}
+      .admin-detail-section-title{font-size:14px;font-weight:1000;color:#1f1f1f;}
+      .admin-detail-section-note{font-size:12px;color:#6e6e6e;line-height:1.35;max-width:520px;}
+      .admin-detail-section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+      .admin-detail-box.wide{grid-column:1 / -1;}
+      .admin-detail-box.danger-zone{border-color:#f0b4ae;background:#fff7f6;color:#842029;}
       .admin-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:0 14px 14px;}
       .admin-detail-box{border:1px solid #eee6dc;border-radius:14px;background:#fff;padding:10px;font-size:12px;line-height:1.35;}
       .admin-detail-box strong{display:block;margin-bottom:4px;color:#1f1f1f;}
@@ -1066,119 +1074,175 @@ export async function renderAdminUsers(container, options = {}) {
                 </div>
 
                 <details class="admin-client-details">
-                  <summary>Ver detalle, herramientas y acciones</summary>
-                  <div class="admin-detail-grid">
-                    <div class="admin-detail-box">
-                      <strong>Datos del cliente</strong>
-                      <div>Responsable: ${escapeHtml(businessOwnerName(row))}</div>
-                      <div>Email: ${escapeHtml(businessOwnerEmail(row))}</div>
-                      <div>WhatsApp: ${escapeHtml(businessPhone(row))}</div>
-                      <div>Ubicación: ${escapeHtml(businessLocation(row))}</div>
-                      ${businessAddress(row) ? `<div>Dirección: ${escapeHtml(businessAddress(row))}</div>` : ""}
-                      <div class="admin-tech-id">ID técnico completo: ${escapeHtml(row.businessId)}</div>
-                    </div>
+                  <summary>Ver detalle ordenado: datos, cobranzas, tracking y acciones</summary>
+                  <div class="admin-detail-sections">
+                    <section class="admin-detail-section">
+                      <div class="admin-detail-section-head">
+                        <div>
+                          <div class="admin-detail-section-title">Datos básicos</div>
+                          <div class="admin-detail-section-note">Quién es el cliente. Datos humanos primero; el ID técnico queda como referencia secundaria.</div>
+                        </div>
+                      </div>
+                      <div class="admin-detail-section-grid">
+                        <div class="admin-detail-box">
+                          <strong>Identidad del cliente</strong>
+                          <div>Responsable: ${escapeHtml(businessOwnerName(row))}</div>
+                          <div>Email: ${escapeHtml(businessOwnerEmail(row))}</div>
+                          <div>WhatsApp: ${escapeHtml(businessPhone(row))}</div>
+                          <div>Ubicación: ${escapeHtml(businessLocation(row))}</div>
+                          ${businessAddress(row) ? `<div>Dirección: ${escapeHtml(businessAddress(row))}</div>` : ""}
+                          ${row.isTestBusiness ? `<div style="margin-top:6px;color:#8a6200;font-weight:1000;font-size:12px;">EMPRESA TEST</div>` : ""}
+                          <div class="admin-tech-id">ID técnico completo: ${escapeHtml(row.businessId)}</div>
+                        </div>
 
-                    <div class="admin-detail-box">
-                      <strong>Qué significa</strong>
-                      <div><b>Acceso:</b> ${escapeHtml(accessState.action)}</div>
-                      <div><b>Pago:</b> ${escapeHtml(paymentState.action)}</div>
-                      <div><b>Plan:</b> ${escapeHtml(planState.action)}</div>
-                      <div><b>Admin:</b> ${escapeHtml(internalState.action)}</div>
-                    </div>
+                        <div class="admin-detail-box">
+                          <strong>Lectura rápida</strong>
+                          <div><b>Acceso:</b> ${escapeHtml(accessState.label || "Sin definir")}</div>
+                          <div>${escapeHtml(accessState.action || "Revisar estado.")}</div>
+                          <div style="margin-top:8px;"><b>Plan:</b> ${escapeHtml(planState.label || "Sin definir")}</div>
+                          <div>${escapeHtml(planState.action || "Revisar plan.")}</div>
+                          <div style="margin-top:8px;"><b>Admin:</b> ${escapeHtml(internalState.label || "Sin definir")}</div>
+                          <div>${escapeHtml(internalState.action || "Revisar administración.")}</div>
+                        </div>
+                      </div>
+                    </section>
 
-                    <div class="admin-detail-box">
-                      <strong>Cambiar estados</strong>
-                      <div style="display:grid;gap:8px;">
-                        <label>Acceso<br><select class="admin-select" data-status-business="${escapeHtml(row.businessId)}">
-                          ${["active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${row.status === s ? "selected" : ""}>${accessLabel(s)}</option>`).join("")}
-                        </select></label>
-                        <label>Pago<br><select class="admin-select" data-billing-business="${escapeHtml(row.businessId)}">
-                          ${ADMIN_PAYMENT_STATUSES.map((s) => `<option value="${s}" ${String(row.billing?.status || "active") === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
-                        </select></label>
-                        <label>Plan<br><select class="admin-select" data-plan-business="${escapeHtml(row.businessId)}">
-                          ${ADMIN_BILLING_PLANS.map((p) => `<option value="${p}" ${String(row.billing?.plan || "trial").toLowerCase() === p ? "selected" : ""}>${planLabel(p)}</option>`).join("")}
-                        </select></label>
+                    <section class="admin-detail-section">
+                      <div class="admin-detail-section-head">
+                        <div>
+                          <div class="admin-detail-section-title">Cobranzas</div>
+                          <div class="admin-detail-section-note">Plan, pago, vencimiento y nota interna. Todo lo comercial queda junto para resolver rápido.</div>
+                        </div>
                       </div>
-                    </div>
+                      <div class="admin-detail-section-grid">
+                        <div class="admin-detail-box">
+                          <strong>Estado comercial</strong>
+                          <div><b>Plan actual:</b> ${escapeHtml(planLabel(row.billing?.plan || "trial"))}</div>
+                          <div><b>Pago:</b> ${escapeHtml(paymentLabel(row.billing?.status || "active"))}</div>
+                          <div><b>Lectura:</b> ${escapeHtml(paymentState.action || "Revisar cobranza.")}</div>
+                          <div><b>Último pago registrado:</b> ${escapeHtml(businessLastPaymentLabel(row))}</div>
+                        </div>
 
-                    <div class="admin-detail-box">
-                      <strong>Gestión comercial</strong>
-                      <div style="display:grid;gap:8px;">
-                        <div><b>Plan actual:</b> ${escapeHtml(planLabel(row.billing?.plan || "trial"))}</div>
-                        <div><b>Pago:</b> ${escapeHtml(paymentLabel(row.billing?.status || "active"))}</div>
-                        <label>Próximo vencimiento / fecha de pago
-                          <input class="admin-input" type="date" data-payment-due-business="${escapeHtml(row.businessId)}" value="${escapeHtml(businessPaymentDueInput(row))}" />
-                        </label>
-                        <div><b>Último pago registrado:</b> ${escapeHtml(businessLastPaymentLabel(row))}</div>
-                        <button data-payment-received-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini success">Marcar pago recibido</button>
-                      </div>
-                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
-                        Usá esto para seguimiento comercial manual. La automatización de avisos 48/72 hs queda para otro bloque.
-                      </div>
-                    </div>
+                        <div class="admin-detail-box">
+                          <strong>Cambiar pago y plan</strong>
+                          <div style="display:grid;gap:8px;">
+                            <label>Pago<br><select class="admin-select" data-billing-business="${escapeHtml(row.businessId)}">
+                              ${ADMIN_PAYMENT_STATUSES.map((s) => `<option value="${s}" ${String(row.billing?.status || "active") === s ? "selected" : ""}>${paymentLabel(s)}</option>`).join("")}
+                            </select></label>
+                            <label>Plan<br><select class="admin-select" data-plan-business="${escapeHtml(row.businessId)}">
+                              ${ADMIN_BILLING_PLANS.map((p) => `<option value="${p}" ${String(row.billing?.plan || "trial").toLowerCase() === p ? "selected" : ""}>${planLabel(p)}</option>`).join("")}
+                            </select></label>
+                            <label>Próximo vencimiento / fecha de pago
+                              <input class="admin-input" type="date" data-payment-due-business="${escapeHtml(row.businessId)}" value="${escapeHtml(businessPaymentDueInput(row))}" />
+                            </label>
+                            <button data-payment-received-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini success">Marcar pago recibido</button>
+                          </div>
+                          <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                            Seguimiento comercial manual. Automatizaciones de aviso y La Nelly quedan para otro bloque.
+                          </div>
+                        </div>
 
-                    <div class="admin-detail-box">
-                      <strong>Nota interna</strong>
-                      <textarea data-internal-note-business="${escapeHtml(row.businessId)}" rows="4" placeholder="Ej: Lo contacté el 03/05. Quiere pasar a Salvador cuando termine la prueba." style="width:100%;box-sizing:border-box;border:1px solid #e7e1d8;border-radius:12px;padding:10px;font-family:inherit;resize:vertical;">${escapeHtml(businessInternalNote(row))}</textarea>
-                      <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-                        <button data-save-internal-note="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Guardar nota</button>
+                        <div class="admin-detail-box wide">
+                          <strong>Nota interna</strong>
+                          <textarea data-internal-note-business="${escapeHtml(row.businessId)}" rows="4" placeholder="Ej: Lo contacté el 03/05. Quiere pasar a Salvador cuando termine la prueba." style="width:100%;box-sizing:border-box;border:1px solid #e7e1d8;border-radius:12px;padding:10px;font-family:inherit;resize:vertical;">${escapeHtml(businessInternalNote(row))}</textarea>
+                          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+                            <button data-save-internal-note="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Guardar nota</button>
+                          </div>
+                          <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                            Esta nota es solo para administración. No la ve el carnicero.
+                          </div>
+                        </div>
                       </div>
-                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
-                        Esta nota es solo para administración. No la ve el carnicero.
-                      </div>
-                    </div>
+                    </section>
 
-                    <div class="admin-detail-box">
-                      <strong>Actividad y módulos</strong>
-                      <div>Último login: ${fmtDate(row.lastLoginAt)}</div>
-                      <div>Última actividad: ${fmtDate(row.lastActivityAt)}</div>
-                      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-                        ${Object.keys(DEFAULT_MODULES).map((key) => moduleSummaryChip(row, key)).join("")}
+                    <section class="admin-detail-section">
+                      <div class="admin-detail-section-head">
+                        <div>
+                          <div class="admin-detail-section-title">Tracking</div>
+                          <div class="admin-detail-section-note">Uso actual disponible: último ingreso, última actividad, módulos y lectura comercial básica.</div>
+                        </div>
                       </div>
-                      <div style="margin-top:10px;">${commercialBadge(commercial)}</div>
-                    </div>
+                      <div class="admin-detail-section-grid">
+                        <div class="admin-detail-box">
+                          <strong>Actividad</strong>
+                          <div>Último login: ${fmtDate(row.lastLoginAt)}</div>
+                          <div>Última actividad: ${fmtDate(row.lastActivityAt)}</div>
+                          <div style="margin-top:10px;">${commercialBadge(commercial)}</div>
+                          <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                            Los contadores de ofertas, WhatsApp y Vender urgente quedan para Future 5-C real.
+                          </div>
+                        </div>
 
-                    <div class="admin-detail-box">
-                      <strong>Contacto rápido</strong>
-                      <div>WhatsApp registrado: ${escapeHtml(businessPhone(row))}</div>
-                      <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap;">
-                        ${renderWhatsappAction(row, "📲 Escribir por WhatsApp")}
+                        <div class="admin-detail-box">
+                          <strong>Módulos activos</strong>
+                          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                            ${Object.keys(DEFAULT_MODULES).map((key) => moduleSummaryChip(row, key)).join("")}
+                          </div>
+                        </div>
                       </div>
-                      ${row.isTestBusiness ? `<div style="margin-top:8px;color:#7a4b00;font-size:12px;line-height:1.35;"><strong>Empresa TEST:</strong> verificá que este número sea de prueba antes de enviar.</div>` : ""}
-                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
-                        Abre WhatsApp con un mensaje base editable. Los mensajes por pago, prueba por vencer o cambio de plan van en el próximo bloque de Control operativo.
-                      </div>
-                    </div>
+                    </section>
 
-                    <div class="admin-detail-box">
-                      <strong>Herramientas de administración</strong>
-                      <div style="display:flex;gap:7px;flex-wrap:wrap;">
-                        <button data-test-business="${escapeHtml(row.businessId)}" data-test-current="${row.isTestBusiness ? "true" : "false"}" type="button" class="admin-action-mini">${row.isTestBusiness ? "Quitar TEST" : "Marcar TEST"}</button>
-                        <button data-logs-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Ver logs</button>
-                        <button data-defaults-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Reparar configuración base</button>
-                        ${row.isTestBusiness
-                          ? `<button data-clone-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Clonar como TEST</button>`
-                          : `<button type="button" class="admin-action-mini" disabled title="Solo disponible para empresas TEST">Clonar solo TEST</button>`}
+                    <section class="admin-detail-section">
+                      <div class="admin-detail-section-head">
+                        <div>
+                          <div class="admin-detail-section-title">Acciones</div>
+                          <div class="admin-detail-section-note">Botones operativos agrupados. Las acciones peligrosas siguen protegidas.</div>
+                        </div>
                       </div>
-                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
-                        “Reparar configuración base” se usa solo si una empresa vieja o de prueba no muestra bien módulos, acceso o datos básicos. No es una acción diaria.
-                      </div>
-                      <div style="margin-top:8px;color:#7a4b00;font-size:12px;line-height:1.35;">
-                        <strong>Empresas TEST:</strong> sirven para probar, clonar escenarios y limpiar datos sin tocar clientes reales. Ver documentación en <code>public/docs/EMPRESAS_TEST_APPPROMOS.md</code>.
-                      </div>
-                    </div>
+                      <div class="admin-detail-section-grid">
+                        <div class="admin-detail-box">
+                          <strong>Acciones rápidas</strong>
+                          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                            ${renderWhatsappAction(row, "📲 Escribir por WhatsApp")}
+                            <button data-enter-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini success">Entrar como cliente</button>
+                            <button class="admin-manage-modules" data-manage-modules="${escapeHtml(row.businessId)}" type="button">Gestionar módulos</button>
+                          </div>
+                          ${row.isTestBusiness ? `<div style="margin-top:8px;color:#7a4b00;font-size:12px;line-height:1.35;"><strong>Empresa TEST:</strong> verificá que este número sea de prueba antes de enviar.</div>` : ""}
+                        </div>
 
-                    <div class="admin-detail-box">
-                      <strong>Zona peligrosa</strong>
-                      <div style="display:flex;gap:7px;flex-wrap:wrap;">
-                        ${row.isTestBusiness
-                          ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini danger">Eliminar TEST</button>`
-                          : `<button type="button" class="admin-action-mini danger" disabled title="Los clientes reales se archivan. No se eliminan desde acá.">Eliminar solo TEST</button>`}
+                        <div class="admin-detail-box">
+                          <strong>Acceso</strong>
+                          <div style="display:grid;gap:8px;">
+                            <label>Estado de acceso<br><select class="admin-select" data-status-business="${escapeHtml(row.businessId)}">
+                              ${["active","trial","suspended","disabled"].map((s) => `<option value="${s}" ${row.status === s ? "selected" : ""}>${accessLabel(s)}</option>`).join("")}
+                            </select></label>
+                          </div>
+                          <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                            ${escapeHtml(accessState.help || "Revisar estado de acceso.")}
+                          </div>
+                        </div>
+
+                        <div class="admin-detail-box">
+                          <strong>Herramientas administrativas</strong>
+                          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                            <button data-test-business="${escapeHtml(row.businessId)}" data-test-current="${row.isTestBusiness ? "true" : "false"}" type="button" class="admin-action-mini">${row.isTestBusiness ? "Quitar TEST" : "Marcar TEST"}</button>
+                            <button data-logs-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Ver logs</button>
+                            <button data-defaults-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Reparar configuración base</button>
+                            ${row.isTestBusiness
+                              ? `<button data-clone-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini">Clonar como TEST</button>`
+                              : `<button type="button" class="admin-action-mini" disabled title="Solo disponible para empresas TEST">Clonar solo TEST</button>`}
+                          </div>
+                          <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
+                            “Reparar configuración base” se usa solo si una empresa vieja o de prueba no muestra bien módulos, acceso o datos básicos.
+                          </div>
+                        </div>
+
+                        <div class="admin-detail-box danger-zone">
+                          <strong>Zona segura / peligrosa</strong>
+                          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                            ${archived
+                              ? `<button class="admin-action-mini success" data-restore-business="${escapeHtml(row.businessId)}" type="button">Restaurar empresa</button>`
+                              : `<button class="admin-action-mini danger" data-archive-business="${escapeHtml(row.businessId)}" type="button">Archivar empresa</button>`}
+                            ${row.isTestBusiness
+                              ? `<button data-delete-test-business="${escapeHtml(row.businessId)}" type="button" class="admin-action-mini danger">Eliminar TEST</button>`
+                              : `<button type="button" class="admin-action-mini danger" disabled title="Los clientes reales se archivan. No se eliminan desde acá.">Eliminar solo TEST</button>`}
+                          </div>
+                          <div style="margin-top:8px;color:#842029;font-size:12px;line-height:1.35;">
+                            Clientes reales se archivan. Eliminar queda reservado para empresas TEST y no borra usuarios de Firebase Auth.
+                          </div>
+                        </div>
                       </div>
-                      <div style="margin-top:8px;color:#6e6e6e;font-size:12px;line-height:1.35;">
-                        Eliminar TEST borra datos de prueba conocidos y libera índices TEST. No borra usuarios de Firebase Auth. Para clientes reales, usar Archivar.
-                      </div>
-                    </div>
+                    </section>
                   </div>
                 </details>
               </article>
