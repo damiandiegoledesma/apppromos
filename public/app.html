@@ -713,6 +713,32 @@
 
   </style>
 <link rel="stylesheet" href="/styles/status-compact.css">
+  <!-- APPPROMOS TRACKING DEMO GA4 C1 -->
+  <script>
+    (function () {
+      var host = window.location.hostname || "";
+      var isLocal = host === "localhost" || host === "127.0.0.1";
+
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () {
+        window.dataLayer.push(arguments);
+      };
+
+      if (isLocal) {
+        window.__APPPROMOS_ANALYTICS_DISABLED__ = true;
+        console.info("[AppPromos Analytics] GA4 desactivado en entorno local.");
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.async = true;
+      script.src = "https://www.googletagmanager.com/gtag/js?id=G-EBJM7TQRSN";
+      document.head.appendChild(script);
+
+      window.gtag("js", new Date());
+      window.gtag("config", "G-EBJM7TQRSN");
+    })();
+  </script>
 </head>
 <body>
   <!-- MARCO ROJO TOP -->
