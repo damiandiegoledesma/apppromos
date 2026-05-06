@@ -1,4 +1,4 @@
-﻿import {
+import {
   openBusiness,
   setActiveBusinessId,
   getResolvedBusinessId
@@ -17,6 +17,7 @@ import { renderWebPremium } from "./modules/web-module.js";
 import { initCarniza, updateCarnizaContext } from "./modules/carniza-module.js";
 import { renderPublicAuth } from "./modules/public-auth-module.js";
 import { trackCarnizaSignal } from "./services/carniza-signals-service.js";
+import { trackDemoEvent, trackDemoStartedOnce } from "./services/tracking-service.js";
 
 import { updateBusinessBasicData } from "./services/web-premium-service.js";
 import { loadActiveBusinessData } from "./services/data-service.js";
@@ -273,6 +274,7 @@ function showDemoConversionPrompt(kind = "whatsapp") {
   `;
   document.body.appendChild(overlay);
   overlay.querySelector("#demoGoSignupBtn")?.addEventListener("click", () => {
+    trackDemoEvent("demo_register_clicked", { source: "conversion_prompt" });
     window.location.href = "./index.html#signup";
   });
   overlay.querySelector("#demoBackHomeBtn")?.addEventListener("click", () => {
@@ -296,6 +298,10 @@ function registerDemoWhatsappAttempt(source = "demo") {
   saveDemoUsage(usage);
   updateDemoBannerUsage();
   trackCarnizaSignal("demo_whatsapp_clicked", { source, count: usage.whatsappSentCount });
+  trackDemoEvent("demo_whatsapp_clicked", {
+    source,
+    whatsapp_count: usage.whatsappSentCount
+  });
   return true;
 }
 
@@ -360,6 +366,7 @@ function insertDemoBanner() {
   `;
   appRoot.insertBefore(banner, appRoot.firstChild);
   banner.querySelector("#demoCreateAccountBtn")?.addEventListener("click", () => {
+    trackDemoEvent("demo_register_clicked", { source: "demo_banner" });
     window.location.href = "./index.html#signup";
   });
   updateDemoBannerUsage();
@@ -2415,6 +2422,12 @@ async function renderBusinessWorkspace(options = {}) {
   currentBusinessControl = currentSession?.isDemo
     ? buildBusinessDefaults({ businessId: currentBusinessId, name: payload?.meta?.name || "Carnicería de Carniza", status: "active", billingStatus: "active", plan: "demo" })
     : buildBusinessDefaults({ ...(root || {}), businessId: currentBusinessId, name: root?.name || payload?.meta?.name || currentBusinessId });
+  if (!options.skipTracking && currentSession?.isDemo) {
+    trackDemoStartedOnce({
+      source: "app_demo",
+      business_id: currentBusinessId || "demo-carniza"
+    });
+  }
   if (!options.skipTracking && !currentSession?.isDemo) {
     await trackBusinessLogin(currentBusinessId);
     await trackBusinessActivityThrottled(currentBusinessId, 60);

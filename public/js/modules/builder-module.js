@@ -180,6 +180,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       rubroFilter: "",
       productLimit: PRODUCT_RENDER_BATCH,
       searchDebounceTimer: null,
+      offerTracked: false,
     };
   }
 
@@ -191,6 +192,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       rubroFilter: "",
       productLimit: PRODUCT_RENDER_BATCH,
       searchDebounceTimer: null,
+      offerTracked: false,
       globalDiscount: 0,
       offerName: "OFERTA DEL DIA",
     };

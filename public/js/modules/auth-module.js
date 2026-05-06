@@ -6,6 +6,7 @@ import {
 import { app } from "../core/firebase-core.js";
 import { registerClientAndBusiness } from "../services/auth-service.js";
 import { setActiveBusinessId } from "../services/business-service.js";
+import { trackTrialRegistered } from "../services/tracking-service.js";
 
 const auth = getAuth(app);
 
@@ -170,6 +171,10 @@ if (registroBtn) {
       setStatus(registroStatus, "Creando tu carnicería...");
 
       const result = await registerClientAndBusiness(data);
+      trackTrialRegistered({
+        source: "landing_register",
+        business_id: result?.businessId || null
+      });
 
       await setActiveBusinessId(result.businessId);
 
