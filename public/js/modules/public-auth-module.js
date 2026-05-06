@@ -33,7 +33,7 @@ function buildAuthHTML() {
     <main class="public-auth-page">
       <section class="public-auth-card">
         <a class="public-auth-logo" href="./index.html" aria-label="Volver a AppPromos">
-          <img src="/assets/images/logo.png" alt="AppPromos" />
+          <img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" />
           <span>App<b>Promos</b></span>
         </a>
 
