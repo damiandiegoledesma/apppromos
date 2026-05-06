@@ -30,3 +30,7 @@ Esta carpeta contiene documentación interna del repositorio.
 No mezclar documentación histórica suelta en la raíz de docs.
 
 La raíz de docs debe quedar simple y explicar la estructura.
+
+## Documentos internos destacados
+
+- repo/APPPROMOS_V12_13_C7_MANTENIMIENTO_REPO.md — resumen del hito V12.13-C7 de limpieza de assets, logo liviano y orden de documentación.
