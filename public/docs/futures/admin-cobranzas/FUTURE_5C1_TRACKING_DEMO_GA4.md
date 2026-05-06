@@ -1,82 +1,71 @@
-# Future 5-C1 â€” Tracking demo mÃ­nimo GA4
+# Future 5-C1 — Tracking demo mínimo GA4
 
 ## Estado
 
-Patch de feature branch:
-
-`feature/tracking-demo-ga4`
-
-Objetivo: medir el embudo mÃ­nimo demo â†’ WhatsApp â†’ registro usando GA4.
-
-No toca:
-
-- Firestore;
-- Admin;
-- Cobranzas;
-- reglas Firebase;
-- lÃ³gica comercial de ofertas;
-- Web Arranque;
-- deploy automÃ¡tico.
-
-## Problema
-
-Firebase Authentication solo muestra usuarios que completaron registro.
-
-Los visitantes que entran a:
+Feature branch:
 
 ```txt
-app.html?demo=1
+feature/tracking-demo-ga4
 ```
 
-no aparecen en Authentication porque no crean usuario.
+Objetivo: medir el embudo mínimo de demo a WhatsApp y registro usando GA4, sin tocar la lógica comercial de AppPromos.
 
-Para entender si la demo convierte, hace falta medir eventos anÃ³nimos de uso.
+## Alcance C1
 
-## Eventos agregados
+Este hito mide solo eventos simples y útiles:
 
 ```txt
 demo_started
-demo_offer_ready
 demo_whatsapp_clicked
 demo_register_clicked
 trial_registered
 ```
 
-## QuÃ© responde
+## Qué responde
 
 ```txt
-Â¿CuÃ¡ntos entran a la demo?
-Â¿CuÃ¡ntos arman una oferta?
-Â¿CuÃ¡ntos tocan WhatsApp?
-Â¿CuÃ¡ntos intentan registrarse desde la demo?
-Â¿CuÃ¡ntos completan registro?
+¿Cuántos entran a la demo?
+¿Cuántos llegan al momento WhatsApp?
+¿Cuántos intentan registrarse desde la demo?
+¿Cuántos completan el registro gratuito?
 ```
 
-## ParÃ¡metros principales
+## Decisión de producto
+
+`demo_whatsapp_clicked` queda como evento comercial principal del hito, porque confirma que la persona probó la demo y llegó al momento de venta.
+
+Se descarta por ahora medir oferta lista, porque en AppPromos una oferta puede quedar lista, enviarse o no guardarse según el flujo. Para C1 conviene medir menos eventos, pero más claros.
+
+## Protección local
+
+En `localhost` y `127.0.0.1`, Analytics queda desactivado para no ensuciar GA4 real durante pruebas locales.
+
+En producción, si GA4 está disponible, los eventos se envían con parámetros básicos como:
 
 ```txt
-source
-offer_mode
-product_count
-total_amount
-whatsapp_count
 is_demo
 app_mode
 demo_session_id
 page_path
 page_hash
+source
+whatsapp_count
 ```
 
-## Decisiones
+## No toca
 
-- GA4 primero.
-- Firestore despuÃ©s, si hace falta verlo dentro del Panel Admin.
-- No se trackean datos personales.
-- No se trackea contenido del mensaje de WhatsApp.
-- No se trackea cada click.
-- No se hace heartbeat.
+```txt
+Firestore
+Admin
+Cobranzas
+reglas Firebase
+Web Arranque
+lógica comercial de ofertas
+WhatsApp
+deploy automático
+```
 
-## ValidaciÃ³n
+## Validación
 
 En GA4 revisar:
 
@@ -85,32 +74,15 @@ Realtime / Tiempo real
 Eventos
 ```
 
-Eventos esperados durante prueba:
+Eventos esperados:
 
 ```txt
 demo_started
-demo_offer_ready
 demo_whatsapp_clicked
 demo_register_clicked
 trial_registered
 ```
 
-## Regla
+## Cierre operativo
 
-Analytics muestra interÃ©s y embudo.
-
-Firebase Auth muestra registros reales.
-
-El Panel Admin futuro mostrarÃ¡ lectura operativa.
-
----
-
-## Cierre operativo C1
-
-Este hito queda acotado a medir el embudo mínimo útil:
-
-```txt
-demo_started
-demo_whatsapp_clicked
-demo_register_clicked
-trial_registeredrn
+C1 queda como tracking mínimo real. La lectura operativa más profunda para Panel Admin, Cobranzas o salud del cliente queda para futures posteriores.

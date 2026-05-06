@@ -334,17 +334,7 @@ function getBuilderOptions() {
   return {
     businessId: currentBusinessId,
     ...getWriteOptions(),
-    ...getDemoActionOptions(),
-    onOfferCreated: ({ source, payload, mode } = {}) => {
-      if (!currentSession?.isDemo) return;
-      const items = Array.isArray(payload?.items) ? payload.items : [];
-      trackDemoEvent("demo_offer_ready", {
-        source: source || "builder",
-        offer_mode: mode || payload?.mode || "unknown",
-        product_count: items.length,
-        total_amount: Number(payload?.total || 0)
-      });
-    }
+    ...getDemoActionOptions()
   };
 }
 
@@ -778,14 +768,6 @@ function renderCarnizaUrgentStockCard(container) {
 
   function renderUrgentResult(data) {
     const items = Array.isArray(data.items) ? data.items : [];
-    if (currentSession?.isDemo) {
-      trackDemoEvent("demo_offer_ready", {
-        source: "vender_urgente",
-        offer_mode: "urgent",
-        product_count: items.length,
-        total_amount: Number(data?.total || 0)
-      });
-    }
     const baseMessage = data.message || "";
     const missing = Array.isArray(data.missing_prices) ? data.missing_prices : [];
     const suggestedName = cleanExternalOfferTitle(data.offer_name || data.title || suggestCommercialOfferName(items));
