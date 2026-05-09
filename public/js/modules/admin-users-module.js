@@ -354,17 +354,19 @@ function accessLabel(status = "active") {
 }
 
 function planLabel(plan = "trial") {
+  const key = String(plan || "trial").toLowerCase();
   const map = {
     trial: "Prueba",
     basic: "ARRANQUE",
     arranque: "ARRANQUE",
     pro: "SALVADOR",
     salvador: "SALVADOR",
-    dueno: "DUEÑO",
-    dueño: "DUEÑO",
-    owner: "DUEÑO"
+    dueno: "DUE\u00D1O",
+    duenio: "DUE\u00D1O",
+    "due\u00F1o": "DUE\u00D1O",
+    owner: "DUE\u00D1O"
   };
-  return map[String(plan || "trial").toLowerCase()] || String(plan || "—").toUpperCase();
+  return map[key] || String(plan || "—").toUpperCase();
 }
 
 function chip(label, tone = "neutral") {
