@@ -844,6 +844,135 @@ function renderMore(businesses = []) {
   `;
 }
 
+
+function accountEstimatedMonthlyAmount(row = {}) {
+  const key = planKey(row);
+  const amounts = {
+    trial: 0,
+    basic: 19999,
+    arranque: 19999,
+    pro: 34999,
+    salvador: 34999,
+    dueno: 54999,
+    duenio: 54999,
+    "due\u00f1o": 54999,
+    owner: 54999
+  };
+  return Number(amounts[key] || 0);
+}
+
+function accountMovementDate(value, fallback = "\u2014") {
+  return dateOnly(value) || fallback;
+}
+
+function buildAccountLedgerRows(row = {}) {
+  const b = billing(row);
+  const link = mpLinkForBusiness(row);
+  const hasLink = Boolean(mpPaymentUrl(link));
+  const payment = paymentKey(row);
+  const due = dueValue(row);
+  const lastPaymentAt = b.lastPaymentAt || row.lastPaymentAt || null;
+  const linkAmount = mpAmount(link);
+  const estimatedAmount = accountEstimatedMonthlyAmount(row);
+  const period = firstText(link?.calculation?.period_key, link?.period_key, "per\u00edodo actual");
+
+  const rows = [];
+  let balance = 0;
+
+  const shouldShowDebit = hasLink || ["pending", "overdue", "suspended"].includes(payment);
+  const debitAmount = Number(linkAmount || (shouldShowDebit ? estimatedAmount : 0) || 0);
+
+  if (debitAmount > 0) {
+    balance += debitAmount;
+    rows.push({
+      date: accountMovementDate(link?.raw?.created_at || link?.created_at || due),
+      movement: hasLink ? `Link Mercado Pago generado · ${period}` : `Abono ${planLabel(planKey(row))} pendiente`,
+      debit: debitAmount,
+      credit: 0,
+      balance
+    });
+  }
+
+  if (lastPaymentAt) {
+    const creditAmount = Number(debitAmount || estimatedAmount || 0);
+    balance = Math.max(0, balance - creditAmount);
+    rows.push({
+      date: accountMovementDate(lastPaymentAt),
+      movement: payment === "manual" ? "Pago / bonificaci\u00f3n manual registrada" : "Pago manual registrado",
+      debit: 0,
+      credit: creditAmount,
+      balance
+    });
+  }
+
+  if (!rows.length) {
+    rows.push({
+      date: "\u2014",
+      movement: "Sin movimientos de cuenta corriente registrados todav\u00eda",
+      debit: 0,
+      credit: 0,
+      balance: 0
+    });
+  }
+
+  return rows;
+}
+
+function renderAccountLedger(row = {}) {
+  const b = billing(row);
+  const link = mpLinkForBusiness(row);
+  const hasLink = Boolean(mpPaymentUrl(link));
+  const amount = mpAmount(link);
+  const period = firstText(link?.calculation?.period_key, link?.period_key, "\u2014");
+  const due = dateOnly(dueValue(row)) || "Sin fecha";
+  const lastPayment = dateTime(b.lastPaymentAt || row.lastPaymentAt) || "Sin pago registrado";
+  const rows = buildAccountLedgerRows(row);
+  const lastBalance = rows.length ? Number(rows[rows.length - 1].balance || 0) : 0;
+
+  return `
+    <div class="admin-ledger-box">
+      <div class="admin-ledger-summary">
+        <div><span>Estado</span><strong>${escapeHtml(paymentLabel(paymentKey(row)))}</strong><small>${escapeHtml(planLabel(planKey(row)))}</small></div>
+        <div><span>Vencimiento</span><strong>${escapeHtml(due)}</strong><small>Pr\u00f3ximo control</small></div>
+        <div><span>\u00daltimo pago</span><strong>${escapeHtml(lastPayment)}</strong><small>Registro del cliente</small></div>
+        <div><span>Saldo visual</span><strong>${escapeHtml(formatMoney(lastBalance))}</strong><small>No contable todav\u00eda</small></div>
+      </div>
+
+      <div class="admin-ledger-link-note">
+        Mercado Pago: ${hasLink ? `link listo · ${escapeHtml(formatMoney(amount))} · ${escapeHtml(period)}` : "sin link cargado en esta sesi\u00f3n"}
+      </div>
+
+      <div class="admin-ledger-table-wrap">
+        <table class="admin-ledger-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Movimiento</th>
+              <th>D\u00e9bito</th>
+              <th>Cr\u00e9dito</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((item) => `
+              <tr>
+                <td>${escapeHtml(item.date)}</td>
+                <td>${escapeHtml(item.movement)}</td>
+                <td>${item.debit ? escapeHtml(formatMoney(item.debit)) : "\u2014"}</td>
+                <td>${item.credit ? escapeHtml(formatMoney(item.credit)) : "\u2014"}</td>
+                <td><strong>${escapeHtml(formatMoney(item.balance || 0))}</strong></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <small class="admin-ledger-help">Vista m\u00ednima visual. Los movimientos persistidos reales quedan para el pr\u00f3ximo hito.</small>
+    </div>
+  `;
+}
+
+
 function renderDetail(row = {}) {
   const status = commercialStatus(row);
   const b = billing(row);
@@ -874,8 +1003,9 @@ function renderDetail(row = {}) {
           </dl>
         </section>
 
-        <section class="admin-panel-card important">
+        <section class="admin-panel-card important admin-ledger-panel-wide">
           <h3>Cobranzas</h3>
+          ${renderAccountLedger(row)}
           <div class="admin-form-grid">
             <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
             <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(status))}</option>`).join("")}</select></label>
@@ -1044,6 +1174,25 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-billing-actions .primary-action{background:#0f6fe8;color:#fff;border-color:#0f6fe8;}
       .admin-billing-actions .success-action{background:#13a85b;color:#fff;border-color:#13a85b;}
       .admin-billing-actions .muted-action{background:#f8f5f0;color:#6b5d50;}
+
+      .admin-ledger-panel-wide{grid-column:span 2;}
+      .admin-ledger-box{border:1px solid #e7dccb;border-radius:18px;background:#fffdf8;padding:12px;margin:10px 0 14px;}
+      .admin-ledger-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+      .admin-ledger-summary div{border:1px solid #f0ebe3;border-radius:14px;background:#fff;padding:10px;min-width:0;}
+      .admin-ledger-summary span{display:block;color:#6e6e6e;font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:900;}
+      .admin-ledger-summary strong{display:block;font-size:14px;line-height:1.2;margin-top:4px;word-break:break-word;}
+      .admin-ledger-summary small{display:block;color:#6e6e6e;font-size:11px;line-height:1.35;margin-top:3px;}
+      .admin-ledger-link-note{border:1px dashed #e7dccb;border-radius:12px;background:#fff;padding:9px 10px;color:#5f5147;font-size:12px;font-weight:800;margin-bottom:10px;}
+      .admin-ledger-table-wrap{overflow:auto;border:1px solid #eee6dc;border-radius:14px;background:#fff;}
+      .admin-ledger-table{width:100%;border-collapse:collapse;font-size:12px;min-width:660px;}
+      .admin-ledger-table th{background:#f8f5f0;color:#5f5147;text-align:left;padding:9px;border-bottom:1px solid #e7e1d8;font-size:10px;text-transform:uppercase;letter-spacing:.03em;}
+      .admin-ledger-table td{padding:9px;border-bottom:1px solid #f0ebe3;vertical-align:top;}
+      .admin-ledger-table tr:last-child td{border-bottom:0;}
+      .admin-ledger-table td:nth-child(3),
+      .admin-ledger-table td:nth-child(4),
+      .admin-ledger-table td:nth-child(5){text-align:right;white-space:nowrap;}
+      .admin-ledger-help{display:block;color:#6e6e6e;font-size:11px;line-height:1.35;margin-top:8px;}
+
       .admin-detail-top{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:start;margin-bottom:12px;border-bottom:1px solid #eee6dc;padding-bottom:12px;}
       .admin-detail-top h3{margin:0;font-size:22px;}
       .admin-detail-top p{margin:4px 0 0;color:#6e6e6e;font-size:13px;}
@@ -1057,10 +1206,13 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-module-toggle{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 9px;border:1px solid #ded6ca;border-radius:999px;background:#fff;font-size:12px;font-weight:900;}
       button:disabled{opacity:.45;cursor:not-allowed;}
       @media(max-width:980px){
+        .admin-ledger-panel-wide{grid-column:span 1;}
+        .admin-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
         .admin-billing-card{grid-template-columns:1fr;}
         .admin-billing-actions{grid-template-columns:repeat(2,minmax(120px,1fr));}
       }
       @media(max-width:760px){
+        .admin-ledger-summary{grid-template-columns:1fr;}
         .admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
         .admin-toolbar-simple{grid-template-columns:1fr;}
         .admin-content{padding:10px;}
