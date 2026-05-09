@@ -5,8 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.db import init_db, get_cached_answer, save_cached_answer
+from app.billing_mp import router as billing_mp_router
 
 app = FastAPI(title="AppPromos Carniza IA", version="12.2.3")
+app.include_router(billing_mp_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
