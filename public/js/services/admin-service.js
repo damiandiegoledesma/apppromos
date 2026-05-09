@@ -296,6 +296,151 @@ export async function updateBusinessStatus(businessId, nextStatus) {
   await logAdminAction({ action: "business_status_changed", targetBusinessId: businessId, before: { status: before?.status || null }, after: { status: nextStatus } });
 }
 
+
+function normalizeBillingMovementType(type = "note") {
+  const clean = String(type || "note").trim().toLowerCase();
+  const allowed = [
+    "charge_created",
+    "mp_link_created",
+    "manual_payment",
+    "mp_payment_confirmed",
+    "bonus",
+    "adjustment_debit",
+    "adjustment_credit",
+    "note"
+  ];
+  return allowed.includes(clean) ? clean : "note";
+}
+
+function safeBillingMovementNumber(value = 0) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.round(number));
+}
+
+function safeBillingMovementDate(value = null) {
+  const text = String(value || "").trim();
+  if (text) return text;
+  return new Date().toISOString();
+}
+
+function cleanBillingMovementRecord(record = {}) {
+  return Object.fromEntries(
+    Object.entries(record).filter(([, value]) => value !== undefined)
+  );
+}
+
+function billingMovementSortValue(item = {}) {
+  return String(item.date || item.createdAt || item.createdAtIso || "");
+}
+
+export async function listBusinessBillingMovements(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const maxRows = Math.max(1, Math.min(Number(options.limit || 50), 100));
+  const snap = await trackedGetDocs(
+    collection(db, "businesses", businessId, "billingMovements"),
+    `businesses/${businessId}/billingMovements`
+  );
+
+  const rows = [];
+  snap.forEach((docSnap) => {
+    rows.push({
+      id: docSnap.id,
+      ...(docSnap.data() || {})
+    });
+  });
+
+  rows.sort((a, b) => billingMovementSortValue(a).localeCompare(billingMovementSortValue(b)));
+
+  if (options.desc === true) {
+    rows.reverse();
+  }
+
+  return rows.slice(-maxRows);
+}
+
+export async function recordBusinessBillingMovement(businessId, movement = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const before = await readBusinessRoot(businessId);
+  const previousMovements = await listBusinessBillingMovements(businessId, { limit: 100 });
+  const previousBalance = previousMovements.length
+    ? Number(previousMovements[previousMovements.length - 1].balanceAfter || 0)
+    : Number(before?.billing?.accountBalance || before?.accountBalance || 0) || 0;
+
+  const debit = safeBillingMovementNumber(movement.debit);
+  const credit = safeBillingMovementNumber(movement.credit);
+  const balanceAfter = movement.balanceAfter !== undefined
+    ? safeBillingMovementNumber(movement.balanceAfter)
+    : Math.max(0, previousBalance + debit - credit);
+
+  const now = new Date().toISOString();
+  const cleanType = normalizeBillingMovementType(movement.type);
+  const description = String(movement.description || movement.movement || "Movimiento de cuenta corriente").trim();
+
+  const record = cleanBillingMovementRecord({
+    businessId,
+    type: cleanType,
+    date: safeBillingMovementDate(movement.date || now),
+    description,
+    movement: description,
+    debit,
+    credit,
+    balanceBefore: previousBalance,
+    balanceAfter,
+    source: String(movement.source || "panel_admin").trim(),
+    periodKey: movement.periodKey || movement.period_key || null,
+    mpPreferenceId: movement.mpPreferenceId || movement.preference_id || null,
+    mpExternalReference: movement.mpExternalReference || movement.external_reference || null,
+    mpInitPoint: movement.mpInitPoint || movement.init_point || null,
+    metadata: movement.metadata && typeof movement.metadata === "object" ? movement.metadata : null,
+    createdAt: now,
+    createdAtServer: serverTimestamp()
+  });
+
+  const movementRef = await addDoc(
+    collection(db, "businesses", businessId, "billingMovements"),
+    record
+  );
+
+  const billing = {
+    ...(before?.billing || {}),
+    accountBalance: balanceAfter,
+    lastBillingMovementAt: now,
+    updatedAt: now
+  };
+
+  await setDoc(doc(db, "businesses", businessId), {
+    billing,
+    accountBalance: balanceAfter,
+    lastBillingMovementAt: now,
+    updatedAt: now
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_billing_movement_recorded",
+    targetBusinessId: businessId,
+    before: {
+      billing: before?.billing || null,
+      accountBalance: previousBalance
+    },
+    after: {
+      movementId: movementRef.id,
+      movement: record,
+      billing
+    }
+  });
+
+  return {
+    id: movementRef.id,
+    ...record
+  };
+}
+
+
 export async function updateBusinessBillingPlan(businessId, nextPlan) {
   await requireAdmin();
   const cleanPlan = normalizeAdminPlan(nextPlan || "trial");
@@ -1003,6 +1148,3 @@ export function subscribeBusinessControl(businessId, callback) {
     console.warn("Listener business control error", error);
   });
 }
-
-
-
