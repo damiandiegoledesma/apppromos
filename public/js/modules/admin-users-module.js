@@ -13,6 +13,8 @@ import {
   updateBusinessBillingStatus,
   updateBusinessPaymentDueDate,
   markBusinessPaymentReceived,
+  listBusinessBillingMovements,
+  recordBusinessBillingMovement,
   updateBusinessInternalNote,
   setBusinessTestFlag,
   markExistingBusinessesAsTest,
@@ -29,6 +31,7 @@ const PAYMENT_STATUSES = ["active", "pending", "overdue", "suspended", "manual"]
 const ACCESS_STATUSES = ["active", "trial", "suspended", "disabled"];
 const MP_BACKEND_URL = "http://127.0.0.1:8000";
 const MP_LINKS_BY_BUSINESS = new Map();
+const BILLING_MOVEMENTS_BY_BUSINESS = new Map();
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -865,7 +868,29 @@ function accountMovementDate(value, fallback = "\u2014") {
   return dateOnly(value) || fallback;
 }
 
-function buildAccountLedgerRows(row = {}) {
+function buildAccountLedgerRows(row = {}, persistedMovements = []) {
+  const realMovements = Array.isArray(persistedMovements) ? persistedMovements.filter(Boolean) : [];
+  if (realMovements.length) {
+    let runningBalance = 0;
+    return realMovements
+      .slice()
+      .sort((a, b) => String(a.date || a.createdAt || "").localeCompare(String(b.date || b.createdAt || "")))
+      .map((item) => {
+        const debit = Number(item.debit || 0) || 0;
+        const credit = Number(item.credit || 0) || 0;
+        runningBalance = item.balanceAfter !== undefined && item.balanceAfter !== null
+          ? Number(item.balanceAfter || 0) || 0
+          : Math.max(0, runningBalance + debit - credit);
+        return {
+          date: accountMovementDate(item.date || item.createdAt || item.createdAtIso),
+          movement: firstText(item.description, item.movement, item.type, "Movimiento de cuenta corriente"),
+          debit,
+          credit,
+          balance: runningBalance
+        };
+      });
+  }
+
   const b = billing(row);
   const link = mpLinkForBusiness(row);
   const hasLink = Boolean(mpPaymentUrl(link));
@@ -918,7 +943,7 @@ function buildAccountLedgerRows(row = {}) {
   return rows;
 }
 
-function renderAccountLedger(row = {}) {
+function renderAccountLedger(row = {}, persistedMovements = []) {
   const b = billing(row);
   const link = mpLinkForBusiness(row);
   const hasLink = Boolean(mpPaymentUrl(link));
@@ -926,7 +951,8 @@ function renderAccountLedger(row = {}) {
   const period = firstText(link?.calculation?.period_key, link?.period_key, "\u2014");
   const due = dateOnly(dueValue(row)) || "Sin fecha";
   const lastPayment = dateTime(b.lastPaymentAt || row.lastPaymentAt) || "Sin pago registrado";
-  const rows = buildAccountLedgerRows(row);
+  const rows = buildAccountLedgerRows(row, persistedMovements);
+  const hasPersistedMovements = Array.isArray(persistedMovements) && persistedMovements.length > 0;
   const lastBalance = rows.length ? Number(rows[rows.length - 1].balance || 0) : 0;
 
   return `
@@ -1005,7 +1031,7 @@ function renderDetail(row = {}) {
 
         <section class="admin-panel-card important admin-ledger-panel-wide">
           <h3>Cobranzas</h3>
-          ${renderAccountLedger(row)}
+          ${renderAccountLedger(row, BILLING_MOVEMENTS_BY_BUSINESS.get(safeBusinessId(row)) || [])}
           <div class="admin-form-grid">
             <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
             <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(status))}</option>`).join("")}</select></label>
@@ -1316,6 +1342,31 @@ export async function renderAdminUsers(container, options = {}) {
     };
   }
 
+
+  async function refreshBillingMovementsForBusiness(businessId) {
+    if (!businessId) return [];
+    try {
+      const rows = await listBusinessBillingMovements(businessId, { limit: 50 });
+      BILLING_MOVEMENTS_BY_BUSINESS.set(businessId, rows);
+      return rows;
+    } catch (error) {
+      console.warn("No se pudieron leer movimientos de cuenta corriente", error);
+      return BILLING_MOVEMENTS_BY_BUSINESS.get(businessId) || [];
+    }
+  }
+
+  async function recordBillingMovementSafe(businessId, movement = {}) {
+    if (!businessId) return null;
+    try {
+      const saved = await recordBusinessBillingMovement(businessId, movement);
+      await refreshBillingMovementsForBusiness(businessId);
+      return saved;
+    } catch (error) {
+      console.warn("No se pudo registrar movimiento de cuenta corriente", error);
+      return null;
+    }
+  }
+
   async function generateMpLink(row = {}) {
     const payload = mpPayloadForBusiness(row);
     const response = await fetch(`${MP_BACKEND_URL}/billing/mp/app-charge`, {
@@ -1392,7 +1443,10 @@ export async function renderAdminUsers(container, options = {}) {
 
     const viewButton = target.closest("[data-view-business]");
     if (viewButton) {
-      state.selectedBusinessId = viewButton.dataset.viewBusiness || "";
+      const businessId = viewButton.dataset.viewBusiness || "";
+      state.selectedBusinessId = businessId;
+      render();
+      await refreshBillingMovementsForBusiness(businessId);
       render();
       return;
     }
@@ -1426,6 +1480,21 @@ export async function renderAdminUsers(container, options = {}) {
       await withButton(generateMpButton, "Generando...", async () => {
         try {
           const result = await generateMpLink(row);
+          await recordBillingMovementSafe(businessId, {
+            type: "mp_link_created",
+            description: `Link Mercado Pago generado · ${firstText(result.calculation?.period_key, "período actual")}`,
+            debit: mpAmount(result),
+            credit: 0,
+            source: "panel_admin_mp_link",
+            periodKey: firstText(result.calculation?.period_key, result.period_key, ""),
+            mpPreferenceId: firstText(result.preference_id, ""),
+            mpExternalReference: firstText(result.external_reference, ""),
+            mpInitPoint: mpPaymentUrl(result),
+            metadata: {
+              plan: firstText(result.calculation?.plan, result.plan, planKey(row)),
+              businessName: businessName(row)
+            }
+          });
           window.alert(`Link Mercado Pago generado.\n\nImporte: ${formatMoney(mpAmount(result))}\nPeríodo: ${firstText(result.calculation?.period_key, "—")}`);
           render();
         } catch (error) {
@@ -1476,7 +1545,20 @@ export async function renderAdminUsers(container, options = {}) {
       if (!window.confirm(`Marcar pago recibido para "${businessName(row)}"?`)) return;
       await withButton(markPaymentButton, "Guardando...", async () => {
         const dueInput = container.querySelector("[data-detail-due]");
+        const creditAmount = Math.max(
+          Number(row.billing?.accountBalance || row.accountBalance || 0) || 0,
+          Number(mpAmount(mpLinkForBusiness(row)) || 0) || 0,
+          Number(accountEstimatedMonthlyAmount(row) || 0) || 0
+        );
         await markBusinessPaymentReceived(businessId, { nextPaymentDueAt: dueInput?.value || dateInput(dueValue(row)) || null });
+        await recordBillingMovementSafe(businessId, {
+          type: "manual_payment",
+          description: "Pago manual registrado",
+          debit: 0,
+          credit: creditAmount,
+          source: "panel_admin_manual_payment",
+          periodKey: firstText(mpLinkForBusiness(row)?.calculation?.period_key, mpLinkForBusiness(row)?.period_key, "")
+        });
         await refreshKeepingDetail();
       });
       return;
