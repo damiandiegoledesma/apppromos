@@ -45,10 +45,74 @@ export const VERTICAL_CONFIGS = {
   }
 };
 
+function capitalizeFirst(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function pickLabel(singular = "", plural = "", options = {}) {
+  const label = options.plural ? (plural || singular) : singular;
+  return options.capitalize ? capitalizeFirst(label) : label;
+}
+
 export function getVerticalConfig(verticalId = DEFAULT_VERTICAL_ID) {
   return VERTICAL_CONFIGS[verticalId] || VERTICAL_CONFIGS[DEFAULT_VERTICAL_ID];
 }
 
 export function getDefaultVerticalConfig() {
   return getVerticalConfig(DEFAULT_VERTICAL_ID);
+}
+
+export function getVerticalLabel(verticalId = DEFAULT_VERTICAL_ID) {
+  return getVerticalConfig(verticalId).label;
+}
+
+export function getBusinessLabel(verticalId = DEFAULT_VERTICAL_ID, options = {}) {
+  const config = getVerticalConfig(verticalId);
+  return pickLabel(config.businessLabel, config.businessPluralLabel, options);
+}
+
+export function getProductLabel(verticalId = DEFAULT_VERTICAL_ID, options = {}) {
+  const config = getVerticalConfig(verticalId);
+  return pickLabel(config.productLabel, config.productPluralLabel, options);
+}
+
+export function getCategoryLabel(verticalId = DEFAULT_VERTICAL_ID, options = {}) {
+  const config = getVerticalConfig(verticalId);
+  return pickLabel(config.categoryLabel, config.categoryPluralLabel, options);
+}
+
+export function getDefaultUnit(verticalId = DEFAULT_VERTICAL_ID) {
+  return getVerticalConfig(verticalId).defaultUnit || "kg";
+}
+
+export function getAllowedUnits(verticalId = DEFAULT_VERTICAL_ID) {
+  const units = getVerticalConfig(verticalId).allowedUnits;
+  return Array.isArray(units) ? [...units] : [];
+}
+
+export function getVerticalCategories(verticalId = DEFAULT_VERTICAL_ID) {
+  const categories = getVerticalConfig(verticalId).categories;
+  return Array.isArray(categories) ? [...categories] : [];
+}
+
+export function getVerticalDemoCopy(verticalId = DEFAULT_VERTICAL_ID) {
+  return { ...(getVerticalConfig(verticalId).demo || {}) };
+}
+
+export function getVerticalUrgentModeCopy(verticalId = DEFAULT_VERTICAL_ID) {
+  return { ...(getVerticalConfig(verticalId).urgentMode || {}) };
+}
+
+export function getVerticalWhatsappCopy(verticalId = DEFAULT_VERTICAL_ID) {
+  return { ...(getVerticalConfig(verticalId).whatsapp || {}) };
+}
+
+export function getVerticalWebCopy(verticalId = DEFAULT_VERTICAL_ID) {
+  return { ...(getVerticalConfig(verticalId).web || {}) };
+}
+
+export function getCarnizaVerticalCopy(verticalId = DEFAULT_VERTICAL_ID) {
+  return { ...(getVerticalConfig(verticalId).carniza || {}) };
 }
