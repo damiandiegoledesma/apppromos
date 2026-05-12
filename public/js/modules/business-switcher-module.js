@@ -1,9 +1,14 @@
+import { getBusinessLabel } from "../config/vertical-config.js";
 import { resolveSession } from "../services/auth-service.js";
 import {
   listBusinesses,
   getResolvedBusinessId
 } from "../services/business-service.js";
 import { changeActiveBusiness } from "../app-main.js";
+
+const BUSINESS_LABEL = getBusinessLabel();
+const BUSINESS_LABEL_PLURAL = getBusinessLabel(undefined, { plural: true });
+const BUSINESS_LABEL_CAPITALIZED = getBusinessLabel(undefined, { capitalize: true });
 
 export async function renderBusinessSwitcher(container) {
   if (!container) return;
@@ -23,16 +28,16 @@ export async function renderBusinessSwitcher(container) {
       container.innerHTML = `
         <div class="admin-switcher-compact">
           <strong>Modo Admin</strong>
-          <span style="font-size:12px;color:#666;">Sin carnicerías</span>
+          <span style="font-size:12px;color:#666;">Sin ${BUSINESS_LABEL_PLURAL}</span>
         </div>
       `;
       return;
     }
 
     container.innerHTML = `
-      <div class="admin-switcher-compact" title="Elegí qué carnicería estás administrando">
+      <div class="admin-switcher-compact" title="Eleg\u00ed qu\u00e9 ${BUSINESS_LABEL} est\u00e1s administrando">
         <strong>Modo Admin</strong>
-        <select id="adminBusinessSelect" aria-label="Carnicería activa">
+        <select id="adminBusinessSelect" aria-label="${BUSINESS_LABEL_CAPITALIZED} activa">
           ${businesses.map((business) => `
             <option
               value="${business.businessId}"
@@ -55,7 +60,7 @@ export async function renderBusinessSwitcher(container) {
         await changeActiveBusiness(id);
       } catch (error) {
         console.error("Error cambiando empresa desde switcher:", error);
-        alert(error?.message || "No se pudo cambiar la carnicería activa");
+        alert(error?.message || `No se pudo cambiar la ${BUSINESS_LABEL} activa`);
       }
     });
   } catch (error) {
