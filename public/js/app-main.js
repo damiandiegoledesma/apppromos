@@ -333,6 +333,7 @@ function getDemoActionOptions() {
 function getBuilderOptions() {
   return {
     businessId: currentBusinessId,
+    businessMeta: currentPayload?.meta || {},
     ...getWriteOptions(),
     ...getDemoActionOptions()
   };
@@ -2283,7 +2284,7 @@ async function refreshSavedModule() {
     meta: data.meta,
     state: data.state
   };
-  renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
   renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], data.meta || {}, getShareOptions("whatsapp_panel"));
   renderCurrentDashboard();
   markLazyPanelsDirty();
@@ -2478,7 +2479,7 @@ async function renderBusinessWorkspace(options = {}) {
     if (isPaymentOverdue()) injectAccessWarning(pricesPanel);
   }
 
-  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
   if (!setPanelLocked(builderPanel, "combos")) renderBuilder(builderPanel, activeProducts, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);

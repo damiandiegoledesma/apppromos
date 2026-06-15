@@ -1,3 +1,4 @@
+import { buildCustomerWhatsappMessage, openCustomerWhatsappMessage } from "../services/whatsapp-message-service.js";
 import {
   formatCurrency,
   normalizeSavedCombosFromState
@@ -37,33 +38,12 @@ function formatQty(value) {
   return Number.isInteger(number) ? String(number) : String(number).replace(".", ",");
 }
 
-function buildWhatsappText(combo) {
-  const items = Array.isArray(combo?.items) ? combo.items : [];
-  const title = toWhatsappSafeText(String(combo?.name || "OFERTA DEL DIA").toUpperCase());
-  const lines = [title, ""];
-
-  for (const item of items) {
-    const cantidad = formatQty(item.cantidad || 1);
-    const unidad = toWhatsappSafeText(item.unidad || "kg");
-    const nombre = toWhatsappSafeText(item.nombre || "Producto");
-    lines.push(`- ${cantidad} ${unidad} ${nombre}`);
-  }
-
-  const total = combo.total || combo?.snapshot?.totals?.total_redondeado || 0;
-  lines.push(
-    "",
-    `Total: ${formatCurrency(total)}`,
-    "",
-    "Oferta por tiempo limitado / hasta agotar stock.",
-    "Carniceria de Carniza"
-  );
-  return lines.join("\n");
+function buildWhatsappText(combo, businessMeta = {}) {
+  return buildCustomerWhatsappMessage(combo, businessMeta);
 }
 
-function openWhatsapp(combo) {
-  const text = buildWhatsappText(combo);
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+function openWhatsapp(combo, businessMeta = {}) {
+  return openCustomerWhatsappMessage(combo, businessMeta);
 }
 
 function canRunOptionHook(hook, payload) {
@@ -158,7 +138,7 @@ export function renderSaved(container, state, options = {}) {
       const combo = savedCombos[index];
       if (!combo) return;
       if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "saved", combo })) return;
-      openWhatsapp(combo);
+      openWhatsapp(combo, options?.businessMeta || {});
     });
   });
 }
