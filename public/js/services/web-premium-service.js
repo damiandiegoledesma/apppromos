@@ -376,6 +376,56 @@ export async function saveWebConfig(businessId, configPatch = {}) {
   return nextWeb;
 }
 
+// V12.18-A-FIX1 — al guardar los primeros precios reales, la vidriera
+// deja automáticamente el modo "en preparación". El carnicero no necesita
+// entrar a Mi Web ni guardar una configuración adicional.
+export async function activateStarterWebFromProducts(businessId, products = []) {
+  if (!businessId) return { activated: false, reason: "missing_business" };
+
+  const pricedProducts = (Array.isArray(products) ? products : []).filter((product = {}) => {
+    const price = Number(product.precio ?? product.price ?? 0);
+    return product.active !== false && product.activo !== false && Number.isFinite(price) && price > 0;
+  });
+
+  if (!pricedProducts.length) {
+    return { activated: false, reason: "no_real_prices", pricedCount: 0 };
+  }
+
+  const { config } = await loadWebConfig(businessId);
+  const needsActivation =
+    config?.mode === "starter" ||
+    config?.priceListStatus === "pending_real_prices" ||
+    config?.showPriceList !== true;
+
+  if (!needsActivation) {
+    return {
+      activated: false,
+      reason: "already_ready",
+      pricedCount: pricedProducts.length,
+      publicUrl: getPublicWebUrl(businessId, config?.slug || "")
+    };
+  }
+
+  const nextWeb = await saveWebConfig(businessId, {
+    enabled: true,
+    published: true,
+    active: true,
+    mode: "web_premium",
+    priceListStatus: "ready",
+    showPriceList: true,
+    // Vacío = mostrar todos los rubros que tengan productos activos con precio real.
+    visibleRubros: [],
+    updatedFrom: "first_real_prices"
+  });
+
+  return {
+    activated: true,
+    pricedCount: pricedProducts.length,
+    publicUrl: getPublicWebUrl(businessId, nextWeb?.slug || ""),
+    web: nextWeb
+  };
+}
+
 
 function cleanBusinessText(value = "") {
   return String(value || "").trim().replace(/\s+/g, " ");

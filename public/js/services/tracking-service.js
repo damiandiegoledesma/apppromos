@@ -113,3 +113,21 @@ export function trackTrialRegistered(params = {}) {
     is_demo: false
   });
 }
+
+
+// V12.18-A — embudo de activación para primeras carnicerías reales.
+export function trackRegistrationStarted(params = {}) {
+  trackAppPromosEvent("registration_started", { ...params, is_demo: false });
+}
+
+export function trackFirstPriceSaved(params = {}) {
+  trackAppPromosEvent("first_price_saved", { ...params, is_demo: false });
+}
+
+export function trackWebOpened(params = {}) {
+  trackAppPromosEvent("web_opened", { ...params, is_demo: false });
+}
+
+export function trackWebShared(params = {}) {
+  trackAppPromosEvent("web_shared", { ...params, is_demo: false });
+}

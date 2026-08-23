@@ -6,7 +6,7 @@ import {
 import { app } from "../core/firebase-core.js";
 import { registerClientAndBusiness } from "../services/auth-service.js";
 import { setActiveBusinessId } from "../services/business-service.js";
-import { trackTrialRegistered } from "../services/tracking-service.js";
+import { trackRegistrationStarted, trackTrialRegistered } from "../services/tracking-service.js";
 
 const auth = getAuth(app);
 
@@ -40,7 +40,7 @@ function buildAuthHTML() {
 
         <div class="public-auth-title">
           <h1>Entrá a vender más rápido</h1>
-          <p>Creá tu carnicería o iniciá sesión para armar ofertas y vender por WhatsApp.</p>
+          <p>Creá tu carnicería online. Cargá precios y empezá a recibir pedidos por WhatsApp.</p>
         </div>
 
         <div class="public-auth-tabs">
@@ -60,14 +60,10 @@ function buildAuthHTML() {
         <div id="tabRegistro" class="public-auth-tab">
           <label>Nombre de la carnicería</label>
           <input id="businessName" placeholder="Ej: Carnicería El Buen Corte" />
-          <label>Nombre del responsable</label>
-          <input id="ownerName" placeholder="Tu nombre" />
           <label>Email</label>
           <input id="email" type="email" placeholder="tu@email.com" autocomplete="email" />
           <label>Contraseña</label>
           <input id="password" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          <label>Dirección</label>
-          <input id="direccion" placeholder="Dirección del local" />
           <label>Teléfono / WhatsApp</label>
           <input id="telefono" placeholder="Ej: 3462 555555" />
           <label>Localidad</label>
@@ -150,10 +146,10 @@ function bindEvents() {
   document.getElementById("registroBtn")?.addEventListener("click", async () => {
     const data = {
       businessName: document.getElementById("businessName")?.value?.trim(),
-      ownerName: document.getElementById("ownerName")?.value?.trim(),
+      ownerName: document.getElementById("businessName")?.value?.trim(),
       email: document.getElementById("email")?.value?.trim(),
       password: document.getElementById("password")?.value || "",
-      direccion: document.getElementById("direccion")?.value?.trim(),
+      direccion: "",
       telefono: document.getElementById("telefono")?.value?.trim(),
       ciudad: document.getElementById("ciudad")?.value?.trim(),
       locality: document.getElementById("ciudad")?.value?.trim(),
@@ -162,15 +158,16 @@ function bindEvents() {
     };
 
     try {
-      setStatus("registroStatus", "Creando carnicería...");
+      trackRegistrationStarted({ source: "public_auth_register" });
+      setStatus("registroStatus", "Creando tu carnicería online...");
       const result = await registerClientAndBusiness(data);
       trackTrialRegistered({
         source: "public_auth_register",
         business_id: result?.businessId || null
       });
       await setActiveBusinessId(result.businessId);
-      setStatus("registroStatus", "Listo, entrando...");
-      window.location.href = "./app.html";
+      setStatus("registroStatus", "¡Listo! Tu carnicería ya está creada.");
+      window.location.href = "./app.html?onboarding=1";
     } catch (error) {
       console.error(error);
       setStatus("registroStatus", error?.message || "No se pudo crear la carnicería");

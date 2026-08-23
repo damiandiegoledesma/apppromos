@@ -420,6 +420,23 @@
       text-decoration:underline;
       text-underline-offset:3px;
     }
+
+    /* APPPROMOS V12.17-A2-REBUILD - carrito limpio vidriera */
+    .product{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding:8px 0;}
+    .cart-add-mini{min-height:34px;padding:0 10px;border-radius:12px;border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;font-weight:950;cursor:pointer;white-space:nowrap;}
+    .cart-add-btn{width:100%;margin-top:10px;}
+    .cart-section{margin-top:16px;}.cart-card{display:grid;gap:12px;background:linear-gradient(180deg,#fff,#fff7ed);border:1px solid #fed7aa;border-radius:24px;padding:16px;box-shadow:0 14px 34px rgba(47,22,14,.10)}
+    .cart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.cart-head h2{margin:0;color:#7c2d12;font-size:1.35rem;letter-spacing:-.03em}.cart-head p{margin:4px 0 0;color:#7c2d12;font-weight:820;line-height:1.35}
+    .cart-badge{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:#ffedd5;border:1px solid #fed7aa;color:#7c2d12;font-weight:950;white-space:nowrap}
+    .cart-items{display:grid;gap:8px}.cart-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid #f1e4d6;border-radius:18px;padding:10px;background:#fff}.cart-line strong{display:block;color:#2b2724;line-height:1.18;overflow-wrap:anywhere}.cart-line small{display:block;margin-top:3px;color:#7c2d12;font-weight:850;line-height:1.25}
+    .cart-line-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}.cart-line-actions button{min-width:34px;min-height:34px;padding:0 10px;border-radius:12px;border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;font-weight:1000;cursor:pointer}.cart-line-actions .cart-remove{color:#b42318;background:#fff1f0;border-color:#fecaca}
+    .cart-total{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:12px;border-radius:18px;background:#7c2d12;color:#fff;font-weight:950}.cart-total strong{font-size:1.25rem}
+    .cart-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cart-form label{display:grid;gap:5px;color:#7c2d12;font-size:.78rem;font-weight:950;text-transform:uppercase;letter-spacing:.03em}.cart-form input{width:100%;min-height:44px;border:1px solid #fed7aa;border-radius:14px;padding:0 12px;font:inherit;font-weight:760;color:#2b2724;background:#fff}.cart-form--single{grid-template-columns:1fr}
+    .cart-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}.cart-choice{border:1px solid #fde68a;background:#fffdf5;border-radius:16px;padding:12px;display:flex;gap:8px;align-items:flex-start;font-weight:900;color:#7c2d12;line-height:1.18}.cart-choice input{margin-top:2px;accent-color:#9a3412}.cart-choice small{display:block;margin-top:4px;color:#92400e;font-weight:750;line-height:1.25;text-transform:none;letter-spacing:0}
+    .cart-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.cart-actions .btn{min-width:180px}
+    .cart-floating{position:fixed;left:14px;right:14px;bottom:calc(14px + var(--safe-bottom));z-index:80;max-width:520px;margin:0 auto;pointer-events:none}.cart-floating a{width:100%;pointer-events:auto;text-decoration:none;border:1px solid #f97316;background:#9a3412;color:#fff;border-radius:18px;box-shadow:0 18px 45px rgba(124,45,18,.28);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}.cart-floating strong{font-size:.98rem}.cart-floating span{font-size:.86rem;opacity:.95;text-align:right}
+    @media(max-width:520px){.cart-form{grid-template-columns:1fr}.cart-choice-grid{grid-template-columns:1fr}.cart-actions .btn{width:100%;min-width:0}.product{grid-template-columns:1fr auto}.cart-add-mini{grid-column:1 / -1;width:100%}.cart-line{grid-template-columns:1fr}.cart-line-actions{justify-content:flex-start}}
+
 </style>
 </head>
 <body>
@@ -577,19 +594,79 @@
       const rubroNames=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].sort((a,b)=>a.localeCompare(b,"es"));
       const baseMessage=`Hola! Quiero consultar ofertas de ${name}`;
       const mainWa=waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},baseMessage);
+      const cartMeta={phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""};
+      const cartKey=`apppromos_web_cart_${data.businessId||data.slug||normalizeSlug(name)||"public"}`;
+      let cartItems=loadCartItems();
+      function loadCartItems(){try{const parsed=JSON.parse(localStorage.getItem(cartKey)||"[]");return Array.isArray(parsed)?parsed:[]}catch(error){return[]}}
+      function saveCartItems(){try{localStorage.setItem(cartKey,JSON.stringify(cartItems))}catch(error){console.warn("No se pudo guardar el carrito",error)}}
+      function cartNumber(value){const number=Number(value||0);return Number.isFinite(number)?number:0}
+      function cartItemKey(item={}){return `${item.type||"product"}:${String(item.id||item.name||item.nombre||"item").trim()}`.toLowerCase()}
+      function encodeCartItem(item={}){try{return encodeURIComponent(JSON.stringify(item||{}))}catch(error){return ""}}
+      function decodeCartItem(raw=""){try{return JSON.parse(decodeURIComponent(String(raw||"")))}catch(error){return null}}
+      function cartQtyLabel(item={}){const qty=Math.max(1,cartNumber(item.quantity)||1);return item.type==="combo"?`${qty} combo${qty===1?"":"s"}`:`${qty} ${item.unit||"kg"}`}
+      function cartLineTotal(item={}){return Math.round(cartNumber(item.price)*Math.max(1,cartNumber(item.quantity)||1))}
+      function cartTotal(){return cartItems.reduce((acc,item)=>acc+cartLineTotal(item),0)}
+      function currentCartCustomer(){return {name:app.querySelector("#cartCustomerName")?.value||"",phone:app.querySelector("#cartCustomerPhone")?.value||"",delivery:app.querySelector("input[name='cartDelivery']:checked")?.value||"retiro",address:app.querySelector("#cartCustomerAddress")?.value||"",payment:app.querySelector("input[name='cartPayment']:checked")?.value||"efectivo",note:app.querySelector("#cartCustomerNote")?.value||""}}
+      function tidyCustomerText(value=""){const text=String(value||"").trim().replace(/\s+/g," ");return text?text.charAt(0).toLocaleUpperCase("es-AR")+text.slice(1):""}
+      function renderCartHtml(customer=currentCartCustomer()){const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);const delivery=customer.delivery||"retiro";const payment=customer.payment||"efectivo";const itemsHtml=cartItems.length?`<div class="cart-items">${cartItems.map((item)=>{const key=esc(item.key||cartItemKey(item));const rubro=item.rubro?` · ${esc(item.rubro)}`:"";return `<div class="cart-line"><div><strong>${esc(item.name||"Producto")}</strong><small>${esc(cartQtyLabel(item))}${rubro} · ${money(cartLineTotal(item))}</small></div><div class="cart-line-actions"><button type="button" data-cart-minus="${key}">−</button><button type="button" data-cart-plus="${key}">+</button><button type="button" class="cart-remove" data-cart-remove="${key}">Quitar</button></div></div>`}).join("")}</div>`:`<div class="empty">Agregá productos u ofertas para armar tu pedido.</div>`;const totalHtml=cartItems.length?`<div class="cart-total"><span>Total estimado</span><strong>${money(cartTotal())}</strong></div>`:"";return `<section class="section cart-section" id="pedido" data-cart-root><div class="cart-card"><div class="cart-head"><div><h2>Tu pedido</h2><p>Elegí productos, revisá el total y enviá el pedido por WhatsApp.</p></div><span class="cart-badge">${count} ítem${count===1?"":"s"}</span></div>${itemsHtml}${totalHtml}<div class="cart-form"><label>Tu nombre<input id="cartCustomerName" type="text" value="${esc(customer.name||"")}" placeholder="Ej: Juan" autocomplete="name"></label><label>Tu teléfono<input id="cartCustomerPhone" type="tel" value="${esc(customer.phone||"")}" placeholder="Ej: 3462 555555" autocomplete="tel"></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartDelivery" value="retiro" ${delivery==="retiro"?"checked":""}><span>Retiro en el local<small>Pasás por la carnicería.</small></span></label><label class="cart-choice"><input type="radio" name="cartDelivery" value="envio" ${delivery==="envio"?"checked":""}><span>Envío con cadete<small>Dejanos la dirección.</small></span></label></div><div class="cart-form cart-form--single"><label>Dirección para envío<input id="cartCustomerAddress" type="text" value="${esc(customer.address||"")}" placeholder="Ej: Mitre 1234, barrio, entre calles" autocomplete="street-address"></label><label>Aclaración opcional<input id="cartCustomerNote" type="text" value="${esc(customer.note||"")}" placeholder="Ej: Sin mucha grasa / retiro 20 hs"></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartPayment" value="efectivo" ${payment==="efectivo"?"checked":""}><span>Efectivo<small>Al retirar o al cadete.</small></span></label><label class="cart-choice"><input type="radio" name="cartPayment" value="transferencia" ${payment==="transferencia"?"checked":""}><span>Transferencia<small>Coordinás con la carnicería.</small></span></label></div><div class="cart-actions"><button class="btn btn-ghost" type="button" data-cart-clear="true" ${cartItems.length?"":"disabled"}>Vaciar pedido</button><button class="btn btn-primary" type="button" data-cart-send-order="true" ${cartItems.length?"":"disabled"}>Enviar pedido por WhatsApp</button></div></div></section>`}
+      function renderFloatingCartHtml(){const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);if(!count)return"";return `<div class="cart-floating" data-cart-floating><a href="#pedido"><strong>🛒 Ver pedido</strong><span>${count} ítem${count===1?"":"s"} · ${money(cartTotal())}</span></a></div>`}
+      function refreshCart(){const customer=currentCartCustomer();const root=app.querySelector("[data-cart-root]");if(root)root.outerHTML=renderCartHtml(customer);const floating=app.querySelector("[data-cart-floating]");const nextFloating=renderFloatingCartHtml();if(floating&&nextFloating)floating.outerHTML=nextFloating;else if(floating&&!nextFloating)floating.remove();else if(!floating&&nextFloating)app.insertAdjacentHTML("beforeend",nextFloating)}
+      function addCartItem(item={}){const price=cartNumber(item.price);const itemName=String(item.name||item.nombre||"").trim();if(!itemName||price<=0)return;const normalized={type:item.type||"product",id:item.id||itemName,key:cartItemKey(item),name:itemName,rubro:item.rubro||"",unit:item.unit||"kg",price,quantity:Math.max(1,cartNumber(item.quantity)||1),items:Array.isArray(item.items)?item.items:[]};const current=cartItems.find((entry)=>entry.key===normalized.key);if(current)current.quantity=Math.max(1,cartNumber(current.quantity)||1)+normalized.quantity;else cartItems.push(normalized);saveCartItems();refreshCart()}
+      function changeCartItem(key="",delta=0){const item=cartItems.find((entry)=>entry.key===key);if(!item)return;item.quantity=Math.max(1,(cartNumber(item.quantity)||1)+delta);saveCartItems();refreshCart()}
+      function removeCartItem(key=""){cartItems=cartItems.filter((entry)=>entry.key!==key);saveCartItems();refreshCart()}
+      function buildCartOrderMessage(){
+        const customer=currentCartCustomer();
+        const customerName=tidyCustomerText(customer.name);
+        const customerAddress=tidyCustomerText(customer.address);
+        const customerNote=String(customer.note||"").trim();
+        const rows=[];
+        cartItems.forEach((item)=>{
+          if(item.type==="combo"){
+            rows.push(`🔥 *${cartQtyLabel(item)} ${item.name}* — ${money(cartLineTotal(item))}`);
+            if(Array.isArray(item.items)) item.items.forEach((part)=>rows.push(`   • ${part.cantidad||1} ${part.unidad||"kg"} ${part.nombre||"Producto"}`));
+          }else{
+            rows.push(`• ${cartQtyLabel(item)} ${item.name}${item.rubro?` - ${item.rubro}`:""} — ${money(cartLineTotal(item))}`);
+          }
+        });
+        const deliveryText=customer.delivery==="envio"?"Envío con cadete":"Retiro en el local";
+        const paymentText=customer.payment==="transferencia"?"Transferencia":"Efectivo";
+        const lines=[
+          `Hola, quiero hacer este pedido en *${name}*:`,
+          "",
+          "🛒 *PEDIDO*",
+          "",
+          ...rows,
+          "",
+          `💰 *Total estimado: ${money(cartTotal())}*`,
+          "",
+          `👤 *Cliente:* ${customerName}`,
+          `📞 *Teléfono:* ${String(customer.phone||"").trim()}`,
+          "",
+          `🛵 *Entrega:* ${deliveryText}`,
+          customer.delivery==="envio"?`📍 *Dirección:* ${customerAddress}`:"",
+          `💵 *Pago:* ${paymentText}`,
+          customerNote?"":"",
+          customerNote?`📝 *Aclaración:* ${customerNote}`:"",
+          "",
+          "_Precios sujetos a disponibilidad._"
+        ];
+        return lines.filter((line,index,array)=>line!=="" || (index>0 && array[index-1]!=="")).join("\n");
+      }
+      function sendCartOrder(){const customer=currentCartCustomer();if(!cartItems.length){alert("Agregá al menos un producto al pedido.");return}if(!customer.name.trim()){alert("Completá tu nombre para enviar el pedido.");app.querySelector("#cartCustomerName")?.focus();return}if(!customer.phone.trim()){alert("Completá tu teléfono para enviar el pedido.");app.querySelector("#cartCustomerPhone")?.focus();return}if(customer.delivery==="envio"&&!customer.address.trim()){alert("Completá la dirección para el envío.");app.querySelector("#cartCustomerAddress")?.focus();return}window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer")}
+
       const location=[address,city,province].filter(Boolean).map(esc).join(" — ");
 
       const offersHtml=isStarter
         ? `<div class="starter-note"><strong>Web de arranque lista</strong>Esta carnicería está preparando sus primeras ofertas. Consultá la promo de hoy por WhatsApp.</div>`
-        : combos.length?`<div class="grid">${combos.map(c=>{
+        : combos.length?`<div class="grid">${combos.map((c,index)=>{
         const items=Array.isArray(c.items)?c.items:[];
-        const msg=`Hola! Quiero este combo:\n\n${c.name||"Oferta"}\n${items.map(i=>`- ${i.nombre||"Producto"} — ${i.cantidad||1} ${i.unidad||"kg"}`).join("\n")}\n\nPrecio: ${money(getTotal(c))}\n\n${name}`;
-        return `<div class="card offer-card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><a class="btn btn-primary" href="${waLink({phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""},msg)}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a></div>`;
+        const item={type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:c.name||c.nombre||"Oferta",rubro:"Oferta",unit:"combo",price:getTotal(c),quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
+        return `<div class="card offer-card"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><button type="button" class="btn btn-ghost cart-add-btn" data-cart-add="${encodeCartItem(item)}">Agregar al pedido</button></div>`;
       }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
 
       const pricesHtml=(data.showPriceList&&products.length)?`<div class="price-list">${rubroNames.map(r=>{
         const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-        return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map(p=>`<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong></div>`).join("")}</div>`;
+        return `<div class="card rubro"><h3>${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:p.unidad||"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; return `<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}">Agregar</button></div>`;}).join("")}</div>`;
       }).join("")}</div>`:"";
 
       const headerName = esc(String(shortName).toUpperCase());
@@ -602,11 +679,30 @@
       // V12.13-C3 - Carniza contextual en Web Arranque
       const hasOffersForCarniza = !isStarter && combos.length > 0;
       const hasPricesForCarniza = Boolean(data.showPriceList && products.length);
-      const carnizaTitle = hasOffersForCarniza ? "Mirá las promos de hoy" : (hasPricesForCarniza ? "¿No ves lo que buscás?" : "Pedí la promo del día");
-      const carnizaSub = hasOffersForCarniza ? "Carniza te ayuda a pedir rápido." : (hasPricesForCarniza ? "Consultá disponibilidad por WhatsApp." : "Te pasamos con la carnicería.");
-      const carnizaCta = hasOffersForCarniza ? "📲 Pedir por WhatsApp" : (hasPricesForCarniza ? "📲 Consultar" : "📲 Pedir promo");
+      const carnizaTitle = hasOffersForCarniza ? "Mirá las promos de hoy" : (hasPricesForCarniza ? "Armá tu pedido" : "Pedí la promo del día");
+      const carnizaSub = hasOffersForCarniza ? "Agregá ofertas al pedido y mandalo ordenado." : (hasPricesForCarniza ? "Elegí productos y completá el carrito." : "Te pasamos con la carnicería.");
+      const carnizaCta = hasOffersForCarniza || hasPricesForCarniza ? "🛒 Ir al pedido" : "📲 Pedir promo";
+      const carnizaHref = hasOffersForCarniza || hasPricesForCarniza ? "#pedido" : mainWa;
+      const carnizaAttrs = hasOffersForCarniza || hasPricesForCarniza ? "" : ' target="_blank" rel="noopener"';
 
-      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">📲 Pedir por WhatsApp</a><a class="btn btn-light" href="#precios">Ver precios</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}<a class="powered powered-card" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${mainWa}" target="_blank" rel="noopener">${esc(carnizaCta)}</a></div></div>`;
+      app.innerHTML=`<section class="hero"><span class="badge">Vidriera online</span><h1>CARNICERÍA ${headerName}</h1><p>Ofertas, precios y pedidos online por WhatsApp.</p><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="#precios">Ver productos</a><a class="btn btn-light" href="#pedido">Ir al pedido</a></div></section><section class="section"><div class="section-head"><h2>Ofertas activas</h2><small>Hasta agotar stock</small></div>${offersHtml}</section>${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="powered powered-card" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span>Esta carnicería vende online con AppPromos</span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>`;
+
+      app.onclick=(event)=>{
+        const target=event.target instanceof Element?event.target:event.target?.parentElement;
+        if(!target)return;
+        const addButton=target.closest("[data-cart-add]");
+        if(addButton){event.preventDefault();const item=decodeCartItem(addButton.dataset.cartAdd||"");if(item){addCartItem(item);const original=addButton.textContent;addButton.textContent="Agregado";setTimeout(()=>{addButton.textContent=original},900)}return}
+        const plusButton=target.closest("[data-cart-plus]");
+        if(plusButton){event.preventDefault();changeCartItem(plusButton.dataset.cartPlus||"",1);return}
+        const minusButton=target.closest("[data-cart-minus]");
+        if(minusButton){event.preventDefault();changeCartItem(minusButton.dataset.cartMinus||"",-1);return}
+        const removeButton=target.closest("[data-cart-remove]");
+        if(removeButton){event.preventDefault();removeCartItem(removeButton.dataset.cartRemove||"");return}
+        const clearButton=target.closest("[data-cart-clear]");
+        if(clearButton){event.preventDefault();if(cartItems.length&&confirm("¿Vaciar el pedido?")){cartItems=[];saveCartItems();refreshCart()}return}
+        const sendButton=target.closest("[data-cart-send-order]");
+        if(sendButton){event.preventDefault();sendCartOrder()}
+      };
     }
 
     async function boot(){

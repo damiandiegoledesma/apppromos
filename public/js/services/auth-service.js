@@ -201,6 +201,7 @@ function deepClone(value) {
 
 function normalizeTemplateProduct(product = {}, index = 0) {
   const id = String(product.id || product.productKey || `item_${index}`).trim();
+  const templatePrice = Number(product.precio ?? product.price ?? product.precioSugerido ?? 0);
 
   return {
     ...deepClone(product),
@@ -210,7 +211,10 @@ function normalizeTemplateProduct(product = {}, index = 0) {
     rubro: String(product.rubro || product.category || "").trim(),
     subrubro: String(product.subrubro || "").trim(),
     unidad: String(product.unidad || "kg").trim(),
-    precio: Number(product.precio ?? product.price ?? product.precioSugerido ?? 0),
+    // V12.18-A-FIX1: el catálogo se clona sin precios demo.
+    // El carnicero pone sus precios reales y solo esos se publican.
+    precioSugerido: Number.isFinite(templatePrice) ? templatePrice : 0,
+    precio: 0,
     active: product.active !== false,
     activo: product.activo !== false
   };
@@ -485,9 +489,12 @@ export async function registerClientAndBusiness(data) {
 
   const identity = buildBusinessIdentity(data);
 
-  if (!businessName || !ownerName || !email || !password || !identity.address || !identity.rawPhone || !identity.locality) {
+  if (!businessName || !email || !password || !identity.rawPhone || !identity.locality) {
     throw new Error("Faltan datos obligatorios");
   }
+
+  // V12.18-A: alta ultracorta. El responsable y la dirección se completan después.
+  const resolvedOwnerName = String(ownerName || businessName || "Carnicería").trim();
 
   await assertPhoneKeyAvailable(identity.phoneKey);
 
@@ -648,7 +655,7 @@ export async function registerClientAndBusiness(data) {
     await setDoc(doc(db, "users", uid), {
       uid,
       email,
-      displayName: ownerName,
+      displayName: resolvedOwnerName,
       role: "client",
       businessId,
       status: "active",
