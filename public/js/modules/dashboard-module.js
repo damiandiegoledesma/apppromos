@@ -100,6 +100,11 @@ export function renderDashboard(container, businessId, meta, state, options = {}
   const products = normalizeProductsFromState(state);
   const savedCombos = normalizeSavedCombosFromState(state);
   const activeProducts = products.filter((item) => item.active !== false);
+  let publicWebUrl = "";
+  try {
+    const slug = state?.web?.slug || buildBusinessSlug(meta || {}, businessId);
+    publicWebUrl = getPublicWebUrl(businessId, slug);
+  } catch (_) {}
 
   const updatedAt = state?.updatedAt
     ? new Date(state.updatedAt).toLocaleString("es-AR", {
@@ -192,31 +197,45 @@ export function renderDashboard(container, businessId, meta, state, options = {}
 
     <div class="dash-shell">
       <div class="dash-main-card">
-        <div class="dash-kicker">Inicio rápido</div>
-        <h2 class="dash-main-title">¿Qué querés hacer ahora?</h2>
-        <p class="dash-main-subtitle">Elegí una acción. La app tiene que trabajar para vos, no al revés.</p>
-        <div class="dash-actions">
-          <button class="dash-action-btn" data-action-panel="pricesPanel"><strong>⚡ Cambiar precios</strong><span>Actualizá valores rápido. Ideal para arrancar el día.</span></button>
-          <button class="dash-action-btn" data-action-panel="builderPanel"><strong>🔥 Crear oferta</strong><span>Armá un combo con precios actuales y guardalo para vender.</span></button>
-          <button class="dash-action-btn" data-action-panel="whatsappPanel"><strong>📤 Enviar WhatsApp</strong><span>Elegí una oferta guardada, personalizá cliente y enviá.</span></button>
+        <div class="dash-kicker">Tu operación diaria</div>
+        <h2 class="dash-main-title">Tu carnicería online está trabajando</h2>
+        <p class="dash-main-subtitle">Entrá a tu vidriera, actualizá precios o armá una oferta. Lo importante queda siempre a mano.</p>
+        <div class="dash-actions" style="grid-template-columns:repeat(4,minmax(0,1fr));">
+          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><strong>🌐 Ver mi carnicería</strong><span>Abrí tu vidriera como la ven tus clientes.</span></button>
+          <button class="dash-action-btn" data-action-panel="pricesPanel"><strong>💲 Actualizar precios</strong><span>Seguí cargando o modificá precios cuando quieras.</span></button>
+          <button class="dash-action-btn" data-action-panel="builderPanel"><strong>🔥 Crear oferta</strong><span>Usá Oferta rápida, con descuento o Vender urgente.</span></button>
+          <button class="dash-action-btn" data-action-panel="whatsappPanel"><strong>📲 WhatsApp</strong><span>Usá tus mensajes y ofertas para vender.</span></button>
+        </div>
+        <div class="dash-secondary-actions">
+          <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>📲 Compartir mi carnicería</button>
+          <button type="button" data-action-panel="webPanel">🌐 Mi carnicería online</button>
         </div>
       </div>
 
       <div class="dash-two">
         <div class="dash-card">
-          <h3>Recorrido sugerido</h3>
+          <h3>La regla es simple</h3>
           <div class="dash-list">
-            <button class="dash-step-btn" data-action-panel="pricesPanel"><strong>1. Actualizá precios</strong><span>Dejá la lista lista para vender →</span></button>
-            <button class="dash-step-btn" data-action-panel="builderPanel"><strong>2. Creá una oferta</strong><span>Armá el combo y guardalo →</span></button>
-            <button class="dash-step-btn" data-action-panel="whatsappPanel"><strong>3. Mandá por WhatsApp</strong><span>Nombre, teléfono y mensaje listo →</span></button>
+            <div class="dash-step-btn" style="cursor:default;"><strong>1. Cambiás precios</strong><span>AppPromos actualiza la vidriera →</span></div>
+            <div class="dash-step-btn" style="cursor:default;"><strong>2. Tu cliente compra online</strong><span>Ve precios, ofertas y arma carrito →</span></div>
+            <div class="dash-step-btn" style="cursor:default;"><strong>3. El pedido vuelve por WhatsApp</strong><span>Listo para preparar →</span></div>
           </div>
         </div>
-
-
       </div>
 
     </div>
   `;
+
+  container.querySelector("[data-dashboard-open-web]")?.addEventListener("click", () => {
+    if (!publicWebUrl) return;
+    window.open(publicWebUrl, "_blank", "noopener,noreferrer");
+  });
+
+  container.querySelector("[data-dashboard-share-web]")?.addEventListener("click", () => {
+    if (!publicWebUrl) return;
+    const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicWebUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  });
 
 }
 

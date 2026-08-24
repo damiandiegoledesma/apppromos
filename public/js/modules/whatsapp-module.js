@@ -1,3 +1,4 @@
+import { buildCustomerWhatsappMessage, buildWhatsappShareUrl } from "../services/whatsapp-message-service.js";
 function formatCurrency(value) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -54,35 +55,9 @@ function getItemIcon(rubro = "", name = "") {
 }
 
 function buildMessage(combo, meta = {}, customer = {}) {
-  const name = String(combo?.name || "Oferta").trim();
-  const items = Array.isArray(combo?.items) ? combo.items : [];
-  const businessName = meta?.name || meta?.nombre || "Tu carnicería";
-  const businessPhone = meta?.telefono || meta?.phone || "";
-  const address = meta?.direccion || meta?.address || meta?.city || meta?.ciudad || "";
-  const price = Number(combo?.total || combo?.snapshot?.totals?.total_redondeado || 0);
-  const customerName = String(customer?.name || "").trim();
-
-  const lines = [];
-  if (customerName) lines.push(`Hola ${customerName}! 👋`);
-  lines.push(`🔥 ${name.toUpperCase()}`);
-  lines.push("");
-
-  items.forEach((item) => {
-    const qty = Number(item?.cantidad || 0);
-    const unit = item?.unidad || "kg";
-    const product = item?.nombre || "Producto";
-    const icon = getItemIcon(item?.rubro, product);
-    lines.push(`${icon} ${product} — ${qty} ${unit}`);
+  return buildCustomerWhatsappMessage(combo, meta, {
+    customerName: customer?.name || ""
   });
-
-  lines.push("");
-  lines.push(`💰 TOTAL: ${formatCurrency(price)}`);
-  lines.push("⏰ Oferta por tiempo limitado / hasta agotar stock");
-  lines.push("");
-  lines.push(`📍 ${businessName}`);
-  if (address) lines.push(`📌 ${address}`);
-  if (businessPhone) lines.push(`📲 Consultas: ${businessPhone}`);
-  return lines.join("\n");
 }
 
 export function renderWhatsApp(container, savedCombos = [], meta = {}, options = {}) {
@@ -108,10 +83,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
     const baseMessage = combo ? buildMessage(combo, meta, { name: customerName }) : "";
     const message = manualMessage || baseMessage;
     const normalizedPhone = normalizePhone(customerPhone);
-    const encoded = encodeURIComponent(message);
-    const waUrl = normalizedPhone
-      ? `https://wa.me/${normalizedPhone}?text=${encoded}`
-      : `https://wa.me/?text=${encoded}`;
+    const waUrl = buildWhatsappShareUrl(message, normalizedPhone);
 
     container.innerHTML = `
       <style>
@@ -237,15 +209,13 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
       if (bubble) bubble.textContent = manualMessage || "Sin mensaje para mostrar";
 
       const livePhone = normalizePhone(customerPhone);
-      const liveUrl = livePhone
-        ? `https://wa.me/${livePhone}?text=${encodeURIComponent(manualMessage)}`
-        : `https://wa.me/?text=${encodeURIComponent(manualMessage)}`;
+      const liveUrl = buildWhatsappShareUrl(manualMessage, livePhone);
 
       if (openBtn) {
         openBtn.onclick = () => {
           saveLastCustomer(meta, { name: customerName, phone: customerPhone });
           if (typeof options?.onBeforeWhatsapp === "function" && options.onBeforeWhatsapp({ source: "whatsapp_panel" }) === false) return;
-          window.open(liveUrl, "_blank");
+          window.open(liveUrl, "_blank", "noopener,noreferrer");
         };
       }
 

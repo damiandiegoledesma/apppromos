@@ -3,6 +3,8 @@ import {
   disableProduct,
   updateProductPricesBatch
 } from "../services/data-service.js";
+import { activateStarterWebFromProducts } from "../services/web-premium-service.js";
+import { trackFirstPriceSaved } from "../services/tracking-service.js";
 
 function parsePriceInputValue(value) {
   const cleaned = String(value ?? "")
@@ -258,7 +260,33 @@ export function renderPrices(container, products = [], businessId = null, option
     setStatus("saving", "Guardando cambios...");
 
     const result = await updateProductPricesBatch(changes, businessId);
-    updateLocalProducts(result.updatedProducts || safeProducts);
+    const updatedProducts = result.updatedProducts || safeProducts;
+    updateLocalProducts(updatedProducts);
+
+    let webActivation = null;
+    if (!isDemoPriceSession && result?.changed > 0) {
+      try {
+        webActivation = await activateStarterWebFromProducts(businessId, updatedProducts);
+        if (webActivation?.activated) {
+          trackFirstPriceSaved({
+            source: "prices_first_real_save",
+            business_id: businessId,
+            priced_products: webActivation.pricedCount || 0
+          });
+          window.dispatchEvent(new CustomEvent("apppromos:web-auto-ready", {
+            detail: {
+              businessId,
+              publicUrl: webActivation.publicUrl || "",
+              pricedCount: webActivation.pricedCount || 0
+            }
+          }));
+        }
+      } catch (webError) {
+        // Guardar precios es lo prioritario. Si la publicación automática falla,
+        // no revertimos ni bloqueamos el trabajo del carnicero.
+        console.warn("No se pudo actualizar automáticamente la vidriera", webError);
+      }
+    }
 
     Object.keys(changes).forEach((id) => {
       delete pendingChanges[id];
@@ -273,8 +301,14 @@ export function renderPrices(container, products = [], businessId = null, option
 
     isSaving = false;
     draw();
-    setStatus("saved", isDemoPriceSession ? "Guardado en esta demo" : "✅ Guardado");
-    showToast(isDemoPriceSession ? "Cambio guardado en esta demo" : "Cambios guardados", "ok");
+    const savedStatus = webActivation?.activated
+      ? "✅ Guardado · Vidriera actualizada"
+      : (isDemoPriceSession ? "Guardado en esta demo" : "✅ Guardado");
+    const savedToast = webActivation?.activated
+      ? "¡Listo! Tus precios ya están en tu carnicería online"
+      : (isDemoPriceSession ? "Cambio guardado en esta demo" : "Cambios guardados");
+    setStatus("saved", savedStatus);
+    showToast(savedToast, "ok");
   }
 
   async function saveAllPendingChanges() {

@@ -1,3 +1,4 @@
+import { buildCustomerWhatsappMessage, openCustomerWhatsappMessage } from "../services/whatsapp-message-service.js";
 import { saveCombo } from "../services/data-service.js";
 
 function formatMoney(value) {
@@ -117,36 +118,12 @@ function calculateDiscountTotals(items = [], globalDiscount = 0) {
   };
 }
 
-function buildWhatsappText(combo) {
-  const items = Array.isArray(combo?.items) ? combo.items : [];
-  const title = toWhatsappSafeText(String(combo?.name || "OFERTA DEL DIA").toUpperCase());
-  const lines = [title, ""];
-
-  for (const item of items) {
-    const cantidad = formatQty(item.cantidad || 1);
-    const unidad = toWhatsappSafeText(item.unidad || "kg");
-    const nombre = toWhatsappSafeText(item.nombre || "Producto");
-    const rubro = toWhatsappSafeText(item.rubro || "");
-    let line = `- ${cantidad} ${unidad} ${nombre}`;
-    if (rubro) line += ` - ${rubro}`;
-    lines.push(line);
-  }
-
-  lines.push(
-    "",
-    `Total: $ ${formatMoney(combo?.total || 0)}`,
-    "",
-    "Oferta por tiempo limitado / hasta agotar stock.",
-    "Carniceria de Carniza"
-  );
-
-  return lines.join("\n");
+function buildWhatsappText(combo, businessMeta = {}) {
+  return buildCustomerWhatsappMessage(combo, businessMeta);
 }
 
-function openComboWhatsapp(combo) {
-  const text = buildWhatsappText(combo);
-  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
+function openComboWhatsapp(combo, businessMeta = {}) {
+  return openCustomerWhatsappMessage(combo, businessMeta);
 }
 
 function canRunOptionHook(hook, payload) {
@@ -791,7 +768,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderQuickReview() {
     const payload = buildQuickPayload();
-    const whatsappPreview = buildWhatsappText(payload);
+    const whatsappPreview = buildWhatsappText(payload, options?.businessMeta || {});
 
     container.innerHTML = `
       <section style="display:grid; gap:12px; padding-bottom:calc(138px + var(--apppromos-mobile-nav-height, 0px));">
@@ -818,7 +795,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     container.querySelector("#quickWhatsappBtn")?.addEventListener("click", () => {
       const payload = buildQuickPayload();
       if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "builder_quick", payload })) return;
-      openComboWhatsapp(payload);
+      openComboWhatsapp(payload, options?.businessMeta || {});
     });
   }
 
@@ -1019,7 +996,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     content.querySelector("#discountWhatsappBtn")?.addEventListener("click", () => {
       const payload = buildDiscountPayload();
       if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "builder_discount", payload })) return;
-      openComboWhatsapp(payload);
+      openComboWhatsapp(payload, options?.businessMeta || {});
       showChooser({ clear: true });
     });
   }

@@ -17,9 +17,14 @@ import { renderWebPremium } from "./modules/web-module.js";
 import { initCarniza, updateCarnizaContext } from "./modules/carniza-module.js";
 import { renderPublicAuth } from "./modules/public-auth-module.js";
 import { trackCarnizaSignal } from "./services/carniza-signals-service.js";
-import { trackDemoEvent, trackDemoStartedOnce } from "./services/tracking-service.js";
+import {
+  trackDemoEvent,
+  trackDemoStartedOnce,
+  trackWebOpened,
+  trackWebShared
+} from "./services/tracking-service.js";
 
-import { updateBusinessBasicData } from "./services/web-premium-service.js";
+import { updateBusinessBasicData, getPublicWebUrl } from "./services/web-premium-service.js";
 import { loadActiveBusinessData } from "./services/data-service.js";
 import {
   loadMarketCacheOnce,
@@ -333,6 +338,7 @@ function getDemoActionOptions() {
 function getBuilderOptions() {
   return {
     businessId: currentBusinessId,
+    businessMeta: currentPayload?.meta || {},
     ...getWriteOptions(),
     ...getDemoActionOptions()
   };
@@ -1337,6 +1343,114 @@ function renderSuperadminBusinessContextBanner() {
   dashboardPanel.prepend(banner);
 }
 
+function isActivationOnboarding() {
+  if (currentSession?.isDemo || currentSession?.appMode === "superadmin") return false;
+  try {
+    return new URLSearchParams(window.location.search || "").get("onboarding") === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function getActivationPublicUrl() {
+  const web = currentPayload?.state?.web || {};
+  const slug = web?.slug || "";
+  return web?.publicUrl || (currentBusinessId ? getPublicWebUrl(currentBusinessId, slug) : "");
+}
+
+function getActivationPricedCount() {
+  const products = Array.isArray(currentPayload?.state?.products) ? currentPayload.state.products : [];
+  return products.filter((product = {}) => {
+    const price = Number(product.precio ?? product.price ?? 0);
+    return product.active !== false && product.activo !== false && Number.isFinite(price) && price > 0;
+  }).length;
+}
+
+function getActivationSharedKey() {
+  return `apppromos_onboarding_web_shared_${currentBusinessId || "business"}`;
+}
+
+function wasActivationWebShared() {
+  try { return localStorage.getItem(getActivationSharedKey()) === "1"; } catch (_) { return false; }
+}
+
+function renderActivationOnboarding() {
+  if (!dashboardPanel || !currentPayload || !isActivationOnboarding()) return;
+
+  const oldMain = dashboardPanel.querySelector(".dash-main-card");
+  const oldRoute = dashboardPanel.querySelector(".dash-two");
+  if (oldMain) oldMain.style.display = "none";
+  if (oldRoute) oldRoute.style.display = "none";
+
+  dashboardPanel.querySelector("[data-activation-onboarding]")?.remove();
+
+  const businessName =
+    currentPayload?.meta?.name ||
+    currentPayload?.meta?.nombre ||
+    "Tu carnicería";
+  const pricedCount = getActivationPricedCount();
+  const web = currentPayload?.state?.web || {};
+  const webReady = web?.priceListStatus === "ready" && web?.showPriceList === true;
+  const publicUrl = getActivationPublicUrl();
+  const shared = wasActivationWebShared();
+  const suggestedGoal = 5;
+  const goalReached = pricedCount >= suggestedGoal;
+
+  const card = document.createElement("section");
+  card.dataset.activationOnboarding = "true";
+  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #bbf7d0;border-radius:24px;background:linear-gradient(180deg,#f0fdf4,#ffffff);box-shadow:0 14px 34px rgba(22,163,74,.10);display:grid;gap:16px;";
+  card.innerHTML = `
+    <div style="display:grid;gap:6px;">
+      <span style="width:max-content;max-width:100%;padding:6px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Tu carnicería online</span>
+      <h2 style="margin:0;color:#14532d;font-size:clamp(26px,6vw,38px);line-height:1;letter-spacing:-.04em;">🎉 ¡${escapeCarnizaHtml(businessName)} ya está creada!</h2>
+      <p style="margin:0;color:#3f5f4a;font-weight:800;line-height:1.4;">Ahora cargá tus precios reales. AppPromos publica automáticamente los productos que tengan precio y deja afuera los que estén en $0.</p>
+    </div>
+
+    <div style="display:grid;gap:8px;">
+      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:#166534;"><span>✅</span><span>Cuenta creada</span></div>
+      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:#166534;"><span>✅</span><span>Vidriera online creada</span></div>
+      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${pricedCount ? "#166534" : "#6b7280"};"><span>${pricedCount ? "✅" : "○"}</span><span>${pricedCount} producto${pricedCount === 1 ? "" : "s"} con precio real ${goalReached ? "· objetivo inicial cumplido" : `· cargá ${Math.max(0, suggestedGoal - pricedCount)} más para una buena primera vidriera`}</span></div>
+      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${webReady ? "#166534" : "#6b7280"};"><span>${webReady ? "✅" : "○"}</span><span>${webReady ? "Vidriera actualizada automáticamente" : "La vidriera se actualizará cuando guardes tus primeros precios"}</span></div>
+      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${shared ? "#166534" : "#6b7280"};"><span>${shared ? "✅" : "○"}</span><span>${shared ? "Vidriera compartida" : "Compartila con tu primer cliente"}</span></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;">
+      <button type="button" data-onboarding-prices style="min-height:52px;border:0;border-radius:15px;background:#16a34a;color:#fff;font-weight:1000;font-size:15px;cursor:pointer;">⚡ ${pricedCount ? "Seguir cargando precios" : "Cargar mis primeros precios"}</button>
+      <button type="button" data-onboarding-view-web ${publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:#fff;color:#166534;font-weight:1000;font-size:15px;cursor:pointer;">🌐 Ver mi carnicería</button>
+      <button type="button" data-onboarding-share-web ${webReady && publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:${webReady ? "#dcfce7" : "#f3f4f6"};color:${webReady ? "#166534" : "#9ca3af"};font-weight:1000;font-size:15px;cursor:pointer;">📲 Compartir por WhatsApp</button>
+    </div>
+
+    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés descubrir Oferta rápida, Oferta con descuento y Vender urgente para hacerla vender todavía más.</div>` : ""}
+
+    ${goalReached && webReady ? `<button type="button" data-onboarding-finish style="justify-self:start;min-height:42px;padding:0 14px;border:0;border-radius:13px;background:#14532d;color:#fff;font-weight:1000;cursor:pointer;">Listo, ir al Inicio →</button>` : ""}
+  `;
+
+  card.querySelector("[data-onboarding-prices]")?.addEventListener("click", () => goToPanel("pricesPanel"));
+  card.querySelector("[data-onboarding-view-web]")?.addEventListener("click", () => {
+    if (!publicUrl) return;
+    trackWebOpened({ source: "onboarding_activation", business_id: currentBusinessId || null });
+    window.open(publicUrl, "_blank", "noopener,noreferrer");
+  });
+  card.querySelector("[data-onboarding-share-web]")?.addEventListener("click", () => {
+    if (!publicUrl || !webReady) return;
+    const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicUrl}`;
+    try { localStorage.setItem(getActivationSharedKey(), "1"); } catch (_) {}
+    trackWebShared({ source: "onboarding_activation", business_id: currentBusinessId || null });
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    renderActivationOnboarding();
+  });
+  card.querySelector("[data-onboarding-finish]")?.addEventListener("click", () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("onboarding");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    } catch (_) {}
+    renderCurrentDashboard();
+  });
+
+  dashboardPanel.prepend(card);
+}
+
 function renderCurrentDashboard() {
   if (!currentPayload || !dashboardPanel) return;
   renderDashboard(
@@ -1364,6 +1478,7 @@ function renderCurrentDashboard() {
       }
     }
   );
+  renderActivationOnboarding();
   renderSuperadminBusinessContextBanner();
   trackCarnizaSignal("carniza_home_seen", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
   void renderCarnizaCommercialLayer(dashboardPanel);
@@ -2021,7 +2136,7 @@ function openMobileBottomMenu(kind) {
   const moreButtons = `
     <div class="app-mobile-bottom-menu__grid two">
       <button type="button" data-mobile-action="account"><strong>👤 Mi cuenta</strong><span>Datos y estado.</span></button>
-      <button type="button" data-mobile-action="web"><strong>🌐 Mi web</strong><span>Ver vidriera.</span></button>
+      <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
       <button type="button" data-mobile-action="saved"><strong>⭐ Guardadas</strong><span>Promos para repetir.</span></button>
       <button type="button" data-mobile-action="market"><strong>📊 Competencia</strong><span>Mirar mercado.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
@@ -2253,6 +2368,21 @@ function bindNav() {
   });
 }
 
+window.addEventListener("apppromos:web-auto-ready", async (event) => {
+  if (!currentBusinessId || event?.detail?.businessId !== currentBusinessId) return;
+  try {
+    const data = await loadActiveBusinessData(currentBusinessId);
+    currentPayload = { businessId: data.businessId, meta: data.meta, state: data.state };
+    markLazyPanelsDirty();
+    if (isActivationOnboarding()) {
+      goToPanel("dashboardPanel");
+      renderCurrentDashboard();
+    }
+  } catch (error) {
+    console.warn("No se pudo refrescar el onboarding después de actualizar la web", error);
+  }
+});
+
 function syncNavForRole(session) {
   const usersBtn = document.querySelector('[data-panel="usersPanel"]');
   const marketBtn = document.querySelector('[data-panel="marketPanel"]');
@@ -2283,7 +2413,7 @@ async function refreshSavedModule() {
     meta: data.meta,
     state: data.state
   };
-  renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
   renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], data.meta || {}, getShareOptions("whatsapp_panel"));
   renderCurrentDashboard();
   markLazyPanelsDirty();
@@ -2465,10 +2595,13 @@ async function renderBusinessWorkspace(options = {}) {
   // La Nelly queda en la alerta superior. Evitamos duplicar el mensaje dentro de Inicio.
 
   const data = await loadActiveBusinessData(currentBusinessId);
-  const activeProducts = setActiveProductCatalog(data.products);
+  const catalogProducts = Array.isArray(data.products) ? data.products : [];
+  const activeProducts = setActiveProductCatalog(catalogProducts);
 
   if (!setPanelLocked(pricesPanel, "prices")) {
-    renderPrices(pricesPanel, activeProducts, currentBusinessId, {
+    // Precios debe mostrar el catálogo completo, incluso productos todavía en $0.
+    // Builder/ofertas sigue recibiendo solo productos activos con precio real.
+    renderPrices(pricesPanel, catalogProducts, currentBusinessId, {
       ...getWriteOptions(),
       onProductsUpdated: async (...args) => {
         await trackBusinessActivityThrottled(currentBusinessId, 60);
@@ -2478,7 +2611,7 @@ async function renderBusinessWorkspace(options = {}) {
     if (isPaymentOverdue()) injectAccessWarning(pricesPanel);
   }
 
-  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, getShareOptions("saved"));
+  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
   if (!setPanelLocked(builderPanel, "combos")) renderBuilder(builderPanel, activeProducts, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);
@@ -2499,7 +2632,7 @@ async function renderBusinessWorkspace(options = {}) {
 
   if (webPanel) {
     webPanel.dataset.rendered = "";
-    webPanel.innerHTML = `<div style="padding:18px;color:#6e6e6e;">Mi Web Premium se cargará al abrir este módulo.</div>`;
+    webPanel.innerHTML = `<div style="padding:18px;color:#6e6e6e;">Tu carnicería online se cargará al abrir este módulo.</div>`;
   }
 
   console.info("📊 AppPromos Firestore reads:", getReadDebug());

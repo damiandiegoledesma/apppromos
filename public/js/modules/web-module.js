@@ -18,170 +18,143 @@ function money(value) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(Number(value || 0));
 }
 
-function uniqueRubros(products = []) {
-  return [...new Set(products.map(p => String(p.rubro || "Sin rubro").trim() || "Sin rubro"))]
-    .sort((a,b) => a.localeCompare(b, "es"));
+function getRealPricedProducts(products = []) {
+  return (Array.isArray(products) ? products : []).filter((product = {}) => {
+    const price = Number(product.precio ?? product.price ?? 0);
+    return product.active !== false && product.activo !== false && Number.isFinite(price) && price > 0;
+  });
+}
+
+function getBusinessPublicFields(meta = {}, config = {}, businessId = "") {
+  let slug = config?.slug || "";
+  if (!slug) {
+    try { slug = buildBusinessSlug(meta || {}, businessId); } catch (_) {}
+  }
+  const publicUrl = slug ? getPublicWebUrl(businessId, slug) : "";
+  return {
+    name: meta?.name || meta?.nombre || "Tu carnicería",
+    address: meta?.direccion || meta?.address || "",
+    phone: meta?.telefono || meta?.phone || meta?.whatsapp || "",
+    city: meta?.localidad || meta?.ciudad || meta?.city || meta?.locality || "",
+    publicUrl
+  };
 }
 
 export async function renderWebPremium(container, businessId) {
   if (!container) return;
-  container.innerHTML = `<div style="padding:18px;color:#6b7280;">Cargando tu vidriera...</div>`;
+  container.innerHTML = `<div style="padding:18px;color:#6b7280;">Cargando tu carnicería online...</div>`;
 
   try {
     const data = await loadActiveBusinessData(businessId);
-    const { meta, state, config, webPremiumEnabled } = await loadWebConfig(businessId, data);
-
-    const products = Array.isArray(data.products) ? data.products.filter(p => p.active !== false) : [];
+    const { meta, config, webPremiumEnabled } = await loadWebConfig(businessId, data);
+    const products = Array.isArray(data.products) ? data.products : [];
+    const pricedProducts = getRealPricedProducts(products);
     const savedCombos = Array.isArray(data.state?.savedCombos) ? data.state.savedCombos : [];
-    const rubros = uniqueRubros(products);
     const selectedOffers = Array.isArray(config.selectedOffers) ? config.selectedOffers : [];
-    const visibleRubros = Array.isArray(config.visibleRubros) ? config.visibleRubros : [];
-    let generatedSlug = config.slug;
-    let slugWarning = "";
-
-    try {
-      generatedSlug = buildBusinessSlug(meta || {}, businessId);
-      if (config.slug && config.slug !== generatedSlug) {
-        slugWarning = `Al guardar, el link cambiará de ${config.slug} a ${generatedSlug}.`;
-      }
-    } catch (error) {
-      slugWarning = error?.message || "No se pudo generar el link automático.";
-    }
-
-    const publicUrl = getPublicWebUrl(businessId, generatedSlug);
+    const fields = getBusinessPublicFields(meta || {}, config || {}, businessId);
 
     if (!webPremiumEnabled) {
       container.innerHTML = `
-        <style>.wp-card{border:1px solid #eadbd4;border-radius:20px;background:#fff;padding:22px}.wp-btn{min-height:44px;border:none;border-radius:12px;padding:0 16px;font-weight:900;cursor:pointer}.wp-muted{color:#6b7280}</style>
+        <style>.wp-card{border:1px solid #eadbd4;border-radius:20px;background:#fff;padding:22px}.wp-muted{color:#6b7280}</style>
         <div class="wp-card" style="background:linear-gradient(180deg,#fff,#fff7f4);">
-          <h2 style="margin:0 0 8px;color:#8b1f1f;">🌐 Mi Web / Vidriera online</h2>
-          <p class="wp-muted" style="margin:0 0 16px;">Este módulo todavía no está habilitado para esta carnicería.</p>
-          <div style="padding:16px;border:1px dashed #d8b4a8;border-radius:16px;background:#fff;">
-            🔒 Disponible como upgrade. El administrador debe activar <strong>Mi Web</strong> para esta cuenta.
-          </div>
+          <h2 style="margin:0 0 8px;color:#8b1f1f;">🌐 Mi carnicería online</h2>
+          <p class="wp-muted" style="margin:0;">Esta carnicería todavía no tiene habilitada su vidriera online.</p>
         </div>`;
       return;
     }
 
     container.innerHTML = `
       <style>
-        .wp-shell{display:flex;flex-direction:column;gap:16px}.wp-card{border:1px solid #ece7df;border-radius:20px;background:#fff;padding:18px;box-shadow:0 4px 14px rgba(17,24,39,.04)}.wp-head{background:linear-gradient(180deg,#fff,#fff7f4)}.wp-head h2{margin:0 0 6px;color:#8b1f1f;font-size:28px}.wp-muted{color:#6b7280}.wp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.wp-field label{display:block;font-weight:900;margin-bottom:8px}.wp-input{width:100%;min-height:48px;border:1px solid #d7d7d7;border-radius:14px;padding:0 12px;font-size:16px;box-sizing:border-box}.wp-input[readonly]{background:#f9fafb;color:#374151}.wp-btn{min-height:46px;border:none;border-radius:14px;padding:0 16px;font-weight:950;cursor:pointer}.wp-primary{background:#b63b2b;color:#fff}.wp-secondary{background:#fff;border:1px solid #d1d5db;color:#111827}.wp-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wp-check{border:1px solid #eee;border-radius:14px;padding:10px;background:#fffaf7}.wp-offer{display:flex;justify-content:space-between;gap:10px;align-items:center}.wp-price{font-weight:950;color:#b63b2b}.wp-actions{display:flex;gap:10px;flex-wrap:wrap}.wp-url{background:#f8f5f0;border:1px solid #e7e1d8;border-radius:14px;padding:12px;word-break:break-all;font-weight:800}.wp-warning{margin-top:10px;padding:10px;border-radius:12px;background:#fff7ed;color:#9a3412;font-weight:800}@media(max-width:760px){.wp-grid,.wp-checks{grid-template-columns:1fr}.wp-head h2{font-size:24px}.wp-actions{flex-direction:column}.wp-btn{width:100%}}
-      .wp-vidriera-ready{margin-top:12px;padding:14px 16px;border:1px solid #bbf7d0;border-radius:16px;background:#f0fdf4;color:#14532d;display:grid;gap:4px;}
-      .wp-vidriera-ready span{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#166534;}
-      .wp-vidriera-ready strong{font-size:1.05rem;font-weight:950;color:#14532d;}
-      .wp-vidriera-ready small{font-size:13px;color:#3f6212;line-height:1.35;}
-      .wp-technical-link-field{display:none!important;}
-      .wp-url{display:none!important;}
+        .wp-shell{display:flex;flex-direction:column;gap:14px}.wp-card{border:1px solid #ece7df;border-radius:22px;background:#fff;padding:18px;box-shadow:0 4px 14px rgba(17,24,39,.04)}.wp-head{background:linear-gradient(180deg,#f0fdf4,#fff)}.wp-head h2{margin:0 0 6px;color:#14532d;font-size:28px}.wp-muted{color:#6b7280;font-weight:750;line-height:1.4}.wp-ready{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 14px;border-radius:16px;background:#dcfce7;border:1px solid #bbf7d0;color:#166534}.wp-ready strong{font-size:1.05rem}.wp-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.wp-btn{min-height:48px;border-radius:14px;padding:0 14px;font-weight:950;cursor:pointer;border:1px solid #d1d5db;background:#fff;color:#111827}.wp-btn.primary{background:#16a34a;border-color:#16a34a;color:#fff}.wp-btn.orange{background:#fff7ed;border-color:#fed7aa;color:#9a3412}.wp-data{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wp-data-item{padding:12px;border:1px solid #f1ece7;border-radius:14px;background:#fffaf7}.wp-data-item span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#9a6a59;font-weight:950;margin-bottom:4px}.wp-data-item strong{display:block;color:#2b2724;overflow-wrap:anywhere}.wp-offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wp-offer{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #eee;border-radius:14px;padding:11px;background:#fffaf7}.wp-offer label{display:flex;gap:8px;align-items:center;font-weight:900;color:#7c2d12}.wp-offer small{display:block;margin-top:3px;color:#6b7280;font-weight:750}.wp-price{font-weight:950;color:#b63b2b;white-space:nowrap}.wp-auto-note{padding:13px 14px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-weight:850;line-height:1.4}.wp-status{min-height:20px;color:#166534;font-weight:900;margin-top:8px}@media(max-width:760px){.wp-actions,.wp-data,.wp-offers{grid-template-columns:1fr}.wp-head h2{font-size:24px}.wp-btn{width:100%}}
       </style>
       <div class="wp-shell">
         <div class="wp-card wp-head">
-          <h2>🌐 Mi Web / Vidriera online</h2>
-          <p class="wp-muted" style="margin:0;">Tu vidriera muestra ofertas, precios y pedidos por WhatsApp.</p>
-        </div>
-
-        <div class="wp-card">
-          <div class="wp-grid">
-            <div class="wp-field">
-              <label>Estado de la web</label>
-              <select id="wpEnabled" class="wp-input">
-                <option value="true" ${config.enabled ? "selected" : ""}>Activada</option>
-                <option value="false" ${!config.enabled ? "selected" : ""}>Desactivada</option>
-              </select>
-            </div>
-            <div class="wp-vidriera-ready">
-              <span>Estado de tu vidriera</span>
-              <strong>${config.enabled ? "Vidriera activa" : "Vidriera pausada"}</strong>
-              <small>Tu enlace está listo. Podés verlo o copiarlo para compartirlo.</small>
-            </div>
-            <div class="wp-field wp-technical-link-field" hidden aria-hidden="true">
-              <label>Enlace técnico interno</label>
-              <input id="wpSlug" class="wp-input" value="${escapeHtml(generatedSlug)}" readonly />
-            </div>
-          </div>
-          <div style="margin-top:12px;display:none;" class="wp-url" id="wpUrl" aria-hidden="true">${escapeHtml(publicUrl)}</div>
-          ${slugWarning ? `<div class="wp-warning">⚠️ ${escapeHtml(slugWarning)}</div>` : ""}
-          <div class="wp-actions" style="margin-top:12px;">
-            <button id="wpCopy" class="wp-btn wp-secondary">📋 Copiar enlace</button>
-            <button id="wpOpen" class="wp-btn wp-secondary">👁️ Ver mi web</button>
+          <h2>🌐 Mi carnicería online</h2>
+          <p class="wp-muted" style="margin:0;">Tu vidriera se mantiene actualizada con tus precios reales. No hace falta configurar ni guardar la web por separado.</p>
+          <div class="wp-ready" style="margin-top:14px;">
+            <strong>${config.enabled !== false ? "✅ Vidriera activa" : "⏸️ Vidriera pausada"}</strong>
+            <span>${pricedProducts.length} producto${pricedProducts.length === 1 ? "" : "s"} con precio publicado</span>
           </div>
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 10px;">🔥 Ofertas que aparecen en la web</h3>
-          ${savedCombos.length ? `<div class="wp-checks">
+          <div class="wp-actions">
+            <button id="wpOpen" class="wp-btn primary" ${fields.publicUrl ? "" : "disabled"}>🌐 Ver mi carnicería</button>
+            <button id="wpShare" class="wp-btn" ${fields.publicUrl ? "" : "disabled"}>📲 Compartir</button>
+            <button type="button" class="wp-btn orange" data-action-panel="pricesPanel">💲 Actualizar precios</button>
+            <button type="button" class="wp-btn" data-action-panel="savedPanel">🔥 Gestionar ofertas</button>
+          </div>
+          <div class="wp-status" id="wpStatus"></div>
+        </div>
+
+        <div class="wp-card">
+          <h3 style="margin:0 0 12px;color:#7c2d12;">Datos de tu carnicería online</h3>
+          <div class="wp-data">
+            <div class="wp-data-item"><span>Nombre</span><strong>${escapeHtml(fields.name)}</strong></div>
+            <div class="wp-data-item"><span>WhatsApp</span><strong>${escapeHtml(fields.phone || "Sin cargar")}</strong></div>
+            <div class="wp-data-item"><span>Dirección</span><strong>${escapeHtml(fields.address || "Podés completarla después")}</strong></div>
+            <div class="wp-data-item"><span>Localidad</span><strong>${escapeHtml(fields.city || "Sin cargar")}</strong></div>
+            <div class="wp-data-item" style="grid-column:1/-1;"><span>Link público</span><strong>${escapeHtml(fields.publicUrl || "Se genera automáticamente")}</strong></div>
+          </div>
+        </div>
+
+        <div class="wp-card">
+          <h3 style="margin:0 0 6px;color:#7c2d12;">🔥 Ofertas publicadas</h3>
+          <p class="wp-muted" style="margin:0 0 12px;">Marcá o desmarcá una oferta. AppPromos actualiza la vidriera automáticamente.</p>
+          ${savedCombos.length ? `<div class="wp-offers">
             ${savedCombos.map(combo => `
-              <label class="wp-check">
-                <div class="wp-offer">
-                  <span><input type="checkbox" data-wp-offer="${escapeHtml(combo.id)}" ${selectedOffers.includes(combo.id) ? "checked" : ""}> ${escapeHtml(combo.name || "Oferta")}</span>
-                  <span class="wp-price">${money(getComboTotal(combo))}</span>
-                </div>
-              </label>`).join("")}
-          </div>` : `<div class="wp-muted">Todavía no hay ofertas guardadas. Primero creá ofertas desde “Crear oferta”.</div>`}
+              <div class="wp-offer">
+                <label>
+                  <input type="checkbox" data-wp-offer="${escapeHtml(combo.id)}" ${selectedOffers.includes(combo.id) ? "checked" : ""}>
+                  <span>${escapeHtml(combo.name || "Oferta")}<small>${selectedOffers.includes(combo.id) ? "Publicada" : "No publicada"}</small></span>
+                </label>
+                <span class="wp-price">${money(getComboTotal(combo))}</span>
+              </div>`).join("")}
+          </div>` : `<div class="wp-muted">Todavía no hay ofertas guardadas. Podés crearlas desde “Crear oferta”.</div>`}
         </div>
 
-        <div class="wp-card">
-          <h3 style="margin:0 0 10px;">🧾 Lista de precios pública</h3>
-          <label class="wp-check" style="display:block;margin-bottom:12px;"><input type="checkbox" id="wpShowPrices" ${config.showPriceList ? "checked" : ""}> Mostrar lista de precios en la web</label>
-          <div class="wp-checks">
-            ${rubros.map(rubro => `<label class="wp-check"><input type="checkbox" data-wp-rubro="${escapeHtml(rubro)}" ${visibleRubros.includes(rubro) ? "checked" : ""}> ${escapeHtml(rubro)}</label>`).join("")}
-          </div>
-          <div class="wp-muted" style="margin-top:10px;">Los productos se muestran ordenados por rubro y alfabéticamente.</div>
-        </div>
-
-        <div class="wp-card">
-          <button id="wpSave" class="wp-btn wp-primary">💾 Guardar configuración web</button>
-          <span id="wpStatus" class="wp-muted" style="margin-left:10px;"></span>
-        </div>
+        <div class="wp-auto-note">💡 <strong>Automático:</strong> cuando guardás precios, los productos activos con precio mayor a $0 aparecen en tu carnicería online. Los que quedan en $0 no se publican.</div>
       </div>`;
 
-    const slugInput = container.querySelector("#wpSlug");
-    const urlEl = container.querySelector("#wpUrl");
-    function refreshUrl() {
-      urlEl.textContent = getPublicWebUrl(businessId, slugInput.value);
-    }
+    const status = container.querySelector("#wpStatus");
 
-    container.querySelector("#wpCopy")?.addEventListener("click", async () => {
-      refreshUrl();
-      try { await navigator.clipboard.writeText(urlEl.textContent); alert("Link copiado"); } catch { alert(urlEl.textContent); }
+    container.querySelector("#wpOpen")?.addEventListener("click", () => {
+      if (!fields.publicUrl) return;
+      window.open(fields.publicUrl, "_blank", "noopener,noreferrer");
     });
-    container.querySelector("#wpOpen")?.addEventListener("click", () => { refreshUrl(); window.open(urlEl.textContent, "_blank"); });
-    container.querySelector("#wpSave")?.addEventListener("click", async () => {
-      const btn = container.querySelector("#wpSave");
-      const status = container.querySelector("#wpStatus");
-      btn.disabled = true; status.textContent = "Guardando...";
-      try {
-        if (config.slug && slugInput.value && config.slug !== slugInput.value) {
-          const ok = confirm(
-            `Atención: al guardar cambiará el enlace de tu vidriera.\n\n` +
-            `Enlace anterior: ${config.slug}\n` +
-            `Enlace nuevo: ${slugInput.value}\n\n` +
-            `Los enlaces anteriores dejarán de funcionar. ¿Guardar igual?`
-          );
-          if (!ok) {
-            status.textContent = "Guardado cancelado";
-            btn.disabled = false;
-            return;
-          }
-        }
 
-        const offerIds = [...container.querySelectorAll("[data-wp-offer]:checked")].map(el => el.getAttribute("data-wp-offer"));
-        const rubroNames = [...container.querySelectorAll("[data-wp-rubro]:checked")].map(el => el.getAttribute("data-wp-rubro"));
-        const next = await saveWebConfig(businessId, {
-          enabled: container.querySelector("#wpEnabled")?.value === "true",
-          selectedOffers: offerIds,
-          showPriceList: Boolean(container.querySelector("#wpShowPrices")?.checked),
-          visibleRubros: rubroNames
-        });
-        status.textContent = "✅ Guardado";
-        slugInput.value = next.slug;
-        urlEl.textContent = getPublicWebUrl(businessId, next.slug);
-      } catch (error) {
-        console.error(error);
-        status.textContent = "Error: " + (error?.message || "no se pudo guardar");
-      } finally { btn.disabled = false; }
+    container.querySelector("#wpShare")?.addEventListener("click", () => {
+      if (!fields.publicUrl) return;
+      const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${fields.publicUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    });
+
+    container.querySelectorAll("[data-wp-offer]").forEach((checkbox) => {
+      checkbox.addEventListener("change", async () => {
+        const offerIds = [...container.querySelectorAll("[data-wp-offer]:checked")].map((el) => el.getAttribute("data-wp-offer"));
+        if (status) status.textContent = "Actualizando vidriera...";
+        try {
+          await saveWebConfig(businessId, {
+            enabled: true,
+            published: true,
+            active: true,
+            showPriceList: true,
+            visibleRubros: [],
+            selectedOffers: offerIds,
+            updatedFrom: "mi_carniceria_online"
+          });
+          if (status) status.textContent = "✅ Vidriera actualizada";
+          const small = checkbox.closest(".wp-offer")?.querySelector("small");
+          if (small) small.textContent = checkbox.checked ? "Publicada" : "No publicada";
+        } catch (error) {
+          console.error(error);
+          checkbox.checked = !checkbox.checked;
+          if (status) status.textContent = "No se pudo actualizar. Probá de nuevo.";
+        }
+      });
     });
   } catch (error) {
     console.error("Error renderWebPremium", error);
-    container.innerHTML = `<div style="padding:18px;color:#b42318;">No pudimos cargar Mi Web: ${escapeHtml(error?.message || "desconocido")}</div>`;
+    container.innerHTML = `<div style="padding:18px;color:#b42318;">No pudimos cargar tu carnicería online: ${escapeHtml(error?.message || "desconocido")}</div>`;
   }
 }
