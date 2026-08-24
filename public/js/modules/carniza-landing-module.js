@@ -6,59 +6,59 @@
 
   const CONTEXTS = {
     hero: {
-      label: "Proba la demo",
-      badge: "Carniza · demo rapida",
-      title: "Soy Carniza",
-      subtitle: "Vendedor de AppPromos",
-      message: "Te muestro como vender una oferta en 3 toques.",
-      hint: "Entras a la Carniceria de Carniza, elegis productos y ves como sale lista para WhatsApp.",
-      primary: { action: "demo", text: "Probar demo" },
-      secondary: { action: "signup", text: "Crear mi carniceria gratis" },
-      footer: "Primero probala. Si te sirve, la hacemos tuya."
+      label: "Ver A La Estaca",
+      badge: "Carniza · carnicería online real",
+      title: "Mirá una carnicería online",
+      subtitle: "Así se vende con AppPromos",
+      message: "Te muestro cómo A La Estaca usa AppPromos para mostrar precios, ofertas y recibir pedidos.",
+      hint: "Entrá a su vidriera, mirá los productos y probá cómo funciona el carrito.",
+      primary: { action: "storefront", text: "Ver A La Estaca" },
+      secondary: { action: "signup", text: "Crear mi carnicería" },
+      footer: "Primero mirá una real. Después armamos la tuya."
     },
     how: {
-      label: "Vende en 3 toques",
-      badge: "Carniza · como funciona",
-      title: "Simple como mostrador",
-      subtitle: "Elegis, armas y mandas",
-      message: "Elegis productos, armas la promo y la mandas por WhatsApp.",
-      hint: "La app esta pensada para vender rapido desde el celular, sin planillas ni vueltas.",
-      primary: { action: "demo", text: "Probar demo" },
-      secondary: { action: "signup", text: "Crear mi carniceria gratis" },
-      footer: "Si lo entendes solo, AppPromos esta haciendo bien su trabajo."
+      label: "Así funciona",
+      badge: "Carniza · cómo funciona",
+      title: "Simple para el carnicero",
+      subtitle: "Precios, web y WhatsApp",
+      message: "Cargás tus precios, tu vidriera se actualiza y el cliente te manda el pedido por WhatsApp.",
+      hint: "Sin planillas ni vueltas: tus productos quedan online y el cliente arma su pedido desde el celular.",
+      primary: { action: "storefront", text: "Ver A La Estaca" },
+      secondary: { action: "signup", text: "Quiero la mía" },
+      footer: "Tu carnicería online primero. Después descubrís todo el sistema comercial."
     },
     web: {
-      label: "Primero proba la app",
-      badge: "Carniza · foco comercial",
-      title: "La web suma despues",
-      subtitle: "Primero vende por WhatsApp",
-      message: "La web suma, pero primero proba como AppPromos te ayuda a vender por WhatsApp.",
-      hint: "Entra a la demo y mira el flujo real: oferta lista y salida rapida al cliente.",
-      primary: { action: "demo", text: "Probar demo" },
-      secondary: { action: "signup", text: "Crear mi carniceria gratis" },
-      footer: "La prioridad es que vendas. Lo demas acompaña."
+      label: "Ver A La Estaca",
+      badge: "Carniza · ejemplo real",
+      title: "Esta carnicería ya está online",
+      subtitle: "Mirá la experiencia del cliente",
+      message: "A La Estaca ya muestra productos, precios y ofertas y recibe pedidos desde su vidriera.",
+      hint: "Abrila como cliente, recorré la web y probá el carrito antes de crear la tuya.",
+      primary: { action: "storefront", text: "Abrir A La Estaca" },
+      secondary: { action: "signup", text: "Quiero mi carnicería online" },
+      footer: "Una carnicería real vale más que una demo."
     },
     pricing: {
-      label: "Elegi tu plan",
-      badge: "Carniza · planes",
-      title: "Podes empezar gratis",
-      subtitle: "Salvador cuida margen",
-      message: "Podes empezar gratis. Si queres cuidar margen y vender antes de picar, mira Salvador.",
-      hint: "Arranque te ayuda a vender rapido. Salvador te ayuda a vender antes de perder. Dueño te da mas control.",
-      primary: { action: "signup", text: "Crear mi carniceria gratis" },
-      secondary: { action: "demo", text: "Probar demo" },
-      footer: "Todos los planes tienen web propia. Dueño tiene web personalizada."
+      label: "Probala sin cargo",
+      badge: "Carniza · empezá hoy",
+      title: "Poné tu carnicería online",
+      subtitle: "Probala sin cargo",
+      message: "Creá tu carnicería, cargá algunos precios y empezá a compartir tu vidriera.",
+      hint: "No necesitás elegir un plan para entender si AppPromos te sirve.",
+      primary: { action: "signup", text: "Crear mi carnicería" },
+      secondary: { action: "storefront", text: "Ver A La Estaca" },
+      footer: "Primero usala. Después definimos juntos el siguiente paso."
     },
     auth: {
-      label: "Estoy aca",
+      label: "Ahora hacé la tuya",
       badge: "Carniza · registro",
-      title: "La hacemos tuya",
-      subtitle: "30 dias sin costo",
-      message: "Crea tu carniceria gratis. Despues cargas tus precios y salis vendiendo.",
-      hint: "Completa tus datos tranquilo. No te tapo el formulario; solo te acompaño.",
+      title: "Tu carnicería online empieza acá",
+      subtitle: "Registro corto",
+      message: "Creá tu cuenta y empezá cargando algunos precios. AppPromos prepara tu vidriera.",
+      hint: "Después vas a poder completar o cambiar los datos de tu negocio.",
       primary: { action: "focusSignup", text: "Completar registro" },
-      secondary: { action: "demo", text: "Seguir probando demo" },
-      footer: "Sin tarjeta. Si no te sirve, no seguis."
+      secondary: { action: "storefront", text: "Ver A La Estaca" },
+      footer: "La idea es que llegues rápido a ver tu propia carnicería online."
     }
   };
 
@@ -75,9 +75,9 @@
     window.location.hash = "signup";
   }
 
-  function openDemo() {
+  function openStorefront() {
     closePanel();
-    window.location.href = "/app.html?demo=1";
+    window.location.href = "/carniceria-a-la-estaca-3462-543210";
   }
 
   function focusSignup() {
@@ -101,7 +101,7 @@
 
   function runAction(action) {
     if (action === "signup") return openSignup();
-    if (action === "demo") return openDemo();
+    if (action === "storefront") return openStorefront();
     if (action === "focusSignup") return focusSignup();
   }
 
@@ -203,7 +203,7 @@
     root.innerHTML = `
       <button type="button" class="carniza-landing-fab" aria-label="Abrir Carniza">
         <img class="carniza-landing-fab-icon" src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" />
-        <span class="carniza-landing-fab-label">Proba la demo</span>
+        <span class="carniza-landing-fab-label">Ver A La Estaca</span>
         <span class="carniza-landing-dot" aria-hidden="true"></span>
       </button>
 
@@ -220,7 +220,7 @@
         </div>
 
         <div class="carniza-landing-body">
-          <div class="carniza-landing-badge">Carniza · demo rapida</div>
+          <div class="carniza-landing-badge">Carniza · carnicería online real</div>
           <p class="carniza-landing-message"></p>
           <p class="carniza-landing-hint"></p>
           <div class="carniza-landing-actions"></div>

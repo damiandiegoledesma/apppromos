@@ -6,7 +6,7 @@ import {
 import { app } from "../core/firebase-core.js";
 import { registerClientAndBusiness } from "../services/auth-service.js";
 import { setActiveBusinessId } from "../services/business-service.js";
-import { trackTrialRegistered } from "../services/tracking-service.js";
+import { trackRegistrationStarted, trackTrialRegistered } from "../services/tracking-service.js";
 
 const auth = getAuth(app);
 
@@ -152,23 +152,24 @@ if (registroBtn) {
 
     const data = {
       businessName: safeValue("businessName"),
-      ownerName: safeValue("ownerName"),
+      ownerName: safeValue("businessName"),
       email: safeValue("email"),
       password,
-      direccion: safeValue("direccion"),
+      direccion: "",
       telefono: safeValue("telefono"),
       ciudad: safeValue("ciudad"),
       provincia: safeValue("provincia"),
       provinceId: safeValue("provinceId")
     };
 
-    if (!data.businessName || !data.ownerName || !data.email || !data.telefono || !data.ciudad) {
+    if (!data.businessName || !data.email || !data.telefono || !data.ciudad) {
       setStatus(registroStatus, "Completá los datos principales para crear tu carnicería.");
       return;
     }
 
     try {
-      setStatus(registroStatus, "Creando tu carnicería...");
+      trackRegistrationStarted({ source: "landing_register" });
+      setStatus(registroStatus, "Creando tu carnicería online...");
 
       const result = await registerClientAndBusiness(data);
       trackTrialRegistered({
@@ -184,7 +185,7 @@ if (registroBtn) {
       );
 
       setTimeout(() => {
-        window.location.href = "./app.html";
+        window.location.href = "./app.html?onboarding=1";
       }, 1800);
 
     } catch (e) {
