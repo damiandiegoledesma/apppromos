@@ -531,13 +531,870 @@
       .store-preview-window img { width:136%; }
       .trial-simple .checklist { display:grid; grid-template-columns:1fr; gap:8px; text-align:left; }
     }
-  </style>
+
+    /* APPPROMOS V12.18-B1-FIX8.2 — header mobile simple + CTA inferior fijo */
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+      text-decoration:none;
+      background:transparent;
+    }
+    .brand-symbol{
+      display:block;
+      width:34px;
+      height:34px;
+      flex:0 0 34px;
+      background-image:url('/assets/logo/apppromos-symbol-transparent.png');
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:contain;
+    }
+    .brand-word{
+      display:inline-flex;
+      align-items:baseline;
+      color:#fff;
+      font-size:19px;
+      line-height:1;
+      font-weight:1000;
+      letter-spacing:-.5px;
+      white-space:nowrap;
+    }
+    .brand-word span{color:#1685ff;}
+
+    .mobile-bottom-cta{display:none;}
+
+    @media(max-width:860px){
+      .hero .wrap{grid-template-columns:1fr;}
+      .hero{padding:34px 0 24px;}
+      h1{
+        font-size:clamp(38px,10vw,58px);
+        line-height:.98;
+        letter-spacing:-.05em;
+      }
+      .lead{font-size:clamp(17px,4.5vw,20px);}
+      .hero-ctas{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+        margin:22px 0;
+      }
+      .hero-ctas .btn{
+        width:100%;
+        min-height:50px;
+        padding:11px 14px;
+        white-space:normal;
+        line-height:1.15;
+        text-align:center;
+      }
+      .trust{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+      }
+      .pill{width:100%;text-align:left;}
+      .steps,.benefits{grid-template-columns:1fr;}
+      .section-title h2{font-size:clamp(28px,8vw,42px);}
+      .section-title p{font-size:16px;}
+      .real-shot-card,.real-store-shot{
+        width:100%;
+        max-width:100%;
+        padding:8px;
+      }
+      .store-preview-window{
+        aspect-ratio:auto;
+        width:100%;
+      }
+      .store-preview-window img{
+        width:100%;
+        max-width:100%;
+        height:auto;
+      }
+      .center-actions .btn{width:100%;white-space:normal;}
+      .trial-simple .checklist{
+        display:grid;
+        grid-template-columns:1fr;
+        text-align:left;
+      }
+    }
+
+    @media(max-width:640px){
+      body{
+        padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));
+      }
+
+      .wrap{
+        width:min(var(--max),calc(100% - 18px));
+      }
+
+      .topbar{
+        position:sticky;
+        top:0;
+        z-index:100;
+      }
+
+      .nav{
+        min-height:56px;
+        gap:8px;
+      }
+
+      .brand{gap:6px;}
+      .brand-symbol{
+        width:28px;
+        height:28px;
+        flex-basis:28px;
+      }
+      .brand-word{
+        font-size:16px;
+      }
+
+      .nav-actions{
+        margin-left:auto;
+        gap:0;
+      }
+      .nav-actions .nav-link-how,
+      .nav-actions .nav-link-demo{
+        display:none!important;
+      }
+      .nav-actions .nav-link-login{
+        display:inline-flex!important;
+        width:auto!important;
+        min-height:34px;
+        padding:0 10px;
+        border-radius:999px;
+        font-size:11.5px;
+        white-space:nowrap;
+      }
+
+      .hero{
+        padding:24px 0 18px;
+      }
+      .eyebrow{
+        font-size:11px;
+        letter-spacing:.065em;
+      }
+      h1{
+        margin:10px 0 12px;
+        font-size:clamp(33px,10.2vw,44px);
+      }
+      .lead{
+        margin-bottom:16px;
+        font-size:16px;
+      }
+
+      .hero-ctas{
+        margin:18px 0;
+      }
+      .hero-ctas .btn{
+        min-height:48px;
+        font-size:14px;
+      }
+
+      .hero-login-line{
+        margin:-2px 0 12px;
+        text-align:left;
+        font-size:13px;
+      }
+      .microcopy{
+        margin-top:-4px;
+        font-size:11.5px;
+        line-height:1.3;
+      }
+
+      .trust{
+        grid-template-columns:1fr;
+      }
+
+      section{padding:34px 0;}
+      .step-card,.benefit-card{padding:18px;}
+      .step-num{
+        width:46px;
+        height:46px;
+        border-radius:14px;
+        font-size:23px;
+        margin-bottom:12px;
+      }
+      .step-card h3,.benefit-card h3{font-size:21px;}
+
+      .real-shot-card{border-radius:18px;}
+      .store-preview-window{border-radius:12px;}
+
+      .trial-simple .checklist li{
+        min-width:0;
+        padding:11px 12px;
+      }
+
+      footer .wrap{
+        display:grid;
+        gap:14px;
+      }
+
+      .mobile-bottom-cta{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:0;
+        z-index:140;
+        display:block;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+        background:rgba(2,8,23,.96);
+        border-top:1px solid rgba(255,255,255,.14);
+        box-shadow:0 -14px 34px rgba(0,0,0,.28);
+        backdrop-filter:blur(14px);
+      }
+
+      .mobile-bottom-cta-link{
+        width:100%;
+        min-height:48px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:10px 14px;
+        border-radius:16px;
+        text-decoration:none;
+        text-align:center;
+        color:#fff;
+        background:linear-gradient(135deg,#16a34a,#22c55e);
+        box-shadow:0 10px 24px rgba(34,197,94,.25);
+        font-size:14px;
+        line-height:1.15;
+        font-weight:1000;
+      }
+    }
+
+    @media(max-width:380px){
+      .brand-symbol{
+        width:26px;
+        height:26px;
+        flex-basis:26px;
+      }
+      .brand-word{font-size:15px;}
+      .nav-actions .nav-link-login{
+        padding:0 8px;
+        font-size:11px;
+      }
+      h1{font-size:32px;}
+      .lead{font-size:15.5px;}
+      .mobile-bottom-cta-link{font-size:13px;}
+    }
+
+
+    /* APPPROMOS V12.18-B1-FIX9 — identidad visual real de AppPromos */
+    :root{
+      --brand-blue:#0477f2;
+      --brand-blue-dark:#005bd8;
+      --brand-navy:#061a35;
+      --brand-ink:#0f172a;
+      --brand-muted:#64748b;
+      --brand-soft:#eff6ff;
+      --brand-soft-2:#eaf3ff;
+      --brand-line:rgba(4,119,242,.15);
+      --brand-card:#ffffff;
+      --brand-green:#22c55e;
+      --brand-green-dark:#16a34a;
+      --brand-shadow:0 20px 60px rgba(2,8,23,.10);
+      --brand-shadow-blue:0 18px 46px rgba(4,119,242,.18);
+    }
+
+    body{
+      color:var(--brand-ink)!important;
+      background:
+        radial-gradient(circle at top left,rgba(4,119,242,.14),transparent 34%),
+        radial-gradient(circle at bottom right,rgba(34,197,94,.07),transparent 32%),
+        linear-gradient(180deg,#f8fbff 0%,#eef5ff 44%,#ffffff 100%)!important;
+    }
+
+    .topbar{
+      background:rgba(255,255,255,.92)!important;
+      border-bottom:1px solid rgba(4,119,242,.12)!important;
+      box-shadow:0 14px 34px rgba(15,23,42,.07)!important;
+      backdrop-filter:blur(18px);
+    }
+
+    .brand-word{color:var(--brand-navy)!important;}
+    .brand-word span{color:var(--brand-blue)!important;}
+
+    .nav-actions .btn-light{
+      color:var(--brand-navy)!important;
+      background:#fff!important;
+      border-color:rgba(4,119,242,.14)!important;
+      box-shadow:0 8px 22px rgba(2,8,23,.045)!important;
+    }
+    .nav-actions .btn-primary{
+      background:linear-gradient(135deg,var(--brand-blue),var(--brand-blue-dark))!important;
+      color:#fff!important;
+      box-shadow:var(--brand-shadow-blue)!important;
+    }
+
+    .hero{
+      padding:54px 0 42px!important;
+      background:transparent!important;
+      overflow:visible!important;
+    }
+    .hero::before{
+      display:none!important;
+      content:none!important;
+    }
+    .hero .wrap{
+      display:grid!important;
+      grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr)!important;
+      align-items:center!important;
+      gap:34px!important;
+    }
+    .hero .eyebrow{
+      color:var(--brand-blue)!important;
+    }
+    .hero h1{
+      color:var(--brand-navy)!important;
+      max-width:12ch;
+    }
+    .hero h1 .accent{
+      color:var(--brand-blue)!important;
+    }
+    .hero .lead,
+    .hero-login-line,
+    .microcopy{
+      color:var(--brand-muted)!important;
+    }
+    .hero-login-line a{
+      color:var(--brand-blue)!important;
+    }
+    .hero .btn-light{
+      color:var(--brand-navy)!important;
+      background:#fff!important;
+      border-color:rgba(4,119,242,.16)!important;
+      box-shadow:0 10px 28px rgba(2,8,23,.06)!important;
+    }
+    .hero .btn-green{
+      background:linear-gradient(135deg,var(--brand-green-dark),var(--brand-green))!important;
+      color:#fff!important;
+    }
+    .trust{
+      color:var(--brand-navy)!important;
+    }
+    .pill{
+      background:#fff!important;
+      border-color:rgba(4,119,242,.12)!important;
+      color:var(--brand-navy)!important;
+      box-shadow:0 8px 22px rgba(2,8,23,.045);
+    }
+
+    .hero-app-preview{
+      min-width:0;
+      padding:18px;
+      border-radius:28px;
+      background:linear-gradient(145deg,#ffffff,#f4f8ff);
+      border:1px solid rgba(4,119,242,.14);
+      box-shadow:var(--brand-shadow);
+    }
+    .hero-app-preview-head{
+      display:grid;
+      gap:5px;
+      margin-bottom:14px;
+    }
+    .hero-app-preview-kicker{
+      color:var(--brand-blue);
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.08em;
+    }
+    .hero-app-preview-head strong{
+      color:var(--brand-navy);
+      font-size:22px;
+      line-height:1.05;
+      letter-spacing:-.035em;
+    }
+    .hero-app-preview-head small{
+      color:var(--brand-muted);
+      font-size:13px;
+      line-height:1.35;
+      font-weight:750;
+    }
+    .hero-app-preview-frame{
+      overflow:hidden;
+      border-radius:20px;
+      border:1px solid rgba(4,119,242,.12);
+      background:#fff;
+    }
+    .hero-app-preview-frame img{
+      display:block;
+      width:100%;
+      height:auto;
+    }
+
+    section{
+      color:var(--brand-ink)!important;
+    }
+    .section-title h2,
+    .copy h2,
+    .final-cta h2{
+      color:var(--brand-navy)!important;
+    }
+    .section-title p,
+    .copy p,
+    .step-card p,
+    .benefit-card p,
+    .web-card p,
+    .final-cta p{
+      color:var(--brand-muted)!important;
+    }
+
+    .step-card,
+    .benefit-card,
+    .web-card,
+    .real-shot-card,
+    .trial-simple .checklist li{
+      background:linear-gradient(180deg,#ffffff,#f8fbff)!important;
+      color:var(--brand-ink)!important;
+      border:1px solid rgba(4,119,242,.12)!important;
+      box-shadow:var(--brand-shadow)!important;
+    }
+    .step-card h3,
+    .benefit-card h3,
+    .web-card h3{
+      color:var(--brand-navy)!important;
+    }
+    .step-num{
+      background:linear-gradient(135deg,var(--brand-blue),var(--brand-blue-dark))!important;
+      color:#fff!important;
+      box-shadow:0 12px 24px rgba(4,119,242,.18);
+    }
+
+    #carniceria-online{
+      background:linear-gradient(180deg,rgba(255,255,255,.52),rgba(239,246,255,.76));
+      border-top:1px solid rgba(4,119,242,.08);
+      border-bottom:1px solid rgba(4,119,242,.08);
+    }
+    .real-shot-card{
+      background:#fff!important;
+    }
+    .center-actions .btn-light,
+    #probar-sin-cargo .btn-light,
+    .final-cta .btn-light{
+      color:var(--brand-navy)!important;
+      background:#fff!important;
+      border-color:rgba(4,119,242,.16)!important;
+    }
+
+    #probar-sin-cargo{
+      background:
+        radial-gradient(circle at 50% 0,rgba(4,119,242,.10),transparent 52%),
+        linear-gradient(180deg,#f8fbff,#fff);
+    }
+    .trial-simple h2{
+      color:var(--brand-navy)!important;
+    }
+    .trial-simple p{
+      color:var(--brand-muted)!important;
+    }
+    .trial-simple .checklist li{
+      color:var(--brand-navy)!important;
+    }
+
+    .final-cta{
+      background:
+        radial-gradient(circle at center,rgba(4,119,242,.14),rgba(255,255,255,0) 64%)!important;
+    }
+
+    footer{
+      color:var(--brand-muted)!important;
+      background:#fff!important;
+      border-top:1px solid rgba(4,119,242,.10)!important;
+    }
+    .footer-socials a{
+      color:var(--brand-blue)!important;
+      background:#f8fbff!important;
+      border-color:rgba(4,119,242,.14)!important;
+    }
+
+    .mobile-bottom-cta{
+      background:rgba(255,255,255,.96)!important;
+      border-top:1px solid rgba(4,119,242,.12)!important;
+      box-shadow:0 -12px 32px rgba(2,8,23,.10)!important;
+    }
+
+    /* Carniza no compite con el cierre/CTA de la landing */
+    .carniza-landing-root{
+      transition:opacity .18s ease,transform .18s ease!important;
+    }
+    body.carniza-end-zone .carniza-landing-root{
+      opacity:0!important;
+      pointer-events:none!important;
+      transform:translateY(14px)!important;
+    }
+
+    @media(max-width:860px){
+      .hero .wrap{
+        grid-template-columns:1fr!important;
+        gap:22px!important;
+      }
+      .hero-app-preview{
+        padding:12px;
+        border-radius:22px;
+      }
+      .hero h1{
+        max-width:14ch;
+      }
+    }
+
+    @media(max-width:640px){
+      body{
+        padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));
+      }
+      .hero{
+        padding:28px 0 22px!important;
+      }
+      .hero .wrap{
+        gap:20px!important;
+      }
+      .hero h1{
+        color:var(--brand-navy)!important;
+        font-size:clamp(34px,10.3vw,44px)!important;
+        max-width:none;
+      }
+      .hero .lead{
+        color:var(--brand-muted)!important;
+      }
+      .hero-app-preview{
+        order:2;
+      }
+      .hero-app-preview-head strong{
+        font-size:18px;
+      }
+      .hero-app-preview-frame{
+        border-radius:15px;
+      }
+      .trust{
+        grid-template-columns:1fr!important;
+      }
+      .carniza-landing-root{
+        bottom:calc(80px + env(safe-area-inset-bottom,0px))!important;
+      }
+    }
+
+
+    /* APPPROMOS V12.18-B1-FIX10 — Así trabaja AppPromos */
+    .workflow-section{
+      position:relative;
+      background:
+        radial-gradient(circle at 12% 8%,rgba(4,119,242,.10),transparent 24%),
+        linear-gradient(180deg,#ffffff 0%,#f5f9ff 100%);
+      border-top:1px solid rgba(4,119,242,.08);
+      border-bottom:1px solid rgba(4,119,242,.08);
+    }
+    .workflow-title{max-width:820px;margin-left:auto;margin-right:auto;}
+    .workflow-title .eyebrow{color:var(--brand-blue);}
+    .workflow-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:18px;
+      margin-top:30px;
+    }
+    .workflow-card{
+      position:relative;
+      overflow:hidden;
+      min-width:0;
+      padding:18px;
+      border-radius:24px;
+      background:#fff;
+      border:1px solid rgba(4,119,242,.13);
+      box-shadow:0 18px 42px rgba(2,8,23,.07);
+    }
+    .workflow-card::after{
+      content:"";
+      position:absolute;
+      width:110px;height:110px;
+      right:-58px;top:-58px;
+      border-radius:50%;
+      background:rgba(4,119,242,.055);
+      pointer-events:none;
+    }
+    .workflow-topline{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin-bottom:13px;
+      color:var(--brand-navy);
+      font-weight:950;
+    }
+    .workflow-num{
+      display:grid;
+      place-items:center;
+      width:31px;height:31px;
+      flex:0 0 31px;
+      border-radius:50%;
+      color:#fff;
+      background:linear-gradient(135deg,var(--brand-blue),var(--brand-blue-dark));
+      box-shadow:0 8px 18px rgba(4,119,242,.22);
+    }
+    .workflow-label{font-size:14px;}
+    .workflow-card h3{
+      margin:15px 0 6px;
+      color:var(--brand-navy);
+      font-size:20px;
+      line-height:1.08;
+      letter-spacing:-.025em;
+    }
+    .workflow-card p{
+      margin:0;
+      color:var(--brand-muted);
+      font-size:14px;
+      line-height:1.45;
+      font-weight:650;
+    }
+    .workflow-visual{
+      position:relative;
+      min-height:205px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      border-radius:18px;
+      background:
+        radial-gradient(circle at 50% 0,rgba(4,119,242,.12),transparent 56%),
+        #f8fbff;
+      border:1px solid rgba(4,119,242,.10);
+    }
+    .workflow-carniza{
+      position:absolute;
+      left:-15px;
+      bottom:-28px;
+      width:148px;
+      max-height:205px;
+      object-fit:contain;
+      object-position:bottom;
+      filter:drop-shadow(0 12px 18px rgba(2,8,23,.12));
+    }
+    .workflow-carniza-small{
+      width:118px;
+      left:-18px;
+      bottom:-24px;
+    }
+    .mini-phone,.mini-app,.customer-phone,.mini-cart,.wa-phone{
+      position:relative;
+      z-index:2;
+      width:150px;
+      padding:10px;
+      border-radius:18px;
+      background:#fff;
+      border:4px solid var(--brand-navy);
+      box-shadow:0 14px 30px rgba(2,8,23,.16);
+      font-size:9px;
+      color:var(--brand-navy);
+    }
+    .workflow-register .mini-phone{margin-left:82px;}
+    .mini-phone-head,.mini-app-title{
+      margin-bottom:9px;
+      text-align:center;
+      color:var(--brand-blue);
+      font-size:10px;
+      font-weight:1000;
+    }
+    .mini-field{
+      margin:5px 0;
+      padding:6px;
+      border-radius:7px;
+      background:#f5f9ff;
+      border:1px solid rgba(4,119,242,.12);
+      font-weight:800;
+    }
+    .mini-action{
+      margin-top:8px;
+      padding:7px 6px;
+      border-radius:8px;
+      text-align:center;
+      color:#fff;
+      background:linear-gradient(135deg,var(--brand-green-dark),var(--brand-green));
+      font-weight:1000;
+    }
+    .mini-blue{background:linear-gradient(135deg,var(--brand-blue),var(--brand-blue-dark));}
+    .mini-app{width:176px;border-width:1px;border-radius:14px;}
+    .mini-price-row,.cart-line,.cart-total{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      padding:7px 2px;
+      border-bottom:1px solid rgba(4,119,242,.10);
+    }
+    .mini-price-row strong,.cart-line strong,.cart-total strong{white-space:nowrap;}
+    .workflow-publish,.workflow-whatsapp{justify-content:flex-end;padding-right:18px;}
+    .publish-card{
+      position:relative;
+      z-index:2;
+      width:165px;
+      min-height:145px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid rgba(4,119,242,.14);
+      box-shadow:0 12px 28px rgba(4,119,242,.12);
+      color:var(--brand-navy);
+      text-align:center;
+    }
+    .publish-check{
+      position:absolute;
+      top:-13px;right:-10px;
+      display:grid;place-items:center;
+      width:38px;height:38px;
+      border-radius:50%;
+      background:var(--brand-blue);
+      color:#fff;
+      font-size:24px;font-weight:1000;
+      box-shadow:0 8px 18px rgba(4,119,242,.25);
+    }
+    .publish-store{font-size:43px;line-height:1;color:var(--brand-blue);margin-bottom:8px;}
+    .publish-card strong{font-size:13px;}
+    .publish-card span{font-size:11px;color:var(--brand-muted);font-weight:800;}
+    .customer-phone{
+      width:160px;
+      border-radius:20px;
+      background:#fff;
+    }
+    .customer-store{
+      margin:-10px -10px 8px;
+      padding:10px 6px;
+      border-radius:13px 13px 0 0;
+      text-align:center;
+      color:#fff;
+      background:var(--brand-navy);
+      font-weight:1000;
+      letter-spacing:.04em;
+    }
+    .customer-offer{
+      display:grid;
+      grid-template-columns:1fr auto auto;
+      align-items:center;
+      gap:5px;
+      padding:7px 2px;
+      border-bottom:1px solid rgba(4,119,242,.10);
+    }
+    .customer-offer b{
+      display:grid;place-items:center;
+      width:20px;height:20px;
+      border-radius:6px;
+      background:var(--brand-blue);
+      color:#fff;
+      font-size:14px;
+    }
+    .mini-cart{width:178px;border-width:1px;border-radius:14px;}
+    .cart-total{margin-top:3px;border-bottom:0;font-size:10px;}
+    .wa-phone{
+      width:175px;
+      min-height:165px;
+      border-width:1px;
+      border-radius:14px;
+      background:#efeae2;
+    }
+    .wa-head{
+      margin:-10px -10px 9px;
+      padding:9px;
+      border-radius:13px 13px 0 0;
+      background:#075e54;
+      color:#fff;
+      font-weight:1000;
+      text-align:center;
+    }
+    .wa-message{
+      display:grid;
+      gap:4px;
+      padding:9px;
+      border-radius:9px;
+      background:#d9fdd3;
+      box-shadow:0 4px 10px rgba(2,8,23,.08);
+      line-height:1.25;
+    }
+    .wa-message strong{margin-bottom:2px;}
+    .wa-message b{margin-top:4px;}
+    .workflow-summary{
+      position:relative;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:1fr 180px;
+      align-items:center;
+      gap:22px;
+      margin-top:20px;
+      padding:25px 28px;
+      border-radius:26px;
+      background:linear-gradient(135deg,#eaf3ff,#ffffff);
+      border:1px solid rgba(4,119,242,.13);
+      box-shadow:0 18px 42px rgba(2,8,23,.06);
+    }
+    .workflow-summary-kicker{
+      display:block;
+      margin-bottom:7px;
+      color:var(--brand-blue);
+      font-size:12px;
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+    }
+    .workflow-summary strong{
+      display:block;
+      max-width:720px;
+      color:var(--brand-navy);
+      font-size:clamp(24px,3vw,36px);
+      line-height:1.02;
+      letter-spacing:-.04em;
+    }
+    .workflow-summary p{
+      margin:9px 0 0;
+      color:var(--brand-muted);
+      font-size:16px;
+      font-weight:750;
+    }
+    .workflow-summary img{
+      position:absolute;
+      right:18px;
+      bottom:-38px;
+      width:170px;
+      max-height:210px;
+      object-fit:contain;
+      object-position:bottom;
+      filter:drop-shadow(0 12px 20px rgba(2,8,23,.10));
+    }
+
+    @media(max-width:860px){
+      .workflow-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media(max-width:640px){
+      .workflow-grid{
+        grid-template-columns:1fr;
+        gap:13px;
+        margin-top:22px;
+      }
+      .workflow-card{
+        padding:14px;
+        border-radius:20px;
+      }
+      .workflow-visual{min-height:190px;}
+      .workflow-card h3{font-size:19px;}
+      .workflow-summary{
+        grid-template-columns:1fr;
+        min-height:250px;
+        padding:22px 18px 122px;
+      }
+      .workflow-summary strong{font-size:27px;}
+      .workflow-summary img{
+        width:145px;
+        right:10px;
+        bottom:-34px;
+      }
+    }
+
+</style>
 </head>
 <body>
   <header class="topbar">
     <div class="wrap nav">
       <a class="brand" href="#top" aria-label="AppPromos inicio">
-        <img class="brand-official" src="/assets/logo/apppromos-square-transparent.png" alt="" aria-hidden="true" /><span class="brand-word">App<span>Promos</span></span>
+        <span class="brand-symbol" aria-hidden="true"></span>
+        <span class="brand-word">App<span>Promos</span></span>
       </a>
       <nav class="nav-actions" aria-label="Acciones principales">
         <a class="btn btn-light nav-link-how" href="#como-funciona">Cómo funciona</a>
@@ -567,31 +1424,130 @@
           </div>
         </div>
 
+        <aside class="hero-app-preview" aria-label="Así se ve AppPromos por dentro">
+          <div class="hero-app-preview-head">
+            <span class="hero-app-preview-kicker">APP PROMOS POR DENTRO</span>
+            <strong>Tu carnicería online está trabajando</strong>
+            <small>Precios, ofertas, vidriera y WhatsApp siempre a mano.</small>
+          </div>
+          <div class="hero-app-preview-frame">
+            <img src="/assets/product/landing/app-real-dashboard.png" alt="Pantalla real de AppPromos para gestionar una carnicería online" />
+          </div>
+        </aside>
       </div>
     </section>
 
-    <section id="como-funciona" data-carniza-section="how">
+    <section id="como-funciona" class="workflow-section" data-carniza-section="how">
       <div class="wrap">
-        <div class="section-title">
-          <h2>De cero a tu carnicería online.</h2>
-          <p>La preparás en minutos desde el celular.</p>
+        <div class="section-title workflow-title">
+          <div class="eyebrow">Así trabaja AppPromos</div>
+          <h2>Vos actualizás. AppPromos publica. Tu cliente compra.</h2>
+          <p>Todo el circuito de tu carnicería online, en 6 pasos simples.</p>
         </div>
-        <div class="steps">
-          <article class="step-card">
-            <div class="step-num">1</div>
-            <h3>Elegís tus productos</h3>
-            <p>Partís del catálogo precargado y dejás listos los cortes que vendés.</p>
+
+        <div class="workflow-grid">
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">1</span><span class="workflow-label">Te registrás</span></div>
+            <div class="workflow-visual workflow-register">
+              <img class="workflow-carniza" src="/assets/characters/carniza/carniza-base.webp" alt="" aria-hidden="true" />
+              <div class="mini-phone">
+                <div class="mini-phone-head">Crear mi carnicería</div>
+                <div class="mini-field">Carnicería López</div>
+                <div class="mini-field">3462 50-5050</div>
+                <div class="mini-action">Crear cuenta</div>
+              </div>
+            </div>
+            <h3>Creás tu carnicería</h3>
+            <p>Te registrás y dejás listo el negocio para empezar a vender online.</p>
           </article>
-          <article class="step-card">
-            <div class="step-num">2</div>
-            <h3>Actualizás tus precios</h3>
-            <p>Cambiás un precio y AppPromos actualiza tu vidriera automáticamente.</p>
+
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">2</span><span class="workflow-label">Cargás precios</span></div>
+            <div class="workflow-visual">
+              <div class="mini-app">
+                <div class="mini-app-title">Actualizar precios</div>
+                <div class="mini-price-row"><span>Asado</span><strong>$ 14.990</strong></div>
+                <div class="mini-price-row"><span>Vacío</span><strong>$ 16.990</strong></div>
+                <div class="mini-price-row"><span>Milanesas</span><strong>$ 6.990</strong></div>
+                <div class="mini-action mini-blue">Guardar cambios</div>
+              </div>
+            </div>
+            <h3>Cambiás lo que vendés hoy</h3>
+            <p>Cargás o modificás precios desde AppPromos, sin tocar una página web.</p>
           </article>
-          <article class="step-card">
-            <div class="step-num">3</div>
-            <h3>Tu carnicería queda online</h3>
-            <p>Tus clientes ven precios y ofertas, arman el carrito y te mandan el pedido por WhatsApp.</p>
+
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">3</span><span class="workflow-label">Publicamos tu web</span></div>
+            <div class="workflow-visual workflow-publish">
+              <img class="workflow-carniza workflow-carniza-small" src="/assets/characters/carniza/carniza-base.webp" alt="" aria-hidden="true" />
+              <div class="publish-card">
+                <div class="publish-check">✓</div>
+                <div class="publish-store">▰</div>
+                <strong>Tu web actualizada</strong>
+                <span>y publicada</span>
+              </div>
+            </div>
+            <h3>AppPromos hace el resto</h3>
+            <p>Los cambios pasan automáticamente a tu vidriera online.</p>
           </article>
+
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">4</span><span class="workflow-label">Tu cliente la ve</span></div>
+            <div class="workflow-visual">
+              <div class="customer-phone">
+                <div class="customer-store">A LA ESTACA</div>
+                <div class="customer-offer"><span>Asado</span><strong>$ 14.990</strong><b>+</b></div>
+                <div class="customer-offer"><span>Vacío</span><strong>$ 16.990</strong><b>+</b></div>
+                <div class="customer-offer"><span>Milanesas</span><strong>$ 6.990</strong><b>+</b></div>
+              </div>
+            </div>
+            <h3>Ve precios y ofertas</h3>
+            <p>Entra desde el celular y encuentra tu carnicería siempre actualizada.</p>
+          </article>
+
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">5</span><span class="workflow-label">Arma el carrito</span></div>
+            <div class="workflow-visual">
+              <div class="mini-cart">
+                <div class="mini-app-title">Mi carrito</div>
+                <div class="cart-line"><span>Asado · 2 kg</span><strong>$ 29.980</strong></div>
+                <div class="cart-line"><span>Vacío · 1 kg</span><strong>$ 16.990</strong></div>
+                <div class="cart-line"><span>Milanesas · 2 kg</span><strong>$ 13.980</strong></div>
+                <div class="cart-total"><span>Total</span><strong>$ 60.950</strong></div>
+                <div class="mini-action">Enviar por WhatsApp</div>
+              </div>
+            </div>
+            <h3>Elige y arma su pedido</h3>
+            <p>Agrega productos al carrito y revisa todo antes de enviarlo.</p>
+          </article>
+
+          <article class="workflow-card">
+            <div class="workflow-topline"><span class="workflow-num">6</span><span class="workflow-label">Te llega por WhatsApp</span></div>
+            <div class="workflow-visual workflow-whatsapp">
+              <img class="workflow-carniza workflow-carniza-small" src="/assets/characters/carniza/carniza-base.webp" alt="" aria-hidden="true" />
+              <div class="wa-phone">
+                <div class="wa-head">Pedido nuevo</div>
+                <div class="wa-message">
+                  <strong>Hola, quiero hacer este pedido:</strong>
+                  <span>• 2 kg de Asado</span>
+                  <span>• 1 kg de Vacío</span>
+                  <span>• 2 kg de Milanesas</span>
+                  <b>Total: $ 60.950</b>
+                </div>
+              </div>
+            </div>
+            <h3>Recibís el pedido ordenado</h3>
+            <p>El pedido vuelve a tu WhatsApp listo para preparar y coordinar.</p>
+          </article>
+        </div>
+
+        <div class="workflow-summary">
+          <div>
+            <span class="workflow-summary-kicker">La idea es simple</span>
+            <strong>Vos ponés los precios. AppPromos mantiene la vidriera online.</strong>
+            <p>Tus clientes ven, eligen y te mandan el pedido.</p>
+          </div>
+          <img src="/assets/characters/carniza/carniza-base.webp" alt="Carniza, asistente de AppPromos" />
         </div>
       </div>
     </section>
@@ -880,6 +1836,42 @@
         });
       }
     });
+  })();
+</script>
+
+
+  <div class="mobile-bottom-cta" aria-label="Crear mi carnicería">
+    <a class="mobile-bottom-cta-link" href="#signup">🚀 CREAR MI CARNICERÍA · PROBALA SIN CARGO</a>
+  </div>
+
+
+<script>
+  (function(){
+    function setupCarnizaEndZone(){
+      const endTargets = [
+        document.querySelector(".final-cta"),
+        document.querySelector("footer")
+      ].filter(Boolean);
+
+      if(!endTargets.length || !("IntersectionObserver" in window)) return;
+
+      const visible = new Set();
+      const observer = new IntersectionObserver((entries)=>{
+        entries.forEach((entry)=>{
+          if(entry.isIntersecting) visible.add(entry.target);
+          else visible.delete(entry.target);
+        });
+        document.body.classList.toggle("carniza-end-zone", visible.size > 0);
+      }, { threshold: 0.08 });
+
+      endTargets.forEach((target)=>observer.observe(target));
+    }
+
+    if(document.readyState === "loading"){
+      document.addEventListener("DOMContentLoaded", setupCarnizaEndZone);
+    }else{
+      setupCarnizaEndZone();
+    }
   })();
 </script>
 
