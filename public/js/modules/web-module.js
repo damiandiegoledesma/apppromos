@@ -40,7 +40,7 @@ function getBusinessPublicFields(meta = {}, config = {}, businessId = "") {
   };
 }
 
-export async function renderWebPremium(container, businessId) {
+export async function renderWebPremium(container, businessId, options = {}) {
   if (!container) return;
   container.innerHTML = `<div style="padding:18px;color:#6b7280;">Cargando tu carnicería online...</div>`;
 
@@ -83,6 +83,7 @@ export async function renderWebPremium(container, businessId) {
             <button id="wpShare" class="wp-btn" ${fields.publicUrl ? "" : "disabled"}>📲 Compartir</button>
             <button type="button" class="wp-btn orange" data-action-panel="pricesPanel">💲 Actualizar precios</button>
             <button type="button" class="wp-btn" data-action-panel="savedPanel">🔥 Gestionar ofertas</button>
+            <button type="button" class="wp-btn" data-wp-business-data>⚙️ Datos de mi carnicería</button>
           </div>
           <div class="wp-status" id="wpStatus"></div>
         </div>
@@ -127,6 +128,12 @@ export async function renderWebPremium(container, businessId) {
       if (!fields.publicUrl) return;
       const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${fields.publicUrl}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    });
+
+    container.querySelector("[data-wp-business-data]")?.addEventListener("click", () => {
+      if (typeof options?.onEditBusinessData === "function") {
+        options.onEditBusinessData();
+      }
     });
 
     container.querySelectorAll("[data-wp-offer]").forEach((checkbox) => {

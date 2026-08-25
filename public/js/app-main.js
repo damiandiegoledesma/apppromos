@@ -25,6 +25,12 @@ import {
 } from "./services/tracking-service.js";
 
 import { updateBusinessBasicData, getPublicWebUrl } from "./services/web-premium-service.js";
+import {
+  uploadBusinessLogo,
+  uploadBusinessFrontPhoto,
+  deleteBusinessLogo,
+  deleteBusinessFrontPhoto
+} from "./services/business-brand-service.js";
 import { loadActiveBusinessData } from "./services/data-service.js";
 import {
   loadMarketCacheOnce,
@@ -1509,7 +1515,9 @@ function getBusinessAccountFields() {
     plan: currentBusinessControl?.plan || currentBusinessControl?.billing?.plan || state?.plan || "",
     paymentStatus: currentBusinessControl?.paymentStatus || currentBusinessControl?.billing?.status || "",
     accessLabel: access?.label || access?.title || "",
-    updatedAt: state?.updatedAt || meta?.updatedAt || ""
+    updatedAt: state?.updatedAt || meta?.updatedAt || "",
+    logoUrl: meta?.brand?.logoUrl || "",
+    frontPhotoUrl: meta?.brand?.frontPhotoUrl || ""
   };
 }
 
@@ -1579,6 +1587,14 @@ function renderAccountViewHtml() {
   `;
 }
 
+function renderAccountBrandPreview(url, alt, kind = "logo") {
+  if (!url) {
+    return `<div class="app-account-brand-empty">Todavía no cargaste ${escapeCarnizaHtml(alt.toLowerCase())}.</div>`;
+  }
+  const className = kind === "front" ? "app-account-brand-preview front" : "app-account-brand-preview logo";
+  return `<img class="${className}" src="${escapeCarnizaHtml(url)}" alt="${escapeCarnizaHtml(alt)}" loading="lazy" />`;
+}
+
 function renderAccountEditHtml() {
   const fields = getBusinessAccountFields();
   return `
@@ -1587,12 +1603,43 @@ function renderAccountEditHtml() {
       <h3>Editar datos del negocio</h3>
       <p>Usamos estos datos para tu app, tu WhatsApp y tu web de arranque.</p>
       <label><span>Nombre comercial *</span><input name="name" required value="${escapeCarnizaHtml(fields.name === "Sin nombre cargado" ? "" : fields.name)}" placeholder="Carnicería Sur" /></label>
+      <label><span>Responsable</span><input name="responsable" value="${escapeCarnizaHtml(fields.responsible)}" placeholder="Juan Pérez" /></label>
       <label><span>Teléfono / WhatsApp *</span><input name="telefono" required value="${escapeCarnizaHtml(fields.phone)}" placeholder="3462 555555" /></label>
       <label><span>Dirección *</span><input name="direccion" required value="${escapeCarnizaHtml(fields.address)}" placeholder="Patagonia 28" /></label>
       <label><span>Ciudad *</span><input name="ciudad" required value="${escapeCarnizaHtml(fields.city)}" placeholder="Venado Tuerto" /></label>
+
+      <div class="app-account-brand-section">
+        <div>
+          <strong>Identidad de tu carnicería</strong>
+          <p>Guardá tu logo y una foto real del local para identificar claramente tu carnicería.</p>
+        </div>
+
+        <div class="app-account-brand-item">
+          <span class="app-account-brand-label">Logo oficial</span>
+          <div data-brand-logo-preview>${renderAccountBrandPreview(fields.logoUrl, "Logo oficial", "logo")}</div>
+          <label class="app-account-file-button">
+            <span>${fields.logoUrl ? "Cambiar logo" : "Elegir logo"}</span>
+            <input type="file" name="logoFile" accept="image/jpeg,image/png,image/webp" data-brand-logo-input />
+          </label>
+          ${fields.logoUrl ? '<button type="button" class="app-account-remove-image" data-brand-remove-logo>Quitar logo</button>' : ''}
+          <small>JPG, PNG o WEBP. AppPromos lo optimiza antes de guardarlo.</small>
+        </div>
+
+        <div class="app-account-brand-item">
+          <span class="app-account-brand-label">Foto del frente de tu local</span>
+          <div data-brand-front-preview>${renderAccountBrandPreview(fields.frontPhotoUrl, "Foto del frente", "front")}</div>
+          <label class="app-account-file-button">
+            <span>${fields.frontPhotoUrl ? "Cambiar foto" : "Elegir foto"}</span>
+            <input type="file" name="frontPhotoFile" accept="image/jpeg,image/png,image/webp" data-brand-front-input />
+          </label>
+          ${fields.frontPhotoUrl ? '<button type="button" class="app-account-remove-image" data-brand-remove-front>Quitar foto</button>' : ''}
+          <small>Elegí una foto clara del frente. Máximo 8 MB antes de optimizar.</small>
+        </div>
+      </div>
+
       <div class="app-account-error" data-account-error></div>
       <div class="app-account-actions">
-        <button type="submit" class="primary">Guardar cambios</button>
+        <button type="submit" class="primary" data-account-save>Guardar cambios</button>
         <button type="button" data-account-view>Cancelar</button>
       </div>
     </form>
@@ -1629,6 +1676,20 @@ function openAccountSheet(mode = "view") {
       .app-account-form label { display:grid; gap:6px; color:#475569; font-size:13px; font-weight:900; }
       .app-account-form input { width:100%; min-height:46px; border:1px solid #cbd5e1; border-radius:14px; padding:0 12px; font-size:15px; font-weight:800; box-sizing:border-box; }
       .app-account-form input:focus { outline:3px solid rgba(185,28,28,.12); border-color:#b91c1c; }
+      .app-account-brand-section { display:grid; gap:14px; margin-top:4px; padding-top:14px; border-top:1px solid #e2e8f0; }
+      .app-account-brand-section > div:first-child { display:grid; gap:4px; }
+      .app-account-brand-section > div:first-child strong { color:#0f172a; font-size:16px; }
+      .app-account-brand-section > div:first-child p { font-size:13px; }
+      .app-account-brand-item { display:grid; gap:8px; padding:12px; border:1px solid #e2e8f0; border-radius:16px; background:#f8fafc; }
+      .app-account-brand-label { color:#334155; font-size:13px; font-weight:1000; }
+      .app-account-brand-preview { display:block; max-width:100%; object-fit:cover; border-radius:14px; border:1px solid #e2e8f0; background:#fff; }
+      .app-account-brand-preview.logo { width:112px; height:112px; object-fit:contain; padding:8px; box-sizing:border-box; }
+      .app-account-brand-preview.front { width:100%; aspect-ratio:16/9; }
+      .app-account-brand-empty { min-height:72px; display:grid; place-items:center; padding:12px; border:1px dashed #cbd5e1; border-radius:14px; color:#64748b; background:#fff; font-size:13px; font-weight:800; text-align:center; }
+      .app-account-file-button { position:relative; display:inline-flex !important; align-items:center; justify-content:center; min-height:44px; border-radius:14px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8 !important; cursor:pointer; font-weight:1000 !important; }
+      .app-account-file-button input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+      .app-account-remove-image { min-height:40px; border-radius:12px; border:1px solid #fecaca; background:#fff; color:#b91c1c; font-weight:900; cursor:pointer; }
+      .app-account-brand-item small { color:#64748b; font-weight:700; line-height:1.3; }
       .app-account-error { min-height:18px; color:#b42318; font-size:13px; font-weight:900; }
       .app-account-web-status { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:950; }
       .app-account-web-status.active { color:#166534; background:#dcfce7; border:1px solid #86efac; }
@@ -1659,7 +1720,23 @@ function openAccountSheet(mode = "view") {
     content.innerHTML = nextMode === "edit" ? renderAccountEditHtml() : renderAccountViewHtml();
   };
 
-  overlay.addEventListener("click", (event) => {
+
+  const showSelectedImagePreview = (input, targetSelector, kind) => {
+    const file = input?.files?.[0];
+    const target = overlay.querySelector(targetSelector);
+    if (!file || !target) return;
+    if (!/^image\/(jpeg|png|webp)$/i.test(String(file.type || ""))) {
+      const errorEl = overlay.querySelector("[data-account-error]");
+      if (errorEl) errorEl.textContent = "Usá una imagen JPG, PNG o WEBP.";
+      input.value = "";
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    target.innerHTML = `<img class="app-account-brand-preview ${kind}" src="${objectUrl}" alt="Vista previa" />`;
+    target.querySelector("img")?.addEventListener("load", () => URL.revokeObjectURL(objectUrl), { once: true });
+  };
+
+  overlay.addEventListener("click", async (event) => {
     const edit = event.target.closest("[data-account-edit]");
     if (edit) {
       renderMode("edit");
@@ -1670,10 +1747,49 @@ function openAccountSheet(mode = "view") {
       renderMode("view");
       return;
     }
+    const removeLogo = event.target.closest("[data-brand-remove-logo]");
+    if (removeLogo) {
+      if (!window.confirm("¿Querés quitar el logo de esta carnicería?")) return;
+      const errorEl = overlay.querySelector("[data-account-error]");
+      try {
+        removeLogo.disabled = true;
+        const result = await deleteBusinessLogo(currentPayload.businessId);
+        currentPayload = { ...currentPayload, meta: result.meta };
+        renderMode("edit");
+      } catch (error) {
+        if (errorEl) errorEl.textContent = error?.message || "No pudimos quitar el logo.";
+        removeLogo.disabled = false;
+      }
+      return;
+    }
+    const removeFront = event.target.closest("[data-brand-remove-front]");
+    if (removeFront) {
+      if (!window.confirm("¿Querés quitar la foto del frente de esta carnicería?")) return;
+      const errorEl = overlay.querySelector("[data-account-error]");
+      try {
+        removeFront.disabled = true;
+        const result = await deleteBusinessFrontPhoto(currentPayload.businessId);
+        currentPayload = { ...currentPayload, meta: result.meta };
+        renderMode("edit");
+      } catch (error) {
+        if (errorEl) errorEl.textContent = error?.message || "No pudimos quitar la foto.";
+        removeFront.disabled = false;
+      }
+      return;
+    }
     const web = event.target.closest("[data-account-web]");
     if (web) {
       const url = getBusinessAccountFields().publicUrl;
       if (url) window.open(url, "_blank", "noopener");
+    }
+  });
+
+  overlay.addEventListener("change", (event) => {
+    if (event.target.matches("[data-brand-logo-input]")) {
+      showSelectedImagePreview(event.target, "[data-brand-logo-preview]", "logo");
+    }
+    if (event.target.matches("[data-brand-front-input]")) {
+      showSelectedImagePreview(event.target, "[data-brand-front-preview]", "front");
     }
   });
 
@@ -1685,6 +1801,7 @@ function openAccountSheet(mode = "view") {
     const fd = new FormData(form);
     const formData = {
       name: String(fd.get("name") || "").trim(),
+      responsable: String(fd.get("responsable") || "").trim(),
       telefono: String(fd.get("telefono") || "").trim(),
       direccion: String(fd.get("direccion") || "").trim(),
       ciudad: String(fd.get("ciudad") || "").trim()
@@ -1693,7 +1810,15 @@ function openAccountSheet(mode = "view") {
       if (errorEl) errorEl.textContent = "Completá nombre, WhatsApp, dirección y ciudad para guardar.";
       return;
     }
+    const saveButton = form.querySelector("[data-account-save]");
+    const originalSaveText = saveButton?.textContent || "Guardar cambios";
     try {
+      if (errorEl) errorEl.textContent = "";
+      if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = "Guardando...";
+      }
+
       const result = await updateBusinessBasicData(
         currentPayload.businessId,
         formData,
@@ -1701,13 +1826,46 @@ function openAccountSheet(mode = "view") {
         currentPayload.state
       );
       currentPayload = { ...currentPayload, meta: result.meta, state: result.state };
+
+      const logoFile = form.querySelector("[data-brand-logo-input]")?.files?.[0] || null;
+      const frontFile = form.querySelector("[data-brand-front-input]")?.files?.[0] || null;
+
+      if (logoFile) {
+        if (saveButton) saveButton.textContent = "Guardando logo...";
+        const logoResult = await uploadBusinessLogo(currentPayload.businessId, logoFile, {
+          onProgress: (percent) => {
+            if (saveButton) saveButton.textContent = `Guardando logo... ${percent}%`;
+          }
+        });
+        currentPayload = { ...currentPayload, meta: logoResult.meta };
+      }
+
+      if (frontFile) {
+        if (saveButton) saveButton.textContent = "Guardando foto...";
+        const frontResult = await uploadBusinessFrontPhoto(currentPayload.businessId, frontFile, {
+          onProgress: (percent) => {
+            if (saveButton) saveButton.textContent = `Guardando foto... ${percent}%`;
+          }
+        });
+        currentPayload = { ...currentPayload, meta: frontResult.meta };
+      }
+
       renderCurrentDashboard();
       renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
       markLazyPanelsDirty();
       renderMode("view");
       trackCarnizaSignal("account_data_saved", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
     } catch (error) {
+      console.error("[AppPromos][D1] No pudimos guardar identidad", error);
       if (errorEl) errorEl.textContent = error?.message || "No pudimos guardar. Revisá los datos y volvé a intentar.";
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = "Reintentar";
+      }
+    } finally {
+      if (saveButton && !saveButton.disabled && saveButton.textContent === "Reintentar") {
+        // Se deja habilitado para que el usuario pueda intentar otra vez sin cerrar el modal.
+      }
     }
   });
 }
@@ -2478,7 +2636,9 @@ async function refreshMarketModule() {
 async function refreshWebModule() {
   if (!webPanel) return;
   if (setPanelLocked(webPanel, "webPremium")) return;
-  await renderWebPremium(webPanel, currentBusinessId);
+  await renderWebPremium(webPanel, currentBusinessId, {
+    onEditBusinessData: () => openAccountSheet("edit")
+  });
   if (isPaymentOverdue()) injectAccessWarning(webPanel);
   webPanel.dataset.rendered = "true";
 }

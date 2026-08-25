@@ -9,6 +9,7 @@ import {
   writeBatch,
   collection
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC5e2yOOdP9QnN3751RdoSHEWZUDHUUbJU",
@@ -22,8 +23,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { app, db, doc, writeBatch, collection };
+export { app, db, storage, doc, writeBatch, collection };
 
 export const LOCAL_ACTIVE_BUSINESS_KEY = "apppromos_active_business_id";
 

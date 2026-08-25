@@ -124,10 +124,11 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-main-title { margin:0 0 8px; font-size:38px; line-height:1.05; color:#8b1f1f; }
       .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:15px; }
       .dash-actions { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; }
-      .dash-action-btn { width:100%; max-width:100%; border:1px solid #eadfd6; border-radius:22px; padding:22px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.04); text-align:left; cursor:pointer; transition:all .2s ease; min-height:118px; }
+      .dash-action-btn { width:100%; max-width:100%; border:1px solid #eadfd6; border-radius:22px; padding:18px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.04); text-align:left; cursor:pointer; transition:all .2s ease; min-height:88px; display:flex; align-items:center; gap:12px; }
       .dash-action-btn:hover { transform:translateY(-1px); border-color:#c23b28; box-shadow:0 8px 18px rgba(139,31,31,.08); }
-      .dash-action-btn strong { display:block; font-size:21px; color:#8b1f1f; margin-bottom:7px; }
-      .dash-action-btn span { color:#6b7280; font-size:14px; line-height:1.45; }
+      .dash-action-btn strong { display:block; font-size:18px; color:#8b1f1f; margin:0; line-height:1.15; }
+      .dash-action-icon { width:42px; height:42px; flex:0 0 42px; border-radius:14px; display:grid; place-items:center; font-size:22px; background:#f8fbff; border:1px solid rgba(4,119,242,.12); }
+      .dash-action-btn span { display:none; }
       .dash-carniza-card { border:1px solid #fed7aa; border-radius:24px; padding:18px; background:linear-gradient(135deg,#fff7ed,#ffffff 58%,#eff6ff); box-shadow:0 12px 28px rgba(234,88,12,.10); display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; }
       .dash-carniza-kicker { font-size:12px; font-weight:1000; color:#c2410c; text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
       .dash-carniza-title { margin:0; font-size:27px; line-height:1.05; color:#7c2d12; font-weight:1000; }
@@ -171,14 +172,17 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       @media (max-width: 900px) { .dash-actions, .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card { grid-template-columns:1fr; } .dash-carniza-actions { justify-content:stretch; } .dash-carniza-btn { flex:1; min-width:150px; } }
       @media (max-width: 640px) {
         .dash-shell { gap:12px; }
-        .dash-main-card { padding:14px; border-radius:20px; }
-        .dash-main-title { font-size:26px; line-height:1.08; }
-        .dash-main-subtitle { font-size:13px; margin-bottom:12px; }
+        .dash-main-card { padding:12px; border-radius:20px; }
+        .dash-main-title { font-size:22px; line-height:1.08; margin-bottom:12px; }
+        .dash-main-subtitle, .dash-kicker { display:none; }
         .dash-value { font-size:24px; }
-        .dash-actions { grid-template-columns:1fr; gap:10px; }
-        .dash-action-btn { min-height:auto; padding:14px; border-radius:18px; }
-        .dash-action-btn strong { font-size:18px; margin-bottom:4px; }
-        .dash-action-btn span { font-size:13px; line-height:1.32; }
+        .dash-actions { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px; }
+        .dash-action-btn { min-width:0; min-height:88px; padding:10px; border-radius:17px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:7px; text-align:center; }
+        .dash-action-icon { display:grid !important; width:36px; height:36px; flex:0 0 36px; place-items:center; border-radius:11px; font-size:19px; line-height:1; }
+        .dash-action-btn strong { display:block; width:100%; font-size:14px; margin:0; line-height:1.12; text-align:center; }
+        .dash-action-btn span { display:none; }
+        .dash-secondary-actions { grid-template-columns:1fr 1fr; margin-top:8px; }
+        .dash-secondary-actions button { min-width:0; min-height:42px; font-size:11px; line-height:1.15; padding:0 6px; }
         .dash-card { padding:14px; border-radius:16px; }
         .dash-two { gap:12px; }
         .dash-step-btn { padding:12px; }
@@ -197,29 +201,18 @@ export function renderDashboard(container, businessId, meta, state, options = {}
 
     <div class="dash-shell">
       <div class="dash-main-card">
-        <div class="dash-kicker">Tu operación diaria</div>
-        <h2 class="dash-main-title">Tu carnicería online está trabajando</h2>
-        <p class="dash-main-subtitle">Entrá a tu vidriera, actualizá precios o armá una oferta. Lo importante queda siempre a mano.</p>
-        <div class="dash-actions" style="grid-template-columns:repeat(4,minmax(0,1fr));">
-          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><strong>🌐 Ver mi carnicería</strong><span>Abrí tu vidriera como la ven tus clientes.</span></button>
-          <button class="dash-action-btn" data-action-panel="pricesPanel"><strong>💲 Actualizar precios</strong><span>Seguí cargando o modificá precios cuando quieras.</span></button>
-          <button class="dash-action-btn" data-action-panel="builderPanel"><strong>🔥 Crear oferta</strong><span>Usá Oferta rápida, con descuento o Vender urgente.</span></button>
-          <button class="dash-action-btn" data-action-panel="whatsappPanel"><strong>📲 WhatsApp</strong><span>Usá tus mensajes y ofertas para vender.</span></button>
+        <div class="dash-kicker">Hoy</div>
+        <h2 class="dash-main-title">¿Qué querés hacer?</h2>
+        <p class="dash-main-subtitle">Todo lo importante, a un toque.</p>
+        <div class="dash-actions">
+          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon">🌐</span><strong>Mi carnicería</strong><span>Ver como cliente</span></button>
+          <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon">💲</span><strong>Precios</strong><span>Actualizar precios</span></button>
+          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">🔥</span><strong>Crear oferta</strong><span>Armar una promo</span></button>
+          <button class="dash-action-btn" data-action-panel="whatsappPanel"><span class="dash-action-icon">💬</span><strong>WhatsApp</strong><span>Vender por WhatsApp</span></button>
         </div>
         <div class="dash-secondary-actions">
-          <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>📲 Compartir mi carnicería</button>
-          <button type="button" data-action-panel="webPanel">🌐 Mi carnicería online</button>
-        </div>
-      </div>
-
-      <div class="dash-two">
-        <div class="dash-card">
-          <h3>La regla es simple</h3>
-          <div class="dash-list">
-            <div class="dash-step-btn" style="cursor:default;"><strong>1. Cambiás precios</strong><span>AppPromos actualiza la vidriera →</span></div>
-            <div class="dash-step-btn" style="cursor:default;"><strong>2. Tu cliente compra online</strong><span>Ve precios, ofertas y arma carrito →</span></div>
-            <div class="dash-step-btn" style="cursor:default;"><strong>3. El pedido vuelve por WhatsApp</strong><span>Listo para preparar →</span></div>
-          </div>
+          <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>📤 Compartir web</button>
+          <button type="button" data-action-panel="webPanel">⚙️ Gestionar mi web</button>
         </div>
       </div>
 

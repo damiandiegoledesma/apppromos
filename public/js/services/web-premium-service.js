@@ -439,6 +439,7 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   const nextTelefono = cleanBusinessText(formData.telefono || formData.phone);
   const nextDireccion = cleanBusinessText(formData.direccion || formData.address);
   const nextCiudad = cleanBusinessText(formData.ciudad || formData.city);
+  const nextResponsable = cleanBusinessText(formData.responsable || formData.responsible || formData.ownerName);
 
   if (!nextName) throw new Error("Nombre comercial requerido");
   if (!nextDireccion) throw new Error("Dirección requerida");
@@ -460,6 +461,7 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
     phoneKey: nextPhoneKey,
     direccion: nextDireccion,
     ciudad: nextCiudad,
+    responsable: nextResponsable,
     updatedAt: new Date().toISOString()
   };
 

@@ -1,0 +1,131 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath() {
+      return /databases/(default)/documents/users/$(request.auth.uid);
+    }
+
+    function adminPath() {
+      return /databases/(default)/documents/admins/$(request.auth.uid);
+    }
+
+    function businessPath(businessId) {
+      return /databases/(default)/documents/businesses/$(businessId);
+    }
+
+    function hasUserDoc() {
+      return signedIn() && firestore.exists(userPath());
+    }
+
+    function hasAdminDoc() {
+      return signedIn() && firestore.exists(adminPath());
+    }
+
+    function userData() {
+      return firestore.get(userPath()).data;
+    }
+
+    function adminData() {
+      return firestore.get(adminPath()).data;
+    }
+
+    function businessData(businessId) {
+      return firestore.get(businessPath(businessId)).data;
+    }
+
+    // Perfil administrativo canónico actual.
+    function hasActiveAdminProfile() {
+      return hasAdminDoc()
+        && adminData().active == true
+        && (
+          adminData().role == "superadmin"
+          || adminData().role == "admin"
+        );
+    }
+
+    // Compatibilidad con AppPromos legado:
+    // resolveSession() todavía acepta users/{uid}.role == "superadmin".
+    function isLegacySuperadmin() {
+      return hasUserDoc()
+        && userData().keys().hasAll(["role"])
+        && userData().role == "superadmin";
+    }
+
+    function isAdmin() {
+      return hasActiveAdminProfile() || isLegacySuperadmin();
+    }
+
+    // Dueño directo de la empresa. Es la relación más fuerte.
+    function isBusinessOwner(businessId) {
+      return signedIn()
+        && firestore.exists(businessPath(businessId))
+        && businessData(businessId).keys().hasAll(["ownerUid"])
+        && businessData(businessId).ownerUid == request.auth.uid;
+    }
+
+    // Compatibilidad con las formas reales que resolveSession() usa hoy.
+    function userBelongsToBusiness(businessId) {
+      return hasUserDoc()
+        && (
+          (
+            userData().keys().hasAll(["businessId"])
+            && userData().businessId is string
+            && userData().businessId == businessId
+          )
+          ||
+          (
+            userData().keys().hasAll(["primaryBusinessId"])
+            && userData().primaryBusinessId is string
+            && userData().primaryBusinessId == businessId
+          )
+          ||
+          (
+            userData().keys().hasAll(["businesses"])
+            && userData().businesses is list
+            && businessId in userData().businesses
+          )
+        );
+    }
+
+    function canManageBusinessBrand(businessId) {
+      return signedIn()
+        && (
+          isAdmin()
+          || isBusinessOwner(businessId)
+          || userBelongsToBusiness(businessId)
+        );
+    }
+
+    function validBrandFileName(fileName) {
+      return fileName == "logo.webp" || fileName == "front.webp";
+    }
+
+    function validBrandImage(fileName) {
+      return request.resource != null
+        && validBrandFileName(fileName)
+        && request.resource.contentType == "image/webp"
+        && (
+          (fileName == "logo.webp" && request.resource.size < 2 * 1024 * 1024)
+          || (fileName == "front.webp" && request.resource.size < 8 * 1024 * 1024)
+        );
+    }
+
+    // Logo y frente son recursos públicos de la vidriera.
+    // Sólo la empresa correspondiente o un admin puede modificarlos.
+    match /businesses/{businessId}/brand/{fileName} {
+      allow read: if validBrandFileName(fileName);
+
+      allow create, update: if canManageBusinessBrand(businessId)
+        && validBrandImage(fileName);
+
+      allow delete: if canManageBusinessBrand(businessId)
+        && validBrandFileName(fileName);
+    }
+  }
+}

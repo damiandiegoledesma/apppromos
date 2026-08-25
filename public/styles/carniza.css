@@ -414,3 +414,43 @@ body.apppromos-nelly-mode .dash-carniza-card {
   width: 58px !important;
   height: 58px !important;
 }
+
+
+/* APPPROMOS V12.18-E1 — Carniza contextual, menos texto */
+@media (max-width: 640px) {
+  .carniza-panel {
+    width: min(286px, calc(100vw - 24px));
+  }
+  .carniza-card-head {
+    padding: 11px 12px 9px;
+  }
+  .carniza-avatar {
+    width: 38px;
+    height: 38px;
+  }
+  .carniza-title {
+    font-size: 16px;
+  }
+  .carniza-subtitle {
+    font-size: 11px;
+  }
+  .carniza-body {
+    padding: 10px 12px 12px;
+  }
+  .carniza-message {
+    margin-bottom: 7px;
+    font-size: 13px;
+  }
+  .carniza-hint {
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .carniza-action {
+    min-height: 39px;
+    border-radius: 13px;
+    font-size: 12px;
+  }
+  .carniza-footer {
+    display: none;
+  }
+}

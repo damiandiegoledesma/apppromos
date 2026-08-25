@@ -15,27 +15,32 @@ let initialized = false;
 
 const ACTIONS = {
   prices: {
-    label: "⚡ Ir a Precios",
+    label: "💲 Precios",
     kind: "primary",
     run: () => navigateTo("pricesPanel")
   },
+  web: {
+    label: "🌐 Mi web",
+    kind: "secondary",
+    run: () => navigateTo("webPanel")
+  },
   offers: {
-    label: "Armar oferta",
+    label: "🔥 Crear oferta",
     kind: "primary",
     run: () => navigateTo("builderPanel")
   },
   whatsapp: {
-    label: "📲 Ir a WhatsApp",
+    label: "💬 WhatsApp",
     kind: "whatsapp",
     run: () => navigateTo("whatsappPanel")
   },
   whatsappAfterSave: {
-    label: "✅ Ya la guardé: WhatsApp",
+    label: "💬 Enviar oferta",
     kind: "whatsapp",
     run: () => navigateTo("whatsappPanel")
   },
   home: {
-    label: "🏠 Volver a Inicio",
+    label: "🏠 Inicio",
     kind: "secondary",
     run: () => navigateTo("dashboardPanel")
   },
@@ -94,29 +99,72 @@ function getBusinessName() {
 function getPanelCopy(panelId) {
   if (panelId === "pricesPanel") {
     return {
-      message: "Estás en Precios. Ajustá lo necesario y después armá una oferta.",
-      hint: "Primero dejá claro el precio. Después pasás a Ofertas y salís a vender.",
-      actions: ["offers"]
+      message: "Poné tus precios.",
+      hint: "Tu web se actualiza sola.",
+      actions: ["offers", "web"]
     };
   }
 
   if (panelId === "builderPanel") {
     return {
-      message: "Estás en Ofertas. Primero guardá la oferta y después mandala por WhatsApp.",
-      hint: "Si todavía no la guardaste, no te apures. Guardala y recién después compartila.",
+      message: "Armá la promo.",
+      hint: "Cuando esté lista, mandala.",
       actions: ["whatsappAfterSave", "prices"]
     };
   }
 
   if (panelId === "whatsappPanel") {
     return {
-      message: "Estás en WhatsApp. Elegí una oferta guardada y compartila con tus clientes.",
-      hint: "Acá se manda lo que ya está listo. Si falta algo, volvé a Ofertas.",
-      actions: ["offers", "prices"]
+      message: "Elegí y enviá.",
+      hint: "",
+      actions: ["offers", "home"]
+    };
+  }
+
+  if (panelId === "webPanel") {
+    return {
+      message: "Esta es tu carnicería online.",
+      hint: "Completala y compartila.",
+      actions: ["prices", "offers"]
     };
   }
 
   return null;
+}
+
+function getActivationState() {
+  const payload = currentContext.payload || {};
+  const meta = payload.meta || {};
+  const state = payload.state || {};
+  const web = state.web || {};
+  const products = Array.isArray(state.products) ? state.products : [];
+
+  const pricedCount = products.filter((product = {}) => {
+    const price = Number(product.precio ?? product.price ?? 0);
+    return product.active !== false
+      && product.activo !== false
+      && Number.isFinite(price)
+      && price > 0;
+  }).length;
+
+  const hasWeb = Boolean(web.slug || web.publicUrl || web.enabled);
+  const webReady = Boolean(
+    hasWeb
+    && web.showPriceList === true
+    && (web.priceListStatus === "ready" || web.priceListStatus === "confirmed")
+  );
+
+  const logoReady = Boolean(meta?.brand?.logoUrl);
+  const frontReady = Boolean(meta?.brand?.frontPhotoUrl);
+
+  return {
+    pricedCount,
+    hasWeb,
+    webReady,
+    identityReady: logoReady && frontReady,
+    logoReady,
+    frontReady
+  };
 }
 
 function getCarnizaCopy() {
@@ -148,6 +196,41 @@ function getCarnizaCopy() {
     };
   }
 
+  const activation = getActivationState();
+
+  if (!activation.hasWeb || activation.pricedCount === 0) {
+    return {
+      badge: "🌐 Activar",
+      tone: access.level === "trial" ? "trial" : "active",
+      subtitle: "Primero tu web",
+      message: activation.pricedCount === 0 ? "Cargá tus primeros precios." : "Activemos tu web.",
+      hint: "Después salimos a vender.",
+      actions: ["prices", "web"]
+    };
+  }
+
+  if (!activation.webReady) {
+    return {
+      badge: "🌐 Casi lista",
+      tone: access.level === "trial" ? "trial" : "active",
+      subtitle: "Primero tu web",
+      message: "Terminemos tu vidriera.",
+      hint: "",
+      actions: ["prices", "web"]
+    };
+  }
+
+  if (!activation.identityReady) {
+    return {
+      badge: "📸 Identidad",
+      tone: access.level === "trial" ? "trial" : "active",
+      subtitle: "Tu negocio primero",
+      message: "Dale tu identidad.",
+      hint: "Logo + foto del local.",
+      actions: ["web", "offers"]
+    };
+  }
+
   if (commercialKey === "trial_ending_soon") {
     return {
       badge: "⏳ Por vencer",
@@ -163,9 +246,10 @@ function getCarnizaCopy() {
     return {
       badge: "🎁 Prueba",
       tone: "trial",
-      message: panelCopy?.message || "Estás probando AppPromos. Arrancá por Precios u Ofertas.",
-      hint: panelCopy?.hint || "Primero armás o elegís la oferta. Después la mandás por WhatsApp.",
-      actions: panelCopy?.actions || ["prices", "offers"]
+      subtitle: "Vendamos algo",
+      message: panelCopy?.message || "Tu web está lista.",
+      hint: panelCopy?.hint || "Ahora vendamos.",
+      actions: panelCopy?.actions || ["offers", "web"]
     };
   }
 
@@ -173,9 +257,10 @@ function getCarnizaCopy() {
   return {
     badge: "✅ Al día",
     tone: "active",
-    message: panelCopy?.message || "¿Qué querés vender hoy?",
-    hint: panelCopy?.hint || "Arrancá por Precios o armá una oferta. WhatsApp viene cuando la oferta ya está lista.",
-    actions: panelCopy?.actions || ["prices", "offers"]
+    subtitle: "Vendamos algo",
+    message: panelCopy?.message || "¿Qué vendemos hoy?",
+    hint: panelCopy?.hint || "",
+    actions: panelCopy?.actions || ["offers", "web"]
   };
 }
 
@@ -207,7 +292,7 @@ function renderCarniza() {
         <img class="carniza-avatar" src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" />
         <div>
           <h3 class="carniza-title">Carniza</h3>
-          <p class="carniza-subtitle">Vendamos algo</p>
+          <p class="carniza-subtitle">${escapeHtml(copy.subtitle || "Vendamos algo")}</p>
         </div>
       </div>
       <button type="button" class="carniza-close" data-carniza-close="true" aria-label="Cerrar Carniza">×</button>
@@ -215,10 +300,10 @@ function renderCarniza() {
     <div class="carniza-body">
       <div class="carniza-badge ${escapeHtml(copy.tone)}">${escapeHtml(copy.badge)}</div>
       <p class="carniza-message">${escapeHtml(copy.message)}</p>
-      <p class="carniza-hint">${escapeHtml(copy.hint)}</p>
+      ${copy.hint ? `<p class="carniza-hint">${escapeHtml(copy.hint)}</p>` : ""}
       <div class="carniza-actions">${actions}</div>
     </div>
-    <div class="carniza-footer">Carniza no viene a charlar. Viene a vender.</div>
+    <div class="carniza-footer">Carniza · siguiente paso</div>
   `;
 }
 
