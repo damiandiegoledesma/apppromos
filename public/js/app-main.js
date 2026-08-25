@@ -24,7 +24,7 @@ import {
   trackWebShared
 } from "./services/tracking-service.js";
 
-import { updateBusinessBasicData, getPublicWebUrl } from "./services/web-premium-service.js";
+import { updateBusinessBasicData, getPublicWebUrl, syncPublicWebSnapshot } from "./services/web-premium-service.js";
 import {
   uploadBusinessLogo,
   uploadBusinessFrontPhoto,
@@ -73,6 +73,24 @@ let lazyRenderInProgress = null;
 let currentPanelId = "dashboardPanel";
 let currentActiveProducts = [];
 let pendingBuilderInitialMode = null;
+
+const publicSnapshotSyncedBusinesses = new Set();
+
+async function syncCurrentPublicWebSnapshot(reason = "app") {
+  if (!currentPayload?.businessId || !currentPayload?.meta || !currentPayload?.state) return null;
+  try {
+    const payload = await syncPublicWebSnapshot(currentPayload.businessId, {
+      meta: currentPayload.meta,
+      state: currentPayload.state
+    });
+    if (payload) publicSnapshotSyncedBusinesses.add(currentPayload.businessId);
+    return payload;
+  } catch (error) {
+    console.warn(`[AppPromos] No se pudo sincronizar snapshot público (${reason})`, error);
+    return null;
+  }
+}
+
 
 const MOBILE_ACTION_FOCUS_PANELS = new Set(["pricesPanel", "builderPanel", "whatsappPanel"]);
 
@@ -1477,6 +1495,7 @@ function renderCurrentDashboard() {
           meta: result.meta,
           state: result.state
         };
+        await syncCurrentPublicWebSnapshot("business_data_save");
         renderCurrentDashboard();
         renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
         markLazyPanelsDirty();
@@ -1755,6 +1774,7 @@ function openAccountSheet(mode = "view") {
         removeLogo.disabled = true;
         const result = await deleteBusinessLogo(currentPayload.businessId);
         currentPayload = { ...currentPayload, meta: result.meta };
+        await syncCurrentPublicWebSnapshot("brand_logo_delete");
         renderMode("edit");
       } catch (error) {
         if (errorEl) errorEl.textContent = error?.message || "No pudimos quitar el logo.";
@@ -1770,6 +1790,7 @@ function openAccountSheet(mode = "view") {
         removeFront.disabled = true;
         const result = await deleteBusinessFrontPhoto(currentPayload.businessId);
         currentPayload = { ...currentPayload, meta: result.meta };
+        await syncCurrentPublicWebSnapshot("brand_front_delete");
         renderMode("edit");
       } catch (error) {
         if (errorEl) errorEl.textContent = error?.message || "No pudimos quitar la foto.";
@@ -1848,6 +1869,10 @@ function openAccountSheet(mode = "view") {
           }
         });
         currentPayload = { ...currentPayload, meta: frontResult.meta };
+      }
+
+      if (logoFile || frontFile) {
+        await syncCurrentPublicWebSnapshot("brand_upload");
       }
 
       renderCurrentDashboard();
@@ -2684,6 +2709,7 @@ async function syncProductDrivenViews(updatedProducts = null) {
     if (currentPanelId === "webPanel") {
       await refreshWebModule();
     }
+    await syncCurrentPublicWebSnapshot("products_updated");
     return;
   }
 
@@ -2704,6 +2730,7 @@ async function syncProductDrivenViews(updatedProducts = null) {
   if (currentPanelId === "webPanel") {
     await refreshWebModule();
   }
+  await syncCurrentPublicWebSnapshot("products_reloaded");
 }
 
 async function renderBusinessWorkspace(options = {}) {
@@ -2724,6 +2751,9 @@ async function renderBusinessWorkspace(options = {}) {
   }
   insertDemoBanner();
   currentPayload = payload;
+  if (!currentSession?.isDemo && !publicSnapshotSyncedBusinesses.has(payload.businessId)) {
+    await syncCurrentPublicWebSnapshot("workspace_open");
+  }
   updateCarnizaContext({
     businessControl: currentBusinessControl,
     payload: currentPayload,

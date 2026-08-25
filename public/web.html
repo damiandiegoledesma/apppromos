@@ -816,6 +816,125 @@
       .store-filter-chip{flex:0 0 auto;white-space:nowrap}
     }
 
+  
+    /* APPPROMOS V12.18-MOBILE-UX INTEGRAL
+       Refina el flujo existente: no crea otro carrito ni otra navegación. */
+    .cart-field-error{
+      display:none;
+      margin-top:2px;
+      color:#b42318;
+      font-size:.72rem;
+      font-weight:850;
+      line-height:1.25;
+      text-transform:none;
+      letter-spacing:0;
+    }
+    .cart-field-error.is-visible{display:block;}
+    .cart-form input[aria-invalid="true"]{
+      border-color:#dc2626;
+      box-shadow:0 0 0 2px rgba(220,38,38,.08);
+    }
+    .cart-address-wrap[hidden]{display:none!important;}
+    .mobile-nav-cart-total{display:none;}
+
+    @media(max-width:640px){
+      /* Targets táctiles: mobile nunca achica acciones críticas. */
+      .cart-line{
+        grid-template-columns:1fr;
+        gap:8px;
+        padding:9px;
+      }
+      .cart-line-actions{
+        justify-content:flex-start;
+        gap:8px;
+      }
+      .cart-line-actions button{
+        min-width:44px;
+        min-height:44px;
+        padding:0 12px;
+        border-radius:12px;
+        font-size:.9rem;
+        touch-action:manipulation;
+      }
+      .cart-line-actions .cart-remove{
+        width:44px;
+        padding:0;
+        font-size:0;
+      }
+      .cart-line-actions .cart-remove::before{
+        content:"🗑";
+        font-size:1.05rem;
+      }
+
+      .cart-add-mini{
+        width:44px;
+        height:44px;
+        min-width:44px;
+        min-height:44px;
+      }
+      .offer-card{
+        grid-template-columns:minmax(0,1fr) 46px;
+      }
+      .offer-card .cart-add-btn{
+        width:44px;
+        height:44px;
+        min-width:44px;
+        min-height:44px;
+      }
+      .store-filter-chip{
+        min-height:44px;
+        padding:0 14px;
+      }
+      .mobile-store-top a{
+        min-height:44px;
+        min-width:44px;
+      }
+
+      /* 16px evita zoom de Safari/iOS al enfocar. */
+      .cart-form input{
+        min-height:44px;
+        padding:0 11px;
+        font-size:16px;
+      }
+
+      .cart-choice{
+        min-height:60px;
+      }
+      .cart-actions .btn{
+        min-height:46px;
+      }
+      .cart-actions .btn-primary{
+        bottom:calc(61px + var(--safe-bottom));
+      }
+
+      /* Estado de compra visible sin sumar otro flotante. */
+      .mobile-store-nav .nav-cart{
+        gap:0;
+      }
+      .mobile-store-nav .nav-cart.has-cart{
+        background:#fff7ed;
+      }
+      .mobile-store-nav .nav-cart.has-cart .nav-label{
+        font-size:.61rem;
+      }
+      .mobile-nav-cart-total{
+        display:block;
+        max-width:100%;
+        margin-top:1px;
+        color:#7c2d12;
+        font-size:.58rem;
+        font-weight:1000;
+        line-height:1;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      html{
+        scroll-padding-bottom:calc(92px + var(--safe-bottom));
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -957,22 +1076,7 @@
 
     async function loadPayload(source){
       if(source.type==="public"){
-        // El documento publicWebSlugs queda como índice público (slug -> businessId).
-        // La vidriera se reconstruye desde core/meta + core/state para mostrar precios actuales.
-        if(source.businessId){
-          try{
-            const [meta,state]=await Promise.all([
-              readPath(getBusinessMetaPath(source.businessId)),
-              readPath(getBusinessStatePath(source.businessId))
-            ]);
-            if(meta && state){
-              const livePayload = buildPayloadFromPrivateData(meta||{},state||{},source.businessId);
-              return { ...(source.data||{}), ...livePayload, slug: livePayload.slug || source.slug || source.data?.slug || "" };
-            }
-          }catch(error){
-            console.warn("No se pudo cargar la web viva; uso snapshot público como respaldo", error);
-          }
-        }
+        // V12.18 QA-PROD01-FIX1: snapshot público autosuficiente.
         return source.data;
       }
       const [meta,state]=await Promise.all([readPath(getBusinessMetaPath(source.businessId)), readPath(getBusinessStatePath(source.businessId))]);
@@ -1034,10 +1138,76 @@
       function cartTotal(){return cartItems.reduce((acc,item)=>acc+cartLineTotal(item),0)}
       function currentCartCustomer(){return {name:app.querySelector("#cartCustomerName")?.value||"",phone:app.querySelector("#cartCustomerPhone")?.value||"",delivery:app.querySelector("input[name='cartDelivery']:checked")?.value||"retiro",address:app.querySelector("#cartCustomerAddress")?.value||"",payment:app.querySelector("input[name='cartPayment']:checked")?.value||"efectivo",note:app.querySelector("#cartCustomerNote")?.value||""}}
       function tidyCustomerText(value=""){const text=String(value||"").trim().replace(/\s+/g," ");return text?text.charAt(0).toLocaleUpperCase("es-AR")+text.slice(1):""}
-      function renderCartHtml(customer=currentCartCustomer()){const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);const delivery=customer.delivery||"retiro";const payment=customer.payment||"efectivo";const itemsHtml=cartItems.length?`<div class="cart-items">${cartItems.map((item)=>{const key=esc(item.key||cartItemKey(item));const rubro=item.rubro?` · ${esc(item.rubro)}`:"";return `<div class="cart-line"><div><strong>${esc(item.name||"Producto")}</strong><small>${esc(cartQtyLabel(item))}${rubro} · ${money(cartLineTotal(item))}</small></div><div class="cart-line-actions"><button type="button" data-cart-minus="${key}">−</button><button type="button" data-cart-plus="${key}">+</button><button type="button" class="cart-remove" data-cart-remove="${key}">Quitar</button></div></div>`}).join("")}</div>`:`<div class="empty">Agregá productos u ofertas para armar tu pedido.</div>`;const totalHtml=cartItems.length?`<div class="cart-total"><span>Total estimado</span><strong>${money(cartTotal())}</strong></div>`:"";return `<section class="section cart-section" id="pedido" data-cart-root><div class="cart-card"><div class="cart-head"><div><h2>🛒 Tu pedido</h2><p>Revisá y enviá por WhatsApp.</p></div><span class="cart-badge">${count} ítem${count===1?"":"s"}</span></div>${itemsHtml}${totalHtml}<div class="cart-form"><label>Tu nombre<input id="cartCustomerName" type="text" value="${esc(customer.name||"")}" placeholder="Ej: Juan" autocomplete="name"></label><label>Tu teléfono<input id="cartCustomerPhone" type="tel" value="${esc(customer.phone||"")}" placeholder="Ej: 3462 555555" autocomplete="tel"></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartDelivery" value="retiro" ${delivery==="retiro"?"checked":""}><span>Retiro en el local<small>Pasás por la carnicería.</small></span></label><label class="cart-choice"><input type="radio" name="cartDelivery" value="envio" ${delivery==="envio"?"checked":""}><span>Envío con cadete<small>Dejanos la dirección.</small></span></label></div><div class="cart-form cart-form--single"><label>Dirección para envío<input id="cartCustomerAddress" type="text" value="${esc(customer.address||"")}" placeholder="Ej: Mitre 1234, barrio, entre calles" autocomplete="street-address"></label><label>Aclaración opcional<input id="cartCustomerNote" type="text" value="${esc(customer.note||"")}" placeholder="Ej: Sin mucha grasa / retiro 20 hs"></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartPayment" value="efectivo" ${payment==="efectivo"?"checked":""}><span>Efectivo<small>Al retirar o al cadete.</small></span></label><label class="cart-choice"><input type="radio" name="cartPayment" value="transferencia" ${payment==="transferencia"?"checked":""}><span>Transferencia<small>Coordinás con la carnicería.</small></span></label></div><div class="cart-actions"><button class="btn btn-ghost" type="button" data-cart-clear="true" ${cartItems.length?"":"disabled"}>Vaciar pedido</button><button class="btn btn-primary" type="button" data-cart-send-order="true" ${cartItems.length?"":"disabled"}>Enviar pedido por WhatsApp</button></div></div></section>`}
+      function renderCartHtml(customer=currentCartCustomer()){
+        const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);
+        const delivery=customer.delivery||"retiro";
+        const payment=customer.payment||"efectivo";
+        const itemsHtml=cartItems.length
+          ? `<div class="cart-items">${cartItems.map((item)=>{
+              const key=esc(item.key||cartItemKey(item));
+              const rubro=item.rubro?` · ${esc(item.rubro)}`:"";
+              const itemName=esc(item.name||"Producto");
+              return `<div class="cart-line"><div><strong>${itemName}</strong><small>${esc(cartQtyLabel(item))}${rubro} · ${money(cartLineTotal(item))}</small></div><div class="cart-line-actions"><button type="button" data-cart-minus="${key}" aria-label="Reducir cantidad de ${itemName}" title="Reducir cantidad">−</button><button type="button" data-cart-plus="${key}" aria-label="Aumentar cantidad de ${itemName}" title="Aumentar cantidad">+</button><button type="button" class="cart-remove" data-cart-remove="${key}" aria-label="Quitar ${itemName} del pedido" title="Quitar">Quitar</button></div></div>`;
+            }).join("")}</div>`
+          : `<div class="empty">Agregá productos u ofertas para armar tu pedido.</div>`;
+
+        const totalHtml=cartItems.length
+          ? `<div class="cart-total"><span>Total estimado</span><strong>${money(cartTotal())}</strong></div>`
+          : "";
+
+        const sendLabel=cartItems.length
+          ? `💬 Pedir · ${money(cartTotal())}`
+          : "Enviar pedido por WhatsApp";
+
+        return `<section class="section cart-section" id="pedido" data-cart-root><div class="cart-card"><div class="cart-head"><div><h2>🛒 Tu pedido</h2><p>Revisá y enviá por WhatsApp.</p></div><span class="cart-badge">${count} ítem${count===1?"":"s"}</span></div>${itemsHtml}${totalHtml}<div class="cart-form"><label>Tu nombre<input id="cartCustomerName" type="text" value="${esc(customer.name||"")}" placeholder="Ej: Juan" autocomplete="name" enterkeyhint="next" aria-describedby="cartCustomerNameError"><span class="cart-field-error" id="cartCustomerNameError" data-cart-error="name" aria-live="polite"></span></label><label>Tu teléfono<input id="cartCustomerPhone" type="tel" inputmode="tel" value="${esc(customer.phone||"")}" placeholder="Ej: 3462 555555" autocomplete="tel" enterkeyhint="next" aria-describedby="cartCustomerPhoneError"><span class="cart-field-error" id="cartCustomerPhoneError" data-cart-error="phone" aria-live="polite"></span></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartDelivery" value="retiro" ${delivery==="retiro"?"checked":""}><span>Retiro en el local<small>Pasás por la carnicería.</small></span></label><label class="cart-choice"><input type="radio" name="cartDelivery" value="envio" ${delivery==="envio"?"checked":""}><span>Envío con cadete<small>Dejanos la dirección.</small></span></label></div><div class="cart-form cart-form--single"><label class="cart-address-wrap" ${delivery==="envio"?"":"hidden"}>Dirección para envío<input id="cartCustomerAddress" type="text" value="${esc(customer.address||"")}" placeholder="Ej: Mitre 1234, barrio, entre calles" autocomplete="street-address" enterkeyhint="next" aria-describedby="cartCustomerAddressError"><span class="cart-field-error" id="cartCustomerAddressError" data-cart-error="address" aria-live="polite"></span></label><label>Aclaración opcional<input id="cartCustomerNote" type="text" value="${esc(customer.note||"")}" placeholder="Ej: Sin mucha grasa / retiro 20 hs" enterkeyhint="done"></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartPayment" value="efectivo" ${payment==="efectivo"?"checked":""}><span>Efectivo<small>Al retirar o al cadete.</small></span></label><label class="cart-choice"><input type="radio" name="cartPayment" value="transferencia" ${payment==="transferencia"?"checked":""}><span>Transferencia<small>Coordinás con la carnicería.</small></span></label></div><div class="cart-actions"><button class="btn btn-ghost" type="button" data-cart-clear="true" ${cartItems.length?"":"disabled"}>Vaciar pedido</button><button class="btn btn-primary" type="button" data-cart-send-order="true" ${cartItems.length?"":"disabled"}>${sendLabel}</button></div></div></section>`;
+      }
+
       function renderFloatingCartHtml(){const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);if(!count)return"";return `<div class="cart-floating" data-cart-floating><a href="#pedido"><strong>🛒 Ver pedido</strong><span>${count} ítem${count===1?"":"s"} · ${money(cartTotal())}</span></a></div>`}
-      function renderMobileNavHtml(){const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#precios"><span class="nav-icon">🥩</span><span class="nav-label">Productos</span></a><a href="#ofertas"><span class="nav-icon">🔥</span><span class="nav-label">Ofertas</span></a><a class="nav-cart" href="#pedido"><span class="nav-icon">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span></a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener"><span class="nav-icon">💬</span><span class="nav-label">WhatsApp</span></a></nav>`}
-      function refreshCart(){const customer=currentCartCustomer();const root=app.querySelector("[data-cart-root]");if(root)root.outerHTML=renderCartHtml(customer);const floating=app.querySelector("[data-cart-floating]");const nextFloating=renderFloatingCartHtml();if(floating&&nextFloating)floating.outerHTML=nextFloating;else if(floating&&!nextFloating)floating.remove();else if(!floating&&nextFloating)app.insertAdjacentHTML("beforeend",nextFloating);const mobileNav=app.querySelector("[data-mobile-nav]");const nextMobileNav=renderMobileNavHtml();if(mobileNav)mobileNav.outerHTML=nextMobileNav;else app.insertAdjacentHTML("beforeend",nextMobileNav)}
+
+      function renderMobileNavHtml(){
+        const count=cartItems.reduce((acc,item)=>acc+Math.max(1,cartNumber(item.quantity)||1),0);
+        const total=count?money(cartTotal()):"";
+        return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#precios"><span class="nav-icon">🥩</span><span class="nav-label">Productos</span></a><a href="#ofertas"><span class="nav-icon">🔥</span><span class="nav-label">Ofertas</span></a><a class="nav-cart${count?" has-cart":""}" href="#pedido"><span class="nav-icon">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span>${count?`<span class="mobile-nav-cart-total">${total}</span>`:""}</a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener"><span class="nav-icon">💬</span><span class="nav-label">WhatsApp</span></a></nav>`;
+      }
+
+      function refreshCart(){
+        const customer=currentCartCustomer();
+        const root=app.querySelector("[data-cart-root]");
+        if(root)root.outerHTML=renderCartHtml(customer);
+        const floating=app.querySelector("[data-cart-floating]");
+        const nextFloating=renderFloatingCartHtml();
+        if(floating&&nextFloating)floating.outerHTML=nextFloating;
+        else if(floating&&!nextFloating)floating.remove();
+        else if(!floating&&nextFloating)app.insertAdjacentHTML("beforeend",nextFloating);
+        const mobileNav=app.querySelector("[data-mobile-nav]");
+        const nextMobileNav=renderMobileNavHtml();
+        if(mobileNav)mobileNav.outerHTML=nextMobileNav;
+        else app.insertAdjacentHTML("beforeend",nextMobileNav);
+      }
+
+      function clearCartFieldErrors(){
+        app.querySelectorAll("[data-cart-error]").forEach((node)=>{
+          node.textContent="";
+          node.classList.remove("is-visible");
+        });
+        app.querySelectorAll(".cart-form input[aria-invalid='true']").forEach((input)=>input.removeAttribute("aria-invalid"));
+      }
+
+      function showCartFieldError(field="",message=""){
+        const error=app.querySelector(`[data-cart-error="${field}"]`);
+        const input=field==="name"
+          ? app.querySelector("#cartCustomerName")
+          : field==="phone"
+            ? app.querySelector("#cartCustomerPhone")
+            : app.querySelector("#cartCustomerAddress");
+        if(error){
+          error.textContent=message;
+          error.classList.add("is-visible");
+        }
+        input?.setAttribute("aria-invalid","true");
+        return input;
+      }
+
       function addCartItem(item={}){const price=cartNumber(item.price);const itemName=String(item.name||item.nombre||"").trim();if(!itemName||price<=0)return;const normalized={type:item.type||"product",id:item.id||itemName,key:cartItemKey(item),name:itemName,rubro:item.rubro||"",unit:item.unit||"kg",price,quantity:Math.max(1,cartNumber(item.quantity)||1),items:Array.isArray(item.items)?item.items:[]};const current=cartItems.find((entry)=>entry.key===normalized.key);if(current)current.quantity=Math.max(1,cartNumber(current.quantity)||1)+normalized.quantity;else cartItems.push(normalized);saveCartItems();refreshCart()}
       function changeCartItem(key="",delta=0){const item=cartItems.find((entry)=>entry.key===key);if(!item)return;item.quantity=Math.max(1,(cartNumber(item.quantity)||1)+delta);saveCartItems();refreshCart()}
       function removeCartItem(key=""){cartItems=cartItems.filter((entry)=>entry.key!==key);saveCartItems();refreshCart()}
@@ -1083,7 +1253,28 @@
 
         return blocks.join("\n\n");
       }
-      function sendCartOrder(){const customer=currentCartCustomer();if(!cartItems.length){alert("Agregá al menos un producto al pedido.");return}if(!customer.name.trim()){alert("Completá tu nombre para enviar el pedido.");app.querySelector("#cartCustomerName")?.focus();return}if(!customer.phone.trim()){alert("Completá tu teléfono para enviar el pedido.");app.querySelector("#cartCustomerPhone")?.focus();return}if(customer.delivery==="envio"&&!customer.address.trim()){alert("Completá la dirección para el envío.");app.querySelector("#cartCustomerAddress")?.focus();return}window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer")}
+      function sendCartOrder(){
+        const customer=currentCartCustomer();
+        clearCartFieldErrors();
+        if(!cartItems.length){alert("Agregá al menos un producto al pedido.");return}
+
+        const errors=[];
+        if(!customer.name.trim())errors.push(["name","Completá tu nombre."]);
+        if(!customer.phone.trim())errors.push(["phone","Completá tu teléfono."]);
+        if(customer.delivery==="envio"&&!customer.address.trim())errors.push(["address","Completá la dirección para el envío."]);
+
+        let firstInvalid=null;
+        errors.forEach(([field,message],index)=>{
+          const input=showCartFieldError(field,message);
+          if(index===0)firstInvalid=input;
+        });
+        if(firstInvalid){
+          firstInvalid.scrollIntoView({behavior:"smooth",block:"center"});
+          window.setTimeout(()=>firstInvalid.focus({preventScroll:true}),220);
+          return;
+        }
+        window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer");
+      }
 
       const location=[address,city,province].filter(Boolean).map(esc).join(" — ");
 
@@ -1097,7 +1288,7 @@
         const items=Array.isArray(c.items)?c.items:[];
         const category=inferOfferCategory(c);
         const item={type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:c.name||c.nombre||"Oferta",rubro:"Oferta",unit:"combo",price:getTotal(c),quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
-        return `<div class="card offer-card" data-offer-category="${esc(category)}"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><button type="button" class="btn btn-ghost cart-add-btn" data-cart-add="${encodeCartItem(item)}">Agregar al pedido</button></div>`;
+        return `<div class="card offer-card" data-offer-category="${esc(category)}"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><button type="button" class="btn btn-ghost cart-add-btn" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(c.name||"Oferta")} al pedido" title="Agregar al pedido">Agregar al pedido</button></div>`;
       }).join("")}</div>`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
 
       const productRubroFilterHtml=(data.showPriceList&&products.length)
@@ -1106,7 +1297,7 @@
 
       const pricesHtml=(data.showPriceList&&products.length)?`${productRubroFilterHtml}<div class="price-list">${rubroNames.map(r=>{
         const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-        return `<div class="card rubro" data-rubro-card="${esc(r)}"${r!==rubroNames[0]?' hidden':""}><h3>${icon(r,"")} ${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:p.unidad||"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; return `<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}">Agregar</button></div>`;}).join("")}</div>`;
+        return `<div class="card rubro" data-rubro-card="${esc(r)}"${r!==rubroNames[0]?' hidden':""}><h3>${icon(r,"")} ${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:p.unidad||"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; return `<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
       }).join("")}</div>`:"";
 
       const headerName = esc(String(shortName).toUpperCase());
@@ -1171,6 +1362,33 @@
         if(clearButton){event.preventDefault();if(cartItems.length&&confirm("¿Vaciar el pedido?")){cartItems=[];saveCartItems();refreshCart()}return}
         const sendButton=target.closest("[data-cart-send-order]");
         if(sendButton){event.preventDefault();sendCartOrder()}
+      };
+
+      app.onchange=(event)=>{
+        const target=event.target;
+        if(!(target instanceof HTMLInputElement))return;
+        if(target.name==="cartDelivery" || target.name==="cartPayment"){
+          refreshCart();
+        }
+      };
+
+      app.oninput=(event)=>{
+        const target=event.target;
+        if(!(target instanceof HTMLInputElement))return;
+        const field=target.id==="cartCustomerName"
+          ? "name"
+          : target.id==="cartCustomerPhone"
+            ? "phone"
+            : target.id==="cartCustomerAddress"
+              ? "address"
+              : "";
+        if(!field)return;
+        const error=app.querySelector(`[data-cart-error="${field}"]`);
+        if(error){
+          error.textContent="";
+          error.classList.remove("is-visible");
+        }
+        target.removeAttribute("aria-invalid");
       };
     }
 

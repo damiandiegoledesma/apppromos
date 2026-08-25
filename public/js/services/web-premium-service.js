@@ -240,6 +240,8 @@ export function buildPublicWebPayload({
     phone: toPublicText(meta?.telefono || meta?.phone || ""),
     phoneKey: cleanPhoneKey,
     whatsapp: cleanPhoneKey,
+    logoUrl: toPublicText(meta?.brand?.logoUrl || ""),
+    frontPhotoUrl: toPublicText(meta?.brand?.frontPhotoUrl || ""),
     showPriceList: Boolean(web?.showPriceList) && canShowRealPrices,
     visibleRubros: [...visibleRubros],
     publicOffers,
@@ -247,6 +249,41 @@ export function buildPublicWebPayload({
     publicUrl: getPublicWebUrl(businessId, cleanSlug),
     updatedAt
   };
+}
+
+
+export async function syncPublicWebSnapshot(businessId, preloaded = null) {
+  if (!businessId) throw new Error("businessId requerido");
+  await assertBusinessCanWrite(businessId, "sincronizar vidriera pública");
+
+  const loaded = preloaded?.meta && preloaded?.state
+    ? { meta: preloaded.meta, state: preloaded.state, config: preloaded.state?.web || {} }
+    : await loadWebConfig(businessId);
+
+  const meta = loaded?.meta || {};
+  const state = loaded?.state || {};
+  const web = loaded?.config || state?.web || {};
+  const slug = normalizeSlug(web?.slug || "");
+  if (!slug) return null;
+
+  const updatedAt = new Date().toISOString();
+  const phoneKey = getPhoneKey(meta?.phoneKey || meta?.telefono || meta?.phone || "");
+  const payload = buildPublicWebPayload({
+    businessId,
+    slug,
+    meta,
+    state,
+    web,
+    phoneKey,
+    plan: "web_premium",
+    createdFrom: web?.createdFrom || "public_snapshot_sync",
+    updatedAt
+  });
+
+  const batch = writeBatch(db);
+  batch.set(doc(db, "publicWebSlugs", slug), payload);
+  await batch.commit();
+  return payload;
 }
 
 export async function setWebPremiumEnabled(businessId, enabled) {
