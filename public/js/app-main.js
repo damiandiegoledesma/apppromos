@@ -806,7 +806,7 @@ function renderCarnizaUrgentStockCard(container) {
 
     resultEl.innerHTML = '<div style="border:1px solid #bfdbfe;border-radius:18px;background:#eff6ff;padding:14px;box-shadow:0 10px 22px rgba(37,99,235,.08);">' +
       '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">' +
-        '<div><div style="font-size:18px;font-weight:1000;color:#1d4ed8;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#1e3a8a;font-weight:850;margin-top:4px;line-height:1.28;">Promo clara, precio claro y lista para mandar por WhatsApp.</div></div>' +
+        '<div><div style="font-size:18px;font-weight:1000;color:#1d4ed8;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#1e3a8a;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
         '<div style="font-size:26px;line-height:1;">📲</div>' +
       '</div>' +
       '<label style="display:block;font-size:13px;font-weight:1000;color:#1e3a8a;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
@@ -816,7 +816,7 @@ function renderCarnizaUrgentStockCard(container) {
       '<pre data-urgent-message-preview style="white-space:pre-wrap;font-family:inherit;margin:10px 0;padding:12px;border-radius:12px;background:#fff;color:#1f1f1f;font-weight:900;line-height:1.38;max-height:245px;overflow:auto;"></pre>' +
       '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
       '<div style="display:grid;grid-template-columns:1.2fr .8fr;gap:8px;">' +
-        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;">📲 Enviar por WhatsApp</a>' +
+        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;">📲 Enviar oferta por WhatsApp</a>' +
         '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#2563eb;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
       '</div>' +
       '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin-top:9px;border:1px solid #bfdbfe;border-radius:13px;background:#fff;color:#1d4ed8;font-weight:1000;cursor:pointer;">← Volver y ajustar</button>' +
@@ -945,16 +945,16 @@ function renderCarnizaUnifiedMenu() {
       <p>${escapeCarnizaHtml(ctx.hint)}</p>
       <div class="carniza-unified-actions">
         <button type="button" class="carniza-unified-action primary" data-carniza-unified-action="offer">
-          <strong>🔥 Armar oferta</strong>
-          <span>Combo o promo tradicional para vender por WhatsApp.</span>
+          <strong>🔥 Vender o crear promo</strong>
+          <span>Respondé una consulta o armá un combo para vender varias veces.</span>
         </button>
         <button type="button" class="carniza-unified-action urgent" data-carniza-unified-action="urgent">
           <strong>⚡ Vender urgente</strong>
-          <span>Elegí productos atrasados y sacalos hoy.</span>
+          <span>Sacá hoy la mercadería antes de perderla o mandarla a picar.</span>
         </button>
         <button type="button" class="carniza-unified-action" data-carniza-unified-action="whatsapp">
           <strong>📲 Ir a WhatsApp</strong>
-          <span>Mandá una oferta guardada o lista.</span>
+          <span>Mandá una promo guardada o una respuesta lista.</span>
         </button>
         <button type="button" class="carniza-unified-action nav" data-carniza-unified-action="home">
           <strong>🏠 Volver a Inicio</strong>
@@ -1444,7 +1444,7 @@ function renderActivationOnboarding() {
       <button type="button" data-onboarding-share-web ${webReady && publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:${webReady ? "#dcfce7" : "#f3f4f6"};color:${webReady ? "#166534" : "#9ca3af"};font-weight:1000;font-size:15px;cursor:pointer;">📲 Compartir por WhatsApp</button>
     </div>
 
-    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés descubrir Oferta rápida, Oferta con descuento y Vender urgente para hacerla vender todavía más.</div>` : ""}
+    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés responder consultas, crear promos o combos y vender mercadería urgente.</div>` : ""}
 
     ${goalReached && webReady ? `<button type="button" data-onboarding-finish style="justify-self:start;min-height:42px;padding:0 14px;border:0;border-radius:13px;background:#14532d;color:#fff;font-weight:1000;cursor:pointer;">Listo, ir al Inicio →</button>` : ""}
   `;
@@ -2287,7 +2287,7 @@ function updateMobileBottomNavActive() {
     pricesPanel: "prices",
     builderPanel: "sell",
     whatsappPanel: "whatsapp",
-    savedPanel: "more",
+    savedPanel: "saved",
     marketPanel: "more",
     webPanel: "more",
     usersPanel: "more"
@@ -2310,9 +2310,9 @@ function openMobileBottomMenu(kind) {
 
   const sellButtons = `
     <div class="app-mobile-bottom-menu__grid">
-      <button type="button" class="green" data-mobile-action="quick-offer"><strong>⚡ Oferta rápida</strong><span>Armar y mandar ya.</span></button>
-      <button type="button" class="orange" data-mobile-action="discount-offer"><strong>🏷️ Oferta con descuentos</strong><span>Ajustar mejor la promo.</span></button>
-      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Vender urgente</strong><span>Mover mercadería rápido.</span></button>
+      <button type="button" class="green" data-mobile-action="quick-offer"><strong>⚡ Responder consulta</strong><span>Calculá y respondé por WhatsApp.</span></button>
+      <button type="button" class="orange" data-mobile-action="discount-offer"><strong>🏷️ Crear promo o combo</strong><span>Guardá una estrategia para repetir.</span></button>
+      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Vender urgente</strong><span>Sacá hoy la mercadería en riesgo.</span></button>
     </div>
   `;
 
@@ -2320,7 +2320,7 @@ function openMobileBottomMenu(kind) {
     <div class="app-mobile-bottom-menu__grid two">
       <button type="button" data-mobile-action="account"><strong>👤 Mi cuenta</strong><span>Datos y estado.</span></button>
       <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
-      <button type="button" data-mobile-action="saved"><strong>⭐ Guardadas</strong><span>Promos para repetir.</span></button>
+      <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
       <button type="button" data-mobile-action="market"><strong>📊 Competencia</strong><span>Mirar mercado.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
       ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
@@ -2374,7 +2374,7 @@ async function handleMobileBottomAction(action) {
 
   if (action === "help") {
     const message = currentPanelId === "builderPanel"
-      ? "Estás en Crear oferta. Elegí productos, revisá la oferta y mandala por WhatsApp."
+      ? "Elegí si vas a responder una consulta o crear una promo para guardar y repetir."
       : "Usá Vender para armar una oferta, Precios para actualizar valores o WhatsApp para enviar una promo lista.";
     window.alert(message);
     return;
@@ -2403,7 +2403,7 @@ function ensureMobileBottomNavigation() {
       <button type="button" data-mobile-nav="home" data-mobile-action="home"><span class="app-mobile-nav-icon">🏠</span><span>Inicio</span></button>
       <button type="button" data-mobile-nav="prices" data-mobile-action="prices"><span class="app-mobile-nav-icon">💲</span><span>Precios</span></button>
       <button type="button" class="is-primary" data-mobile-nav="sell" data-mobile-menu="sell"><span class="app-mobile-nav-icon">🥩</span><span>Vender</span></button>
-      <button type="button" data-mobile-nav="whatsapp" data-mobile-action="whatsapp"><span class="app-mobile-nav-icon app-mobile-whatsapp-icon" aria-hidden="true"><svg viewBox="0 0 32 32" width="22" height="22" focusable="false" role="img"><path fill="#25D366" d="M16.03 3C8.85 3 3 8.85 3 16.03c0 2.3.6 4.55 1.75 6.53L3.1 29l6.61-1.6a13 13 0 0 0 6.32 1.63h.01C23.21 29.03 29 23.18 29 16.03S23.2 3 16.03 3Zm0 23.82a10.74 10.74 0 0 1-5.48-1.5l-.39-.23-3.92.94 1.05-3.82-.25-.4a10.77 10.77 0 1 1 8.99 5.01Zm5.9-8.06c-.32-.16-1.9-.94-2.2-1.04-.3-.1-.51-.16-.73.16-.21.32-.84 1.04-1.03 1.25-.19.21-.38.24-.7.08-.32-.16-1.36-.5-2.59-1.6-.96-.85-1.6-1.9-1.8-2.23-.19-.32-.02-.5.14-.66.15-.15.32-.38.48-.57.16-.19.21-.32.32-.54.1-.21.05-.4-.03-.57-.08-.16-.73-1.76-1-2.41-.26-.63-.53-.54-.73-.55h-.62c-.21 0-.57.08-.86.4-.3.32-1.13 1.1-1.13 2.68s1.16 3.12 1.32 3.33c.16.21 2.28 3.49 5.52 4.89.77.33 1.37.53 1.84.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg></span><span>WhatsApp</span></button>
+      <button type="button" data-mobile-nav="saved" data-mobile-action="saved"><span class="app-mobile-nav-icon">⭐</span><span>Promos</span></button>
       <button type="button" data-mobile-nav="more" data-mobile-menu="more"><span class="app-mobile-nav-icon">☰</span><span>Más</span></button>
     `;
     document.body.appendChild(nav);
@@ -2513,8 +2513,7 @@ function bindNav() {
     const urgent = event.target.closest("[data-carniza-open-liquidator]");
     if (!urgent) return;
     trackCarnizaSignal(urgent.dataset.carnizaSignal || "carniza_urgent_clicked", { businessId: currentPayload?.businessId || currentBusinessId || null, panelId: currentPanelId, appMode: currentSession?.appMode || "client" });
-    ensureCarnizaFloatingLiquidator();
-    document.getElementById("carnizaFloatingLiquidatorFab")?.click();
+    openCarnizaUrgentFlowDirect();
   });
 
   document.addEventListener("click", (event) => {

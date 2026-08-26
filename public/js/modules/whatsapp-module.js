@@ -141,7 +141,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
                 <button class="wa-btn wa-btn--secondary" data-action-panel="builderPanel">🔥 Crear otra oferta</button>
               </div>
             </div>
-          ` : `<div class="wa-empty">Todavía no hay ofertas guardadas. Primero creá una desde <strong>Crear oferta</strong>.</div>`}
+          ` : `<div class="wa-empty">Todavía no hay promos o combos guardados. Primero creá uno desde <strong>Vender / Crear promo</strong>.</div>`}
         </div>
 
         <div class="wa-card">

@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## V12.19-A — Tres maneras de vender
+
+- Renombra **Oferta rápida** como **Responder una consulta** y aclara que es una acción puntual que no se guarda.
+- Renombra **Oferta con descuentos** como **Crear promo o combo** y la presenta como estrategia reutilizable para guardar, publicar y compartir.
+- Mantiene **Vender urgente** como acción excepcional y aclara que no se guarda como combo permanente.
+- Actualiza accesos desktop/mobile, menú de Carniza, Inicio, CTA y ayudas contextuales.
+- Conserva los modos internos `quick` y `discount` y toda la lógica existente.
+- No modifica Firebase, Firestore rules, BusinessStore, billing, control de acceso, snapshot público, web pública, carrito ni modelos de datos.
+- FIX1: agrega **Vender urgente** como tercera opción visible de “Tres maneras de vender”.
+- FIX1: reemplaza el acceso inferior general de WhatsApp por **Promos** y mueve WhatsApp al menú “Más”.
+- FIX1-A: la tarjeta **Vender urgente** abre directamente el flujo urgente, sin el menú intermedio de Carniza.
+
 ## V12.13-A — Web pública autogenerada mobile-first
 
 - Rediseña `public/web.html` como vidriera pública mobile-first.

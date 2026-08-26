@@ -111,7 +111,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
                 </label>
                 <span class="wp-price">${money(getComboTotal(combo))}</span>
               </div>`).join("")}
-          </div>` : `<div class="wp-muted">Todavía no hay ofertas guardadas. Podés crearlas desde “Crear oferta”.</div>`}
+          </div>` : `<div class="wp-muted">Todavía no hay promos o combos guardados. Podés crearlos desde “Vender / Crear promo”.</div>`}
         </div>
 
         <div class="wp-auto-note">💡 <strong>Automático:</strong> cuando guardás precios, los productos activos con precio mayor a $0 aparecen en tu carnicería online. Los que quedan en $0 no se publican.</div>
