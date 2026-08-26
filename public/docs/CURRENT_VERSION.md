@@ -1,5 +1,21 @@
 # AppPromos — Versión actual
 
+## V12.19-A — Tres maneras de vender
+
+AppPromos diferencia claramente tres trabajos comerciales:
+
+- **Responder una consulta:** respuesta puntual por WhatsApp; no se guarda.
+- **Vender urgente:** salida excepcional de mercadería en riesgo; no se guarda como combo permanente.
+- **Crear promo o combo:** estrategia reutilizable que se guarda, publica y comparte.
+
+Esta etapa actualiza UX, copy y CTA sin modificar modelos, persistencia, Firebase, BusinessStore, snapshot público, carrito ni WhatsApp.
+
+FIX1 incorpora Vender urgente como tercera opción del selector y deja la navegación inferior mobile en: **Inicio · Precios · Vender · Promos · Más**. El panel general de WhatsApp continúa disponible dentro de “Más”.
+
+FIX1-A conecta esa tarjeta directamente con el flujo de Vender urgente, sin volver a mostrar el menú general de Carniza. El avatar de Carniza conserva su menú completo.
+
+Base estable: V12.18 cerrada en `83d0b2d`.
+
 ## V12.13-A — Web pública autogenerada mobile-first
 
 Base de trabajo:
