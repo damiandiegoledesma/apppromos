@@ -25,7 +25,7 @@ const ACTIONS = {
     run: () => navigateTo("webPanel")
   },
   offers: {
-    label: "🔥 Crear oferta",
+    label: "🔥 Vender o crear promo",
     kind: "primary",
     run: () => navigateTo("builderPanel")
   },

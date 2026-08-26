@@ -207,7 +207,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         <div class="dash-actions">
           <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon">🌐</span><strong>Mi carnicería</strong><span>Ver como cliente</span></button>
           <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon">💲</span><strong>Precios</strong><span>Actualizar precios</span></button>
-          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">🔥</span><strong>Crear oferta</strong><span>Armar una promo</span></button>
+          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">🔥</span><strong>Vender o crear promo</strong><span>Consulta puntual o combo</span></button>
           <button class="dash-action-btn" data-action-panel="whatsappPanel"><span class="dash-action-icon">💬</span><strong>WhatsApp</strong><span>Vender por WhatsApp</span></button>
         </div>
         <div class="dash-secondary-actions">

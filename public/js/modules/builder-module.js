@@ -261,7 +261,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function buildQuickPayload() {
     return {
       name: "OFERTA DEL DIA",
-      description: "Oferta rápida creada para vender por WhatsApp.",
+      description: "Respuesta puntual creada para un cliente por WhatsApp.",
       mode: "quick",
       items: state.quick.items.map((item) => ({ ...item })),
       total: getQuickTotal(),
@@ -273,7 +273,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     const totals = calculateDiscountTotals(state.discount.items, state.discount.globalDiscount);
     return {
       name: state.discount.offerName || "OFERTA DEL DIA",
-      description: "Oferta con descuentos creada para vender por WhatsApp.",
+      description: "Promo o combo creado para guardar, publicar y compartir.",
       mode: "discount",
       discountSummary: {
         globalDiscount: state.discount.globalDiscount,
@@ -309,7 +309,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     }
     const combo = await saveCombo(payload, options?.businessId || null);
     if (typeof onComboSaved === "function") await onComboSaved(combo);
-    alert("Promo con descuento guardada.");
+    alert("Promo o combo guardado.");
     return combo;
   }
 
@@ -474,21 +474,26 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     container.innerHTML = `
       <section style="display:grid; gap:14px;">
         <header style="background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:18px;">
-          <div style="font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
-          <h2 style="margin:6px 0 4px;">Elegí cómo querés vender</h2>
-          <p class="muted" style="margin:0;">Una oferta rápida para mandar ya, o una con descuentos si querés trabajar mejor el precio.</p>
+          <div style="font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em;">Tres maneras de vender</div>
+          <h2 style="margin:6px 0 4px;">¿Qué necesitás hacer ahora?</h2>
+          <p class="muted" style="margin:0;">Respondé una consulta, prepará una promo para vender varias veces o sacá hoy la mercadería en riesgo.</p>
         </header>
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;">
           <button id="quickModeBtn" type="button" style="text-align:left; background:#eff6ff; border:2px solid #bfdbfe; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
             <div style="font-size:2rem;">⚡</div>
-            <h3 style="margin:8px 0 4px;">Oferta rápida</h3>
-            <p style="margin:0; color:#1e3a8a; font-weight:800;">Tocás productos, revisás total y la mandás por WhatsApp.</p>
+            <h3 style="margin:8px 0 4px;">Responder una consulta</h3>
+            <p style="margin:0; color:#1e3a8a; font-weight:800;">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
           </button>
           <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
             <div style="font-size:2rem;">🏷️</div>
-            <h3 style="margin:8px 0 4px;">Oferta con descuentos</h3>
-            <p style="margin:0; color:#7c2d12; font-weight:800;">Ves cuánto queda antes de mandar. Sin hacer cuentas a mano.</p>
+            <h3 style="margin:8px 0 4px;">Crear promo o combo</h3>
+            <p style="margin:0; color:#7c2d12; font-weight:800;">Armá una estrategia para vender varias veces: guardala, publicala y compartila.</p>
+          </button>
+          <button id="urgentModeBtn" type="button" data-carniza-open-liquidator data-carniza-signal="builder_urgent_clicked" style="text-align:left; background:#fff1f2; border:2px solid #fecdd3; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
+            <div style="font-size:2rem;">🔥</div>
+            <h3 style="margin:8px 0 4px;">Vender urgente</h3>
+            <p style="margin:0; color:#9f1239; font-weight:800;">Elegí la mercadería que necesitás sacar hoy antes de perderla o mandarla a picar.</p>
           </button>
         </div>
       </section>
@@ -574,7 +579,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     container.innerHTML = `
       <section style="display:grid; gap:12px;">
-        ${renderTopActions("Oferta rápida", "Arrancá con sugeridos o buscá cualquier producto del catálogo.")}
+        ${renderTopActions("Responder una consulta", "Elegí lo que pidió el cliente y calculá la respuesta con tus precios reales.")}
         ${renderQuickFloatingSummary()}
 
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); display:grid; gap:12px;">
@@ -772,7 +777,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     container.innerHTML = `
       <section style="display:grid; gap:12px; padding-bottom:calc(138px + var(--apppromos-mobile-nav-height, 0px));">
-        ${renderTopActions("Oferta lista", "Revisá kilos y mandá por WhatsApp. Esta oferta no se guarda.", "← Productos")}
+        ${renderTopActions("Respuesta lista", "Revisá productos y cantidades. Es para este cliente y no se guarda en tus promociones.", "← Productos")}
         <div style="display:grid; gap:10px;">
           ${renderQuantityList(state.quick.items, "quickReview")}
         </div>
@@ -780,7 +785,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:1.2rem; color:#1e3a8a;">Total final: $ ${formatMoney(payload.total)}</strong>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
+              <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Responder por WhatsApp</button>
             </div>
           </div>
           <div style="background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
@@ -809,7 +814,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     container.innerHTML = `
       <section style="display:grid; gap:12px;">
-        ${renderTopActions("Oferta con descuentos", "Armá una promo con descuento. Esta sí podés guardarla.")}
+        ${renderTopActions("Crear promo o combo", "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
         <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;">
           ${steps.map((step) => `
             <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
@@ -971,7 +976,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
             <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              <button id="discountSaveBtn" type="button">Guardar como promo</button>
+              <button id="discountSaveBtn" type="button">Guardar promo o combo</button>
               <button id="discountWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
             </div>
           </div>
