@@ -129,6 +129,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-action-btn strong { display:block; font-size:18px; color:#8b1f1f; margin:0; line-height:1.15; }
       .dash-action-icon { width:42px; height:42px; flex:0 0 42px; border-radius:14px; display:grid; place-items:center; font-size:22px; background:#f8fbff; border:1px solid rgba(4,119,242,.12); }
       .dash-action-btn span { display:none; }
+      .dash-action-btn .dash-action-icon { display:grid; }
       .dash-carniza-card { border:1px solid #fed7aa; border-radius:24px; padding:18px; background:linear-gradient(135deg,#fff7ed,#ffffff 58%,#eff6ff); box-shadow:0 12px 28px rgba(234,88,12,.10); display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; }
       .dash-carniza-kicker { font-size:12px; font-weight:1000; color:#c2410c; text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
       .dash-carniza-title { margin:0; font-size:27px; line-height:1.05; color:#7c2d12; font-weight:1000; }

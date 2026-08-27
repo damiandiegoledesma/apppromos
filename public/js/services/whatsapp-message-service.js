@@ -92,6 +92,9 @@ function getTimeGreeting(now = new Date()) {
 }
 
 function getTitle(combo = {}, options = {}) {
+  if (combo?.mode === "quick" || options?.messageType === "consultation") {
+    return "\uD83E\uDDFE RESPUESTA A TU CONSULTA";
+  }
   const raw = options?.title || combo?.name || combo?.nombre || "OFERTA DEL D\u00cdA";
   const clean = stripForbiddenExternalWords(raw) || "OFERTA DEL D\u00cdA";
   return `\uD83D\uDD25 ${clean.toUpperCase()}`;
@@ -108,6 +111,7 @@ function buildProductLine(item = {}) {
 
 export function buildCustomerWhatsappMessage(combo = {}, businessMeta = {}, options = {}) {
   const items = Array.isArray(combo?.items) ? combo.items : [];
+  const isConsultation = combo?.mode === "quick" || options?.messageType === "consultation";
   const customerName = cleanText(options?.customerName || options?.customer?.name || "");
   const greeting = customerName
     ? `Hola ${customerName}, ${getTimeGreeting()} \uD83D\uDC4B`
@@ -130,7 +134,7 @@ export function buildCustomerWhatsappMessage(combo = {}, businessMeta = {}, opti
     "",
     `Total: $ ${formatMoney(getTotal(combo))}`,
     "",
-    "Oferta especial hasta agotar stock.",
+    isConsultation ? "Este es el detalle de tu pedido." : "Oferta especial hasta agotar stock.",
     ""
   );
 

@@ -492,8 +492,8 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           </button>
           <button id="urgentModeBtn" type="button" data-carniza-open-liquidator data-carniza-signal="builder_urgent_clicked" style="text-align:left; background:#fff1f2; border:2px solid #fecdd3; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
             <div style="font-size:2rem;">🔥</div>
-            <h3 style="margin:8px 0 4px;">Vender urgente</h3>
-            <p style="margin:0; color:#9f1239; font-weight:800;">Elegí la mercadería que necesitás sacar hoy antes de perderla o mandarla a picar.</p>
+            <h3 style="margin:8px 0 4px;">Promo del día</h3>
+            <p style="margin:0; color:#9f1239; font-weight:800;">Elegí la mercadería que necesitás vender hoy. Publicala por el día y finalizala cuando quieras.</p>
           </button>
         </div>
       </section>

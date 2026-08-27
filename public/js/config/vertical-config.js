@@ -18,7 +18,7 @@ export const VERTICAL_CONFIGS = {
       description: "Demo principal de AppPromos para carnicerías."
     },
     urgentMode: {
-      label: "Vender urgente",
+      label: "Promo del día",
       internalCopy: "Mover mercadería, vender hoy y sacar stock sin perder tiempo.",
       externalCopy: "Oferta del día, promo especial o combo de hoy.",
       internalRule: "Internamente: urgencia.",
@@ -40,7 +40,7 @@ export const VERTICAL_CONFIGS = {
       role: "vendedor comercial para carnicerías",
       defaultPrompt: "¿Qué querés vender hoy?",
       quickOfferLabel: "Armar oferta",
-      urgentOfferLabel: "Vender urgente"
+      urgentOfferLabel: "Promo del día"
     }
   }
 };
