@@ -1,5 +1,22 @@
 # AppPromos — Versión actual
 
+## V12.20 — Vender urgente de punta a punta
+
+V12.20 convierte **Vender urgente** en un flujo completo para sacar mercadería hoy:
+
+- el carnicero busca y elige únicamente los productos que necesita vender;
+- ajusta cantidades y descuento con un resumen económico en vivo;
+- AppPromos calcula localmente sobre precios reales, sin depender del backend opcional;
+- la oferta puede enviarse por WhatsApp o publicarse como **Promo del día**;
+- las Promos del día aparecen destacadas en la web pública, admiten carrito y pedido por WhatsApp;
+- vencen al terminar el día en Argentina o pueden finalizarse anticipadamente desde **Publicadas hoy**.
+
+Las publicaciones diarias se almacenan en `state.dailyPromos`, separadas de `savedCombos`. El snapshot público expone solamente `dailyOffers` sanitizadas. Finalizar una oferta la conserva internamente con estado `ended`, pero la retira inmediatamente de la web.
+
+La alternativa V12.20-B de armar complementos urgentes fue descartada: si el carnicero necesita sacar mercadería de inmediato, el flujo debe ser corto y directo.
+
+QA integral local: **OK**. Sin errores rojos. Base de desarrollo: V12.19-A en `bbe1f73`.
+
 ## V12.19-A — Tres maneras de vender
 
 AppPromos diferencia claramente tres trabajos comerciales:

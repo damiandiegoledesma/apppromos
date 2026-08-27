@@ -169,6 +169,26 @@ function sanitizePublicOffer(combo = {}) {
   };
 }
 
+function sanitizePublicDailyOffer(promo = {}) {
+  const items = Array.isArray(promo?.items) ? promo.items : [];
+  return {
+    id: toPublicText(promo.id || promo.name),
+    schemaVersion: 1,
+    origin: "daily_offer",
+    name: toPublicText(promo.name || "Promo del día"),
+    total: publicNumber(promo.total),
+    status: "active",
+    publishedAt: toPublicText(promo.publishedAt || promo.createdAt || ""),
+    expiresAt: toPublicText(promo.expiresAt || ""),
+    items: items.map((item = {}) => ({
+      nombre: toPublicText(item.name || item.nombre || "Producto"),
+      rubro: toPublicText(item.rubro || ""),
+      cantidad: publicNumber(item.qty ?? item.cantidad ?? 1) || 1,
+      unidad: toPublicText(item.unit || item.unidad || "kg") || "kg"
+    })).filter((item) => item.nombre)
+  };
+}
+
 function sanitizePublicProduct(product = {}) {
   const price = publicNumber(product.precio ?? product.price ?? 0);
   return {
@@ -212,6 +232,12 @@ export function buildPublicWebPayload({
     .filter((combo = {}) => selected.has(String(combo.id || combo.comboId || "")))
     .map(sanitizePublicOffer)
     .filter((combo) => combo.name && combo.items.length);
+  const nowMs = Date.now();
+  const dailyPromos = Array.isArray(state?.dailyPromos) ? state.dailyPromos : [];
+  const dailyOffers = dailyPromos
+    .filter((promo = {}) => promo.status === "active" && Date.parse(promo.expiresAt || "") > nowMs)
+    .map(sanitizePublicDailyOffer)
+    .filter((promo) => promo.id && promo.name && promo.total > 0 && promo.items.length);
 
   const publicProducts = (web?.showPriceList && canShowRealPrices)
     ? (Array.isArray(state?.products) ? state.products : [])
@@ -245,6 +271,7 @@ export function buildPublicWebPayload({
     showPriceList: Boolean(web?.showPriceList) && canShowRealPrices,
     visibleRubros: [...visibleRubros],
     publicOffers,
+    dailyOffers,
     publicProducts,
     publicUrl: getPublicWebUrl(businessId, cleanSlug),
     updatedAt

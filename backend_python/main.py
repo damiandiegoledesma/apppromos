@@ -29,6 +29,7 @@ class PriceItem(BaseModel):
     unit: str | None = "kg"
     active: bool | None = True
     rubro: str | None = None
+    qty: float | None = 1
 
 class UrgentStockRequest(BaseModel):
     products: list[str] = []
@@ -122,22 +123,9 @@ def build_liquidation_plan(selected_products: list[dict[str, Any]], urgent_produ
             "rubro": item.get("rubro") or "",
             "price": item.get("price") or 0,
             "unit": item.get("unit") or "kg",
-            "qty": get_default_qty(item.get("name") or ""),
+            "qty": max(0.5, float(item.get("qty") or 1)),
             "urgent": True,
         })
-
-    for name in choose_anchor_products([item.get("name") or "" for item in source_selected]):
-        found = find_product_price({"name": name}, prices)
-        if found:
-            add_item(item_map, {
-                "id": found.get("id") or "",
-                "name": found.get("name") or "",
-                "rubro": found.get("rubro") or "",
-                "price": found.get("price") or 0,
-                "unit": found.get("unit") or "kg",
-                "qty": 1,
-                "urgent": False,
-            })
 
     items = []
     for item in item_map.values():
@@ -182,18 +170,6 @@ def add_item(item_map: dict[str, dict[str, Any]], item: dict[str, Any]):
         "urgent": item.get("urgent") is True,
     }
 
-def choose_anchor_products(urgent_products: list[str]) -> list[str]:
-    keys = [normalize_key(p) for p in urgent_products]
-    if any("pollo" in key for key in keys):
-        return ["chorizo"]
-    if any(key in ["cerdo", "bondiola", "pechito"] or "cerdo" in key for key in keys):
-        return ["chorizo", "asado"]
-    if any("milanesa" in key or "mila" in key for key in keys):
-        return ["picada"]
-    if any("asado" in key or "vacio" in key for key in keys):
-        return ["chorizo"]
-    return ["picada", "chorizo"]
-
 def get_default_qty(name: str) -> float:
     key = normalize_key(name)
     if "milanesa" in key or "mila" in key:
@@ -237,7 +213,7 @@ def build_commercial_answer(question: str, screen: str | None, business_name: st
     if has_any(q, ["precio", "precios", "caro", "barato"]):
         return "Usá precios reales de tu lista. Para liquidar, bajá solo el producto urgente, no todo el combo."
     if has_any(q, ["combo", "oferta", "promo", "promoción"]):
-        return "Armá una OFERTA DEL DÍA: producto atrasado con descuento + producto gancho a precio normal."
+        return "Armá una OFERTA DEL DÍA con los productos que elijas. El descuento va solo sobre lo urgente."
     if has_any(q, ["whatsapp", "mensaje", "mandar", "enviar"]):
         return "Mensaje corto: OFERTA DEL DÍA, productos, precio final y hasta agotar stock."
     today = get_daily_recommendation()
@@ -287,12 +263,17 @@ def normalize_selected_products(products: list[dict[str, Any]]) -> list[dict[str
             price = float(item.get("price") if item.get("price") is not None else item.get("precio") or 0)
         except Exception:
             price = 0
+        try:
+            qty = max(0.5, float(item.get("qty") if item.get("qty") is not None else item.get("cantidad") or 1))
+        except Exception:
+            qty = 1
         result.append({
             "id": item_id,
             "name": name,
             "rubro": clean_product_name(item.get("rubro") or item.get("category") or item.get("categoria") or ""),
             "price": price,
-            "unit": item.get("unit") or item.get("unidad") or "kg"
+            "unit": item.get("unit") or item.get("unidad") or "kg",
+            "qty": qty
         })
     return result
 

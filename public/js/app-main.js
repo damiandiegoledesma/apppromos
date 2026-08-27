@@ -25,6 +25,7 @@ import {
 } from "./services/tracking-service.js";
 
 import { updateBusinessBasicData, getPublicWebUrl, syncPublicWebSnapshot } from "./services/web-premium-service.js";
+import { finishDailyPromo, getArgentinaDayKey, getDailyPromosForManagement, publishDailyPromo } from "./services/daily-promos-service.js";
 import {
   uploadBusinessLogo,
   uploadBusinessFrontPhoto,
@@ -539,6 +540,7 @@ function renderCarnizaUrgentStockCard(container) {
   const selectedQty = new Map();
   let selectedDiscount = 20;
   let searchText = "";
+  let showFullProductList = false;
 
   const card = document.createElement("div");
   card.id = "carnizaUrgentStockCard";
@@ -546,25 +548,78 @@ function renderCarnizaUrgentStockCard(container) {
   card.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
       '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;">🔥 Decile a Carniza qué necesitás vender URGENTE</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
       '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid #fed7aa;background:#fff;" /></div>' +
+    '<div data-daily-promos-management style="margin:0 0 12px;"></div>' +
     '<div style="font-size:13px;font-weight:1000;color:#8a2600;margin:4px 0 7px;">1. Elegí producto</div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:10px;"><input data-carniza-product-search type="text" inputmode="text" placeholder="Buscar producto real: marucha, osobuco, alitas..." style="flex:1;min-width:0;min-height:44px;border:1px solid #e7c6a8;border-radius:13px;padding:0 12px;font-weight:900;background:#fff;" /><button type="button" data-carniza-clear-search style="min-width:48px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:18px;font-weight:1000;cursor:pointer;">×</button></div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px;"><input data-carniza-product-search type="text" inputmode="text" placeholder="¿Qué producto necesitás vender hoy?" style="flex:1;min-width:0;min-height:44px;border:1px solid #e7c6a8;border-radius:13px;padding:0 12px;font-weight:900;background:#fff;" /><button type="button" data-carniza-clear-search aria-label="Limpiar búsqueda" title="Limpiar búsqueda" style="min-width:48px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:18px;font-weight:1000;cursor:pointer;">×</button></div>' +
+    '<button type="button" data-carniza-toggle-products style="width:100%;min-height:42px;margin:0 0 10px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:13px;font-weight:1000;cursor:pointer;">Ver lista completa</button>' +
     '<div data-carniza-selected style="display:none;margin:2px 0 12px;padding:10px;border-radius:13px;background:#fff;border:2px solid #fdba74;color:#4b2a12;font-size:13px;font-weight:900;box-shadow:0 8px 18px rgba(251,146,60,.12);"></div>' +
     '<div data-carniza-real-products style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px;"></div>' +
     '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">2. Ajustá descuento</div>' +
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
-    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste para liquidar. Los productos gancho van a precio normal.</div>' +
+    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
     '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">3. Armar oferta urgente</button>' +
     '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
 
   const productsEl = card.querySelector("[data-carniza-real-products]");
+  const dailyPromosManagementEl = card.querySelector("[data-daily-promos-management]");
   const selectedEl = card.querySelector("[data-carniza-selected]");
   const discountsEl = card.querySelector("[data-carniza-discounts]");
   const searchInput = card.querySelector("[data-carniza-product-search]");
+  const toggleProductsBtn = card.querySelector("[data-carniza-toggle-products]");
   const errorEl = card.querySelector("[data-carniza-error]");
   const resultEl = card.querySelector("[data-carniza-result]");
   const helpEl = card.querySelector("[data-carniza-discount-help]");
+
+  function renderDailyPromosManagement(message = "", isError = false) {
+    if (!dailyPromosManagementEl) return;
+    const isDemo = currentSession?.isDemo === true;
+    const todayKey = getArgentinaDayKey();
+    const promos = getDailyPromosForManagement({ state: currentPayload?.state || {}, isDemo })
+      .filter((promo = {}) => promo.status === "active" && promo.dayKey === todayKey && Date.parse(promo.expiresAt || "") > Date.now());
+    const statusHtml = message
+      ? '<div role="status" style="margin:0 0 8px;padding:8px;border-radius:10px;background:' + (isError ? '#fff1f0;color:#9f1239' : '#dcfce7;color:#166534') + ';font-size:12px;font-weight:1000;">' + escapeCarnizaHtml(message) + '</div>'
+      : '';
+    const rowsHtml = promos.length
+      ? promos.map((promo = {}) => {
+          const published = new Date(promo.publishedAt || promo.createdAt || "");
+          const time = Number.isNaN(published.getTime()) ? "Hoy" : published.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
+          return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #fed7aa;">' +
+            '<div style="min-width:0;"><strong style="display:block;color:#7c2d12;overflow-wrap:anywhere;">' + escapeCarnizaHtml(promo.name || "Promo del día") + '</strong><span style="display:block;margin-top:3px;color:#9a3412;font-size:11px;font-weight:850;">' + escapeCarnizaHtml(formatCarnizaMoney(promo.total || 0)) + ' · Publicada ' + escapeCarnizaHtml(time) + '</span></div>' +
+            '<button type="button" data-finish-daily-promo="' + escapeCarnizaHtml(promo.id || "") + '" style="min-height:44px;padding:0 11px;border:1px solid #fecaca;border-radius:12px;background:#fff1f0;color:#b42318;font-size:12px;font-weight:1000;cursor:pointer;">Finalizar</button>' +
+          '</div>';
+        }).join("")
+      : '<div style="padding-top:7px;color:#7c2d12;font-size:12px;font-weight:850;">No tenés ofertas activas publicadas hoy.</div>';
+    dailyPromosManagementEl.innerHTML = '<details ' + (promos.length || message ? 'open' : '') + ' style="border:1px solid #fed7aa;border-radius:14px;background:#fff;padding:10px;">' +
+      '<summary style="min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#9a3412;font-weight:1000;cursor:pointer;">📣 Publicadas hoy <span style="font-size:12px;">' + promos.length + '</span></summary>' + statusHtml + rowsHtml + '</details>';
+  }
+
+  dailyPromosManagementEl?.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-finish-daily-promo]");
+    if (!button) return;
+    const promoId = String(button.dataset.finishDailyPromo || "").trim();
+    if (!promoId || !confirm("¿Querés quitar esta oferta de tu web? Esta acción no se puede deshacer.")) return;
+    const previousText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Finalizando...";
+    try {
+      const result = await finishDailyPromo({
+        businessId: currentPayload?.businessId || currentBusinessId,
+        meta: currentPayload?.meta || {},
+        state: currentPayload?.state || {},
+        promoId,
+        isDemo: currentSession?.isDemo === true
+      });
+      currentPayload = { ...currentPayload, state: result.state };
+      renderDailyPromosManagement(result.demo ? "Simulación finalizada. No se modificó una web pública real." : "Oferta finalizada y retirada de tu web.");
+      trackCarnizaSignal("daily_promo_finished", { businessId: currentPayload?.businessId || currentBusinessId || null, promoId, demo: result.demo === true });
+    } catch (finishError) {
+      button.disabled = false;
+      button.textContent = previousText;
+      renderDailyPromosManagement(finishError?.message || "No se pudo finalizar la oferta.", true);
+    }
+  });
 
   function getSelectedProducts() {
     return realProducts
@@ -574,6 +629,7 @@ function renderCarnizaUrgentStockCard(container) {
 
   function getVisibleProducts() {
     const q = normalizeCarnizaProductKey(searchText);
+    if (!q && !showFullProductList) return [];
     let source = realProducts;
     if (q) {
       source = realProducts.filter((item) => {
@@ -582,10 +638,55 @@ function renderCarnizaUrgentStockCard(container) {
         return nameKey.includes(q) || rubroKey.includes(q) || q.includes(nameKey);
       });
     }
-    const selected = getSelectedProducts();
-    const selectedIdsLocal = new Set(selected.map((item) => item.id));
-    const merged = [...selected, ...source.filter((item) => !selectedIdsLocal.has(item.id))];
-    return merged.slice(0, 10);
+    return showFullProductList ? source : source.slice(0, 10);
+  }
+
+  function updateProductListToggle() {
+    if (!toggleProductsBtn) return;
+    toggleProductsBtn.textContent = showFullProductList ? "Ocultar lista completa" : "Ver lista completa";
+  }
+
+  function calculateUrgentLiveSummary(selected = []) {
+    const items = selected.map((item) => {
+      const qty = Math.max(0.5, Number(item.qty || 1));
+      const unitPrice = Number(item.price || 0);
+      const listSubtotal = unitPrice * qty;
+      const discountedSubtotal = Math.round(listSubtotal * (1 - selectedDiscount / 100));
+      return { ...item, qty, unitPrice, listSubtotal, discountedSubtotal };
+    });
+    const listTotal = items.reduce((sum, item) => sum + item.listSubtotal, 0);
+    const calculatedTotal = items.reduce((sum, item) => sum + item.discountedSubtotal, 0);
+    const commercialTotal = calculatedTotal > 0 ? Math.max(100, Math.round(calculatedTotal / 100) * 100) : 0;
+    const discountAmount = Math.max(0, listTotal - calculatedTotal);
+    return { items, listTotal, calculatedTotal, commercialTotal, discountAmount };
+  }
+
+  function buildUrgentLiveSummaryHtml(selected = []) {
+    const summary = calculateUrgentLiveSummary(selected);
+    const quantityTotal = summary.items.reduce((sum, item) => sum + item.qty, 0);
+    const quantityLabel = String(quantityTotal).replace(".", ",");
+    const units = new Set(summary.items.map((item) => String(item.unit || "kg").trim() || "kg"));
+    const selectionMeta = summary.items.length + ' producto' + (summary.items.length === 1 ? '' : 's') + (units.size === 1 ? ' · ' + quantityLabel + ' ' + [...units][0] : ' · cantidades configuradas');
+    const detailRows = summary.items.map((item) =>
+      '<div style="display:grid;gap:2px;padding:7px 0;border-top:1px solid #fed7aa;">' +
+        '<strong style="color:#7c2d12;">' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</strong>' +
+        '<span>' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + ' × ' + escapeCarnizaHtml(formatCarnizaMoney(item.unitPrice)) + ' = ' + escapeCarnizaHtml(formatCarnizaMoney(item.listSubtotal)) + '</span>' +
+        '<span>Con ' + escapeCarnizaHtml(String(selectedDiscount)) + '%: ' + escapeCarnizaHtml(formatCarnizaMoney(item.discountedSubtotal)) + '</span>' +
+      '</div>'
+    ).join("");
+    return '<div data-urgent-live-summary style="margin-top:10px;padding:11px;border:2px solid #fb923c;border-radius:14px;background:linear-gradient(180deg,#fff7ed,#fff);box-shadow:0 8px 18px rgba(234,88,12,.10);">' +
+      '<div style="font-size:12px;font-weight:1000;color:#9a3412;text-transform:uppercase;letter-spacing:.04em;">Resumen urgente en vivo</div>' +
+      '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin-top:6px;">' +
+        '<div style="color:#7c2d12;font-size:12px;font-weight:900;line-height:1.35;">' + escapeCarnizaHtml(selectionMeta) + '<br>Lista: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.listTotal)) + ' · Ahorrás: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.discountAmount)) + '</div>' +
+        '<div style="text-align:right;color:#7c2d12;"><span style="display:block;font-size:11px;font-weight:1000;">TOTAL OFERTA</span><strong style="display:block;font-size:22px;line-height:1.05;">' + escapeCarnizaHtml(formatCarnizaMoney(summary.commercialTotal)) + '</strong></div>' +
+      '</div>' +
+      '<details style="margin-top:8px;color:#7c2d12;font-size:12px;font-weight:850;">' +
+        '<summary style="min-height:36px;display:flex;align-items:center;cursor:pointer;font-weight:1000;">Ver detalle del cálculo</summary>' +
+        detailRows +
+        '<div style="display:flex;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid #fb923c;"><span>Antes de redondear</span><strong>' + escapeCarnizaHtml(formatCarnizaMoney(summary.calculatedTotal)) + '</strong></div>' +
+        '<div style="font-size:11px;margin-top:5px;">Total comercial redondeado a la centena.</div>' +
+      '</details>' +
+    '</div>';
   }
 
   function renderSelectedSummary() {
@@ -598,29 +699,43 @@ function renderCarnizaUrgentStockCard(container) {
     selectedEl.style.display = "block";
     selectedEl.innerHTML = '<div style="font-size:13px;color:#8a2600;font-weight:1000;margin-bottom:7px;">2. Ajustá cantidad antes de liquidar</div>' +
       selected.map((item) =>
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid #f3dcc7;">' +
-          '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔥 ' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</span>' +
-          '<span style="display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;">' +
-            '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" style="min-width:30px;min-height:30px;border-radius:10px;border:1px solid #e7c6a8;background:#fff;font-weight:1000;">−</button>' +
-            '<strong style="min-width:48px;text-align:center;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
-            '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" style="min-width:30px;min-height:30px;border-radius:10px;border:1px solid #e7c6a8;background:#fff;font-weight:1000;">+</button>' +
-          '</span>' +
+        '<div style="display:grid;gap:7px;padding:9px 0;border-top:1px solid #f3dcc7;">' +
+          '<div style="min-width:0;overflow-wrap:anywhere;line-height:1.25;color:#4b2a12;font-weight:1000;">🔥 ' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</div>' +
+          '<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">' +
+            '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" aria-label="Restar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">−</button>' +
+            '<strong style="min-width:56px;text-align:center;white-space:nowrap;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
+            '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" aria-label="Sumar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">+</button>' +
+            '<button type="button" data-urgent-remove="' + escapeCarnizaHtml(item.id) + '" aria-label="Quitar ' + escapeCarnizaHtml(item.name) + '" title="Quitar producto" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #fecaca;background:#fff1f0;color:#b42318;font-size:17px;font-weight:1000;cursor:pointer;">×</button>' +
+          '</div>' +
         '</div>'
-      ).join("");
+      ).join("") + buildUrgentLiveSummaryHtml(selected);
   }
 
   function renderProductButtons() {
+    const q = normalizeCarnizaProductKey(searchText);
     if (!realProducts.length) {
+      productsEl.style.display = "grid";
       productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff1f0;color:#9f1239;font-weight:900;font-size:13px;">No encontré productos con precio cargado. Primero cargá precios reales.</div>';
+      updateProductListToggle();
+      renderSelectedSummary();
+      return;
+    }
+    if (!q && !showFullProductList) {
+      productsEl.style.display = "none";
+      productsEl.innerHTML = "";
+      updateProductListToggle();
       renderSelectedSummary();
       return;
     }
     const visible = getVisibleProducts();
     if (!visible.length) {
+      productsEl.style.display = "grid";
       productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff8e1;color:#7a4b00;font-weight:900;font-size:13px;">No encontré ese producto en tu lista de precios. Para liquidarlo, primero tiene que existir con precio real.</div>';
+      updateProductListToggle();
       renderSelectedSummary();
       return;
     }
+    productsEl.style.display = "grid";
     productsEl.innerHTML = visible.map((item) => {
       const active = selectedIds.has(item.id);
       const subtitle = item.rubro ? item.rubro + " · " + formatCarnizaMoney(item.price) : formatCarnizaMoney(item.price);
@@ -629,6 +744,7 @@ function renderCarnizaUrgentStockCard(container) {
         '<div style="font-size:11px;font-weight:900;opacity:.82;margin-top:3px;">' + escapeCarnizaHtml(subtitle) + '</div>' +
       '</button>';
     }).join("");
+    updateProductListToggle();
     renderSelectedSummary();
   }
 
@@ -661,6 +777,16 @@ function renderCarnizaUrgentStockCard(container) {
   });
 
   selectedEl.addEventListener("click", (event) => {
+    const remove = event.target.closest("[data-urgent-remove]");
+    if (remove) {
+      const id = String(remove.dataset.urgentRemove || "").trim();
+      if (!id) return;
+      selectedIds.delete(id);
+      selectedQty.delete(id);
+      renderProductButtons();
+      hideError();
+      return;
+    }
     const minus = event.target.closest("[data-urgent-qty-minus]");
     const plus = event.target.closest("[data-urgent-qty-plus]");
     const btn = minus || plus;
@@ -676,18 +802,30 @@ function renderCarnizaUrgentStockCard(container) {
 
   searchInput?.addEventListener("input", () => {
     searchText = searchInput.value || "";
+    showFullProductList = false;
+    renderProductButtons();
+    hideError();
+  });
+
+  toggleProductsBtn?.addEventListener("click", () => {
+    showFullProductList = !showFullProductList;
+    if (showFullProductList) {
+      searchText = "";
+      if (searchInput) searchInput.value = "";
+    }
     renderProductButtons();
     hideError();
   });
 
   card.querySelector("[data-carniza-clear-search]")?.addEventListener("click", () => {
     searchText = "";
+    showFullProductList = false;
     if (searchInput) searchInput.value = "";
     renderProductButtons();
     hideError();
   });
 
-  discountsEl.addEventListener("click", (event) => { const btn = event.target.closest("[data-discount]"); if (!btn) return; selectedDiscount = Number(btn.dataset.discount || 20); renderDiscountButtons(); });
+  discountsEl.addEventListener("click", (event) => { const btn = event.target.closest("[data-discount]"); if (!btn) return; selectedDiscount = Number(btn.dataset.discount || 20); renderDiscountButtons(); renderSelectedSummary(); });
 
   card.querySelector("[data-carniza-liquidate]")?.addEventListener("click", async () => {
     hideError(); resultEl.style.display = "none"; resultEl.innerHTML = "";
@@ -809,6 +947,7 @@ function renderCarnizaUrgentStockCard(container) {
         '<div><div style="font-size:18px;font-weight:1000;color:#1d4ed8;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#1e3a8a;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
         '<div style="font-size:26px;line-height:1;">📲</div>' +
       '</div>' +
+      '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #bfdbfe;border-radius:13px;background:#fff;color:#1d4ed8;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
       '<label style="display:block;font-size:13px;font-weight:1000;color:#1e3a8a;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
       '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #93c5fd;border-radius:14px;padding:0 12px;background:#fff;color:#172554;font-weight:1000;font-size:15px;" />' +
       '<div style="font-size:12px;font-weight:900;color:#1e3a8a;margin:7px 0 10px;">Internamente vendés urgente. Al cliente le llega una oportunidad atractiva.</div>' +
@@ -819,13 +958,16 @@ function renderCarnizaUrgentStockCard(container) {
         '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;">📲 Enviar oferta por WhatsApp</a>' +
         '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#2563eb;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
       '</div>' +
-      '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin-top:9px;border:1px solid #bfdbfe;border-radius:13px;background:#fff;color:#1d4ed8;font-weight:1000;cursor:pointer;">← Volver y ajustar</button>' +
+      '<button type="button" data-publish-daily style="width:100%;min-height:52px;margin-top:9px;border:none;border-radius:14px;background:#ea580c;color:#fff;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 9px 18px rgba(234,88,12,.20);">🔥 Publicar por hoy en mi carnicería</button>' +
+      '<div data-publish-daily-status role="status" aria-live="polite" style="display:none;margin-top:8px;padding:9px;border-radius:11px;font-size:12px;font-weight:1000;line-height:1.35;"></div>' +
       '</div>';
 
     const nameInput = resultEl.querySelector("[data-urgent-offer-name]");
     const preview = resultEl.querySelector("[data-urgent-message-preview]");
     const whatsapp = resultEl.querySelector("[data-urgent-whatsapp]");
     const error = resultEl.querySelector("[data-urgent-name-error]");
+    const publishButton = resultEl.querySelector("[data-publish-daily]");
+    const publishStatus = resultEl.querySelector("[data-publish-daily-status]");
 
     const getFinalMessage = () => buildExternalOfferMessage(nameInput?.value || suggestedName, baseMessage, items, data.total, missing);
     const refresh = () => {
@@ -854,10 +996,57 @@ function renderCarnizaUrgentStockCard(container) {
       const finalMessage = getFinalMessage();
       try { await navigator.clipboard.writeText(finalMessage); alert("Mensaje copiado para WhatsApp."); } catch (_) { alert(finalMessage); }
     }));
+    publishButton?.addEventListener("click", async () => {
+      const cleanName = cleanExternalOfferTitle(nameInput?.value || "");
+      if (!cleanName) { if (error) error.style.display = "block"; nameInput?.focus(); return; }
+      if (!currentPayload?.state) return;
+      const previousText = publishButton.textContent;
+      publishButton.disabled = true;
+      publishButton.textContent = "Publicando Promo del día...";
+      if (publishStatus) publishStatus.style.display = "none";
+      try {
+        const result = await publishDailyPromo({
+          businessId: currentPayload.businessId || currentBusinessId,
+          meta: currentPayload.meta || {},
+          state: currentPayload.state || {},
+          isDemo: currentSession?.isDemo === true,
+          offer: {
+            name: cleanName,
+            items,
+            discountPct: data.discount,
+            total: data.total
+          }
+        });
+        currentPayload = { ...currentPayload, state: result.state };
+        renderDailyPromosManagement();
+        publishButton.textContent = result.demo ? "✅ Publicación de prueba lista" : "✅ Publicada por hoy";
+        publishButton.style.background = "#15803d";
+        if (publishStatus) {
+          publishStatus.style.display = "block";
+          publishStatus.style.background = "#dcfce7";
+          publishStatus.style.color = "#166534";
+          publishStatus.textContent = result.demo
+            ? "Demo: simulación local. No se escribió en Firebase ni en una web pública real."
+            : "Visible en el snapshot de tu carnicería hasta las 23:59 de Argentina. No se guardó en Promos.";
+        }
+        trackCarnizaSignal("daily_promo_published", { businessId: currentPayload.businessId || currentBusinessId || null, promoId: result.promo?.id || null, demo: result.demo === true });
+      } catch (publishError) {
+        publishButton.disabled = false;
+        publishButton.textContent = previousText;
+        if (publishStatus) {
+          publishStatus.style.display = "block";
+          publishStatus.style.background = "#fff1f0";
+          publishStatus.style.color = "#9f1239";
+          publishStatus.textContent = publishError?.message || "No se pudo publicar. Probá nuevamente.";
+        }
+      }
+    });
     resultEl.querySelector("[data-urgent-back]")?.addEventListener("click", () => {
       resultEl.style.display = "none";
       resultEl.innerHTML = "";
       setupNodes.forEach((node) => { node.style.display = ""; });
+      const modal = document.getElementById("carnizaFloatingLiquidatorModal");
+      if (modal) modal.scrollTop = 0;
     });
     refresh();
     resultEl.style.display = "block";
@@ -868,7 +1057,7 @@ function renderCarnizaUrgentStockCard(container) {
       nameInput?.focus?.({ preventScroll: true });
     });
   }
-  renderProductButtons(); renderDiscountButtons(); container.prepend(card);
+  renderProductButtons(); renderDiscountButtons(); renderDailyPromosManagement(); container.prepend(card);
 }
 
 function getCarnizaUnifiedContext() {
