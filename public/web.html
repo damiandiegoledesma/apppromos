@@ -972,6 +972,14 @@
       font-weight:950;
       cursor:pointer;
     }
+    .daily-offers-block{display:grid;gap:10px;margin-bottom:14px;}
+    .daily-offers-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px;color:#9a3412;}
+    .daily-offers-head strong{font-size:1rem;font-weight:1000;}
+    .daily-offers-head span{font-size:.74rem;font-weight:900;text-align:right;}
+    .daily-offer-card{position:relative;overflow:hidden;border:2px solid #fb923c;background:linear-gradient(145deg,#fff7ed,#fff);box-shadow:0 14px 30px rgba(234,88,12,.14);}
+    .daily-offer-card::before{content:"SOLO POR HOY";position:absolute;top:10px;right:-32px;transform:rotate(38deg);width:130px;padding:4px 0;background:#ea580c;color:#fff;text-align:center;font-size:.6rem;font-weight:1000;letter-spacing:.05em;}
+    .daily-offer-card .offer-title{padding-right:64px;color:#9a3412;}
+    .daily-offer-note{margin-top:7px;color:#9a3412;font-size:.74rem;font-weight:900;}
 
     @media(max-width:700px){
       /* Una sola identidad: header + contacto. La foto queda limpia. */
@@ -1349,6 +1357,7 @@
       const logoUrl=String(data.logoUrl||data.brand?.logoUrl||"").trim();
       const frontPhotoUrl=String(data.frontPhotoUrl||data.brand?.frontPhotoUrl||"").trim();
       const combos=Array.isArray(data.publicOffers)?data.publicOffers:[];
+      const dailyOffers=(Array.isArray(data.dailyOffers)?data.dailyOffers:[]).filter((offer)=>offer?.status==="active"&&Date.parse(offer.expiresAt||"")>Date.now());
       const products=(Array.isArray(data.publicProducts)?data.publicProducts:[]).filter(p=>validPublicPrice(p));
       const rubroNames=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].sort((a,b)=>a.localeCompare(b,"es"));
       const offerCategoriesAvailable=OFFER_CATEGORIES.filter(category=>combos.some(combo=>inferOfferCategory(combo)===category));
@@ -1363,7 +1372,8 @@
       function cartItemKey(item={}){return `${item.type||"product"}:${String(item.id||item.name||item.nombre||"item").trim()}`.toLowerCase()}
       function encodeCartItem(item={}){try{return encodeURIComponent(JSON.stringify(item||{}))}catch(error){return ""}}
       function decodeCartItem(raw=""){try{return JSON.parse(decodeURIComponent(String(raw||"")))}catch(error){return null}}
-      function cartQtyLabel(item={}){const qty=Math.max(1,cartNumber(item.quantity)||1);return item.type==="combo"?`${qty} combo${qty===1?"":"s"}`:`${qty} ${item.unit||"kg"}`}
+      function isOfferCartItem(item={}){return item.type==="combo"||item.type==="daily_offer"}
+      function cartQtyLabel(item={}){const qty=Math.max(1,cartNumber(item.quantity)||1);return isOfferCartItem(item)?`${qty} oferta${qty===1?"":"s"}`:`${qty} ${item.unit||"kg"}`}
       function cartLineTotal(item={}){return Math.round(cartNumber(item.price)*Math.max(1,cartNumber(item.quantity)||1))}
       function cartTotal(){return cartItems.reduce((acc,item)=>acc+cartLineTotal(item),0)}
       function currentCartCustomer(){return {name:app.querySelector("#cartCustomerName")?.value||"",phone:app.querySelector("#cartCustomerPhone")?.value||"",delivery:app.querySelector("input[name='cartDelivery']:checked")?.value||"retiro",address:app.querySelector("#cartCustomerAddress")?.value||"",payment:app.querySelector("input[name='cartPayment']:checked")?.value||"efectivo"}}
@@ -1377,7 +1387,7 @@
               const key=esc(item.key||cartItemKey(item));
               const rubro=item.rubro?` · ${esc(item.rubro)}`:"";
               const itemName=esc(item.name||"Producto");
-              const comboDetail=item.type==="combo"&&Array.isArray(item.items)&&item.items.length
+              const comboDetail=isOfferCartItem(item)&&Array.isArray(item.items)&&item.items.length
                 ? `<span class="cart-combo-items">${item.items.map((part)=>`<span>${esc(part.cantidad||1)} ${esc(part.unidad||"kg")} · ${esc(part.nombre||"Producto")}</span>`).join("")}</span>`
                 : "";
               return `<div class="cart-line"><div><strong>${itemName}</strong><small>${esc(cartQtyLabel(item))}${rubro} · ${money(cartLineTotal(item))}</small>${comboDetail}</div><div class="cart-line-actions"><button type="button" data-cart-minus="${key}" aria-label="Reducir cantidad de ${itemName}" title="Reducir cantidad">−</button><button type="button" data-cart-plus="${key}" aria-label="Aumentar cantidad de ${itemName}" title="Aumentar cantidad">+</button><button type="button" class="cart-remove" data-cart-remove="${key}" aria-label="Quitar ${itemName} del pedido" title="Quitar">Quitar</button></div></div>`;
@@ -1452,7 +1462,7 @@
 
         cartItems.forEach((item)=>{
           const total=money(cartLineTotal(item));
-          if(item.type==="combo"){
+          if(isOfferCartItem(item)){
             rows.push(`*${cartQtyLabel(item)} ${item.name}* - ${total}`);
             if(Array.isArray(item.items)){
               item.items.forEach((part)=>{
@@ -1515,14 +1525,20 @@
 
       let offersExpanded=false;
       let activeOfferFilter="Todas";
-      const offersHtml=isStarter
-        ? `<div class="starter-note"><strong>Web de arranque lista</strong>Esta carnicería está preparando sus primeras ofertas. Consultá la promo de hoy por WhatsApp.</div>`
+      const dailyOffersHtml=dailyOffers.length?`<div class="daily-offers-block"><div class="daily-offers-head"><strong>🔥 Promos del día</strong><span>Válidas hoy · Hasta agotar stock</span></div><div class="grid">${dailyOffers.map((c,index)=>{
+        const items=Array.isArray(c.items)?c.items:[];
+        const item={type:"daily_offer",id:c.id||c.name||("daily-"+index),name:c.name||"Promo del día",rubro:"Promo del día",unit:"oferta",price:getTotal(c),quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
+        return `<div class="card offer-card daily-offer-card"><div class="offer-title">🔥 ${esc(c.name||"Promo del día")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><div class="daily-offer-note">Hasta agotar stock</div><button type="button" class="btn btn-ghost cart-add-btn" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(c.name||"Promo del día")} al pedido" title="Agregar al pedido">Agregar al pedido</button></div>`;
+      }).join("")}</div></div>`:"";
+      const regularOffersHtml=isStarter
+        ? (dailyOffers.length?"":`<div class="starter-note"><strong>Web de arranque lista</strong>Esta carnicería está preparando sus primeras ofertas. Consultá la promo de hoy por WhatsApp.</div>`)
         : combos.length?`${offersFilterHtml}<div class="grid" data-offers-grid>${combos.map((c,index)=>{
         const items=Array.isArray(c.items)?c.items:[];
         const category=inferOfferCategory(c);
         const item={type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:c.name||c.nombre||"Oferta",rubro:"Oferta",unit:"combo",price:getTotal(c),quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
         return `<div class="card offer-card" data-offer-index="${index}" data-offer-category="${esc(category)}"><div class="offer-title">🔥 ${esc(c.name||"Oferta")}</div><div class="items">${items.map(i=>`${icon(i.rubro,i.nombre)} ${esc(i.nombre||"Producto")} — ${esc(i.cantidad||1)} ${esc(i.unidad||"kg")}`).join("<br>")}</div><div class="price">${money(getTotal(c))}</div><button type="button" class="btn btn-ghost cart-add-btn" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(c.name||"Oferta")} al pedido" title="Agregar al pedido">Agregar al pedido</button></div>`;
-      }).join("")}</div>${combos.length>4?`<div class="offers-more-wrap"><button type="button" class="offers-more-btn" data-offers-toggle>Ver todas (${combos.length})</button></div>`:""}`:`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`;
+      }).join("")}</div>${combos.length>4?`<div class="offers-more-wrap"><button type="button" class="offers-more-btn" data-offers-toggle>Ver todas (${combos.length})</button></div>`:""}`:(dailyOffers.length?"":`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`);
+      const offersHtml=dailyOffersHtml+regularOffersHtml;
 
       function applyOfferView(){
         const cards=[...app.querySelectorAll("[data-offer-category]")];
@@ -1553,7 +1569,7 @@
         : `<section class="section" id="precios"><div class="starter-note"><strong>Lista de precios en preparación</strong>La carnicería está actualizando sus precios reales. Solo se publican productos con precio válido. Si necesitás algo, consultá por WhatsApp.<div class="starter-actions"><a class="btn btn-ghost" href="${mainWa}" target="_blank" rel="noopener">Consultar disponibilidad</a></div></div></section>`;
 
       // V12.13-C3 - Carniza contextual en Web Arranque
-      const hasOffersForCarniza = !isStarter && combos.length > 0;
+      const hasOffersForCarniza = dailyOffers.length > 0 || (!isStarter && combos.length > 0);
       const hasPricesForCarniza = Boolean(data.showPriceList && products.length);
       const carnizaTitle = hasOffersForCarniza ? "Mirá las promos de hoy" : (hasPricesForCarniza ? "Armá tu pedido" : "Pedí la promo del día");
       const carnizaSub = hasOffersForCarniza ? "Agregá ofertas al pedido y mandalo ordenado." : (hasPricesForCarniza ? "Elegí productos y completá el carrito." : "Te pasamos con la carnicería.");

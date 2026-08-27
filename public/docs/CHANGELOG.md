@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## V12.20 — Vender urgente de punta a punta
+
+- Reemplaza las tarjetas completas de productos por búsqueda primero y lista completa opcional.
+- Permite seleccionar uno o varios productos reales, ajustar cantidades de 0,5 en 0,5 y quitarlos antes de calcular.
+- Agrega resumen económico en vivo con precio de lista, ahorro, total calculado y total comercial redondeado.
+- Hace el cálculo urgente local y determinista, sin depender del backend Python opcional.
+- Elimina la incorporación automática de productos gancho o complementarios no elegidos.
+- Conserva en Python las cantidades indicadas por el usuario para mantener paridad de contrato.
+- Agrega regreso desde el resultado para corregir la selección y el cálculo.
+- Permite enviar o copiar la Oferta del día por WhatsApp sin guardarla como combo permanente.
+- Agrega **Publicar por hoy en mi carnicería** y admite varias publicaciones diarias.
+- Persiste publicaciones privadas en `state.dailyPromos`, sin modificar `savedCombos`.
+- Agrega `dailyOffers` sanitizadas al snapshot público y coordina ambas escrituras mediante batch.
+- Muestra **Promos del día** destacadas en la web pública, con detalle, precio, carrito y pedido por WhatsApp.
+- Oculta publicaciones vencidas al finalizar el día en `America/Argentina/Buenos_Aires`.
+- Agrega **Publicadas hoy** con acción **Finalizar** para errores o stock agotado.
+- Al finalizar, cambia el estado a `ended`, registra fecha/motivo y retira la oferta inmediatamente del snapshot público.
+- Mantiene Demo como simulación local y aplica `WriteGuardService` a escrituras reales.
+- Descarta V12.20-B: no se agrega planificación de complementos al flujo urgente.
+- QA A, C1, C2, C3 e integral: **OK**, sin errores rojos.
+
 ## V12.19-A — Tres maneras de vender
 
 - Renombra **Oferta rápida** como **Responder una consulta** y aclara que es una acción puntual que no se guarda.

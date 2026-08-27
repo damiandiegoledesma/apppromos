@@ -41,9 +41,10 @@ const CarnizaAIService = (() => {
     }
   }
 
-  async function buildUrgentStockCombo({ products = [], selectedProducts = [], discount = 20, prices = [], businessName = null } = {}) {
+  async function buildUrgentStockCombo({ products = [], selectedProducts = [], complementProducts = [], discount = 20, prices = [], businessName = null } = {}) {
     const cleanProducts = normalizeProductList(products);
     const cleanSelectedProducts = normalizeSelectedProductList(selectedProducts);
+    const cleanComplementProducts = normalizeSelectedProductList(complementProducts);
     const cleanDiscount = normalizeDiscount(discount);
     const cleanPrices = normalizePriceList(prices);
 
@@ -56,42 +57,16 @@ const CarnizaAIService = (() => {
       };
     }
 
-    if (!isCarnizaBackendEnabled()) {
-      return buildUrgentStockFallback({
-        products: cleanProducts,
-        selectedProducts: cleanSelectedProducts,
-        discount: cleanDiscount,
-        prices: cleanPrices,
-        businessName,
-      });
-    }
-
-    try {
-      const response = await fetchWithTimeout(`${API_URL}/urgent-stock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          products: cleanProducts,
-          selected_products: cleanSelectedProducts,
-          discount: cleanDiscount,
-          prices: cleanPrices,
-          business_name: businessName,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Carniza backend unavailable");
-      const data = await response.json();
-      if (!data || !data.ok) throw new Error("Carniza empty response");
-      return data;
-    } catch (_) {
-      return buildUrgentStockFallback({
-        products: cleanProducts,
-        selectedProducts: cleanSelectedProducts,
-        discount: cleanDiscount,
-        prices: cleanPrices,
-        businessName,
-      });
-    }
+    // V12.20-A: el calculo urgente es local y determinista. No depende del
+    // backend opcional ni agrega productos que el carnicero no haya elegido.
+    return buildUrgentStockFallback({
+      products: cleanProducts,
+      selectedProducts: cleanSelectedProducts,
+      complementProducts: cleanComplementProducts,
+      discount: cleanDiscount,
+      prices: cleanPrices,
+      businessName,
+    });
   }
 
   async function ask({ question, screen = null, businessName = null } = {}) {
@@ -119,12 +94,13 @@ const CarnizaAIService = (() => {
     }
   }
 
-  function buildUrgentStockFallback({ products = [], selectedProducts = [], discount = 20, prices = [], businessName = null } = {}) {
+  function buildUrgentStockFallback({ products = [], selectedProducts = [], complementProducts = [], discount = 20, prices = [], businessName = null } = {}) {
     const urgentProducts = normalizeProductList(products);
     const urgentItems = normalizeSelectedProductList(selectedProducts);
+    const complementItems = normalizeSelectedProductList(complementProducts);
     const cleanPrices = normalizePriceList(prices);
     const cleanDiscount = normalizeDiscount(discount);
-    const plan = buildLocalLiquidationPlan(urgentItems, urgentProducts, cleanDiscount, cleanPrices);
+    const plan = buildLocalLiquidationPlan(urgentItems, urgentProducts, complementItems, cleanDiscount, cleanPrices);
     return {
       ok: true,
       title: "🔥 OFERTA DEL DÍA",
@@ -140,7 +116,7 @@ const CarnizaAIService = (() => {
     };
   }
 
-  function buildLocalLiquidationPlan(urgentItems = [], urgentNames = [], discount, prices) {
+  function buildLocalLiquidationPlan(urgentItems = [], urgentNames = [], complementItems = [], discount, prices) {
     const itemMap = new Map();
     const missing = new Set();
 
@@ -163,19 +139,16 @@ const CarnizaAIService = (() => {
       });
     });
 
-    chooseAnchorProducts(sourceUrgentItems.map((item) => item.name || "")).forEach((name) => {
-      const found = findProductPrice({ name }, prices);
-      if (found?.price) {
-        addItem(itemMap, {
-          id: found.id,
-          name: found.name,
-          rubro: found.rubro,
-          price: found.price,
-          unit: found.unit || "kg",
-          qty: 1,
-          urgent: false
-        });
-      }
+    complementItems.forEach((item) => {
+      addItem(itemMap, {
+        id: item.id,
+        name: item.name,
+        rubro: item.rubro,
+        price: item.price,
+        unit: item.unit || "kg",
+        qty: Math.max(0.5, Number(item.qty || 1)),
+        urgent: false
+      });
     });
 
     const items = Array.from(itemMap.values()).map((item) => {
@@ -227,15 +200,6 @@ const CarnizaAIService = (() => {
     });
   }
 
-  function chooseAnchorProducts(urgentProducts) {
-    const keys = urgentProducts.map(normalizeKey);
-    if (keys.some((key) => key.includes("pollo"))) return ["chorizo"];
-    if (keys.some((key) => key.includes("cerdo") || key.includes("bondiola") || key.includes("pechito"))) return ["chorizo", "asado"];
-    if (keys.some((key) => key.includes("milanesa") || key.includes("mila"))) return ["picada"];
-    if (keys.some((key) => key.includes("asado") || key.includes("vacio") || key.includes("vacío"))) return ["chorizo"];
-    return ["picada", "chorizo"];
-  }
-
   function getDefaultQty(name) {
     const key = normalizeKey(name);
     if (key.includes("milanesa") || key.includes("mila")) return 2;
@@ -283,7 +247,7 @@ const CarnizaAIService = (() => {
     } else if (containsAny(q, ["oferta", "promo", "promoción"])) {
       answer = "Armá una oferta corta: pocos productos, precio final visible y hasta agotar stock.";
     } else if (containsAny(q, ["combo", "combos"])) {
-      answer = "Un combo vendedor mezcla un producto atrasado con un gancho. El descuento va solo sobre lo urgente.";
+      answer = "En un combo urgente, elegí vos cada producto. El descuento va solo sobre lo que necesitás vender urgente.";
     } else if (containsAny(q, ["whatsapp", "mensaje", "mandar", "enviar"])) {
       answer = "Usá mensaje corto: OFERTA DEL DÍA, productos, precio final y hasta agotar stock.";
     } else if (screen === "prices") {
