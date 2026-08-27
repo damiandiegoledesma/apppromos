@@ -643,11 +643,56 @@
     }
 
 
-    /* APPPROMOS V12.18-C3 - navegación por rubros + categorías de ofertas */
-    .offer-filter-bar,.product-rubro-bar{display:none;}
+    /* APPPROMOS V12.18-C3 - categorías de ofertas */
+    .offer-filter-bar{display:none;}
+
+    /* APPPROMOS V12.21-FIX1 - selector de rubros unificado */
+    .product-rubro-select-wrap{
+      margin:0 0 14px;
+      padding:13px 14px;
+      border:1px solid #eadfd8;
+      border-radius:16px;
+      display:grid;
+      grid-template-columns:minmax(150px,.55fr) minmax(220px,1fr);
+      gap:10px 14px;
+      align-items:center;
+      background:#fff;
+      box-shadow:0 8px 22px rgba(47,22,14,.06);
+    }
+    .product-rubro-select-copy strong{
+      display:block;
+      color:#7c2d12;
+      font-size:.9rem;
+      line-height:1.2;
+    }
+    .product-rubro-select-copy small{
+      display:block;
+      margin-top:3px;
+      color:#6b7280;
+      font-size:.72rem;
+      font-weight:760;
+      line-height:1.25;
+    }
+    .product-rubro-select{
+      width:100%;
+      min-height:46px;
+      padding:0 40px 0 12px;
+      border:2px solid #f0c9b8;
+      border-radius:13px;
+      background:#fff;
+      color:#4b2a12;
+      font:inherit;
+      font-size:.88rem;
+      font-weight:950;
+      cursor:pointer;
+    }
+    .product-rubro-select:focus{
+      outline:3px solid rgba(234,88,12,.18);
+      border-color:#ea580c;
+    }
 
     @media(max-width:640px){
-      .offer-filter-bar,.product-rubro-bar{
+      .offer-filter-bar{
         display:flex;
         gap:7px;
         overflow-x:auto;
@@ -656,8 +701,7 @@
         scrollbar-width:none;
         -webkit-overflow-scrolling:touch;
       }
-      .offer-filter-bar::-webkit-scrollbar,
-      .product-rubro-bar::-webkit-scrollbar{display:none;}
+      .offer-filter-bar::-webkit-scrollbar{display:none;}
 
       .store-filter-chip{
         flex:0 0 auto;
@@ -692,6 +736,16 @@
 
       .rubro{
         scroll-margin-top:64px;
+      }
+
+      .product-rubro-select-wrap{
+        grid-template-columns:1fr;
+        gap:8px;
+        padding:12px;
+      }
+      .product-rubro-select{
+        min-height:48px;
+        font-size:16px;
       }
     }
 
@@ -1553,12 +1607,12 @@
       }
 
       const productRubroFilterHtml=(data.showPriceList&&products.length)
-        ? `<div class="product-rubro-bar" data-product-rubro-bar>${rubroNames.map((r,index)=>`<button type="button" class="store-filter-chip${index===0?" is-active":""}" data-product-rubro="${esc(r)}">${icon(r,"")} ${esc(r)}</button>`).join("")}${rubroNames.length>1?`<button type="button" class="store-filter-chip" data-product-rubro="Todos">Todos</button>`:""}</div>`
+        ? `<label class="product-rubro-select-wrap" for="productRubroSelect"><span class="product-rubro-select-copy"><strong>Ver productos de</strong><small>Elegí un rubro para filtrar la lista.</small></span><select id="productRubroSelect" class="product-rubro-select" data-product-rubro-select><option value="Todos">Todos los rubros (${products.length})</option>${rubroNames.map((r)=>{const count=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).length;return `<option value="${esc(r)}">${icon(r,"")} ${esc(r)} (${count})</option>`;}).join("")}</select></label>`
         : "";
 
       const pricesHtml=(data.showPriceList&&products.length)?`${productRubroFilterHtml}<div class="price-list">${rubroNames.map(r=>{
         const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-        return `<div class="card rubro" data-rubro-card="${esc(r)}"${r!==rubroNames[0]?' hidden':""}><h3>${icon(r,"")} ${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:p.unidad||"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; return `<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
+        return `<div class="card rubro" data-rubro-card="${esc(r)}"><h3>${icon(r,"")} ${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:p.unidad||"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; return `<div class="product"><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
       }).join("")}</div>`:"";
 
       const headerName = esc(String(shortName).toUpperCase());
@@ -1608,17 +1662,6 @@
           return;
         }
 
-        const rubroFilter=target.closest("[data-product-rubro]");
-        if(rubroFilter){
-          event.preventDefault();
-          const value=rubroFilter.dataset.productRubro||"Todos";
-          app.querySelectorAll("[data-product-rubro]").forEach(btn=>btn.classList.toggle("is-active",btn===rubroFilter));
-          app.querySelectorAll("[data-rubro-card]").forEach(card=>{
-            card.hidden=value!=="Todos" && card.dataset.rubroCard!==value;
-          });
-          return;
-        }
-
         const addButton=target.closest("[data-cart-add]");
         if(addButton){event.preventDefault();const item=decodeCartItem(addButton.dataset.cartAdd||"");if(item){addCartItem(item);const original=addButton.textContent;addButton.textContent="Agregado";setTimeout(()=>{addButton.textContent=original},900)}return}
         const plusButton=target.closest("[data-cart-plus]");
@@ -1635,6 +1678,13 @@
 
       app.onchange=(event)=>{
         const target=event.target;
+        if(target instanceof HTMLSelectElement && target.matches("[data-product-rubro-select]")){
+          const value=target.value||"Todos";
+          app.querySelectorAll("[data-rubro-card]").forEach(card=>{
+            card.hidden=value!=="Todos" && card.dataset.rubroCard!==value;
+          });
+          return;
+        }
         if(!(target instanceof HTMLInputElement))return;
         if(target.name==="cartDelivery" || target.name==="cartPayment"){
           refreshCart();

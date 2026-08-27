@@ -18,6 +18,7 @@
   </script>
 
   <link rel="stylesheet" href="./styles/carniza-landing.css" />
+  <link rel="stylesheet" href="./styles/landing-video.css" />
 
   <style>
     :root {
@@ -1397,7 +1398,7 @@
         <span class="brand-word">App<span>Promos</span></span>
       </a>
       <nav class="nav-actions" aria-label="Acciones principales">
-        <a class="btn btn-light nav-link-how" href="#como-funciona">Cómo funciona</a>
+        <a class="btn btn-light nav-link-how" href="/como-vender.html">Cómo vender</a>
         <a class="btn btn-light nav-link-login" href="#login">Iniciar sesión</a>
         <a class="btn btn-primary nav-link-demo" href="#signup">Crear mi carnicería</a>
       </nav>
@@ -1424,16 +1425,44 @@
           </div>
         </div>
 
-        <aside class="hero-app-preview" aria-label="Así se ve AppPromos por dentro">
-          <div class="hero-app-preview-head">
-            <span class="hero-app-preview-kicker">APP PROMOS POR DENTRO</span>
-            <strong>Tu carnicería online está trabajando</strong>
-            <small>Precios, ofertas, vidriera y WhatsApp siempre a mano.</small>
-          </div>
-          <div class="hero-app-preview-frame">
-            <img src="/assets/product/landing/app-real-dashboard.png" alt="Pantalla real de AppPromos para gestionar una carnicería online" />
-          </div>
+        <aside class="hero-real-composition" aria-label="De AppPromos al pedido del cliente">
+          <img
+            src="/assets/product/landing/hero-apppromos-real-v1221.webp"
+            alt="Tres pantallas reales: AppPromos, la carnicería A La Estaca online y el carrito del cliente"
+            width="900"
+            height="1125"
+            fetchpriority="high"
+          />
         </aside>
+      </div>
+    </section>
+
+    <section class="landing-video-section" aria-labelledby="landing-video-title">
+      <div class="wrap landing-video-layout">
+        <div class="landing-video-copy">
+          <div class="eyebrow">AppPromos en 10 segundos</div>
+          <h2 id="landing-video-title">Mirá cómo AppPromos pone tu carnicería online.</h2>
+          <p>Cargás tus precios. Tus clientes ven, eligen y te mandan el pedido.</p>
+          <div class="landing-video-actions">
+            <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
+            <a class="btn btn-light btn-big" href="/como-vender.html">Ver tres maneras de vender</a>
+          </div>
+        </div>
+        <div>
+          <div class="landing-video-frame">
+            <video
+              controls
+              playsinline
+              preload="metadata"
+              poster="/assets/product/landing/apppromos-carniza-10s-poster.webp"
+              aria-label="Video promocional de AppPromos con Carniza"
+            >
+              <source src="/assets/product/landing/apppromos-carniza-10s.mp4" type="video/mp4" />
+              Tu navegador no puede reproducir este video.
+            </video>
+          </div>
+          <small class="landing-video-note">Tocá reproducir para verlo con sonido.</small>
+        </div>
       </div>
     </section>
 
@@ -1560,9 +1589,9 @@
           <p>Cuando tu carnicería ya está online, descubrís todo el sistema comercial que ya viene adentro.</p>
         </div>
         <div class="benefits">
-          <article class="benefit-card"><div class="benefit-icon">⚡</div><h3>Oferta rápida</h3><p>Armá una promo en segundos.</p></article>
-          <article class="benefit-card"><div class="benefit-icon">🏷️</div><h3>Con descuento</h3><p>Ajustá productos, kilos y precio final.</p></article>
-          <article class="benefit-card"><div class="benefit-icon">🔥</div><h3>Vender urgente</h3><p>Mové mercadería cuando necesitás vender hoy.</p></article>
+          <article class="benefit-card"><div class="benefit-icon">⚡</div><h3>Responder una consulta</h3><p>Calculá un pedido puntual y respondelo por WhatsApp.</p></article>
+          <article class="benefit-card"><div class="benefit-icon">🏷️</div><h3>Crear promo o combo</h3><p>Guardala para publicar, compartir y volver a venderla.</p></article>
+          <article class="benefit-card"><div class="benefit-icon">🔥</div><h3>Promo del día</h3><p>Mové hoy la mercadería que no puede esperar.</p></article>
         </div>
       </div>
     </section>
@@ -1576,8 +1605,8 @@
           <p>A La Estaca ya muestra ofertas, precios y carrito en su propia vidriera AppPromos.</p>
         </div>
         <div class="real-shot-card real-store-shot">
-          <div class="store-preview-window">
-            <img src="/assets/product/landing/a-la-estaca-real.png" alt="Carnicería A La Estaca online funcionando con AppPromos" />
+          <div class="store-preview-window store-preview-mobile-real">
+            <img src="/assets/product/landing/a-la-estaca-mobile-real-v1221.webp" alt="A La Estaca online y un pedido real armado en su carrito" loading="lazy" width="1000" height="900" />
           </div>
         </div>
         <div class="center-actions"><a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER A LA ESTACA FUNCIONANDO</a></div>

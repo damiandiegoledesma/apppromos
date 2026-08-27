@@ -546,7 +546,7 @@ function renderCarnizaUrgentStockCard(container) {
   card.id = "carnizaUrgentStockCard";
   card.style.cssText = "margin:0 0 14px;padding:15px;border:2px solid #ffd6b0;border-radius:18px;background:#fff8f0;box-shadow:0 10px 24px rgba(0,0,0,.06);";
   card.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
-      '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;">🔥 Decile a Carniza qué necesitás vender URGENTE</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
+      '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;">🔥 Armá la Promo del día con Carniza</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
       '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid #fed7aa;background:#fff;" /></div>' +
     '<div data-daily-promos-management style="margin:0 0 12px;"></div>' +
     '<div style="font-size:13px;font-weight:1000;color:#8a2600;margin:4px 0 7px;">1. Elegí producto</div>' +
@@ -558,7 +558,7 @@ function renderCarnizaUrgentStockCard(container) {
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
     '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
-    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">3. Armar oferta urgente</button>' +
+    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">3. Armar Promo del día</button>' +
     '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
 
@@ -675,7 +675,7 @@ function renderCarnizaUrgentStockCard(container) {
       '</div>'
     ).join("");
     return '<div data-urgent-live-summary style="margin-top:10px;padding:11px;border:2px solid #fb923c;border-radius:14px;background:linear-gradient(180deg,#fff7ed,#fff);box-shadow:0 8px 18px rgba(234,88,12,.10);">' +
-      '<div style="font-size:12px;font-weight:1000;color:#9a3412;text-transform:uppercase;letter-spacing:.04em;">Resumen urgente en vivo</div>' +
+      '<div style="font-size:12px;font-weight:1000;color:#9a3412;text-transform:uppercase;letter-spacing:.04em;">Resumen de la Promo del día</div>' +
       '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin-top:6px;">' +
         '<div style="color:#7c2d12;font-size:12px;font-weight:900;line-height:1.35;">' + escapeCarnizaHtml(selectionMeta) + '<br>Lista: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.listTotal)) + ' · Ahorrás: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.discountAmount)) + '</div>' +
         '<div style="text-align:right;color:#7c2d12;"><span style="display:block;font-size:11px;font-weight:1000;">TOTAL OFERTA</span><strong style="display:block;font-size:22px;line-height:1.05;">' + escapeCarnizaHtml(formatCarnizaMoney(summary.commercialTotal)) + '</strong></div>' +
@@ -750,7 +750,7 @@ function renderCarnizaUrgentStockCard(container) {
 
   function renderDiscountButtons() {
     const helpMap = { 10: "10% = suave, para empujar sin tocar mucho margen.", 15: "15% = buen empujón sin regalar la mercadería.", 20: "20% = vender rápido sin regalar todo.", 25: "25% = para sacarlo hoy sí o sí." };
-    helpEl.textContent = helpMap[selectedDiscount] || (selectedDiscount + "% aplicado solo a lo urgente.");
+    helpEl.textContent = helpMap[selectedDiscount] || (selectedDiscount + "% aplicado solo a los productos marcados.");
     discountsEl.innerHTML = discounts.map((pct) => {
       const active = pct === selectedDiscount;
       return '<button type="button" data-discount="' + pct + '" style="min-height:44px;border-radius:14px;border:1px solid ' + (active ? "#25a244" : "#ead5bf") + ';background:' + (active ? "#25a244" : "#fff") + ';color:' + (active ? "#fff" : "#4b2a12") + ';font-weight:1000;cursor:pointer;">' + pct + '%</button>';
@@ -950,7 +950,7 @@ function renderCarnizaUrgentStockCard(container) {
       '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #bfdbfe;border-radius:13px;background:#fff;color:#1d4ed8;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
       '<label style="display:block;font-size:13px;font-weight:1000;color:#1e3a8a;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
       '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #93c5fd;border-radius:14px;padding:0 12px;background:#fff;color:#172554;font-weight:1000;font-size:15px;" />' +
-      '<div style="font-size:12px;font-weight:900;color:#1e3a8a;margin:7px 0 10px;">Internamente vendés urgente. Al cliente le llega una oportunidad atractiva.</div>' +
+      '<div style="font-size:12px;font-weight:900;color:#1e3a8a;margin:7px 0 10px;">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
       (missing.length ? '<div style="margin:8px 0;padding:8px;border-radius:10px;background:#fff8e1;color:#7a4b00;font-size:12px;font-weight:900;">⚠️ Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
       '<pre data-urgent-message-preview style="white-space:pre-wrap;font-family:inherit;margin:10px 0;padding:12px;border-radius:12px;background:#fff;color:#1f1f1f;font-weight:900;line-height:1.38;max-height:245px;overflow:auto;"></pre>' +
       '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
@@ -1065,7 +1065,7 @@ function getCarnizaUnifiedContext() {
   if (panel === "builderPanel") {
     return {
       title: "Ya estás armando una oferta",
-      hint: "Seguí con la promo normal o pasá a vender algo urgente.",
+      hint: "Seguí con la promo normal o armá una Promo del día.",
       primary: "offer"
     };
   }
@@ -1085,7 +1085,7 @@ function getCarnizaUnifiedContext() {
   }
   return {
     title: "¿Qué querés vender hoy?",
-    hint: "Elegí una promo normal o una oferta urgente para mover stock rápido.",
+    hint: "Elegí una promo normal o una Promo del día para mover stock rápido.",
     primary: "offer"
   };
 }
@@ -1138,7 +1138,7 @@ function renderCarnizaUnifiedMenu() {
           <span>Respondé una consulta o armá un combo para vender varias veces.</span>
         </button>
         <button type="button" class="carniza-unified-action urgent" data-carniza-unified-action="urgent">
-          <strong>⚡ Vender urgente</strong>
+          <strong>⚡ Promo del día</strong>
           <span>Sacá hoy la mercadería antes de perderla o mandarla a picar.</span>
         </button>
         <button type="button" class="carniza-unified-action" data-carniza-unified-action="whatsapp">
@@ -1633,7 +1633,7 @@ function renderActivationOnboarding() {
       <button type="button" data-onboarding-share-web ${webReady && publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:${webReady ? "#dcfce7" : "#f3f4f6"};color:${webReady ? "#166534" : "#9ca3af"};font-weight:1000;font-size:15px;cursor:pointer;">📲 Compartir por WhatsApp</button>
     </div>
 
-    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés responder consultas, crear promos o combos y vender mercadería urgente.</div>` : ""}
+    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés responder consultas, crear promos o combos y publicar una Promo del día.</div>` : ""}
 
     ${goalReached && webReady ? `<button type="button" data-onboarding-finish style="justify-self:start;min-height:42px;padding:0 14px;border:0;border-radius:13px;background:#14532d;color:#fff;font-weight:1000;cursor:pointer;">Listo, ir al Inicio →</button>` : ""}
   `;
@@ -2501,7 +2501,7 @@ function openMobileBottomMenu(kind) {
     <div class="app-mobile-bottom-menu__grid">
       <button type="button" class="green" data-mobile-action="quick-offer"><strong>⚡ Responder consulta</strong><span>Calculá y respondé por WhatsApp.</span></button>
       <button type="button" class="orange" data-mobile-action="discount-offer"><strong>🏷️ Crear promo o combo</strong><span>Guardá una estrategia para repetir.</span></button>
-      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Vender urgente</strong><span>Sacá hoy la mercadería en riesgo.</span></button>
+      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Promo del día</strong><span>Elegí qué vender hoy, publicalo por el día y finalizalo cuando quieras.</span></button>
     </div>
   `;
 
@@ -2510,7 +2510,7 @@ function openMobileBottomMenu(kind) {
       <button type="button" data-mobile-action="account"><strong>👤 Mi cuenta</strong><span>Datos y estado.</span></button>
       <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
       <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
-      <button type="button" data-mobile-action="market"><strong>📊 Competencia</strong><span>Mirar mercado.</span></button>
+      <button type="button" data-mobile-action="how-to-sell"><strong>🧭 Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
       ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
       <button type="button" class="primary" data-mobile-action="logout"><strong>🚪 ${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
@@ -2542,6 +2542,10 @@ async function handleMobileBottomAction(action) {
   if (action === "market") return goToPanel("marketPanel");
   if (action === "web") return goToPanel("webPanel");
   if (action === "admin") return goToPanel("usersPanel");
+  if (action === "how-to-sell") {
+    window.open("/como-vender.html", "_blank", "noopener,noreferrer");
+    return;
+  }
 
   if (action === "quick-offer") {
     pendingBuilderInitialMode = "quick";
@@ -2712,6 +2716,12 @@ function bindNav() {
       trackCarnizaSignal(action.dataset.carnizaSignal, { businessId: currentPayload?.businessId || currentBusinessId || null, fromPanel: currentPanelId, toPanel: action.dataset.actionPanel, appMode: currentSession?.appMode || "client" });
     }
     goToPanel(action.dataset.actionPanel);
+  });
+
+  document.addEventListener("click", (event) => {
+    const howToSell = event.target.closest("[data-open-how-to-sell]");
+    if (!howToSell) return;
+    window.open("/como-vender.html", "_blank", "noopener,noreferrer");
   });
 
   document.addEventListener("click", (event) => {
