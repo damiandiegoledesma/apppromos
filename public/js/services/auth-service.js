@@ -17,6 +17,7 @@ import { app, trackedGetDoc } from "../core/firebase-core.js";
 import { buildBusinessSlug, buildPublicBusinessName, buildPublicWebPayload, buildStarterWebConfig, getPhoneKey } from "./web-premium-service.js";
 import { createTrialEndsAt } from "./access-control-service.js";
 import { buildBusinessIdentity } from "./normalization-service.js";
+import { createStarterProducts, STARTER_CATALOG_VERSION } from "../data/starter-products.js";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -220,29 +221,13 @@ function normalizeTemplateProduct(product = {}, index = 0) {
   };
 }
 
-async function loadDemoTemplate() {
-  const [demoMetaSnap, demoStateSnap] = await Promise.all([
-    trackedGetDoc(doc(db, "businesses", "demo", "core", "meta"), "businesses/demo/core/meta"),
-    trackedGetDoc(doc(db, "businesses", "demo", "core", "state"), "businesses/demo/core/state")
-  ]);
-
-  if (!demoMetaSnap.exists() || !demoStateSnap.exists()) {
-    throw new Error("La plantilla demo no existe o está incompleta");
-  }
-
-  const demoMeta = demoMetaSnap.data() || {};
-  const demoState = demoStateSnap.data() || {};
-  const templateProducts = Array.isArray(demoState.products)
-    ? demoState.products.map((product, index) => normalizeTemplateProduct(product, index))
-    : [];
-
-  if (!templateProducts.length) {
-    throw new Error("La plantilla demo no tiene productos para clonar");
-  }
+async function loadStarterTemplate() {
+  const templateProducts = createStarterProducts()
+    .map((product, index) => normalizeTemplateProduct(product, index));
 
   return {
-    demoMeta,
-    demoState,
+    starterMeta: { activePriceListId: "v1", starterCatalogVersion: STARTER_CATALOG_VERSION },
+    starterState: { activePriceListId: "v1", starterCatalogVersion: STARTER_CATALOG_VERSION },
     templateProducts
   };
 }
@@ -522,8 +507,8 @@ export async function registerClientAndBusiness(data) {
   const starterWeb = buildStarterWebConfig({ name: publicBusinessName, telefono: identity.phone }, businessId, now);
 
   try {
-    const { demoMeta, demoState, templateProducts } = await loadDemoTemplate();
-    const activePriceListId = demoState.activePriceListId || demoMeta.activePriceListId || "v1";
+    const { starterMeta, starterState, templateProducts } = await loadStarterTemplate();
+    const activePriceListId = starterState.activePriceListId || starterMeta.activePriceListId || "v1";
     const modules = {
       prices: true,
       competition: true,

@@ -6,6 +6,12 @@
   <title>AppPromos | Tu carnicería online 24/7</title>
   <meta name="description" content="Poné tu carnicería online hoy. Tu vidriera abierta 24/7, los 365 días. Tus clientes ven precios y ofertas, arman su pedido y te lo mandan por WhatsApp." />
   <meta name="theme-color" content="#071d3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="AppPromos" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/pwa/apppromos-180.png" />
   <link rel="icon" type="image/png" href="/assets/logo/apppromos-favicon-transparent.png" />
 
   <!-- Google Analytics 4 -->
@@ -19,6 +25,7 @@
 
   <link rel="stylesheet" href="./styles/carniza-landing.css" />
   <link rel="stylesheet" href="./styles/landing-video.css" />
+  <link rel="stylesheet" href="./styles/pwa-install.css" />
 
   <style>
     :root {
@@ -1415,9 +1422,10 @@
           <div class="hero-ctas">
             <a class="btn btn-green btn-big" href="#signup">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
             <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
+            <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> INSTALAR EN ESTE CELULAR</button>
           </div>
           <p class="hero-login-line">¿Ya tenés cuenta? <a href="#login">Iniciar sesión</a></p>
-          <div class="microcopy">Período de prueba sin cargo · Sin tarjeta · Empezás en minutos</div>
+          <div class="microcopy">90 días sin cargo · Sin tarjeta · Empezás en minutos</div>
           <div class="trust">
             <span class="pill">🌐 Vidriera online 24/7</span>
             <span class="pill">🛒 Carrito de pedidos</span>
@@ -1616,8 +1624,8 @@
     <section id="probar-sin-cargo">
       <div class="wrap trial-simple">
         <div class="eyebrow">Empezá sin complicaciones</div>
-        <h2>Probá tu carnicería online sin cargo.</h2>
-        <p>Creala, cargá tus precios y usala con clientes reales durante el período de prueba. Sin tarjeta para empezar.</p>
+        <h2>Probá tu carnicería online durante 90 días sin cargo.</h2>
+        <p>Creala, cargá tus precios y usala con clientes reales. No necesitás tarjeta para empezar.</p>
         <ul class="checklist">
           <li>✅ Vidriera online 24/7</li>
           <li>✅ Precios y ofertas</li>
@@ -1669,7 +1677,7 @@
       <div id="tabRegistro" class="tab">
         <p class="auth-help">
           <strong>Creá tu carnicería online</strong>
-          Solo lo necesario para empezar. Los demás datos los completás después.
+          Solo lo necesario para empezar. Tenés 90 días sin cargo y no necesitás tarjeta.
         </p>
 
         <input id="businessName" name="businessName" placeholder="Ej: Carnicería El Corte" autocomplete="organization" />
@@ -1903,6 +1911,8 @@
     }
   })();
 </script>
+
+<script type="module" src="/js/pwa-install.js"></script>
 
 </body>
 </html>

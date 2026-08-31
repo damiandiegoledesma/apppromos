@@ -3,6 +3,7 @@ import {
   openBusiness,
   updateBusinessState
 } from "./business-service.js";
+import { mergeStarterProducts } from "../data/starter-products.js";
 
 const DEMO_LOCAL_COMBOS_KEY = "apppromos_demo_local_saved_combos_v12_7_2";
 const DEMO_LOCAL_PRODUCTS_KEY = "apppromos_demo_local_products_v12_7_2";
@@ -520,7 +521,10 @@ export async function loadActiveBusinessData(providedBusinessId = null) {
         products: getStrongDemoProducts(rawState.products || [], localDemoProducts),
         savedCombos: mergeDemoCombos(rawState.savedCombos || [], readLocalDemoCombos()),
       }
-    : rawState;
+    : {
+        ...rawState,
+        products: mergeStarterProducts(rawState.products || [])
+      };
 
   const activePriceListId =
     state.activePriceListId ??
@@ -735,7 +739,7 @@ export async function saveCombo(combo, businessId = null) {
   const newCombo = {
     id: `combo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: combo.name,
-    description: combo.description || "Oferta creada en modo prueba.",
+    description: String(combo.description || "").trim(),
     items: combo.items,
     total: Number(combo.total || 0),
     isDemoLocal: isDemoRuntime(finalBusinessId),

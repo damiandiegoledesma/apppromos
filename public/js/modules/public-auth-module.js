@@ -40,7 +40,7 @@ function buildAuthHTML() {
 
         <div class="public-auth-title">
           <h1>Entrá a vender más rápido</h1>
-          <p>Creá tu carnicería online. Cargá precios y empezá a recibir pedidos por WhatsApp.</p>
+          <p>Creá tu carnicería online. Tenés 90 días sin cargo y no necesitás tarjeta.</p>
         </div>
 
         <div class="public-auth-tabs">

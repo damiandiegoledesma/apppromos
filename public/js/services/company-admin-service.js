@@ -13,6 +13,7 @@ import {
 
 import { createTrialEndsAt } from "./access-control-service.js";
 import { buildBusinessIdentity } from "./normalization-service.js";
+import { createStarterProducts, STARTER_CATALOG_VERSION } from "../data/starter-products.js";
 
 import {
   collectionGroup,
@@ -107,27 +108,13 @@ async function ensurePhoneAvailable(phoneKey, businessId) {
   }
 }
 
-async function loadDemoTemplate() {
-  const [originMeta, originState] = await Promise.all([
-    readPath(getBusinessMetaPath("demo")),
-    readPath(getBusinessStatePath("demo"))
-  ]);
-
-  if (!originMeta || !originState) {
-    throw new Error("La empresa demo no existe o está incompleta");
-  }
-
-  const products = Array.isArray(originState.products)
-    ? originState.products.map((product, index) => normalizeTemplateProduct(product, index))
-    : [];
-
-  if (!products.length) {
-    throw new Error("La plantilla demo no tiene productos");
-  }
+async function loadStarterTemplate() {
+  const products = createStarterProducts()
+    .map((product, index) => normalizeTemplateProduct(product, index));
 
   return {
-    originMeta,
-    originState,
+    originMeta: { activePriceListId: "v1", starterCatalogVersion: STARTER_CATALOG_VERSION },
+    originState: { activePriceListId: "v1", starterCatalogVersion: STARTER_CATALOG_VERSION },
     products
   };
 }
@@ -238,11 +225,11 @@ export async function createCompanyFromBase(companyData = {}, metadata = {}) {
     throw new Error("Teléfono / WhatsApp válido requerido");
   }
 
-  const template = await loadDemoTemplate();
+  const template = await loadStarterTemplate();
 
   const meta = generateCompanyMeta(companyData, "base", {
     ...metadata,
-    clonedFrom: "demo",
+    clonedFrom: "starter-catalog",
     activePriceListId:
       metadata.activePriceListId ||
       template.originState.activePriceListId ||

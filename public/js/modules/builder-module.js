@@ -104,7 +104,38 @@ function calculateDiscountTotals(items = [], globalDiscount = 0) {
   const descuentoPorProducto = Math.max(0, subtotalBruto - subtotalNeto);
   const descuentoGlobal = clampPercent(globalDiscount);
   const descuentoGlobalMonto = subtotalNeto * (descuentoGlobal / 100);
-  const total = roundUpTo100(subtotalNeto - descuentoGlobalMonto);
+  const totalMatematico = Math.max(0, subtotalNeto - descuentoGlobalMonto);
+  const totalWeight = items.reduce((acc, item) => acc + Number(item.cantidad || 0), 0);
+  const normalizedUnits = new Set(items.map((item) => String(item.unidad || "kg").trim().toLowerCase()));
+  const allSoldByKg = items.length > 0
+    && [...normalizedUnits].every((unit) => ["kg", "kilo", "kilos"].includes(unit));
+
+  let scalePricePerKg = 0;
+  let total = roundUpTo100(totalMatematico);
+
+  if (allSoldByKg && totalWeight > 0 && totalMatematico > 0) {
+    const exactPricePerKg = totalMatematico / totalWeight;
+    let candidate = roundUpTo100(exactPricePerKg);
+
+    /* V12.22-A2-FIX3D: buscamos el menor precio de balanza, en centenas,
+       cuyo total para el peso previsto también cierre exactamente en centenas. */
+    for (let attempts = 0; attempts < 1000; attempts += 1) {
+      const candidateTotal = candidate * totalWeight;
+      const roundedHundreds = Math.round(candidateTotal / 100) * 100;
+      if (Math.abs(candidateTotal - roundedHundreds) < 0.0001) {
+        scalePricePerKg = candidate;
+        total = roundedHundreds;
+        break;
+      }
+      candidate += 100;
+    }
+
+    if (!scalePricePerKg) {
+      scalePricePerKg = roundUpTo100(exactPricePerKg);
+      total = scalePricePerKg * totalWeight;
+    }
+  }
+
   const descuentosAplicados = Math.max(0, subtotalBruto - total);
 
   return {
@@ -113,6 +144,10 @@ function calculateDiscountTotals(items = [], globalDiscount = 0) {
     descuentoPorProducto,
     descuentoGlobal,
     descuentoGlobalMonto,
+    totalMatematico,
+    totalWeight,
+    allSoldByKg,
+    scalePricePerKg,
     descuentosAplicados,
     total,
   };
@@ -171,7 +206,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       searchDebounceTimer: null,
       offerTracked: false,
       globalDiscount: 0,
-      offerName: "OFERTA DEL DIA",
+      offerName: "",
     };
   }
 
@@ -272,14 +307,18 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function buildDiscountPayload() {
     const totals = calculateDiscountTotals(state.discount.items, state.discount.globalDiscount);
     return {
-      name: state.discount.offerName || "OFERTA DEL DIA",
-      description: "Promo o combo creado para guardar, publicar y compartir.",
+      name: String(state.discount.offerName || "").trim(),
+      description: "",
       mode: "discount",
       discountSummary: {
         globalDiscount: state.discount.globalDiscount,
         subtotalBruto: totals.subtotalBruto,
         subtotalNeto: totals.subtotalNeto,
         descuentosAplicados: totals.descuentosAplicados,
+        totalMatematico: totals.totalMatematico,
+        totalWeight: totals.totalWeight,
+        scalePricePerKg: totals.scalePricePerKg,
+        scalePricingAvailable: totals.allSoldByKg,
       },
       items: state.discount.items.map((item) => {
         const calc = calculateDiscountItem(item);
@@ -452,20 +491,173 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderQuickFloatingSummary() {
     const count = state.quick.items.length;
+    if (!count) return "";
+
     const total = getQuickTotal();
-    const selectedText = count
-      ? state.quick.items.map((item) => `${escapeHtml(item.nombre)} · ${formatQty(item.cantidad)} ${escapeHtml(item.unidad || "kg")}`).join("  |  ")
-      : "Elegí productos para armar la oferta.";
+    const totalQuantity = state.quick.items.reduce((acc, item) => acc + Number(item.cantidad || 0), 0);
+    const buildProductNames = (limit) => {
+      const visibleNames = state.quick.items.slice(0, limit).map((item) => escapeHtml(item.nombre));
+      const remaining = Math.max(0, count - visibleNames.length);
+      return `${visibleNames.join(" · ")}${remaining ? ` <strong>+${remaining} más</strong>` : ""}`;
+    };
+    const desktopProductNames = buildProductNames(3);
+    const mobileProductNames = buildProductNames(2);
     return `
-      <aside style="position:sticky;top:8px;z-index:18;margin:10px 0 12px;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:18px;padding:11px;box-shadow:0 10px 24px rgba(15,23,42,.12);">
-        <div style="display:grid;gap:8px;">
-          <div style="min-width:0;">
-            <div style="font-size:.72rem;color:#166534;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Resumen de la oferta</div>
-            <strong style="display:block;color:#14532d;line-height:1.2;">${count} producto${count === 1 ? "" : "s"} · Total estimado $ ${formatMoney(total)}</strong>
-            <div style="margin-top:5px;color:#166534;font-weight:850;font-size:.78rem;white-space:nowrap;overflow:auto;">${selectedText}</div>
-          </div>
-          <button id="quickReviewBtn" type="button" style="width:100%;background:#2563eb;color:#fff;border-color:#2563eb;min-height:48px;${count ? "" : "opacity:.6;"}">Ver oferta lista</button>
+      <style>
+        .quick-fixed-summary {
+          position:fixed;
+          left:50%;
+          bottom:84px;
+          transform:translateX(-50%);
+          z-index:2147482400;
+          width:min(650px,calc(100vw - 36px));
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          padding:9px 10px 9px 15px;
+          border:1px solid rgba(37,99,235,.28);
+          border-radius:18px;
+          background:rgba(239,246,255,.97);
+          color:#1e3a8a;
+          box-shadow:0 16px 38px rgba(15,23,42,.20);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .quick-fixed-summary-copy { min-width:0; display:grid; gap:2px; }
+        .quick-fixed-summary-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#2563eb; }
+        .quick-fixed-summary-products { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.15; font-weight:900; color:#334155; }
+        .quick-fixed-summary-products strong { color:#2563eb; }
+        .quick-fixed-summary-products-mobile { display:none; }
+        .quick-fixed-summary-main { font-size:14px; line-height:1.18; font-weight:1000; color:#1e3a8a; }
+        .quick-fixed-summary-detail { font-size:12px; line-height:1.15; font-weight:850; color:#475569; }
+        .quick-fixed-summary button {
+          flex:0 0 auto;
+          min-width:154px;
+          min-height:40px;
+          border:0;
+          border-radius:13px;
+          padding:0 14px;
+          background:#2563eb;
+          color:#fff;
+          font-size:13px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        @media (max-width:760px) {
+          .quick-fixed-summary {
+            left:10px;
+            right:10px;
+            bottom:var(--apppromos-mobile-quick-summary-bottom,calc(184px + env(safe-area-inset-bottom,0px)));
+            width:auto;
+            transform:none;
+            gap:7px;
+            padding:7px 8px 7px 11px;
+            border-radius:16px;
+          }
+          .quick-fixed-summary-label { display:none; }
+          .quick-fixed-summary-products-desktop { display:none; }
+          .quick-fixed-summary-products-mobile { display:block; font-size:11px; }
+          .quick-fixed-summary-main { font-size:12px; white-space:nowrap; }
+          .quick-fixed-summary-detail { font-size:11px; }
+          .quick-fixed-summary button { min-width:116px; min-height:38px; padding:0 9px; font-size:11px; }
+        }
+      </style>
+      <aside class="quick-fixed-summary" role="status" aria-live="polite">
+        <div class="quick-fixed-summary-copy">
+          <span class="quick-fixed-summary-label">Tu respuesta</span>
+          <span class="quick-fixed-summary-products quick-fixed-summary-products-desktop">${desktopProductNames}</span>
+          <span class="quick-fixed-summary-products quick-fixed-summary-products-mobile">${mobileProductNames}</span>
+          <strong class="quick-fixed-summary-main">${count} producto${count === 1 ? "" : "s"} · Total $ ${formatMoney(total)}</strong>
+          <span class="quick-fixed-summary-detail">Cantidad total: ${formatQty(totalQuantity)}</span>
         </div>
+        <button id="quickReviewBtn" type="button">Ver respuesta lista</button>
+      </aside>
+    `;
+  }
+
+  function renderDiscountProductsFloatingSummary() {
+    const count = state.discount.items.length;
+    if (!count) return "";
+
+    const totals = calculateDiscountTotals(state.discount.items, 0);
+    const totalQuantity = state.discount.items.reduce((acc, item) => acc + Number(item.cantidad || 0), 0);
+    const buildProductNames = (limit) => {
+      const visibleNames = state.discount.items.slice(0, limit).map((item) => escapeHtml(item.nombre));
+      const remaining = Math.max(0, count - visibleNames.length);
+      return `${visibleNames.join(" · ")}${remaining ? ` <strong>+${remaining} más</strong>` : ""}`;
+    };
+
+    return `
+      <style>
+        .discount-products-fixed-summary {
+          position:fixed;
+          left:50%;
+          bottom:84px;
+          transform:translateX(-50%);
+          z-index:2147482400;
+          width:min(650px,calc(100vw - 36px));
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+          padding:9px 10px 9px 15px;
+          border:1px solid rgba(249,115,22,.32);
+          border-radius:18px;
+          background:rgba(255,247,237,.97);
+          color:#7c2d12;
+          box-shadow:0 16px 38px rgba(15,23,42,.20);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .discount-products-fixed-copy { min-width:0; display:grid; gap:2px; }
+        .discount-products-fixed-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#ea580c; }
+        .discount-products-fixed-names { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.15; font-weight:900; color:#431407; }
+        .discount-products-fixed-names strong { color:#ea580c; }
+        .discount-products-fixed-names-mobile { display:none; }
+        .discount-products-fixed-main { font-size:14px; line-height:1.18; font-weight:1000; color:#7c2d12; }
+        .discount-products-fixed-detail { font-size:12px; line-height:1.15; font-weight:850; color:#92400e; }
+        .discount-products-fixed-summary button {
+          flex:0 0 auto;
+          min-width:154px;
+          min-height:40px;
+          border:0;
+          border-radius:13px;
+          padding:0 14px;
+          background:#f97316;
+          color:#fff;
+          font-size:13px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        @media (max-width:760px) {
+          .discount-products-fixed-summary {
+            left:10px;
+            right:10px;
+            bottom:var(--apppromos-mobile-quick-summary-bottom,calc(184px + env(safe-area-inset-bottom,0px)));
+            width:auto;
+            transform:none;
+            gap:7px;
+            padding:7px 8px 7px 11px;
+            border-radius:16px;
+          }
+          .discount-products-fixed-label { display:none; }
+          .discount-products-fixed-names-desktop { display:none; }
+          .discount-products-fixed-names-mobile { display:block; font-size:11px; }
+          .discount-products-fixed-main { font-size:12px; white-space:nowrap; }
+          .discount-products-fixed-detail { font-size:11px; }
+          .discount-products-fixed-summary button { min-width:116px; min-height:38px; padding:0 9px; font-size:11px; }
+        }
+      </style>
+      <aside class="discount-products-fixed-summary" role="status" aria-live="polite">
+        <div class="discount-products-fixed-copy">
+          <span class="discount-products-fixed-label">Tu promo</span>
+          <span class="discount-products-fixed-names discount-products-fixed-names-desktop">${buildProductNames(3)}</span>
+          <span class="discount-products-fixed-names discount-products-fixed-names-mobile">${buildProductNames(2)}</span>
+          <strong class="discount-products-fixed-main">${count} producto${count === 1 ? "" : "s"} · Total $ ${formatMoney(totals.total)}</strong>
+          <span class="discount-products-fixed-detail">Cantidad total: ${formatQty(totalQuantity)}</span>
+        </div>
+        <button id="discountFloatingNextBtn" type="button">Ajustar descuentos</button>
       </aside>
     `;
   }
@@ -686,6 +878,8 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     root.querySelectorAll("[data-discount-summary-subtotal]").forEach((el) => { el.textContent = `$ ${formatMoney(totals.subtotalBruto)}`; });
     root.querySelectorAll("[data-discount-summary-discounts]").forEach((el) => { el.textContent = `-$ ${formatMoney(totals.descuentosAplicados)}`; });
     root.querySelectorAll("[data-discount-summary-total]").forEach((el) => { el.textContent = `$ ${formatMoney(totals.total)}`; });
+    root.querySelectorAll("[data-discount-summary-scale-price]").forEach((el) => { el.textContent = totals.scalePricePerKg ? `$ ${formatMoney(totals.scalePricePerKg)} / kg` : "No disponible"; });
+    root.querySelectorAll("[data-discount-summary-weight]").forEach((el) => { el.textContent = `${formatQty(totals.totalWeight)} kg previstos`; });
 
     state.discount.items.forEach((item, index) => {
       const calc = calculateDiscountItem(item);
@@ -849,20 +1043,18 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     content.innerHTML = `
       <div style="display:grid; gap:12px;">
         ${renderSelectedStrip(state.discount.items)}
+        ${renderDiscountProductsFloatingSummary()}
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
           <input id="discountSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.discount.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #fed7aa; border-radius:14px; padding:0 12px; font-weight:900;" />
           ${renderRubroSelector("discount", state.discount.rubroFilter)}
           ${renderProductGrid("discount", filteredProducts, state.discount.items)}
         </div>
-        <div style="position:sticky; bottom:var(--apppromos-mobile-sticky-bottom, 10px); z-index:6; background:#fff; border:1px solid #fed7aa; border-radius:18px; padding:12px; box-shadow:0 12px 28px rgba(15,23,42,.12); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
-          <strong>${state.discount.items.length} producto${state.discount.items.length === 1 ? "" : "s"}</strong>
-          <button id="discountNextAdjustBtn" type="button" style="background:#f97316; color:#fff; border-color:#f97316;">Ajustar descuentos</button>
-        </div>
+        <div style="height:${state.discount.items.length ? "112px" : "0"};" aria-hidden="true"></div>
       </div>
     `;
 
     bindProductSelection(content, "discount", state.discount.items, state.discount, () => renderDiscountStepProducts(content));
-    content.querySelector("#discountNextAdjustBtn")?.addEventListener("click", () => {
+    content.querySelector("#discountFloatingNextBtn")?.addEventListener("click", () => {
       if (!state.discount.items.length) {
         alert("Elegí al menos un producto para seguir.");
         return;
@@ -897,6 +1089,19 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
             <strong data-discount-summary-total style="display:block; margin-top:3px; color:#c2410c; font-size:1.02rem; white-space:nowrap;">$ ${formatMoney(totals.total)}</strong>
           </div>
         </div>
+        ${totals.allSoldByKg ? `
+          <div style="margin-top:7px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #fdba74; border-radius:13px; background:#fff; padding:8px 10px;">
+            <div style="min-width:0;">
+              <strong style="display:block; color:#7c2d12; font-size:.76rem; line-height:1.1;">Precio para la balanza</strong>
+              <span data-discount-summary-weight style="display:block; margin-top:2px; color:#92400e; font-size:.68rem; font-weight:850;">${formatQty(totals.totalWeight)} kg previstos</span>
+            </div>
+            <strong data-discount-summary-scale-price style="flex:0 0 auto; color:#c2410c; font-size:1.02rem; white-space:nowrap;">$ ${formatMoney(totals.scalePricePerKg)} / kg</strong>
+          </div>
+        ` : `
+          <div style="margin-top:7px; border:1px solid #fde68a; border-radius:13px; background:#fffbeb; padding:8px 10px; color:#92400e; font-size:.72rem; line-height:1.3; font-weight:900;">
+            Esta promo combina diferentes unidades. No se puede generar un único precio para la balanza.
+          </div>
+        `}
       </aside>
     `;
   }
@@ -962,7 +1167,10 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderDiscountStepSell(content, totals) {
     const combo = buildDiscountPayload();
-    const whatsappPreview = buildWhatsappText(combo);
+    const businessMeta = options?.businessMeta || {};
+    const whatsappPreview = combo.name
+      ? buildWhatsappText(combo, businessMeta)
+      : "Escribí un nombre comercial para ver el mensaje que recibirá el cliente.";
 
     content.innerHTML = `
       <div style="display:grid; gap:12px;">
@@ -970,9 +1178,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
           <label style="display:grid; gap:6px; font-weight:1000;">
             Nombre comercial de la promo
-            <input id="discountOfferNameInput" type="text" value="${escapeHtml(state.discount.offerName)}" placeholder="OFERTA DEL DIA" />
+            <input id="discountOfferNameInput" type="text" value="${escapeHtml(state.discount.offerName)}" placeholder="Ej: 2 kg de achuras" required />
           </label>
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
+          <div id="discountWhatsappPreview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
           <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
             <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
@@ -985,8 +1193,22 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     `;
 
     content.querySelector("#discountOfferNameInput")?.addEventListener("input", (event) => {
-      state.discount.offerName = event.target.value || "OFERTA DEL DIA";
+      state.discount.offerName = event.target.value;
+      const preview = content.querySelector("#discountWhatsappPreview");
+      const payload = buildDiscountPayload();
+      if (preview) {
+        preview.textContent = payload.name
+          ? buildWhatsappText(payload, businessMeta)
+          : "Escribí un nombre comercial para ver el mensaje que recibirá el cliente.";
+      }
     });
+
+    function validateOfferName() {
+      if (String(state.discount.offerName || "").trim()) return true;
+      alert("Escribí un nombre comercial para guardar o enviar esta promo.");
+      content.querySelector("#discountOfferNameInput")?.focus();
+      return false;
+    }
 
     content.querySelector("#discountBackAdjustBtn")?.addEventListener("click", () => {
       state.discount.step = 2;
@@ -994,11 +1216,13 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     });
 
     content.querySelector("#discountSaveBtn")?.addEventListener("click", async () => {
+      if (!validateOfferName()) return;
       const saved = await saveBuiltCombo(buildDiscountPayload());
       if (saved) showChooser({ clear: true });
     });
 
     content.querySelector("#discountWhatsappBtn")?.addEventListener("click", () => {
+      if (!validateOfferName()) return;
       const payload = buildDiscountPayload();
       if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "builder_discount", payload })) return;
       openComboWhatsapp(payload, options?.businessMeta || {});

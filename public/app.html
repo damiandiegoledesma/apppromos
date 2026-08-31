@@ -4,12 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AppPromos · App</title>
+  <meta name="theme-color" content="#071d3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="AppPromos" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/assets/pwa/apppromos-180.png" />
   <link rel="icon" type="image/png" href="/assets/logo/apppromos-favicon-transparent.png" />
 
   <!-- Design System Compartido -->
   <link rel="stylesheet" href="./design-system.css" />
   <link rel="stylesheet" href="./styles/carniza.css" />
   <link rel="stylesheet" href="./styles/app-brand-refresh.css" />
+  <link rel="stylesheet" href="./styles/pwa-install.css" />
 
   <style>
     :root {
@@ -463,6 +471,41 @@
       display: none;
     }
 
+    /* ==================== V12.22 A2 FIX3B1 HEADER DESKTOP ==================== */
+    @media (min-width: 761px) {
+      .topbar {
+        padding: 8px 0;
+        margin-bottom: 12px;
+      }
+
+      .topbar-inner {
+        gap: 0;
+      }
+
+      .topbar .nav-shell {
+        display: none !important;
+      }
+
+      .topbar .brand {
+        padding: 9px 14px;
+        border-radius: 18px;
+      }
+
+      .topbar .app-brand-logo-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+      }
+
+      .topbar .brand h1 {
+        font-size: 1.2rem;
+      }
+
+      .topbar .brand p {
+        font-size: .74rem;
+      }
+    }
+
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
       .more-links {
@@ -778,6 +821,7 @@
             <button data-panel="marketPanel" hidden data-future-feature="competition">📊 Competencia</button>
             <button data-panel="webPanel">🌐 Mi carnicería online</button>
             <button type="button" data-open-how-to-sell>🧭 Cómo vender</button>
+            <button type="button" class="pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> Instalar AppPromos</button>
             <button data-panel="usersPanel">🛡️ Admin</button>
           </div>
         </div>
@@ -834,5 +878,6 @@
     <script src="./js/vendor/localidades-ar.plugin.js"></script>
     <script type="module" src="./js/app-main.js"></script>
 <script src="/js/status-compact.js"></script>
+<script type="module" src="/js/pwa-install.js"></script>
 </body>
 </html>

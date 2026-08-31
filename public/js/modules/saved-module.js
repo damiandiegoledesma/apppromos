@@ -14,10 +14,27 @@ function escapeHtml(value = "") {
 }
 
 function formatDate(value) {
-  if (!value) return "sin fecha";
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "sin fecha";
+  if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+function normalizeComparableText(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function getSavedTitle(combo = {}, items = []) {
+  const name = String(combo.name || "").trim();
+  if (name && normalizeComparableText(name) !== "oferta del dia") return name;
+  const firstItemName = String(items[0]?.nombre || "").trim();
+  if (!firstItemName) return "Promo guardada";
+  return items.length > 1 ? `${firstItemName} + ${items.length - 1} más` : firstItemName;
 }
 
 function toWhatsappSafeText(value = "") {
@@ -114,12 +131,26 @@ export function renderSaved(container, state, options = {}) {
         : "Sin detalle";
       const total = combo.total || combo?.snapshot?.totals?.total_redondeado || 0;
       const isPreloaded = combo.isDemoPreloaded;
+      const description = String(combo.description || "").trim();
+      const normalizedDescription = normalizeComparableText(description);
+      const isInternalDescription = [
+        "promo o combo creado para guardar publicar y compartir",
+        "oferta creada en modo prueba"
+      ].includes(normalizedDescription);
+      const savedDate = formatDate(combo.createdAt);
+      const subtitle = isInternalDescription
+        ? ""
+        : description
+          ? `<div class="saved-sub">${escapeHtml(description)}</div>`
+          : savedDate
+            ? `<div class="saved-sub">Guardada: ${escapeHtml(savedDate)}</div>`
+            : "";
 
       return `
         <article class="saved-card ${isPreloaded ? "demo-preloaded" : ""}">
           <div class="saved-top">
-            <div class="saved-title">${escapeHtml(combo.name || "Promo sin nombre")}</div>
-            ${combo.description ? `<div class="saved-sub">${escapeHtml(combo.description)}</div>` : `<div class="saved-sub">Guardada: ${escapeHtml(formatDate(combo.createdAt))}</div>`}
+            <div class="saved-title">${escapeHtml(getSavedTitle(combo, items))}</div>
+            ${subtitle}
             ${isPreloaded ? `<span class="saved-badge">Combo demo listo</span>` : ""}
           </div>
           <div class="saved-items">${itemsText}</div>
