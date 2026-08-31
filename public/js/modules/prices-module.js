@@ -182,7 +182,11 @@ export function renderPrices(container, products = [], businessId = null, option
     statusMessage = message || statusMessage;
 
     const badge = container.querySelector("#pricePendingStatus");
-    const saveAllBtn = container.querySelector("#saveAllBtn");    const summary = container.querySelector("#pricesSummary");
+    const saveAllBtn = container.querySelector("#saveAllBtn");
+    const summary = container.querySelector("#pricesSummary");
+    const desktopFloating = container.querySelector("#pricesDesktopFloatingSummary");
+    const desktopFloatingText = container.querySelector("#pricesDesktopFloatingText");
+    const desktopFloatingSave = container.querySelector("#pricesDesktopFloatingSave");
     const undoMassBtn = container.querySelector("#undoMassAdjustmentBtn");
     const massNote = container.querySelector("#massAdjustmentNote");
     const massText = container.querySelector("#massAdjustmentText");
@@ -211,6 +215,23 @@ export function renderPrices(container, products = [], businessId = null, option
         <strong>${pendingCount}</strong> cambio${pendingCount === 1 ? "" : "s"} pendiente${pendingCount === 1 ? "" : "s"}
         ${lastSavedAt ? ` · Último guardado: ${lastSavedAt}` : ""}
       `;
+    }
+
+    if (desktopFloating) {
+      desktopFloating.classList.toggle("is-visible", pendingCount > 0 || isSaving);
+    }
+
+    if (desktopFloatingText) {
+      desktopFloatingText.textContent = isSaving
+        ? "Guardando tus precios..."
+        : `${pendingCount} precio${pendingCount === 1 ? "" : "s"} modificado${pendingCount === 1 ? "" : "s"} sin guardar`;
+    }
+
+    if (desktopFloatingSave) {
+      desktopFloatingSave.disabled = !canPersistPrices || isSaving || pendingCount === 0;
+      desktopFloatingSave.textContent = isSaving
+        ? "Guardando..."
+        : `Guardar ${pendingCount || ""}`.trim();
     }
     
     const canUndoMassAdjustment = !!lastMassAdjustment && pendingCount > 0 && !isSaving;
@@ -745,6 +766,97 @@ export function renderPrices(container, products = [], businessId = null, option
       .prices-toast[data-tone="error"] { background:#991b1b; }
       .prices-toast[data-tone="warn"] { background:#92400e; }
       .prices-toast[data-tone="ok"] { background:#166534; }
+      .prices-desktop-floating-summary { display:none; }
+      @media (min-width: 761px) {
+        .prices-desktop-floating-summary.is-visible {
+          position:fixed;
+          left:50%;
+          bottom:84px;
+          transform:translateX(-50%);
+          z-index:2147482400;
+          width:min(620px,calc(100vw - 36px));
+          min-height:54px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:14px;
+          padding:8px 10px 8px 16px;
+          border:1px solid rgba(217,119,6,.32);
+          border-radius:18px;
+          background:rgba(255,251,235,.97);
+          color:#78350f;
+          box-shadow:0 16px 38px rgba(15,23,42,.20);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .prices-desktop-floating-copy { min-width:0; display:flex; align-items:center; gap:9px; font-size:14px; font-weight:1000; }
+        .prices-desktop-floating-copy span:first-child { font-size:18px; line-height:1; }
+        .prices-desktop-floating-save {
+          min-width:118px;
+          min-height:38px;
+          border:0;
+          border-radius:13px;
+          padding:0 14px;
+          background:#b45309;
+          color:#fff;
+          font-size:13px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
+      }
+      @media (max-width: 760px) {
+        .prices-desktop-floating-summary.is-visible {
+          position:fixed;
+          left:10px;
+          right:10px;
+          bottom:var(--apppromos-mobile-quick-summary-bottom, calc(184px + env(safe-area-inset-bottom, 0px)));
+          z-index:2147482400;
+          min-height:48px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:8px;
+          padding:7px 8px 7px 12px;
+          border:1px solid rgba(217,119,6,.32);
+          border-radius:16px;
+          background:rgba(255,251,235,.97);
+          color:#78350f;
+          box-shadow:0 12px 28px rgba(15,23,42,.18);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .prices-desktop-floating-copy {
+          min-width:0;
+          display:flex;
+          align-items:center;
+          gap:7px;
+          font-size:12px;
+          line-height:1.15;
+          font-weight:1000;
+        }
+        .prices-desktop-floating-copy span:first-child { font-size:16px; line-height:1; }
+        .prices-desktop-floating-copy span:last-child {
+          min-width:0;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+        }
+        .prices-desktop-floating-save {
+          flex:0 0 auto;
+          min-width:88px;
+          min-height:36px;
+          border:0;
+          border-radius:12px;
+          padding:0 10px;
+          background:#b45309;
+          color:#fff;
+          font-size:12px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
+      }
       @media (max-width: 768px) {
         .prices-title h2 { font-size:25px; }
         .prices-toolbar { top: 60px; padding:12px; }
@@ -1200,6 +1312,10 @@ export function renderPrices(container, products = [], businessId = null, option
 
       <div id="list" class="prices-list"></div>
       <div id="pricesToast" class="prices-toast" data-tone="ok"></div>
+      <div id="pricesDesktopFloatingSummary" class="prices-desktop-floating-summary" role="status" aria-live="polite">
+        <div class="prices-desktop-floating-copy"><span aria-hidden="true">⚡</span><span id="pricesDesktopFloatingText">0 precios modificados sin guardar</span></div>
+        <button id="pricesDesktopFloatingSave" class="prices-desktop-floating-save" type="button">Guardar</button>
+      </div>
     </div>
   `;
 
@@ -1224,6 +1340,7 @@ export function renderPrices(container, products = [], businessId = null, option
   });
 
   container.querySelector("#saveAllBtn").onclick = saveAllPendingChanges;
+  container.querySelector("#pricesDesktopFloatingSave").onclick = saveAllPendingChanges;
 
   // APPPROMOS C6 FIX6C - input moneda listeners
   container.querySelectorAll(".price-input").forEach((input) => {

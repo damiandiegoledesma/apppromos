@@ -1502,8 +1502,16 @@ function getCompactHeaderStatusLabel() {
   const planKey = compactHeaderNormalizeKey(plan);
   const accessKey = compactHeaderNormalizeKey(accessLabel);
 
-  if (currentSession?.isDemo || planKey === "demo") return "Prueba activa";
-  if (["trial", "free", "gratis", "gratuito", "prueba", "prueba_gratis"].includes(planKey)) return "Prueba activa";
+  /* V12.22-A2-FIX4C: en mobile mostramos el tiempo real de prueba. */
+  const trialDaysLeft = Number.isFinite(Number(access?.trialDaysLeft))
+    ? Math.max(0, Math.ceil(Number(access.trialDaysLeft)))
+    : null;
+  const trialLabel = trialDaysLeft === null
+    ? "Prueba activa"
+    : `Gratis · ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"}`;
+
+  if (currentSession?.isDemo || planKey === "demo") return trialLabel;
+  if (["trial", "free", "gratis", "gratuito", "prueba", "prueba_gratis"].includes(planKey)) return trialLabel;
 
   if (accessKey && /(prueba|pendiente|vencid|suspend|pausad|bloquead|regulariz)/.test(accessKey)) {
     return compactHeaderClamp(accessLabel, 20);
@@ -1527,6 +1535,27 @@ function updateMobileCompactHeader() {
 
   copy.dataset.mobileTitle = title;
   copy.dataset.mobileSubtitle = subtitle;
+  copy.dataset.mobileTrial = getAccessState(currentBusinessControl || {})?.level === "trial" ? "true" : "false";
+
+  /* V12.22-A2-FIX4C: el estado compacto abre el mismo detalle que el chip desktop. */
+  if (copy.dataset.mobileTrialStatusBound !== "true") {
+    copy.dataset.mobileTrialStatusBound = "true";
+    copy.setAttribute("role", "button");
+    copy.setAttribute("tabindex", "0");
+    copy.setAttribute("aria-label", "Ver estado y días restantes de la prueba");
+
+    const openAccessStatus = () => {
+      if (!window.matchMedia("(max-width: 768px)").matches) return;
+      document.getElementById("status-chip")?.click();
+    };
+
+    copy.addEventListener("click", openAccessStatus);
+    copy.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openAccessStatus();
+    });
+  }
 
   document.body?.classList.add("app-compact-brand-ready");
 }
@@ -1608,6 +1637,13 @@ function renderActivationOnboarding() {
   const shared = wasActivationWebShared();
   const suggestedGoal = 5;
   const goalReached = pricedCount >= suggestedGoal;
+  const access = getAccessState(currentBusinessControl || {});
+  const trialDaysLeft = Number.isFinite(Number(access?.trialDaysLeft))
+    ? Math.max(0, Math.ceil(Number(access.trialDaysLeft)))
+    : null;
+  const trialWelcome = access?.level === "trial"
+    ? `<div style="padding:13px 15px;border:1px solid #fed7aa;border-radius:16px;background:#fff7ed;color:#9a3412;font-weight:900;line-height:1.4;">🎁 <strong>Tu acceso gratis por 90 días ya está activo.</strong>${trialDaysLeft === null ? "" : ` Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"}.`}</div>`
+    : "";
 
   const card = document.createElement("section");
   card.dataset.activationOnboarding = "true";
@@ -1618,6 +1654,8 @@ function renderActivationOnboarding() {
       <h2 style="margin:0;color:#14532d;font-size:clamp(26px,6vw,38px);line-height:1;letter-spacing:-.04em;">🎉 ¡${escapeCarnizaHtml(businessName)} ya está creada!</h2>
       <p style="margin:0;color:#3f5f4a;font-weight:800;line-height:1.4;">Ahora cargá tus precios reales. AppPromos publica automáticamente los productos que tengan precio y deja afuera los que estén en $0.</p>
     </div>
+
+    ${trialWelcome}
 
     <div style="display:grid;gap:8px;">
       <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:#166534;"><span>✅</span><span>Cuenta creada</span></div>
@@ -2139,6 +2177,67 @@ function resetBuilderPanelForNewSale() {
   });
 }
 
+const APP_PANEL_HISTORY_KEY = "apppromosPanel";
+let appPanelHistoryReady = false;
+
+function writeAppPanelHistory(panelId, mode = "push") {
+  if (!appPanelHistoryReady || !panelId || mode === "none") return;
+  const currentState = window.history.state || {};
+  if (currentState?.[APP_PANEL_HISTORY_KEY] === panelId && mode === "push") return;
+
+  const nextState = {
+    ...currentState,
+    [APP_PANEL_HISTORY_KEY]: panelId,
+    apppromosAppEntry: true
+  };
+
+  if (mode === "replace") {
+    window.history.replaceState(nextState, "", window.location.href);
+    return;
+  }
+  window.history.pushState(nextState, "", window.location.href);
+}
+
+function initializeAppPanelHistory(initialPanelId = "dashboardPanel") {
+  if (appPanelHistoryReady) return;
+  appPanelHistoryReady = true;
+
+  /* V12.22-A2-FIX4A: el primer estado funciona como raíz protegida.
+     El segundo permite que Back vuelva a Inicio sin abandonar app.html. */
+  window.history.replaceState({
+    ...(window.history.state || {}),
+    [APP_PANEL_HISTORY_KEY]: initialPanelId,
+    apppromosAppEntry: true,
+    apppromosHistoryRoot: true
+  }, "", window.location.href);
+  window.history.pushState({
+    [APP_PANEL_HISTORY_KEY]: initialPanelId,
+    apppromosAppEntry: true
+  }, "", window.location.href);
+
+  window.addEventListener("popstate", (event) => {
+    if (!currentSession || currentSession.appMode === "guest") return;
+
+    const requestedPanel = event?.state?.[APP_PANEL_HISTORY_KEY];
+    const panelExists = requestedPanel && document.getElementById(requestedPanel)?.classList.contains("panel");
+    const nextPanel = panelExists ? requestedPanel : "dashboardPanel";
+
+    goToPanel(nextPanel, {
+      historyMode: "none",
+      keepMoreOpen: false
+    });
+
+    if (event?.state?.apppromosHistoryRoot) {
+      /* V12.22-A2-FIX4A1: al alcanzar la raíz no generamos otra entrada.
+         Volvemos al guard ya existente para impedir que el siguiente Back
+         abandone app.html y regrese a la landing. */
+      window.setTimeout(() => {
+        window.history.forward();
+      }, 0);
+    }
+  });
+}
+
 function goToPanel(panelId, options = {}) {
   // Crear oferta debe abrir siempre como una acción nueva.
   // Evita que quede cacheada una oferta anterior y el carnicero se trabe en celular.
@@ -2147,6 +2246,7 @@ function goToPanel(panelId, options = {}) {
   }
 
   activatePanel(panelId);
+  writeAppPanelHistory(panelId, options.historyMode || "push");
   setMoreLinksVisible(Boolean(options.keepMoreOpen));
   window.scrollTo({ top: 0, behavior: "smooth" });
   void renderLazyPanel(panelId);
@@ -2164,6 +2264,123 @@ function injectMobileBottomNavStyles() {
   style.textContent = `
     .app-mobile-bottom-nav,
     .app-mobile-bottom-menu { display: none; }
+
+    /* V12.22-A2-FIX3B: en desktop reutilizamos la navegación inferior
+       probada en mobile, con una presentación más compacta. */
+    @media (min-width: 761px) {
+      body.app-mobile-nav-ready .app {
+        padding-bottom: 108px;
+      }
+
+      .app-mobile-bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+        z-index: 2147482500;
+        width: min(760px, calc(100vw - 32px));
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        padding: 7px;
+        border: 1px solid rgba(15, 23, 42, .12);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, .20);
+        backdrop-filter: blur(14px);
+        box-sizing: border-box;
+      }
+
+      .app-mobile-bottom-nav button {
+        min-width: 0;
+        min-height: 48px;
+        border: 0;
+        border-radius: 14px;
+        background: transparent;
+        color: #334155;
+        font-weight: 1000;
+        font-size: 12px;
+        line-height: 1.1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        cursor: pointer;
+      }
+
+      .app-mobile-bottom-nav button .app-mobile-nav-icon {
+        font-size: 19px;
+        line-height: 1;
+      }
+
+      .app-mobile-bottom-nav button.is-active {
+        background: linear-gradient(135deg, #fff7ed, #fee2e2);
+        color: #9f1239;
+        box-shadow: inset 0 0 0 1px rgba(196, 30, 58, .18);
+      }
+
+      .app-mobile-bottom-nav button.is-primary {
+        background: linear-gradient(135deg, #c41e3a, #9f1239);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(196, 30, 58, .20);
+      }
+
+      .app-mobile-bottom-menu {
+        position: fixed;
+        left: 50%;
+        bottom: 82px;
+        transform: translateX(-50%);
+        z-index: 2147482499;
+        width: min(620px, calc(100vw - 32px));
+        display: none;
+        border-radius: 22px;
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, .12);
+        box-shadow: 0 22px 60px rgba(15, 23, 42, .24);
+        padding: 14px;
+        box-sizing: border-box;
+      }
+
+      .app-mobile-bottom-menu.is-open { display: block; }
+      .app-mobile-bottom-menu__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .app-mobile-bottom-menu__title { margin: 0; color: #7f1d1d; font-size: 16px; font-weight: 1000; }
+      .app-mobile-bottom-menu__hint { margin: 2px 0 0; color: #64748b; font-size: 12px; font-weight: 800; }
+      .app-mobile-bottom-menu__close {
+        min-width: 40px;
+        min-height: 40px;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #fff;
+        color: #334155;
+        font-size: 20px;
+        font-weight: 1000;
+        cursor: pointer;
+      }
+      .app-mobile-bottom-menu__grid { display: grid; gap: 8px; }
+      .app-mobile-bottom-menu__grid.two { grid-template-columns: 1fr 1fr; }
+      .app-mobile-bottom-menu__grid button {
+        min-height: 52px;
+        border: 1px solid #e5e7eb;
+        border-radius: 15px;
+        background: #fff;
+        color: #1f2937;
+        font-weight: 1000;
+        text-align: left;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
+      .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
+      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #9f1239; }
+      .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+      .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+    }
 
     @media (max-width: 760px) {
       html, body {
@@ -2297,6 +2514,7 @@ function injectMobileBottomNavStyles() {
       body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy {
         min-width: 0;
         flex: 1 1 auto;
+        cursor: pointer;
       }
 
       body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy h1,
@@ -2305,7 +2523,7 @@ function injectMobileBottomNavStyles() {
       }
 
       body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy::before {
-        content: attr(data-mobile-title) " · " attr(data-mobile-subtitle);
+        content: attr(data-mobile-title);
         display: block;
         max-width: 100%;
         overflow: hidden;
@@ -2316,6 +2534,31 @@ function injectMobileBottomNavStyles() {
         line-height: 1.15;
         font-weight: 1000;
         letter-spacing: -0.02em;
+      }
+
+      /* V12.22-A2-FIX4C: días de prueba visibles y tocables en mobile. */
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy::after {
+        content: attr(data-mobile-subtitle);
+        display: block;
+        max-width: 100%;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #9a3412;
+        font-size: .72rem;
+        line-height: 1.1;
+        font-weight: 950;
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy[data-mobile-trial="true"]::after {
+        content: "🎁 " attr(data-mobile-subtitle) " · Ver detalle";
+      }
+
+      body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy:focus-visible {
+        outline: 2px solid #0477f2;
+        outline-offset: 3px;
+        border-radius: 8px;
       }
 
       body.app-mobile-nav-ready.app-mobile-action-focus .topbar-frame,
@@ -2511,6 +2754,7 @@ function openMobileBottomMenu(kind) {
       <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
       <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
       <button type="button" data-mobile-action="how-to-sell"><strong>🧭 Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
+      <button type="button" data-mobile-action="install-app"><strong>📲 Instalar AppPromos</strong><span>Entrá desde el icono de tu pantalla.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
       ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
       <button type="button" class="primary" data-mobile-action="logout"><strong>🚪 ${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
@@ -2544,6 +2788,11 @@ async function handleMobileBottomAction(action) {
   if (action === "admin") return goToPanel("usersPanel");
   if (action === "how-to-sell") {
     window.open("/como-vender.html", "_blank", "noopener,noreferrer");
+    return;
+  }
+  if (action === "install-app") {
+    const installButton = document.querySelector("[data-install-apppromos]");
+    if (installButton) installButton.click();
     return;
   }
 
@@ -3068,6 +3317,14 @@ async function boot() {
       return;
     }
 
+    window.__APPPROMOS_AUTHENTICATED_SESSION__ = true;
+    window.dispatchEvent(new CustomEvent("apppromos:authenticated-session", {
+      detail: {
+        appMode: session.appMode,
+        isDemo: session?.isDemo === true
+      }
+    }));
+
     syncNavForRole(session);
 
     if (!session?.isDemo) {
@@ -3089,7 +3346,8 @@ async function boot() {
     currentBusinessId = businessId;
     restartBusinessControlListener(currentBusinessId);
     await renderBusinessWorkspace();
-    goToPanel("dashboardPanel");
+    initializeAppPanelHistory("dashboardPanel");
+    goToPanel("dashboardPanel", { historyMode: "none" });
   } catch (error) {
     console.error("BOOT ERROR:", error);
 
