@@ -1,0 +1,13 @@
+{
+  "version": "v12.23-a11",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 17,
+  "cerdoCatalogCoverage": "14/14",
+  "elaboradosCatalogCoverage": "3/13",
+  "pendingCerdo": [],
+  "sourceAliases": {
+    "nalga (2).png": "cerdo_pulpas"
+  }
+}

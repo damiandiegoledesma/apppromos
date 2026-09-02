@@ -1,0 +1,15 @@
+{
+  "version": "v12.23-a9-pilot",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 35,
+  "catalogCoverage": "33/33",
+  "pending": [],
+  "reused": {
+    "novillo_asado_banderita": "banderita.webp",
+    "novillo_asado_costilla": "costilla.webp",
+    "novillo_asado_del_medio": "costilla.webp",
+    "novillo_falda_deshuesada": "cima.webp"
+  }
+}

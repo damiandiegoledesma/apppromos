@@ -614,19 +614,40 @@ export async function updateProductPricesBatch(updates = [], businessId = null) 
     };
   }
 
+  /* V12.23-A2: productos y Promos vinculadas se guardan juntos en el mismo
+     documento state. Las promos antiguas permanecen congeladas. */
+  const promoSync = recalculateLinkedSavedPromos(
+    Array.isArray(state.savedCombos) ? state.savedCombos : [],
+    updatedProducts,
+    updateMap
+  );
+  const selectedOfferIds = new Set(
+    Array.isArray(state?.web?.selectedOffers)
+      ? state.web.selectedOffers.map(String)
+      : []
+  );
+  const publishedPromosUpdated = promoSync.ids.filter((id) => selectedOfferIds.has(String(id))).length;
+
   await updateBusinessState(finalBusinessId, {
     products: updatedProducts,
+    ...(promoSync.updated > 0 ? { savedCombos: promoSync.combos } : {}),
   });
 
   console.log("💰 Precios actualizados en lote:", {
     businessId: finalBusinessId,
     changed,
+    promosUpdated: promoSync.updated,
+    publishedPromosUpdated,
   });
 
   return {
     businessId: finalBusinessId,
     updatedProducts,
     changed,
+    promosUpdated: promoSync.updated,
+    publishedPromosUpdated,
+    updatedPromoNames: promoSync.names,
+    updatedSavedCombos: promoSync.updated > 0 ? promoSync.combos : (Array.isArray(state.savedCombos) ? state.savedCombos : []),
     demo: false,
   };
 }
@@ -727,6 +748,192 @@ export async function disableProduct(productId, businessId = null) {
   return updateProduct(productId, { active: false }, businessId);
 }
 
+/* V12.23-A1 — Formato versionado de Promos guardadas.
+   Conserva las claves históricas que consumen Promos, WhatsApp y la web pública,
+   y agrega la receta necesaria para recalcular cuando cambie la lista de precios. */
+const SAVED_PROMO_SCHEMA_VERSION = 2;
+const SAVED_PROMO_PRICING_MODE = "linked_to_price_list";
+
+function savedPromoNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeSavedPromoItem(item = {}) {
+  const productId = item.productId || item.id || item.productKey || item.key || null;
+  const productKey = item.productKey || item.id || item.productId || item.key || null;
+  const listPrice = savedPromoNumber(item.precio ?? item.price ?? item.precio_lista_snapshot, 0);
+  const quantity = savedPromoNumber(item.cantidad ?? item.qty ?? item.quantity, 1);
+  const individualDiscount = savedPromoNumber(item.descuento_individual ?? item.individualDiscount, 0);
+
+  return {
+    ...item,
+    id: item.id || productId,
+    productId,
+    productKey,
+    nombre: String(item.nombre || item.name || "Producto").trim(),
+    rubro: String(item.rubro || item.category || item.categoria || "").trim(),
+    unidad: String(item.unidad || item.unit || "kg").trim() || "kg",
+    cantidad: quantity,
+    precio: listPrice,
+    precio_lista_snapshot: listPrice,
+    descuento_individual: individualDiscount,
+    precio_original: savedPromoNumber(item.precio_original, listPrice * quantity),
+    total_con_descuento: savedPromoNumber(item.total_con_descuento, listPrice * quantity),
+  };
+}
+
+function normalizeSavedPromoDiscountSummary(combo = {}, items = []) {
+  const source = combo.discountSummary && typeof combo.discountSummary === "object"
+    ? combo.discountSummary
+    : {};
+  const subtotalFromItems = items.reduce((sum, item) => sum + savedPromoNumber(item.precio_original, 0), 0);
+  const total = savedPromoNumber(combo.total, 0);
+
+  return {
+    globalDiscount: savedPromoNumber(source.globalDiscount, 0),
+    subtotalBruto: savedPromoNumber(source.subtotalBruto, subtotalFromItems),
+    subtotalNeto: savedPromoNumber(source.subtotalNeto, subtotalFromItems),
+    descuentosAplicados: savedPromoNumber(source.descuentosAplicados, Math.max(0, subtotalFromItems - total)),
+    totalMatematico: savedPromoNumber(source.totalMatematico, total),
+    totalWeight: savedPromoNumber(source.totalWeight, items.reduce((sum, item) => sum + savedPromoNumber(item.cantidad, 0), 0)),
+    scalePricePerKg: savedPromoNumber(source.scalePricePerKg, 0),
+    scalePricingAvailable: source.scalePricingAvailable === true,
+  };
+}
+
+function savedPromoRoundUpTo100(value) {
+  const number = savedPromoNumber(value, 0);
+  return number > 0 ? Math.ceil(number / 100) * 100 : 0;
+}
+
+function getSavedPromoItemLink(item = {}) {
+  return String(item.productId || item.productKey || item.id || item.key || "").trim();
+}
+
+function calculateLinkedSavedPromo(combo = {}, productsById = new Map(), changedIds = new Set()) {
+  if (Number(combo.schemaVersion) !== SAVED_PROMO_SCHEMA_VERSION) return null;
+  if (String(combo.pricingMode || "") !== SAVED_PROMO_PRICING_MODE) return null;
+
+  const sourceItems = Array.isArray(combo.items) ? combo.items : [];
+  const isAffected = sourceItems.some((item) => changedIds.has(getSavedPromoItemLink(item)));
+  if (!isAffected) return null;
+
+  let missingProduct = false;
+  const items = sourceItems.map((sourceItem) => {
+    const item = normalizeSavedPromoItem(sourceItem);
+    const link = getSavedPromoItemLink(item);
+    const product = productsById.get(link);
+    if (!product) {
+      missingProduct = true;
+      return item;
+    }
+
+    const listPrice = savedPromoNumber(product.precio ?? product.price, 0);
+    const quantity = savedPromoNumber(item.cantidad, 1);
+    const individualDiscount = Math.min(100, Math.max(0, savedPromoNumber(item.descuento_individual, 0)));
+    const gross = listPrice * quantity;
+    const net = savedPromoRoundUpTo100(gross - (gross * individualDiscount / 100));
+
+    return {
+      ...item,
+      precio: listPrice,
+      precio_lista_snapshot: listPrice,
+      precio_original: gross,
+      total_con_descuento: net,
+    };
+  });
+
+  const globalDiscount = Math.min(100, Math.max(0, savedPromoNumber(combo?.discountSummary?.globalDiscount, 0)));
+  const subtotalBruto = items.reduce((sum, item) => sum + savedPromoNumber(item.precio_original, 0), 0);
+  const subtotalNeto = items.reduce((sum, item) => sum + savedPromoNumber(item.total_con_descuento, 0), 0);
+  const descuentoGlobalMonto = subtotalNeto * globalDiscount / 100;
+  const totalMatematico = Math.max(0, subtotalNeto - descuentoGlobalMonto);
+  const totalWeight = items.reduce((sum, item) => sum + savedPromoNumber(item.cantidad, 0), 0);
+  const units = new Set(items.map((item) => String(item.unidad || "kg").trim().toLowerCase()));
+  const scalePricingAvailable = items.length > 0
+    && [...units].every((unit) => ["kg", "kilo", "kilos"].includes(unit));
+
+  let scalePricePerKg = 0;
+  let total = savedPromoRoundUpTo100(totalMatematico);
+  if (scalePricingAvailable && totalWeight > 0 && totalMatematico > 0) {
+    let candidate = savedPromoRoundUpTo100(totalMatematico / totalWeight);
+    for (let attempts = 0; attempts < 1000; attempts += 1) {
+      const candidateTotal = candidate * totalWeight;
+      const roundedHundreds = Math.round(candidateTotal / 100) * 100;
+      if (Math.abs(candidateTotal - roundedHundreds) < 0.0001) {
+        scalePricePerKg = candidate;
+        total = roundedHundreds;
+        break;
+      }
+      candidate += 100;
+    }
+  }
+
+  const now = new Date().toISOString();
+  const previousTotal = savedPromoNumber(combo.total, 0);
+  const affectedProductIds = sourceItems
+    .map(getSavedPromoItemLink)
+    .filter((id) => changedIds.has(id));
+
+  return {
+    ...combo,
+    items,
+    total,
+    discountSummary: {
+      globalDiscount,
+      subtotalBruto,
+      subtotalNeto,
+      descuentosAplicados: Math.max(0, subtotalBruto - total),
+      totalMatematico,
+      totalWeight,
+      scalePricePerKg,
+      scalePricingAvailable,
+    },
+    pricingSnapshot: {
+      calculatedAt: now,
+      total,
+      subtotalBruto,
+      descuentosAplicados: Math.max(0, subtotalBruto - total),
+      totalWeight,
+      scalePricePerKg,
+    },
+    pricingStatus: missingProduct ? "requires_review" : "current",
+    lastPriceSync: {
+      updatedAt: now,
+      reason: "price_list_changed",
+      previousTotal,
+      newTotal: total,
+      affectedProductIds,
+    },
+    updatedAt: now,
+  };
+}
+
+function recalculateLinkedSavedPromos(savedCombos = [], products = [], updateMap = new Map()) {
+  const productsById = new Map();
+  products.forEach((product = {}) => {
+    [product.id, product.productKey, product.key]
+      .filter(Boolean)
+      .forEach((id) => productsById.set(String(id), product));
+  });
+  const changedIds = new Set([...updateMap.keys()].map(String));
+  let updated = 0;
+  const names = [];
+  const ids = [];
+
+  const combos = savedCombos.map((combo = {}) => {
+    const recalculated = calculateLinkedSavedPromo(combo, productsById, changedIds);
+    if (!recalculated) return combo;
+    updated += 1;
+    names.push(String(combo.name || "Promo guardada"));
+    ids.push(String(combo.id || combo.comboId || ""));
+    return recalculated;
+  });
+
+  return { combos, updated, names, ids };
+}
+
 export async function saveCombo(combo, businessId = null) {
   if (!combo || !combo.name || !Array.isArray(combo.items)) {
     throw new Error("saveCombo: combo inválido");
@@ -735,16 +942,37 @@ export async function saveCombo(combo, businessId = null) {
   const data = await loadActiveBusinessData(businessId);
   const finalBusinessId = data.businessId;
   const state = data.state || {};
+  const now = new Date().toISOString();
+  const normalizedItems = combo.items.map(normalizeSavedPromoItem);
+  const discountSummary = normalizeSavedPromoDiscountSummary(combo, normalizedItems);
+  const total = savedPromoNumber(combo.total, 0);
 
   const newCombo = {
     id: `combo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: combo.name,
     description: String(combo.description || "").trim(),
-    items: combo.items,
-    total: Number(combo.total || 0),
+    schemaVersion: SAVED_PROMO_SCHEMA_VERSION,
+    pricingMode: SAVED_PROMO_PRICING_MODE,
+    mode: String(combo.mode || "discount"),
+    tipo: String(combo.tipo || "promo_con_descuento"),
+    savedAs: String(combo.savedAs || "promo"),
+    isPromotional: combo.isPromotional !== false,
+    status: String(combo.status || "active"),
+    items: normalizedItems,
+    discountSummary,
+    pricingSnapshot: {
+      calculatedAt: now,
+      total,
+      subtotalBruto: discountSummary.subtotalBruto,
+      descuentosAplicados: discountSummary.descuentosAplicados,
+      totalWeight: discountSummary.totalWeight,
+      scalePricePerKg: discountSummary.scalePricePerKg,
+    },
+    total,
+    ...(combo.duplicatedFrom ? { duplicatedFrom: String(combo.duplicatedFrom) } : {}),
     isDemoLocal: isDemoRuntime(finalBusinessId),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: combo.createdAt || now,
+    updatedAt: now,
   };
 
   if (isDemoRuntime(finalBusinessId)) {
@@ -776,6 +1004,144 @@ export async function saveCombo(combo, businessId = null) {
   });
 
   return newCombo;
+}
+
+/* V12.23-A6: actualiza una receta existente conservando identidad y fecha de
+   creación. La publicación se mantiene porque selectedOffers referencia el ID. */
+export async function updateSavedCombo(comboId, combo, businessId = null) {
+  if (!comboId || !combo || !combo.name || !Array.isArray(combo.items)) {
+    throw new Error("updateSavedCombo: promo inválida");
+  }
+
+  const data = await loadActiveBusinessData(businessId);
+  const finalBusinessId = data.businessId;
+  const state = data.state || {};
+  const currentSavedCombos = Array.isArray(state.savedCombos) ? state.savedCombos : [];
+  const originalIndex = currentSavedCombos.findIndex((item = {}) => String(item.id || item.comboId || "") === String(comboId));
+  if (originalIndex < 0) throw new Error("No encontramos la promo que querés editar.");
+
+  const original = currentSavedCombos[originalIndex] || {};
+  const now = new Date().toISOString();
+  const normalizedItems = combo.items.map(normalizeSavedPromoItem);
+  const discountSummary = normalizeSavedPromoDiscountSummary(combo, normalizedItems);
+  const total = savedPromoNumber(combo.total, 0);
+  const updatedCombo = {
+    ...original,
+    name: String(combo.name || "").trim(),
+    description: String(combo.description || original.description || "").trim(),
+    schemaVersion: SAVED_PROMO_SCHEMA_VERSION,
+    pricingMode: SAVED_PROMO_PRICING_MODE,
+    mode: String(combo.mode || original.mode || "discount"),
+    tipo: String(combo.tipo || original.tipo || "promo_con_descuento"),
+    savedAs: String(combo.savedAs || original.savedAs || "promo"),
+    isPromotional: combo.isPromotional !== false,
+    status: "active",
+    items: normalizedItems,
+    discountSummary,
+    pricingSnapshot: {
+      calculatedAt: now,
+      total,
+      subtotalBruto: discountSummary.subtotalBruto,
+      descuentosAplicados: discountSummary.descuentosAplicados,
+      totalWeight: discountSummary.totalWeight,
+      scalePricePerKg: discountSummary.scalePricePerKg,
+    },
+    total,
+    createdAt: original.createdAt || now,
+    updatedAt: now,
+  };
+
+  const updatedCombos = currentSavedCombos.slice();
+  updatedCombos[originalIndex] = updatedCombo;
+
+  if (isDemoRuntime(finalBusinessId)) {
+    const localCombos = readLocalDemoCombos();
+    const localIndex = localCombos.findIndex((item = {}) => String(item.id || item.comboId || "") === String(comboId));
+    if (localIndex < 0) throw new Error("Las promos precargadas de la demo no se pueden editar.");
+    localCombos[localIndex] = { ...updatedCombo, isDemoLocal: true };
+    writeLocalDemoCombos(localCombos);
+    return localCombos[localIndex];
+  }
+
+  await updateBusinessState(finalBusinessId, { savedCombos: updatedCombos });
+  return updatedCombo;
+}
+
+/* V12.23-A7: archiva o restaura una promo sin perder su receta. La
+   publicación se administra aparte para que una promo archivada nunca quede
+   expuesta en la vidriera pública. */
+export async function setSavedComboArchived(comboId, archived, businessId = null) {
+  if (!comboId) throw new Error("setSavedComboArchived: promo requerida");
+
+  const data = await loadActiveBusinessData(businessId);
+  const finalBusinessId = data.businessId;
+  const state = data.state || {};
+  const currentSavedCombos = Array.isArray(state.savedCombos) ? state.savedCombos : [];
+  const comboIndex = currentSavedCombos.findIndex(
+    (item = {}) => String(item.id || item.comboId || "") === String(comboId)
+  );
+  if (comboIndex < 0) throw new Error("No encontramos la promo que querés actualizar.");
+
+  const now = new Date().toISOString();
+  const updatedCombo = {
+    ...currentSavedCombos[comboIndex],
+    status: archived ? "archived" : "active",
+    archived: Boolean(archived),
+    archivedAt: archived ? now : null,
+    restoredAt: archived ? null : now,
+    updatedAt: now,
+  };
+
+  const updatedCombos = currentSavedCombos.slice();
+  updatedCombos[comboIndex] = updatedCombo;
+
+  if (isDemoRuntime(finalBusinessId)) {
+    const localCombos = readLocalDemoCombos();
+    const localIndex = localCombos.findIndex(
+      (item = {}) => String(item.id || item.comboId || "") === String(comboId)
+    );
+    if (localIndex < 0) throw new Error("Las promos precargadas de la demo no se pueden archivar.");
+    localCombos[localIndex] = { ...updatedCombo, isDemoLocal: true };
+    writeLocalDemoCombos(localCombos);
+    return localCombos[localIndex];
+  }
+
+  await updateBusinessState(finalBusinessId, { savedCombos: updatedCombos });
+  return updatedCombo;
+}
+
+/* V12.23-A8: eliminación definitiva limitada a promos ya archivadas. */
+export async function deleteArchivedSavedCombo(comboId, businessId = null) {
+  if (!comboId) throw new Error("deleteArchivedSavedCombo: promo requerida");
+
+  const data = await loadActiveBusinessData(businessId);
+  const finalBusinessId = data.businessId;
+  const state = data.state || {};
+  const currentSavedCombos = Array.isArray(state.savedCombos) ? state.savedCombos : [];
+  const comboIndex = currentSavedCombos.findIndex(
+    (item = {}) => String(item.id || item.comboId || "") === String(comboId)
+  );
+  if (comboIndex < 0) throw new Error("No encontramos la promo que querés eliminar.");
+
+  const combo = currentSavedCombos[comboIndex] || {};
+  if (combo.status !== "archived" && combo.archived !== true) {
+    throw new Error("Por seguridad, primero tenés que archivar la promo.");
+  }
+
+  if (isDemoRuntime(finalBusinessId)) {
+    const localCombos = readLocalDemoCombos();
+    const localIndex = localCombos.findIndex(
+      (item = {}) => String(item.id || item.comboId || "") === String(comboId)
+    );
+    if (localIndex < 0) throw new Error("Las promos precargadas de la demo no se pueden eliminar.");
+    const updatedLocalCombos = localCombos.filter((_, index) => index !== localIndex);
+    writeLocalDemoCombos(updatedLocalCombos);
+    return combo;
+  }
+
+  const updatedCombos = currentSavedCombos.filter((_, index) => index !== comboIndex);
+  await updateBusinessState(finalBusinessId, { savedCombos: updatedCombos });
+  return combo;
 }
 
 export async function validateBusinessExists(businessId) {
