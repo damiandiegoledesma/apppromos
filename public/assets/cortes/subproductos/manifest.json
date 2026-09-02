@@ -1,0 +1,13 @@
+{
+  "version": "v12.23-a15",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 3,
+  "subproductosCatalogCoverage": "6/6",
+  "reusedAssets": {
+    "subproductos_carcazas_pollo": "/assets/cortes/pollo/carcazas.webp",
+    "subproductos_huesitos_cerdo": "/assets/cortes/cerdo/huesitos.webp",
+    "subproductos_menudos_pollo": "/assets/cortes/pollo/menudos.webp"
+  }
+}

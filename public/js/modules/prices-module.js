@@ -5,6 +5,7 @@ import {
 } from "../services/data-service.js";
 import { activateStarterWebFromProducts } from "../services/web-premium-service.js";
 import { trackFirstPriceSaved } from "../services/tracking-service.js";
+import { getProductThumbnailPath } from "../services/product-image-service.js";
 
 function parsePriceInputValue(value) {
   const cleaned = String(value ?? "")
@@ -74,9 +75,9 @@ export function renderPrices(container, products = [], businessId = null, option
   let lastMassAdjustment = null;
   let usageFilter = "active";
 
-  function updateLocalProducts(updatedProducts = []) {
+  async function updateLocalProducts(updatedProducts = [], updateResult = null) {
     safeProducts.splice(0, safeProducts.length, ...updatedProducts);
-    onProductsUpdated?.(updatedProducts);
+    await onProductsUpdated?.(updatedProducts, updateResult);
   }
 
   function showToast(message, tone = "ok") {
@@ -282,7 +283,8 @@ export function renderPrices(container, products = [], businessId = null, option
 
     const result = await updateProductPricesBatch(changes, businessId);
     const updatedProducts = result.updatedProducts || safeProducts;
-    updateLocalProducts(updatedProducts);
+    /* V12.23-A3: esperamos la regeneración pública antes de confirmar el guardado. */
+    await updateLocalProducts(updatedProducts, result);
 
     let webActivation = null;
     if (!isDemoPriceSession && result?.changed > 0) {
@@ -322,12 +324,21 @@ export function renderPrices(container, products = [], businessId = null, option
 
     isSaving = false;
     draw();
+    const promosUpdated = Number(result?.promosUpdated || 0);
+    const publishedPromosUpdated = Number(result?.publishedPromosUpdated || 0);
+    const promoUpdateText = promosUpdated > 0
+      ? ` · ${promosUpdated} promo${promosUpdated === 1 ? "" : "s"} actualizada${promosUpdated === 1 ? "" : "s"}`
+      : "";
     const savedStatus = webActivation?.activated
-      ? "✅ Guardado · Vidriera actualizada"
-      : (isDemoPriceSession ? "Guardado en esta demo" : "✅ Guardado");
-    const savedToast = webActivation?.activated
-      ? "¡Listo! Tus precios ya están en tu carnicería online"
-      : (isDemoPriceSession ? "Cambio guardado en esta demo" : "Cambios guardados");
+      ? `✅ Guardado · Vidriera actualizada${promoUpdateText}`
+      : (isDemoPriceSession ? "Guardado en esta demo" : `✅ Guardado${promoUpdateText}`);
+    const savedToast = publishedPromosUpdated > 0
+      ? `Precios guardados. Actualizamos ${promosUpdated} promo${promosUpdated === 1 ? "" : "s"} y ${publishedPromosUpdated} publicación${publishedPromosUpdated === 1 ? "" : "es"}`
+      : promosUpdated > 0
+        ? `Precios guardados. También actualizamos ${promosUpdated} promo${promosUpdated === 1 ? "" : "s"}`
+      : webActivation?.activated
+        ? "¡Listo! Tus precios ya están en tu carnicería online"
+        : (isDemoPriceSession ? "Cambio guardado en esta demo" : "Cambios guardados");
     setStatus("saved", savedStatus);
     showToast(savedToast, "ok");
   }
@@ -508,10 +519,12 @@ export function renderPrices(container, products = [], businessId = null, option
       const isActive = p.active !== false;
       const usageActionLabel = isActive ? "No uso" : "Usar";
       const usageActionTitle = isActive ? "Marcar como No uso" : "Volver a usar este producto";
+      const thumbnailPath = getProductThumbnailPath(p);
 
       return `
         <div class="price-row ${isDirty ? "dirty" : ""} ${isActive ? "" : "price-row-inactive"}" title="${p.rubro || "Sin rubro"}${isActive ? "" : " · No usado"}">
           <div class="price-row-main">
+            ${thumbnailPath ? `<img class="price-product-thumb" src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" />` : ""}
             <div class="price-name">${p.nombre}</div>
           </div>
 
@@ -750,7 +763,8 @@ export function renderPrices(container, products = [], businessId = null, option
       }
       .price-row.dirty { border-color:#f59e0b; background:#fffbeb; }
       .price-row-main { min-width:0; display:flex; align-items:center; gap:7px; }
-      .price-name { font-size:15px; font-weight:1000; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .price-product-thumb { width:72px; height:72px; flex:0 0 72px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5; }
+      .price-name { font-size:13px; font-weight:900; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .price-actions-wrap { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
       .price-input-wrap { display:block; color:#64748b; font-size:0; font-weight:900; }
       .price-input-wrap span { display:none; }
@@ -760,7 +774,8 @@ export function renderPrices(container, products = [], businessId = null, option
       .mini-action.danger { color:#991b1b; }
       .prices-empty { padding:18px; color:#6b7280; border:1px dashed #d1d5db; border-radius:14px; }
       .prices-toast {
-        position:fixed; right:18px; bottom:18px; z-index:60; background:#111827; color:#fff; padding:12px 16px;
+        position:fixed; left:18px; right:18px; bottom:92px; z-index:2147483000; width:min(560px,calc(100vw - 36px));
+        margin:0 auto; box-sizing:border-box; background:#111827; color:#fff; padding:12px 16px; text-align:center;
         border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:all .2s ease;
       }
       .prices-toast[data-tone="error"] { background:#991b1b; }
@@ -806,6 +821,19 @@ export function renderPrices(container, products = [], businessId = null, option
         .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
       }
       @media (max-width: 760px) {
+        /* V12.23-A2-FIX1: aviso por encima de navegación inferior y Carniza. */
+        .prices-toast {
+          left:10px;
+          right:10px;
+          bottom:var(--apppromos-mobile-quick-summary-bottom, calc(184px + env(safe-area-inset-bottom, 0px)));
+          width:calc(100vw - 20px);
+          max-width:520px;
+          padding:11px 13px;
+          border-radius:14px;
+          font-size:13px;
+          line-height:1.25;
+          font-weight:900;
+        }
         .prices-desktop-floating-summary.is-visible {
           position:fixed;
           left:10px;
@@ -858,6 +886,7 @@ export function renderPrices(container, products = [], businessId = null, option
         .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
       }
       @media (max-width: 768px) {
+        .price-product-thumb { width:58px; height:58px; flex-basis:58px; border-radius:12px; }
         .prices-title h2 { font-size:25px; }
         .prices-toolbar { top: 60px; padding:12px; }
         .prices-toolbar-row { align-items:stretch; }
@@ -1243,6 +1272,18 @@ export function renderPrices(container, products = [], businessId = null, option
       @media (max-width: 768px) {
         .price-row {
           grid-template-columns:minmax(0,1fr) 88px 76px !important;
+          min-height:72px !important;
+        }
+        .price-row-main {
+          display:flex !important;
+          align-items:center !important;
+          gap:7px !important;
+        }
+        .price-name,
+        .price-row .price-name {
+          font-size:12px !important;
+          line-height:1.12 !important;
+          font-weight:850 !important;
         }
         .price-actions,
         .price-actions-simple {

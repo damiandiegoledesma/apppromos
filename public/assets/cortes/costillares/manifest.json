@@ -1,0 +1,15 @@
+{
+  "version": "v12.23-a14",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 2,
+  "costillaresCatalogCoverage": "4/4",
+  "sharedAssets": {
+    "costillar-novillo.webp": [
+      "costillares_costillar_exportacion",
+      "costillares_costillar_novillo_b",
+      "costillares_costillar_ternera_a"
+    ]
+  }
+}

@@ -24,7 +24,7 @@ import {
   trackWebShared
 } from "./services/tracking-service.js";
 
-import { updateBusinessBasicData, getPublicWebUrl, syncPublicWebSnapshot } from "./services/web-premium-service.js";
+import { updateBusinessBasicData, getPublicWebUrl, saveWebConfig, syncPublicWebSnapshot } from "./services/web-premium-service.js";
 import { finishDailyPromo, getArgentinaDayKey, getDailyPromosForManagement, publishDailyPromo } from "./services/daily-promos-service.js";
 import {
   uploadBusinessLogo,
@@ -32,7 +32,7 @@ import {
   deleteBusinessLogo,
   deleteBusinessFrontPhoto
 } from "./services/business-brand-service.js";
-import { loadActiveBusinessData } from "./services/data-service.js";
+import { deleteArchivedSavedCombo, loadActiveBusinessData, saveCombo, setSavedComboArchived } from "./services/data-service.js";
 import {
   loadMarketCacheOnce,
   rebuildMarketSnapshotsFromBusinesses
@@ -74,6 +74,7 @@ let lazyRenderInProgress = null;
 let currentPanelId = "dashboardPanel";
 let currentActiveProducts = [];
 let pendingBuilderInitialMode = null;
+let pendingBuilderEditCombo = null;
 
 const publicSnapshotSyncedBusinesses = new Set();
 
@@ -365,7 +366,12 @@ function getBuilderOptions() {
     businessId: currentBusinessId,
     businessMeta: currentPayload?.meta || {},
     ...getWriteOptions(),
-    ...getDemoActionOptions()
+    ...getDemoActionOptions(),
+    onAfterComboUpdated: async (_combo, { published } = {}) => {
+      if (published) await syncCurrentPublicWebSnapshot("promo_edited");
+      if (webPanel) webPanel.dataset.rendered = "";
+      goToPanel("savedPanel");
+    }
   };
 }
 
@@ -2167,13 +2173,20 @@ function resetBuilderPanelForNewSale() {
     ? pendingBuilderInitialMode
     : null;
   pendingBuilderInitialMode = null;
+  const initialCombo = pendingBuilderEditCombo;
+  pendingBuilderEditCombo = null;
+  const selectedOffers = Array.isArray(currentPayload?.state?.web?.selectedOffers)
+    ? currentPayload.state.web.selectedOffers.map(String)
+    : [];
 
   renderBuilder(builderPanel, products, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);
   }, {
     ...getBuilderOptions(),
-    initialMode
+    initialMode,
+    initialCombo,
+    initialComboPublished: Boolean(initialCombo && selectedOffers.includes(String(initialCombo.id || initialCombo.comboId || "")))
   });
 }
 
@@ -3043,10 +3056,158 @@ async function refreshSavedModule() {
     meta: data.meta,
     state: data.state
   };
-  renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
+  renderSavedModule(data.state, data.meta || currentPayload?.meta || {});
   renderWhatsApp(whatsappPanel, data.state?.savedCombos || [], data.meta || {}, getShareOptions("whatsapp_panel"));
   renderCurrentDashboard();
   markLazyPanelsDirty();
+}
+
+function getSavedModuleOptions(businessMeta = {}) {
+  return {
+    ...getShareOptions("saved"),
+    businessMeta,
+    onEdit: async ({ combo }) => {
+      if (!combo) return;
+      const latest = await loadActiveBusinessData(currentBusinessId);
+      currentPayload = { businessId: latest.businessId, meta: latest.meta, state: latest.state };
+      const currentCombo = (Array.isArray(latest?.state?.savedCombos) ? latest.state.savedCombos : [])
+        .find((item = {}) => String(item.id || item.comboId || "") === String(combo.id || combo.comboId || ""));
+      pendingBuilderEditCombo = currentCombo || combo;
+      pendingBuilderInitialMode = "discount";
+      goToPanel("builderPanel");
+    },
+    onDuplicate: async ({ combo }) => {
+      if (!currentBusinessId || !combo) return;
+      const originalName = String(combo.name || "Promo guardada").trim() || "Promo guardada";
+      const proposedName = `${originalName} - copia`;
+      const requestedName = window.prompt("Nombre para la nueva promo", proposedName);
+      if (requestedName === null) return { cancelled: true };
+      const name = String(requestedName || "").trim();
+      if (!name) {
+        window.alert("Ingresá un nombre para duplicar la promo.");
+        return { cancelled: true };
+      }
+
+      const now = new Date().toISOString();
+      const duplicated = await saveCombo({
+        ...combo,
+        id: undefined,
+        comboId: undefined,
+        name,
+        description: String(combo.description || "").trim(),
+        status: "active",
+        isDemoPreloaded: false,
+        isDemoLocal: false,
+        duplicatedFrom: String(combo.id || combo.comboId || ""),
+        createdAt: now,
+        updatedAt: now
+      }, currentBusinessId);
+
+      await refreshSavedModule();
+      return { combo: duplicated };
+    },
+    onToggleArchive: async ({ combo, archived }) => {
+      if (!currentBusinessId || !combo?.id) return;
+      const action = archived ? "archivar" : "restaurar";
+      const extra = archived
+        ? " Si está publicada, también desaparecerá de tu carnicería online."
+        : " Volverá a Promos sin publicarse automáticamente.";
+      if (!window.confirm(`¿Querés ${action} “${String(combo.name || "esta promo").trim()}”?${extra}`)) {
+        return { cancelled: true };
+      }
+
+      const latest = await loadActiveBusinessData(currentBusinessId);
+      const comboId = String(combo.id);
+      const selectedOffers = Array.isArray(latest?.state?.web?.selectedOffers)
+        ? latest.state.web.selectedOffers.map(String)
+        : [];
+
+      if (archived && selectedOffers.includes(comboId)) {
+        await saveWebConfig(currentBusinessId, {
+          enabled: true,
+          published: true,
+          active: true,
+          selectedOffers: selectedOffers.filter((id) => id !== comboId),
+          updatedFrom: "promos_archivadas"
+        });
+      }
+
+      await setSavedComboArchived(comboId, archived, currentBusinessId);
+      await refreshSavedModule();
+      if (webPanel) webPanel.dataset.rendered = "";
+      return { archived };
+    },
+    onDeleteArchived: async ({ combo }) => {
+      if (!currentBusinessId || !combo?.id) return;
+      const comboName = String(combo.name || "Promo archivada").trim() || "Promo archivada";
+      const confirmation = window.prompt(
+        `Vas a eliminar definitivamente “${comboName}”. Esta acción no se puede deshacer.\n\nEscribí ELIMINAR para continuar.`
+      );
+      if (confirmation === null) return { cancelled: true };
+      if (String(confirmation).trim().toUpperCase() !== "ELIMINAR") {
+        window.alert("No se eliminó la promo. Tenés que escribir ELIMINAR para confirmar.");
+        return { cancelled: true };
+      }
+
+      const latest = await loadActiveBusinessData(currentBusinessId);
+      const comboId = String(combo.id);
+      const currentCombo = (Array.isArray(latest?.state?.savedCombos) ? latest.state.savedCombos : [])
+        .find((item = {}) => String(item.id || item.comboId || "") === comboId);
+      if (!currentCombo || (currentCombo.status !== "archived" && currentCombo.archived !== true)) {
+        throw new Error("La promo cambió de estado. Actualizá Promos y volvé a intentar.");
+      }
+
+      const selectedOffers = Array.isArray(latest?.state?.web?.selectedOffers)
+        ? latest.state.web.selectedOffers.map(String)
+        : [];
+      if (selectedOffers.includes(comboId)) {
+        await saveWebConfig(currentBusinessId, {
+          enabled: true,
+          published: true,
+          active: true,
+          selectedOffers: selectedOffers.filter((id) => id !== comboId),
+          updatedFrom: "promo_eliminada"
+        });
+      }
+
+      await deleteArchivedSavedCombo(comboId, currentBusinessId);
+      await refreshSavedModule();
+      if (webPanel) webPanel.dataset.rendered = "";
+      return { deleted: true };
+    },
+    onTogglePublication: async ({ combo, publish }) => {
+      if (!currentBusinessId || !combo?.id) return;
+      /* La selección se relee antes de guardar para no pisar cambios hechos
+         desde Mi carnicería online u otra sesión abierta. */
+      const latest = await loadActiveBusinessData(currentBusinessId);
+      const selectedOffers = Array.isArray(latest?.state?.web?.selectedOffers)
+        ? latest.state.web.selectedOffers.map(String)
+        : [];
+      const comboId = String(combo.id);
+      const nextSelectedOffers = publish
+        ? [...new Set([...selectedOffers, comboId])]
+        : selectedOffers.filter((id) => id !== comboId);
+
+      const nextWeb = await saveWebConfig(currentBusinessId, {
+        enabled: true,
+        published: true,
+        active: true,
+        selectedOffers: nextSelectedOffers,
+        updatedFrom: "promos_guardadas"
+      });
+
+      currentPayload.state = {
+        ...(latest.state || currentPayload.state || {}),
+        web: nextWeb
+      };
+      renderSavedModule(currentPayload.state, latest.meta || businessMeta);
+      if (webPanel) webPanel.dataset.rendered = "";
+    }
+  };
+}
+
+function renderSavedModule(state = {}, businessMeta = {}) {
+  renderSaved(savedPanel, state, getSavedModuleOptions(businessMeta));
 }
 
 async function refreshUsersModule() {
@@ -3137,13 +3298,18 @@ async function renderLazyPanel(panelId) {
   }
 }
 
-async function syncProductDrivenViews(updatedProducts = null) {
+async function syncProductDrivenViews(updatedProducts = null, updateResult = null) {
   if (!currentBusinessId || !currentPayload) return;
 
   if (Array.isArray(updatedProducts) && currentPayload.state) {
     currentPayload.state = {
       ...currentPayload.state,
-      products: updatedProducts
+      products: updatedProducts,
+      /* V12.23-A3: la publicación debe usar las Promos recién recalculadas,
+         no la copia anterior que permanecía en memoria. */
+      ...(Array.isArray(updateResult?.updatedSavedCombos)
+        ? { savedCombos: updateResult.updatedSavedCombos }
+        : {})
     };
     const activeProducts = setActiveProductCatalog(updatedProducts);
 
@@ -3248,7 +3414,7 @@ async function renderBusinessWorkspace(options = {}) {
     if (isPaymentOverdue()) injectAccessWarning(pricesPanel);
   }
 
-  if (!setPanelLocked(savedPanel, "combos")) renderSaved(savedPanel, data.state, { ...getShareOptions("saved"), businessMeta: data.meta || currentPayload?.meta || {} });
+  if (!setPanelLocked(savedPanel, "combos")) renderSavedModule(data.state, data.meta || currentPayload?.meta || {});
   if (!setPanelLocked(builderPanel, "combos")) renderBuilder(builderPanel, activeProducts, async (...args) => {
     await trackBusinessActivityThrottled(currentBusinessId, 60);
     return refreshSavedModule(...args);

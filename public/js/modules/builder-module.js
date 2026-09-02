@@ -1,5 +1,6 @@
 import { buildCustomerWhatsappMessage, openCustomerWhatsappMessage } from "../services/whatsapp-message-service.js";
-import { saveCombo } from "../services/data-service.js";
+import { saveCombo, updateSavedCombo } from "../services/data-service.js";
+import { getProductThumbnailPath } from "../services/product-image-service.js";
 
 function formatMoney(value) {
   return new Intl.NumberFormat("es-AR").format(Number(value || 0));
@@ -183,6 +184,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     .sort((a, b) => String(a.rubro || "").localeCompare(String(b.rubro || ""), "es") || String(a.nombre || "").localeCompare(String(b.nombre || ""), "es"));
 
   let mode = "chooser";
+  const editingCombo = options?.initialCombo && typeof options.initialCombo === "object"
+    ? options.initialCombo
+    : null;
 
   function createQuickState() {
     return {
@@ -246,6 +250,36 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function startDiscountMode() {
     resetQuickState();
     resetDiscountState();
+    mode = "discount";
+    renderDiscount();
+  }
+
+  function startEditMode(combo = {}) {
+    resetQuickState();
+    resetDiscountState();
+    const productsById = new Map();
+    safeProducts.forEach((product = {}) => {
+      [product.id, product.productKey, product.key]
+        .filter(Boolean)
+        .forEach((id) => productsById.set(String(id), product));
+    });
+
+    state.discount.items = (Array.isArray(combo.items) ? combo.items : []).map((savedItem = {}) => {
+      const link = String(savedItem.productId || savedItem.productKey || savedItem.id || "");
+      const currentProduct = productsById.get(link);
+      return normalizeProduct({
+        ...(currentProduct || {}),
+        ...savedItem,
+        id: currentProduct?.id || savedItem.id || savedItem.productId || null,
+        productKey: currentProduct?.productKey || savedItem.productKey || savedItem.productId || savedItem.id || null,
+        precio: currentProduct ? getProductPrice(currentProduct) : getProductPrice(savedItem),
+        cantidad: Number(savedItem.cantidad ?? savedItem.qty ?? 1),
+        descuento_individual: clampPercent(savedItem.descuento_individual ?? savedItem.individualDiscount ?? 0),
+      });
+    });
+    state.discount.globalDiscount = clampPercent(combo?.discountSummary?.globalDiscount || 0);
+    state.discount.offerName = String(combo.name || "").trim();
+    state.discount.step = 1;
     mode = "discount";
     renderDiscount();
   }
@@ -346,9 +380,21 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     if (!canRunOptionHook(options?.onBeforePromoSave, { source: "builder_discount", payload })) {
       return null;
     }
-    const combo = await saveCombo(payload, options?.businessId || null);
+    let combo = null;
+    if (editingCombo) {
+      if (options?.initialComboPublished) {
+        const confirmed = window.confirm("Esta promo está publicada. Al guardar, también se actualizará en tu carnicería online. ¿Continuar?");
+        if (!confirmed) return null;
+      }
+      combo = await updateSavedCombo(editingCombo.id || editingCombo.comboId, payload, options?.businessId || null);
+    } else {
+      combo = await saveCombo(payload, options?.businessId || null);
+    }
     if (typeof onComboSaved === "function") await onComboSaved(combo);
-    alert("Promo o combo guardado.");
+    if (editingCombo && typeof options?.onAfterComboUpdated === "function") {
+      await options.onAfterComboUpdated(combo, { published: Boolean(options?.initialComboPublished) });
+    }
+    alert(editingCombo ? "Promo actualizada." : "Promo o combo guardado.");
     return combo;
   }
 
@@ -440,15 +486,17 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           <span>${escapeHtml(headerTitle)}</span>
           <span>${escapeHtml(headerHelp)}</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:9px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:9px;">
           ${visibleProducts.map((product) => {
             const key = getProductKey(product);
             const active = selectedKeys.has(String(key));
             const actionText = active ? "Elegido" : "Sumar";
+            const thumbnailPath = getProductThumbnailPath(product);
             return `
-              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:76px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#dbeafe"}; background:${active ? "#ecfdf5" : "#fff"}; color:#172554; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
-                <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start;">
-                  <strong style="font-size:.96rem; line-height:1.15;">${escapeHtml(product.nombre || "Producto")}</strong>
+              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#dbeafe"}; background:${active ? "#ecfdf5" : "#fff"}; color:#172554; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
+                <div style="display:grid; grid-template-columns:${thumbnailPath ? "76px " : ""}minmax(0,1fr) auto; gap:9px; align-items:center;">
+                  ${thumbnailPath ? `<img src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" style="width:76px; height:76px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5;" />` : ""}
+                  <strong style="font-size:.86rem; line-height:1.14;">${escapeHtml(product.nombre || "Producto")}</strong>
                   <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#2563eb"};">${active ? "✓" : "+"} ${actionText}</span>
                 </div>
                 <div style="margin-top:7px; font-size:.78rem; font-weight:900; color:#64748b;">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
@@ -1008,7 +1056,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     container.innerHTML = `
       <section style="display:grid; gap:12px;">
-        ${renderTopActions("Crear promo o combo", "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
+        ${renderTopActions(editingCombo ? "Editar promo" : "Crear promo o combo", editingCombo ? "Modificá la receta y guardá los cambios sobre esta promo." : "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
         <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;">
           ${steps.map((step) => `
             <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
@@ -1184,7 +1232,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
             <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              <button id="discountSaveBtn" type="button">Guardar promo o combo</button>
+              <button id="discountSaveBtn" type="button">${editingCombo ? "Guardar cambios" : "Guardar promo o combo"}</button>
               <button id="discountWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
             </div>
           </div>
@@ -1230,7 +1278,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     });
   }
 
-  if (options?.initialMode === "quick") {
+  if (editingCombo) {
+    startEditMode(editingCombo);
+  } else if (options?.initialMode === "quick") {
     startQuickMode();
   } else if (options?.initialMode === "discount") {
     startDiscountMode();

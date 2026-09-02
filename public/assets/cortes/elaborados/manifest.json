@@ -1,0 +1,18 @@
+{
+  "version": "v12.23-a13",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 9,
+  "elaboradosCatalogCoverage": "13/13",
+  "reusedAssets": {
+    "cerdo": [
+      "elaborados_chorizos",
+      "elaborados_milanesa_cerdo",
+      "elaborados_morcilla"
+    ],
+    "pollo": [
+      "elaborados_milanesa_pollo"
+    ]
+  }
+}

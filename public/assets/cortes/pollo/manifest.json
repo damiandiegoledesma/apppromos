@@ -1,0 +1,10 @@
+{
+  "version": "v12.23-a11-fix1",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 8,
+  "polloCatalogCoverage": "10/10",
+  "elaboradosCatalogCoverage": "1/13",
+  "pendingPollo": []
+}

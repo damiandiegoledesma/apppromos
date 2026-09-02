@@ -1,0 +1,14 @@
+{
+  "version": "v12.23-a12",
+  "format": "webp",
+  "canvas": "320x320",
+  "transparent": true,
+  "assets": 2,
+  "otrosCatalogCoverage": "3/3",
+  "sharedAssets": {
+    "carbon.webp": [
+      "otros_carbon_x_3",
+      "otros_carbon_x_5"
+    ]
+  }
+}
