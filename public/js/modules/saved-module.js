@@ -89,6 +89,10 @@ export function renderSaved(container, state, options = {}) {
       .saved-head { border:1px solid #ece7df; border-radius:18px; padding:18px; background:#fff; }
       .saved-head h2 { margin:0 0 6px; color:#8b1f1f; }
       .saved-head p { margin:0; color:#6b7280; }
+      .saved-filters { display:grid; grid-template-columns:minmax(180px,1fr) minmax(150px,220px) minmax(130px,180px); gap:10px; padding:12px; border:1px solid #dbeafe; border-radius:16px; background:#f8fbff; }
+      .saved-filter-field { display:grid; gap:5px; color:#475569; font-size:11px; font-weight:950; text-transform:uppercase; letter-spacing:.03em; }
+      .saved-filter-field input,.saved-filter-field select { width:100%; min-height:42px; border:1px solid #cbd5e1; border-radius:12px; background:#fff; color:#111827; padding:0 11px; font:inherit; font-size:14px; font-weight:800; text-transform:none; letter-spacing:0; }
+      .saved-filter-result { grid-column:1 / -1; color:#475569; font-size:12px; font-weight:850; }
       .saved-list { display:flex; flex-direction:column; gap:8px; }
       .saved-archive-box { border:1px solid #e5e7eb; border-radius:16px; background:#f8fafc; overflow:hidden; }
       .saved-archive-box summary { padding:13px 15px; cursor:pointer; font-weight:950; color:#475569; list-style:none; }
@@ -98,6 +102,7 @@ export function renderSaved(container, state, options = {}) {
       .saved-archive-list { display:flex; flex-direction:column; gap:8px; padding:0 8px 8px; }
       .saved-card.is-archived { border-color:#cbd5e1; background:#fff; }
       .saved-card { border:1px solid #dbeafe; border-radius:14px; padding:10px 12px; background:#fff; display:grid; grid-template-columns:minmax(220px,1fr) minmax(120px,auto) auto; gap:8px 12px; align-items:center; }
+      .saved-card[hidden] { display:none !important; }
       .saved-card.demo-preloaded { border-color:#f0c36d; background:#fffaf0; }
       .saved-top { display:block; min-width:0; }
       .saved-title { font-size:16px; font-weight:1000; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -118,13 +123,25 @@ export function renderSaved(container, state, options = {}) {
       .saved-whatsapp { border:0; border-radius:999px; padding:9px 13px; background:#16a34a; color:#fff; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-status { grid-column:1 / -1; min-height:0; color:#166534; font-size:12px; font-weight:900; text-align:right; }
       .saved-empty { border:1px dashed #d1d5db; border-radius:18px; padding:22px; background:#fff; color:#6b7280; text-align:center; }
-      @media (max-width: 760px) { .saved-card { grid-template-columns:1fr auto; align-items:start; } .saved-items { grid-column:1 / -1; } .saved-price { text-align:right; font-size:18px; } .saved-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; } .saved-publication,.saved-duplicate,.saved-edit,.saved-archive,.saved-restore,.saved-delete,.saved-whatsapp { width:100%; } .saved-status{text-align:left;} }
+      @media (max-width: 760px) { .saved-filters { grid-template-columns:1fr 1fr; } .saved-filter-search { grid-column:1 / -1; } .saved-card { grid-template-columns:1fr auto; align-items:start; } .saved-items { grid-column:1 / -1; } .saved-price { text-align:right; font-size:18px; } .saved-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; } .saved-publication,.saved-duplicate,.saved-edit,.saved-archive,.saved-restore,.saved-delete,.saved-whatsapp { width:100%; } .saved-status{text-align:left;} }
     </style>
 
     <div class="saved-shell">
       <div class="saved-head">
         <h2>🥩 Promos para repetir</h2>
         <p>Elegí una promo guardada o combo demo y mandalo por WhatsApp.</p>
+      </div>
+      <div class="saved-filters" aria-label="Filtros de promos guardadas">
+        <label class="saved-filter-field saved-filter-search">Buscar
+          <input id="savedFilterSearch" type="search" placeholder="Nombre o producto" autocomplete="off" />
+        </label>
+        <label class="saved-filter-field">Tipo
+          <select id="savedFilterCategory"><option value="all">Todos los tipos</option></select>
+        </label>
+        <label class="saved-filter-field">Cantidad
+          <select id="savedFilterWeight"><option value="all">Todos los kilos</option></select>
+        </label>
+        <div id="savedFilterResult" class="saved-filter-result"></div>
       </div>
       <div id="savedList" class="saved-list"></div>
       <details id="savedArchiveBox" class="saved-archive-box" hidden>
@@ -135,6 +152,10 @@ export function renderSaved(container, state, options = {}) {
   `;
 
   const savedListEl = container.querySelector("#savedList");
+  const savedFilterSearch = container.querySelector("#savedFilterSearch");
+  const savedFilterCategory = container.querySelector("#savedFilterCategory");
+  const savedFilterWeight = container.querySelector("#savedFilterWeight");
+  const savedFilterResult = container.querySelector("#savedFilterResult");
   const savedArchiveBox = container.querySelector("#savedArchiveBox");
   const savedArchiveSummary = container.querySelector("#savedArchiveSummary");
   const savedArchiveList = container.querySelector("#savedArchiveList");
@@ -172,7 +193,7 @@ export function renderSaved(container, state, options = {}) {
             : "";
 
       return `
-        <article class="saved-card ${isPreloaded ? "demo-preloaded" : ""} ${archived ? "is-archived" : ""}">
+        <article class="saved-card ${isPreloaded ? "demo-preloaded" : ""} ${archived ? "is-archived" : ""}" data-saved-card-index="${index}">
           <div class="saved-top">
             <div class="saved-title">${escapeHtml(getSavedTitle(combo, items))}</div>
             ${subtitle}
@@ -199,9 +220,39 @@ export function renderSaved(container, state, options = {}) {
 
   const activeEntries = savedCombos.map((combo, index) => ({ combo, index })).filter(({ combo }) => combo?.status !== "archived" && combo?.archived !== true);
   const archivedEntries = savedCombos.map((combo, index) => ({ combo, index })).filter(({ combo }) => combo?.status === "archived" || combo?.archived === true);
+  const categories = [...new Set(activeEntries.map(({ combo }) => getComboCategory(combo)))].sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b), "es"));
+  const weights = [...new Set(activeEntries.map(({ combo }) => getComboWeightKg(combo)).filter((value) => value > 0))].sort((a, b) => a - b);
+  savedFilterCategory?.insertAdjacentHTML("beforeend", categories.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(categoryLabel(value))}</option>`).join(""));
+  savedFilterWeight?.insertAdjacentHTML("beforeend", weights.map((value) => `<option value="${value}">${escapeHtml(formatWeight(value))} kg</option>`).join(""));
   savedListEl.innerHTML = activeEntries.length
-    ? activeEntries.map(({ combo, index }) => renderComboCard(combo, index, false)).join("")
+    ? `${activeEntries.map(({ combo, index }) => renderComboCard(combo, index, false)).join("")}<div id="savedFilterEmpty" class="saved-empty" hidden>No encontramos promos con esos filtros.</div>`
     : `<div class="saved-empty">No hay promos activas. Podés restaurar una desde Archivadas.</div>`;
+  const savedFilterEmpty = savedListEl.querySelector("#savedFilterEmpty");
+
+  const renderFilteredEntries = () => {
+    const query = normalizeComparableText(savedFilterSearch?.value || "");
+    const category = savedFilterCategory?.value || "all";
+    const weight = savedFilterWeight?.value || "all";
+    const filtered = activeEntries.filter(({ combo }) => {
+      const items = Array.isArray(combo?.items) ? combo.items : [];
+      const haystack = normalizeComparableText(`${getSavedTitle(combo, items)} ${items.map((item) => item?.nombre || "").join(" ")}`);
+      if (query && !haystack.includes(query)) return false;
+      if (category !== "all" && getComboCategory(combo) !== category) return false;
+      if (weight !== "all" && Math.abs(getComboWeightKg(combo) - Number(weight)) > 0.001) return false;
+      return true;
+    });
+    const visibleIndexes = new Set(filtered.map(({ index }) => String(index)));
+    savedListEl.querySelectorAll("[data-saved-card-index]").forEach((card) => {
+      card.hidden = !visibleIndexes.has(String(card.dataset.savedCardIndex));
+    });
+    if (savedFilterEmpty) savedFilterEmpty.hidden = filtered.length > 0;
+    if (savedFilterResult) savedFilterResult.textContent = `${filtered.length} de ${activeEntries.length} promos`;
+  };
+
+  renderFilteredEntries();
+  savedFilterSearch?.addEventListener("input", renderFilteredEntries);
+  savedFilterCategory?.addEventListener("change", renderFilteredEntries);
+  savedFilterWeight?.addEventListener("change", renderFilteredEntries);
 
   if (archivedEntries.length) {
     savedArchiveBox.hidden = false;
@@ -330,4 +381,33 @@ export function renderSaved(container, state, options = {}) {
       }
     });
   });
+}
+
+function getComboWeightKg(combo = {}) {
+  return (Array.isArray(combo.items) ? combo.items : []).reduce((total, item = {}) => {
+    const unit = normalizeComparableText(item.unidad || item.unit || "kg");
+    if (unit && !["kg", "kgs", "kilo", "kilos", "kilogramo", "kilogramos"].includes(unit)) return total;
+    const quantity = Number(item.cantidad ?? item.qty ?? item.quantity ?? 0);
+    return Number.isFinite(quantity) && quantity > 0 ? total + quantity : total;
+  }, 0);
+}
+
+function getComboCategory(combo = {}) {
+  const categories = [...new Set((Array.isArray(combo.items) ? combo.items : [])
+    .map((item = {}) => normalizeComparableText(item.rubro || item.category || item.categoria || ""))
+    .filter(Boolean))];
+  if (categories.length > 1) return "mixed";
+  return categories[0] ? `single:${categories[0]}` : "uncategorized";
+}
+
+function categoryLabel(value = "") {
+  if (value === "mixed") return "Mixtas";
+  if (value === "uncategorized") return "Sin rubro";
+  const name = String(value).replace(/^single:/, "");
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : "Sin rubro";
+}
+
+function formatWeight(value = 0) {
+  const number = Number(value || 0);
+  return Number.isInteger(number) ? String(number) : String(Number(number.toFixed(2))).replace(".", ",");
 }
