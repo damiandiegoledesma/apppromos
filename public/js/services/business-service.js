@@ -189,17 +189,29 @@ export async function openBusiness(businessId, options = {}) {
     }
   }
 
-  if (!forceRemote) {
-    const cached = loadBusinessCache(businessId);
-    if (cached?.meta && cached?.state) {
-      return setBusinessStore({ businessId, meta: cached.meta, state: cached.state }, { source: "localStorage" });
-    }
-  }
+  // La caché es únicamente respaldo de conectividad. Si se devuelve antes de
+  // consultar Firestore, cada dispositivo puede quedar mostrando una versión
+  // diferente del negocio indefinidamente (por ejemplo, promos creadas desde
+  // desktop que nunca aparecen en mobile).
+  const cached = !forceRemote ? loadBusinessCache(businessId) : null;
+  let meta = null;
+  let state = null;
 
-  const [meta, state] = await Promise.all([
-    readPath(getBusinessMetaPath(businessId)),
-    readPath(getBusinessStatePath(businessId))
-  ]);
+  try {
+    [meta, state] = await Promise.all([
+      readPath(getBusinessMetaPath(businessId)),
+      readPath(getBusinessStatePath(businessId))
+    ]);
+  } catch (error) {
+    if (cached?.meta && cached?.state) {
+      console.warn(`Firestore no disponible para ${businessId}; usando caché local`, error);
+      return setBusinessStore(
+        { businessId, meta: cached.meta, state: cached.state },
+        { source: "localStorage-fallback" }
+      );
+    }
+    throw error;
+  }
 
   if (!meta) {
     throw new Error(`Empresa no existe: ${businessId}`);
