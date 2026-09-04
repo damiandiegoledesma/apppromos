@@ -100,6 +100,13 @@ export function renderDashboard(container, businessId, meta, state, options = {}
   const products = normalizeProductsFromState(state);
   const savedCombos = normalizeSavedCombosFromState(state);
   const activeProducts = products.filter((item) => item.active !== false);
+  const logoReady = Boolean(String(meta?.brand?.logoUrl || "").trim());
+  const frontPhotoReady = Boolean(String(meta?.brand?.frontPhotoUrl || "").trim());
+  const showBrandReminder = options?.showBrandReminder !== false && (!logoReady || !frontPhotoReady);
+  const missingBrandParts = [
+    !logoReady ? "tu logo" : "",
+    !frontPhotoReady ? "una foto del frente" : ""
+  ].filter(Boolean);
   let publicWebUrl = "";
   try {
     const slug = state?.web?.slug || buildBusinessSlug(meta || {}, businessId);
@@ -120,6 +127,12 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-shell { display:flex; flex-direction:column; gap:18px; width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box; }
       .dash-shell *, .dash-shell *::before, .dash-shell *::after { box-sizing:border-box; min-width:0; }
       .dash-main-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:24px; padding:26px; background:linear-gradient(180deg,#fff,#fff7f4); box-shadow:0 10px 26px rgba(139,31,31,.08); }
+      .dash-brand-reminder { width:100%; border:1px solid #bfdbfe; border-radius:22px; padding:17px 18px; background:linear-gradient(135deg,#eff6ff,#fff 65%); box-shadow:0 10px 24px rgba(4,119,242,.08); display:flex; align-items:center; justify-content:space-between; gap:16px; }
+      .dash-brand-reminder-copy { display:grid; gap:5px; color:#1e3a8a; }
+      .dash-brand-reminder-copy strong { font-size:18px; line-height:1.15; }
+      .dash-brand-reminder-copy span { color:#475569; font-size:14px; font-weight:750; line-height:1.4; }
+      .dash-brand-reminder-copy small { color:#1d4ed8; font-size:12px; font-weight:900; }
+      .dash-brand-reminder-btn { min-height:46px; flex:0 0 auto; padding:0 17px; border:0; border-radius:14px; background:#0477f2; color:#fff; font-weight:1000; cursor:pointer; box-shadow:0 8px 18px rgba(4,119,242,.18); }
       .dash-kicker { font-size:12px; font-weight:950; color:#9f1d20; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
       .dash-main-title { margin:0 0 8px; font-size:38px; line-height:1.05; color:#8b1f1f; }
       .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:15px; }
@@ -173,6 +186,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       @media (max-width: 900px) { .dash-actions, .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card { grid-template-columns:1fr; } .dash-carniza-actions { justify-content:stretch; } .dash-carniza-btn { flex:1; min-width:150px; } }
       @media (max-width: 640px) {
         .dash-shell { gap:12px; }
+        .dash-brand-reminder { align-items:stretch; flex-direction:column; padding:15px; }
+        .dash-brand-reminder-btn { width:100%; }
         .dash-main-card { padding:12px; border-radius:20px; }
         .dash-main-title { font-size:22px; line-height:1.08; margin-bottom:12px; }
         .dash-main-subtitle, .dash-kicker { display:none; }
@@ -201,6 +216,16 @@ export function renderDashboard(container, businessId, meta, state, options = {}
     </style>
 
     <div class="dash-shell">
+      ${showBrandReminder ? `
+        <section class="dash-brand-reminder" data-brand-reminder>
+          <div class="dash-brand-reminder-copy">
+            <strong>📸 Personalizá tu carnicería online</strong>
+            <span>Subí tu logo y una foto real del frente para que tus clientes reconozcan tu negocio.</span>
+            <small>Te falta: ${missingBrandParts.join(" y ")}.</small>
+          </div>
+          <button type="button" class="dash-brand-reminder-btn" data-brand-reminder-open>Completar ahora</button>
+        </section>
+      ` : ""}
       <div class="dash-main-card">
         <div class="dash-kicker">Hoy</div>
         <h2 class="dash-main-title">¿Qué querés hacer?</h2>
@@ -229,6 +254,10 @@ export function renderDashboard(container, businessId, meta, state, options = {}
     if (!publicWebUrl) return;
     const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicWebUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  });
+
+  container.querySelector("[data-brand-reminder-open]")?.addEventListener("click", () => {
+    if (typeof options?.onEditBusinessData === "function") options.onEditBusinessData();
   });
 
 }

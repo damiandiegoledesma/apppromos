@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Web de Arranque · AppPromos</title>
+  <title>Carnicería online | AppPromos</title>
+  <link id="businessFavicon" rel="icon" href="/assets/logo/apppromos-favicon-transparent.png" />
   <style>
     :root{
       --red:#b63b2b;
@@ -1381,6 +1382,20 @@
     }
     function getSlugFromPath(){const parts=location.pathname.split("/").filter(Boolean); const last=parts[parts.length-1]||""; if(!last||last.includes(".")||["app","admin","index"].includes(last)) return ""; return normalizeSlug(last)}
 
+    function applyBusinessTabIdentity(name="Carnicería",logoUrl=""){
+      const cleanName=String(name||"Carnicería").trim()||"Carnicería";
+      document.title=`${cleanName} | AppPromos`;
+      const favicon=document.getElementById("businessFavicon");
+      if(!favicon)return;
+      const fallback="/assets/logo/apppromos-favicon-transparent.png";
+      const candidate=String(logoUrl||"").trim();
+      if(!candidate){favicon.href=fallback;return;}
+      const probe=new Image();
+      probe.onload=()=>{favicon.href=candidate;};
+      probe.onerror=()=>{favicon.href=fallback;};
+      probe.src=candidate;
+    }
+
     // V12.13-C4-FIX1 - slug como índice: la web lee precios vivos desde meta/state
     async function resolveWebSource(){
       const legacyId=params.get("biz")||params.get("businessId")||"";
@@ -1499,6 +1514,7 @@
       const phone=data.phone||data.telefono||data.whatsapp||data.phoneKey||"";
       const logoUrl=String(data.logoUrl||data.brand?.logoUrl||"").trim();
       const frontPhotoUrl=String(data.frontPhotoUrl||data.brand?.frontPhotoUrl||"").trim();
+      applyBusinessTabIdentity(name,logoUrl);
       const combos=Array.isArray(data.publicOffers)?data.publicOffers:[];
       const dailyOffers=(Array.isArray(data.dailyOffers)?data.dailyOffers:[]).filter((offer)=>offer?.status==="active"&&Date.parse(offer.expiresAt||"")>Date.now());
       const genericDailyOfferNames=new Set(["oferta","promo","oferta-del-dia","promo-del-dia","oferta-de-hoy","promo-de-hoy","vender-urgente"]);
