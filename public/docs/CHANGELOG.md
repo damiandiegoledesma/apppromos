@@ -14,7 +14,7 @@
 - Personaliza el título de la web pública con el nombre real de la carnicería.
 - Utiliza el logo publicado como favicon y el icono de AppPromos como respaldo.
 - No modifica Firebase, Firestore, autenticación, billing, BusinessStore ni estructuras de datos.
-- QA local de los ajustes visibles: **OK**. Cooldown validado por código sin QA manual.
+- QA local y QA integral de producción: **OK**. Instalación, estado PWA, aviso de identidad, acceso al formulario, título y favicon dinámico validados. Cooldown validado por código sin QA manual.
 
 ## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
 

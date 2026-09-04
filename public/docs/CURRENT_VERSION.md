@@ -13,7 +13,7 @@ V12.23.3 mejora la instalación y personalización sin cambiar datos ni flujos c
 - muestra `Nombre de la carnicería | AppPromos` en la pestaña pública;
 - utiliza el logo de la carnicería como favicon y AppPromos como respaldo.
 
-QA local de instalación, estado PWA, aviso de identidad y pestaña pública: **OK**. El cooldown de siete días fue validado por código sin QA manual.
+QA local y QA integral de producción de instalación, estado PWA, aviso de identidad, título y favicon dinámico: **OK**. El cooldown de siete días fue validado por código; su espera real no requirió QA manual.
 
 ## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
 

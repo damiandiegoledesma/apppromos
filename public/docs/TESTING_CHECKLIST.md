@@ -1,6 +1,6 @@
 # AppPromos — Testing Checklist
 
-## V12.23.3 — QA local
+## V12.23.3 — QA local y producción
 
 - [x] CTA PWA unificado como `INSTALAR`.
 - [x] Cuadro nativo de instalación de Chrome.
@@ -12,15 +12,18 @@
 - [x] Título público `Nombre de la carnicería | AppPromos`.
 - [x] Web pública y navegación sin regresiones visibles.
 - [x] Sintaxis JavaScript y `git diff --check` sin errores.
-- [ ] Cooldown de siete días: validado por código, QA manual omitido por decisión de producto.
-- [ ] QA de instalación en celular real, previsto para producción.
+- [x] Cooldown de siete días validado por código; QA manual omitido por decisión de producto.
+- [x] Instalación y estado PWA validados en producción.
+- [x] Aviso de personalización y acceso al formulario validados en producción.
+- [x] Título y favicon dinámico de la carnicería validados en Chrome.
+- [x] Icono fijo de AppPromos confirmado dentro de la PWA instalada.
 
-### Cierre pendiente
+### Cierre completado
 
-- [ ] Commit en `dev`.
-- [ ] PR `dev` → `main`.
-- [ ] Despliegue de Hosting.
-- [ ] QA breve de producción.
+- [x] Commit en `dev`: `a514327`.
+- [x] PR #21 `dev` → `main` mergeado.
+- [x] Despliegue de Firebase Hosting completado.
+- [x] QA integral de producción: **OK**.
 
 ## V12.23.2 — Cierre
 
