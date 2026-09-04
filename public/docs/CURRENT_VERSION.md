@@ -1,5 +1,20 @@
 # AppPromos — Versión actual
 
+## V12.23.3 — Instalación e identidad de la carnicería online
+
+V12.23.3 mejora la instalación y personalización sin cambiar datos ni flujos comerciales:
+
+- unifica el CTA PWA como `INSTALAR` y muestra `INSTALADA` cuando corresponde;
+- actualiza los botones al completarse la instalación;
+- evita repetir durante siete días una invitación automática rechazada;
+- conserva el instalador nativo y mantiene la PWA sin caché offline;
+- muestra en Inicio un aviso mientras falten el logo o la foto del frente;
+- lleva directamente al formulario de identidad y oculta el aviso al completar ambas imágenes;
+- muestra `Nombre de la carnicería | AppPromos` en la pestaña pública;
+- utiliza el logo de la carnicería como favicon y AppPromos como respaldo.
+
+QA local de instalación, estado PWA, aviso de identidad y pestaña pública: **OK**. El cooldown de siete días fue validado por código sin QA manual.
+
 ## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
 
 V12.23.2 completa la estabilización iniciada en V12.23.1 sobre la web pública mobile-first:

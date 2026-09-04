@@ -3,6 +3,8 @@ let authenticatedAccessRecorded = false;
 
 const ACCESS_COUNT_KEY = "apppromos_pwa_authenticated_access_count_v1";
 const INSTALLED_KEY = "apppromos_pwa_installed_on_device_v1";
+const INVITATION_DISMISSED_AT_KEY = "apppromos_pwa_invitation_dismissed_at_v1";
+const INVITATION_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isStandalone() {
   return window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -39,13 +41,28 @@ function markInstalled(installed = true) {
   writeLocalValue(INSTALLED_KEY, installed ? "true" : "false");
 }
 
+function isInvitationCoolingDown() {
+  const dismissedAt = readLocalNumber(INVITATION_DISMISSED_AT_KEY);
+  return dismissedAt > 0 && (Date.now() - dismissedAt) < INVITATION_COOLDOWN_MS;
+}
+
+function recordInvitationDismissal() {
+  writeLocalValue(INVITATION_DISMISSED_AT_KEY, Date.now());
+}
+
 function installButtons() {
   return Array.from(document.querySelectorAll("[data-install-apppromos]"));
 }
 
-function keepInstallButtonsAvailable() {
+function syncInstallButtons() {
+  const installed = isStandalone() || isMarkedInstalled();
   installButtons().forEach((button) => {
     button.hidden = false;
+    button.dataset.pwaInstalled = installed ? "true" : "false";
+    button.setAttribute("aria-label", installed ? "AppPromos ya está instalada" : "Instalar AppPromos");
+  });
+  document.querySelectorAll("[data-pwa-install-label]").forEach((label) => {
+    label.textContent = installed ? "INSTALADA" : "INSTALAR";
   });
 }
 
@@ -90,19 +107,26 @@ function ensureInstallDialog() {
       </div>
     </div>`;
   document.body.appendChild(dialog);
-  dialog.querySelector(".pwa-install-close")?.addEventListener("click", () => dialog.close());
+  dialog.querySelector(".pwa-install-close")?.addEventListener("click", () => {
+    if (dialog.dataset.pwaAutomatic === "true") recordInvitationDismissal();
+    dialog.close();
+  });
   dialog.querySelector(".pwa-install-confirm")?.addEventListener("click", async () => {
     dialog.close();
     await requestInstall();
   });
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
+    if (event.target === dialog) {
+      if (dialog.dataset.pwaAutomatic === "true") recordInvitationDismissal();
+      dialog.close();
+    }
   });
   return dialog;
 }
 
 function openInstallDialog({ installed = false, automatic = false } = {}) {
   const dialog = ensureInstallDialog();
+  dialog.dataset.pwaAutomatic = automatic ? "true" : "false";
   const title = dialog.querySelector("[data-pwa-install-title]");
   const subtitle = dialog.querySelector("[data-pwa-install-subtitle]");
   const copy = dialog.querySelector(".pwa-install-copy");
@@ -153,7 +177,12 @@ async function requestInstall() {
   deferredInstallPrompt = null;
   await promptEvent.prompt();
   const choice = await promptEvent.userChoice.catch(() => null);
-  if (choice?.outcome === "accepted") markInstalled(true);
+  if (choice?.outcome === "accepted") {
+    markInstalled(true);
+    syncInstallButtons();
+  } else if (choice?.outcome === "dismissed") {
+    recordInvitationDismissal();
+  }
   trackInstall(choice?.outcome || "prompt_closed");
 }
 
@@ -163,7 +192,7 @@ function bindInstallButtons() {
     button.dataset.pwaBound = "true";
     button.addEventListener("click", requestInstall);
   });
-  keepInstallButtonsAvailable();
+  syncInstallButtons();
 }
 
 function recordAuthenticatedAccess() {
@@ -172,13 +201,14 @@ function recordAuthenticatedAccess() {
 
   if (isStandalone()) {
     markInstalled(true);
+    syncInstallButtons();
     return;
   }
 
   const nextAccessCount = readLocalNumber(ACCESS_COUNT_KEY) + 1;
   writeLocalValue(ACCESS_COUNT_KEY, nextAccessCount);
 
-  if (isMobileDevice() && nextAccessCount >= 2 && !isMarkedInstalled()) {
+  if (isMobileDevice() && nextAccessCount >= 2 && !isMarkedInstalled() && !isInvitationCoolingDown()) {
     window.setTimeout(() => openInstallDialog({ automatic: true }), 650);
   }
 }
@@ -188,13 +218,14 @@ window.addEventListener("beforeinstallprompt", (event) => {
   deferredInstallPrompt = event;
   markInstalled(false);
   bindInstallButtons();
+  syncInstallButtons();
   trackInstall("available");
 });
 
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
   markInstalled(true);
-  keepInstallButtonsAvailable();
+  syncInstallButtons();
   trackInstall("installed");
 });
 
@@ -210,6 +241,7 @@ if ("serviceWorker" in navigator) {
 
 function initializePwaInstall() {
   bindInstallButtons();
+  syncInstallButtons();
   if (window.__APPPROMOS_AUTHENTICATED_SESSION__ === true) recordAuthenticatedAccess();
 }
 

@@ -1,5 +1,27 @@
 # AppPromos — Testing Checklist
 
+## V12.23.3 — QA local
+
+- [x] CTA PWA unificado como `INSTALAR`.
+- [x] Cuadro nativo de instalación de Chrome.
+- [x] Estado `INSTALADA` y mensaje informativo.
+- [x] Sincronización del estado en los accesos visibles.
+- [x] Aviso cuando faltan logo y foto del frente.
+- [x] Enumeración de los elementos de identidad pendientes.
+- [x] `Completar ahora` abre el formulario correcto.
+- [x] Título público `Nombre de la carnicería | AppPromos`.
+- [x] Web pública y navegación sin regresiones visibles.
+- [x] Sintaxis JavaScript y `git diff --check` sin errores.
+- [ ] Cooldown de siete días: validado por código, QA manual omitido por decisión de producto.
+- [ ] QA de instalación en celular real, previsto para producción.
+
+### Cierre pendiente
+
+- [ ] Commit en `dev`.
+- [ ] PR `dev` → `main`.
+- [ ] Despliegue de Hosting.
+- [ ] QA breve de producción.
+
 ## V12.23.2 — Cierre
 
 Base: V12.23.1, commit `b16e57b007a823843eaf939abbf49616aba40aa7`.

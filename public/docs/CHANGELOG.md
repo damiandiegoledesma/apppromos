@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## V12.23.3 — Instalación e identidad de la carnicería online
+
+- Unifica el CTA de instalación como `INSTALAR` en landing, aplicación y menú mobile.
+- Muestra `INSTALADA` cuando AppPromos se ejecuta como PWA o el navegador registró su instalación.
+- Actualiza inmediatamente los accesos al completarse una instalación.
+- Informa que AppPromos ya está instalada si el usuario vuelve a pulsar el acceso.
+- Aplica una espera de siete días después de rechazar la invitación automática.
+- Actualiza la identificación del service worker sin agregar caché offline.
+- Agrega en Inicio un aviso no bloqueante cuando faltan logo, foto del frente o ambos.
+- Abre directamente la edición de identidad desde `Completar ahora`.
+- Oculta el aviso al completar ambas imágenes y lo excluye para superadmin y demo.
+- Personaliza el título de la web pública con el nombre real de la carnicería.
+- Utiliza el logo publicado como favicon y el icono de AppPromos como respaldo.
+- No modifica Firebase, Firestore, autenticación, billing, BusinessStore ni estructuras de datos.
+- QA local de los ajustes visibles: **OK**. Cooldown validado por código sin QA manual.
+
 ## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
 
 - Agrega Inicio a la navegación pública inferior y consolida seis accesos: Inicio, Buscar, Promos, Hoy, Carrito y WhatsApp.

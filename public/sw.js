@@ -1,4 +1,4 @@
-const SW_VERSION = "apppromos-v12.22-a1";
+const SW_VERSION = "apppromos-v12.23.3-fix-i";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

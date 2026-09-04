@@ -1716,6 +1716,8 @@ function renderCurrentDashboard() {
     currentPayload.meta,
     currentPayload.state,
     {
+      showBrandReminder: currentSession?.appMode !== "superadmin" && currentSession?.isDemo !== true,
+      onEditBusinessData: () => openAccountSheet("edit"),
       onBusinessDataSave: async (formData) => {
         const result = await updateBusinessBasicData(
           currentPayload.businessId,
@@ -2767,7 +2769,7 @@ function openMobileBottomMenu(kind) {
       <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
       <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
       <button type="button" data-mobile-action="how-to-sell"><strong>🧭 Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
-      <button type="button" data-mobile-action="install-app"><strong>📲 Instalar AppPromos</strong><span>Entrá desde el icono de tu pantalla.</span></button>
+      <button type="button" data-mobile-action="install-app"><strong>📲 <span data-pwa-install-label>INSTALAR</span></strong><span>Entrá desde el icono de tu pantalla.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
       ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
       <button type="button" class="primary" data-mobile-action="logout"><strong>🚪 ${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
