@@ -22,34 +22,6 @@ import { createStarterProducts, STARTER_CATALOG_VERSION } from "../data/starter-
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const DEMO_BUSINESS_ID = "demo-carniza";
-
-function isDemoRoute() {
-  try {
-    const params = new URLSearchParams(window.location.search || "");
-    return params.get("demo") === "1";
-  } catch (error) {
-    return false;
-  }
-}
-
-function createDemoSession() {
-  return {
-    firebaseUser: null,
-    userDoc: null,
-    adminProfile: null,
-    adminRole: null,
-    appMode: "client",
-    businessId: DEMO_BUSINESS_ID,
-    isDemo: true,
-    businessName: "Carnicería de Carniza",
-    user: {
-      email: "demo@app.com"
-    }
-  };
-}
-
-
 let sessionCache = {
   firebaseUser: null,
   userDoc: null,
@@ -237,12 +209,6 @@ async function loadStarterTemplate() {
 ========================= */
 
 export async function resolveSession() {
-  if (isDemoRoute()) {
-    sessionCache = createDemoSession();
-    initialized = true;
-    return sessionCache;
-  }
-
   if (initialized) return sessionCache;
 
   const firebaseUser = await waitForAuthReady();
@@ -317,12 +283,8 @@ export async function resolveSession() {
 export async function validateUserCanAccessBusiness(businessId) {
   const session = await resolveSession();
 
-  if (businessId === DEMO_BUSINESS_ID) {
-    return session?.isDemo === true;
-  }
-
   if (businessId === "demo") {
-    return session.appMode === "guest" || session.appMode === "superadmin";
+    return session.appMode === "superadmin";
   }
 
   if (session.appMode === "superadmin") return true;

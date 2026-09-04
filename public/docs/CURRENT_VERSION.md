@@ -1,5 +1,22 @@
 # AppPromos — Versión actual
 
+## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
+
+V12.23.2 completa la estabilización iniciada en V12.23.1 sobre la web pública mobile-first:
+
+- incorpora seis accesos inferiores: Inicio, Buscar, Promos, Hoy, Carrito y WhatsApp;
+- ordena el carrito flotante y Carniza para evitar superposiciones;
+- permite configurar el nombre público de Novillo como Novillo, Ternera, Vaca o un alias propio;
+- permite recordar únicamente nombre y teléfono del comprador, con consentimiento y borrado local;
+- mejora el carrito vacío, la confirmación visual al agregar y la accesibilidad;
+- oculta carrito flotante y Carniza cuando el checkout está visible;
+- retira el acceso público a DEMO, incluida la ruta `?demo=1`;
+- conserva el tenant técnico `demo` exclusivamente para el superadmin.
+
+QA local de FIX E, F, G, H y retiro de DEMO pública: **OK**. Base: V12.23.1 en `b16e57b`.
+
+El cierre requiere commit en `dev`, PR hacia `main`, despliegue conjunto de Hosting y reglas de Firestore, y QA de producción.
+
 ## V12.20 — Vender urgente de punta a punta
 
 V12.20 convierte **Vender urgente** en un flujo completo para sacar mercadería hoy:

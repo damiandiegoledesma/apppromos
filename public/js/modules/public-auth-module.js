@@ -75,10 +75,6 @@ function buildAuthHTML() {
           <div id="registroStatus" class="public-auth-status"></div>
         </div>
 
-        <div class="public-auth-demo">
-          <span>¿Querés mirar primero?</span>
-          <a href="./app.html?demo=1">Probar demo sin registro</a>
-        </div>
       </section>
     </main>
   `;
@@ -92,7 +88,9 @@ function ensureStyles() {
     body.public-auth-open { margin:0; background:#080b12; }
     body.public-auth-open .app,
     body.public-auth-open .footer-frame,
-    body.public-auth-open .footer { display:none !important; }
+    body.public-auth-open .footer,
+    body.public-auth-open .app-mobile-bottom-nav,
+    body.public-auth-open .app-mobile-bottom-menu { display:none !important; }
     .public-auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(circle at top, rgba(4,119,242,.28), rgba(2,8,23,1) 48%); font-family:Arial, sans-serif; color:#fff; }
     .public-auth-card { width:min(100%, 520px); background:rgba(255,255,255,.96); color:#111827; border-radius:28px; padding:26px; box-shadow:0 30px 90px rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.35); }
     .public-auth-logo { display:flex; align-items:center; gap:12px; color:#111827; text-decoration:none; font-size:24px; font-weight:1000; margin-bottom:18px; }
@@ -109,8 +107,6 @@ function ensureStyles() {
     .public-auth-tab input:focus { border-color:#0477f2; box-shadow:0 0 0 4px rgba(4,119,242,.12); }
     .public-auth-submit { min-height:52px; border:0; border-radius:16px; background:#16a34a; color:white; font-size:17px; font-weight:1000; cursor:pointer; margin-top:8px; box-shadow:0 12px 25px rgba(22,163,74,.22); }
     .public-auth-status { min-height:20px; color:#b91c1c; font-weight:800; font-size:14px; }
-    .public-auth-demo { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; border-top:1px solid #e5e7eb; margin-top:14px; padding-top:14px; font-weight:800; color:#4b5563; }
-    .public-auth-demo a { color:#0477f2; text-decoration:none; font-weight:1000; }
     @media (max-width:560px){ .public-auth-page{padding:14px;} .public-auth-card{padding:20px;border-radius:22px;} .public-auth-title h1{font-size:25px;} }
   `;
   document.head.appendChild(style);

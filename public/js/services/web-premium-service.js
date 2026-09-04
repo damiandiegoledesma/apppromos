@@ -98,6 +98,7 @@ export function buildDefaultWebConfig(meta = {}, businessId = "") {
     selectedOffers: [],
     showPriceList: false,
     visibleRubros: [],
+    publicRubroNames: { Novillo: "Novillo" },
     updatedAt: new Date().toISOString()
   };
 }
@@ -117,6 +118,7 @@ export function buildStarterWebConfig(meta = {}, businessId = "", now = new Date
     selectedOffers: [],
     showPriceList: false,
     visibleRubros: [],
+    publicRubroNames: { Novillo: "Novillo" },
     createdFrom: "registration_auto",
     createdAt: now,
     updatedAt: now
@@ -227,6 +229,7 @@ export function buildPublicWebPayload({
   const canShowRealPrices = !isStarter && (!priceListStatus || priceListStatus === "confirmed" || priceListStatus === "ready");
   const selected = new Set(Array.isArray(web?.selectedOffers) ? web.selectedOffers.map(String) : []);
   const visibleRubros = new Set(Array.isArray(web?.visibleRubros) ? web.visibleRubros.map((r) => toPublicText(r)).filter(Boolean) : []);
+  const publicNovilloName = toPublicText(web?.publicRubroNames?.Novillo || "Novillo") || "Novillo";
   const savedCombos = Array.isArray(state?.savedCombos) ? state.savedCombos : [];
   const publicOffers = isStarter ? [] : savedCombos
     .filter((combo = {}) => selected.has(String(combo.id || combo.comboId || "")))
@@ -270,6 +273,7 @@ export function buildPublicWebPayload({
     frontPhotoUrl: toPublicText(meta?.brand?.frontPhotoUrl || ""),
     showPriceList: Boolean(web?.showPriceList) && canShowRealPrices,
     visibleRubros: [...visibleRubros],
+    publicRubroNames: { Novillo: publicNovilloName },
     publicOffers,
     dailyOffers,
     publicProducts,

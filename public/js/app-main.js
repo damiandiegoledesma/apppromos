@@ -3469,19 +3469,19 @@ async function boot() {
   try {
     bindNav();
     setupTopbarAutoHide();
-    ensureMobileBottomNavigation();
     // Carniza visual unificado vive en ensureCarnizaFloatingLiquidator(). Evitamos segundo botón flotante legacy.
     // initCarniza({ onNavigate: goToPanel });
 
     const session = await resolveSession();
     currentSession = session;
-    ensureMobileBottomNavigation();
     updateCarnizaContext({ appMode: currentSession?.appMode || "client" });
 
     if (session.appMode === "guest") {
       renderPublicAuth();
       return;
     }
+
+    ensureMobileBottomNavigation();
 
     window.__APPPROMOS_AUTHENTICATED_SESSION__ = true;
     window.dispatchEvent(new CustomEvent("apppromos:authenticated-session", {

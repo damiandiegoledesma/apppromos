@@ -51,14 +51,14 @@ service cloud.firestore {
     }
 
     match /businesses/{businessId} {
-      allow read: if businessId == "demo" || ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
       allow update: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
       allow delete: if (isAdmin() || isSuperadmin()) && resource.data.isTestBusiness == true;
     }
 
     match /businesses/{businessId}/{document=**} {
-      allow read: if businessId == "demo" || ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
       allow create: if signedIn() && (ownsBusiness(businessId) || isAdmin() || isSuperadmin() || request.resource.data.ownerUid == request.auth.uid);
       allow update, delete: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
     }
