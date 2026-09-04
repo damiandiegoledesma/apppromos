@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## V12.23.2 — Cierre mobile, carrito y retiro de demo pública
+
+- Agrega Inicio a la navegación pública inferior y consolida seis accesos: Inicio, Buscar, Promos, Hoy, Carrito y WhatsApp.
+- Conserva el carrito flotante y ajusta su convivencia con Carniza en tablet y escritorio.
+- Evita superposiciones sobre el checkout y restaura ambos elementos al salir de esa sección.
+- Permite mostrar públicamente Novillo como Novillo, Ternera, Vaca o un nombre personalizado, sin cambiar la categoría interna.
+- Propaga el alias público al snapshot, filtros, títulos, carrito y pedido de WhatsApp.
+- Agrega consentimiento para recordar solamente nombre y teléfono del comprador en el dispositivo.
+- Incorpora `Olvidar mis datos` y mantiene fuera del almacenamiento dirección, entrega, pago, carrito y pedidos.
+- Agrega `Ver productos` al carrito vacío y confirmación visual/accesible al incorporar artículos.
+- Mantiene cantidades de productos en pasos de 0,5 kg y promociones en unidades enteras.
+- Retira `Probar demo sin registro` y desactiva la sesión ficticia asociada a `app.html?demo=1`.
+- Impide que invitados reciban o lean el tenant `demo`.
+- Reserva el tenant técnico `demo` únicamente para el arranque y operación del superadmin.
+- Evita que la navegación interna aparezca en la pantalla pública de ingreso o registro.
+- Actualiza las reglas de Firestore para eliminar la lectura pública de `businesses/demo` y sus subdocumentos.
+- Conserva Firebase Auth, BusinessStore, WriteGuard, billing, aislamiento multi-tenant y datos históricos.
+- QA local de FIX E, F, G, H y retiro de DEMO pública: **OK**.
+
 ## V12.20 — Vender urgente de punta a punta
 
 - Reemplaza las tarjetas completas de productos por búsqueda primero y lista completa opcional.

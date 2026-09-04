@@ -428,6 +428,7 @@
     .product{grid-template-columns:64px minmax(0,1fr) auto auto;gap:9px;padding:8px 0;min-height:68px;}
     .cart-add-mini{min-height:34px;padding:0 10px;border-radius:12px;border:1px solid #fed7aa;background:#fff7ed;color:#7c2d12;font-weight:950;cursor:pointer;white-space:nowrap;}
     .cart-add-btn{width:100%;margin-top:10px;}
+    .cart-add-mini.is-added,.cart-add-btn.is-added{background:#dcfce7;border-color:#86efac;color:#166534;}
     .cart-section{margin-top:16px;}.cart-card{display:grid;gap:12px;background:linear-gradient(180deg,#fff,#fff7ed);border:1px solid #fed7aa;border-radius:24px;padding:16px;box-shadow:0 14px 34px rgba(47,22,14,.10)}
     .cart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.cart-head h2{margin:0;color:#7c2d12;font-size:1.35rem;letter-spacing:-.03em}.cart-head p{margin:4px 0 0;color:#7c2d12;font-weight:820;line-height:1.35}
     .cart-badge{display:inline-flex;align-items:center;min-height:30px;padding:0 11px;border-radius:999px;background:#ffedd5;border:1px solid #fed7aa;color:#7c2d12;font-weight:950;white-space:nowrap}
@@ -436,6 +437,8 @@
     .cart-line-quantity{min-width:64px;text-align:center;color:#7c2d12;font-size:.8rem;font-weight:950;white-space:nowrap;}
     .cart-total{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:12px;border-radius:18px;background:#7c2d12;color:#fff;font-weight:950}.cart-total strong{font-size:1.25rem}
     .cart-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cart-form label{display:grid;gap:5px;color:#7c2d12;font-size:.78rem;font-weight:950;text-transform:uppercase;letter-spacing:.03em}.cart-form input{width:100%;min-height:44px;border:1px solid #fed7aa;border-radius:14px;padding:0 12px;font:inherit;font-weight:760;color:#2b2724;background:#fff}.cart-form--single{grid-template-columns:1fr}
+    .cart-memory{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid #fed7aa;border-radius:15px;background:#fffaf7}.cart-memory label{display:flex;align-items:center;gap:8px;color:#7c2d12;font-size:.82rem;font-weight:900;line-height:1.25}.cart-memory input{width:18px;height:18px;margin:0;accent-color:#9a3412}.cart-forget{min-height:34px;padding:0 11px;border:1px solid #fecaca;border-radius:11px;background:#fff1f0;color:#b42318;font-weight:900;cursor:pointer}.cart-empty-action{display:inline-flex;align-items:center;justify-content:center;min-height:38px;margin-top:10px;padding:0 13px;border:1px solid #fed7aa;border-radius:12px;background:#fff7ed;color:#7c2d12;text-decoration:none;font-weight:950}.cart-live-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .cart-floating,.carniza-web{transition:opacity .18s ease,transform .18s ease,visibility .18s ease}.cart-floating.is-checkout-hidden,.carniza-web.is-checkout-hidden{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(12px)}
     .cart-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}.cart-choice{border:1px solid #fde68a;background:#fffdf5;border-radius:16px;padding:12px;display:flex;gap:8px;align-items:flex-start;font-weight:900;color:#7c2d12;line-height:1.18}.cart-choice input{margin-top:2px;accent-color:#9a3412}.cart-choice small{display:block;margin-top:4px;color:#92400e;font-weight:750;line-height:1.25;text-transform:none;letter-spacing:0}
     .cart-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.cart-actions .btn{min-width:180px}
     .cart-floating{position:fixed;left:14px;right:14px;bottom:calc(14px + var(--safe-bottom));z-index:80;max-width:520px;margin:0 auto;pointer-events:none}.cart-floating a{width:100%;pointer-events:auto;text-decoration:none;border:1px solid #f97316;background:#9a3412;color:#fff;border-radius:18px;box-shadow:0 18px 45px rgba(124,45,18,.28);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}.cart-floating strong{font-size:.98rem}.cart-floating span{font-size:.86rem;opacity:.95;text-align:right}
@@ -1276,7 +1279,7 @@
     }
 
     /* QA A La Estaca — navegación inferior única en mobile y desktop */
-    .mobile-store-nav{position:fixed;left:50%;right:auto;bottom:10px;transform:translateX(-50%);z-index:120;width:min(760px,calc(100vw - 28px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:6px;border:1px solid #eadfd8;border-radius:20px;background:rgba(255,255,255,.98);box-shadow:0 -6px 30px rgba(47,22,14,.15);backdrop-filter:blur(14px);}
+    .mobile-store-nav{position:fixed;left:50%;right:auto;bottom:10px;transform:translateX(-50%);z-index:120;width:min(760px,calc(100vw - 28px));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;padding:6px;border:1px solid #eadfd8;border-radius:20px;background:rgba(255,255,255,.98);box-shadow:0 -6px 30px rgba(47,22,14,.15);backdrop-filter:blur(14px);}
     .mobile-store-nav a{position:relative;min-width:0;min-height:52px;display:grid;place-items:center;align-content:center;gap:2px;border-radius:13px;text-decoration:none;color:#6b4a40;font-size:.68rem;font-weight:900;touch-action:manipulation;}
     .mobile-store-nav a:hover,.mobile-store-nav a:focus-visible{background:#fff4ed;outline:none;}
     .mobile-store-nav .nav-icon{font-size:1.12rem;line-height:1;}
@@ -1286,11 +1289,27 @@
     .page{padding-bottom:110px;}
     .cart-floating,.carniza-web{bottom:88px;}
     html{scroll-padding-bottom:96px;}
+    #buscar-productos,#promos,#ofertas-dia,#pedido{scroll-margin-top:72px;scroll-margin-bottom:104px;}
+    @media(min-width:1101px){
+      .cart-floating{left:14px;right:auto;width:min(520px,calc(100vw - 420px));margin:0;}
+      .carniza-web{left:auto;right:14px;}
+    }
+    @media(min-width:641px) and (max-width:1100px){
+      .cart-floating{left:14px;right:82px;width:auto;max-width:520px;margin:0;}
+      .carniza-web{left:auto;right:14px;width:54px;height:54px;padding:4px;border-radius:50%;grid-template-columns:1fr;}
+      .carniza-web>div{display:none;}
+      .carniza-web>img{width:46px;height:46px;margin:0;}
+    }
     @media(max-width:640px){
       .mobile-store-nav{left:0;right:0;bottom:0;transform:none;width:100%;max-width:none;gap:0;padding:5px 3px calc(5px + var(--safe-bottom));border-width:1px 0 0;border-radius:0;}
-      .mobile-store-nav a{min-height:50px;font-size:.6rem;}
-      .mobile-store-nav .nav-icon{font-size:1.02rem;}
+      .mobile-store-nav a{min-height:50px;font-size:.55rem;}
+      .mobile-store-nav .nav-icon{font-size:1rem;}
+      .mobile-store-nav .nav-cart.has-cart .nav-label{font-size:.54rem;}
+      .mobile-nav-cart-total{font-size:.5rem;}
+      .mobile-cart-badge{right:calc(50% - 18px);}
       .page{padding-bottom:calc(96px + var(--safe-bottom));}
+      .apppromos-signature{margin-bottom:calc(100px + var(--safe-bottom));}
+      #buscar-productos,#promos,#ofertas-dia,#pedido{scroll-margin-top:64px;scroll-margin-bottom:calc(96px + var(--safe-bottom));}
     }
   </style>
 </head>
@@ -1430,6 +1449,7 @@
         logoUrl:meta?.brand?.logoUrl||"",
         frontPhotoUrl:meta?.brand?.frontPhotoUrl||"",
         showPriceList:Boolean(web.showPriceList)&&canShowRealPrices,
+        publicRubroNames:{Novillo:String(web?.publicRubroNames?.Novillo||"Novillo").trim()||"Novillo"},
         publicOffers,
         publicProducts:products
       };
@@ -1506,6 +1526,8 @@
       }
       const products=(Array.isArray(data.publicProducts)?data.publicProducts:[]).filter(p=>validPublicPrice(p));
       const rubroNames=[...new Set(products.map(p=>String(p.rubro||"Sin rubro").trim()||"Sin rubro"))].sort((a,b)=>a.localeCompare(b,"es"));
+      const publicNovilloName=String(data?.publicRubroNames?.Novillo||"Novillo").trim()||"Novillo";
+      function publicRubroName(rubro=""){return rubro==="Novillo"?publicNovilloName:rubro}
       const offerCategoriesAvailable=OFFER_CATEGORIES.filter(category=>combos.some(combo=>inferOfferCategory(combo)===category));
       const randomize=(items=[])=>items.map(item=>({item,sort:Math.random()})).sort((a,b)=>a.sort-b.sort).map(entry=>entry.item);
       const productAnchorId=(product={},index=0)=>`producto-${normalizeSlug(`${product.rubro||"corte"}-${product.id||product.nombre||index}`)}`;
@@ -1516,6 +1538,7 @@
       const cartMeta={phone,telefono:phone,whatsapp:phone,phoneKey:data.phoneKey||data.whatsapp||""};
       const tenantKey=data.businessId||data.slug||normalizeSlug(name)||"public";
       const cartKey=`apppromos_web_cart_${tenantKey}`;
+      const customerKey=`apppromos_web_customer_${tenantKey}`;
       const viewStateKey=`apppromos_web_view_${tenantKey}`;
       function loadViewState(){try{const parsed=JSON.parse(sessionStorage.getItem(viewStateKey)||"{}");return parsed&&typeof parsed==="object"?{search:String(parsed.search||""),rubro:String(parsed.rubro||""),scrollY:Math.max(0,Number(parsed.scrollY)||0)}:{}}catch(error){return{}}}
       const savedViewState=loadViewState();
@@ -1533,6 +1556,11 @@
       });
       function loadCartItems(){try{const parsed=JSON.parse(localStorage.getItem(cartKey)||"[]");return Array.isArray(parsed)?parsed:[]}catch(error){return[]}}
       function saveCartItems(){try{localStorage.setItem(cartKey,JSON.stringify(cartItems))}catch(error){console.warn("No se pudo guardar el carrito",error)}}
+      function loadRememberedCustomer(){try{const raw=localStorage.getItem(customerKey);if(!raw)return null;const parsed=JSON.parse(raw);return parsed&&typeof parsed==="object"?{name:String(parsed.name||""),phone:String(parsed.phone||"")}:null}catch(error){return null}}
+      let rememberedCustomer=loadRememberedCustomer();
+      let rememberCustomer=Boolean(rememberedCustomer);
+      function saveRememberedCustomer(customer={}){if(!rememberCustomer)return;rememberedCustomer={name:String(customer.name||"").slice(0,80),phone:String(customer.phone||"").slice(0,40)};try{localStorage.setItem(customerKey,JSON.stringify({version:1,...rememberedCustomer}))}catch(error){console.warn("No se pudieron recordar los datos",error)}}
+      function forgetRememberedCustomer(){rememberCustomer=false;rememberedCustomer=null;try{localStorage.removeItem(customerKey)}catch(error){console.warn("No se pudieron olvidar los datos",error)}}
       function cartNumber(value){const number=Number(value||0);return Number.isFinite(number)?number:0}
       function cartItemKey(item={}){return `${item.type||"product"}:${String(item.id||item.name||item.nombre||"item").trim()}`.toLowerCase()}
       function encodeCartItem(item={}){try{return encodeURIComponent(JSON.stringify(item||{}))}catch(error){return ""}}
@@ -1545,23 +1573,24 @@
       function cartQtyLabel(item={}){const qty=normalizedCartQuantity(item);return isOfferCartItem(item)?`${formatCartQuantity(qty)} oferta${qty===1?"":"s"}`:`${formatCartQuantity(qty)} kg`}
       function cartLineTotal(item={}){return Math.round(cartNumber(item.price)*normalizedCartQuantity(item))}
       function cartTotal(){return cartItems.reduce((acc,item)=>acc+cartLineTotal(item),0)}
-      function currentCartCustomer(){return {name:app.querySelector("#cartCustomerName")?.value||"",phone:app.querySelector("#cartCustomerPhone")?.value||"",delivery:app.querySelector("input[name='cartDelivery']:checked")?.value||"retiro",address:app.querySelector("#cartCustomerAddress")?.value||"",payment:app.querySelector("input[name='cartPayment']:checked")?.value||"efectivo"}}
+      function currentCartCustomer(){const nameInput=app.querySelector("#cartCustomerName");const phoneInput=app.querySelector("#cartCustomerPhone");const rememberInput=app.querySelector("[data-cart-remember]");return {name:nameInput?.value??rememberedCustomer?.name??"",phone:phoneInput?.value??rememberedCustomer?.phone??"",remember:rememberInput?.checked??rememberCustomer,delivery:app.querySelector("input[name='cartDelivery']:checked")?.value||"retiro",address:app.querySelector("#cartCustomerAddress")?.value||"",payment:app.querySelector("input[name='cartPayment']:checked")?.value||"efectivo"}}
       function tidyCustomerText(value=""){const text=String(value||"").trim().replace(/\s+/g," ");return text?text.charAt(0).toLocaleUpperCase("es-AR")+text.slice(1):""}
       function renderCartHtml(customer=currentCartCustomer()){
         const count=cartItems.length;
         const delivery=customer.delivery||"retiro";
         const payment=customer.payment||"efectivo";
+        const remember=Boolean(customer.remember);
         const itemsHtml=cartItems.length
           ? `<div class="cart-items">${cartItems.map((item)=>{
               const key=esc(item.key||cartItemKey(item));
-              const rubro=item.rubro?` · ${esc(item.rubro)}`:"";
+              const rubro=item.rubro?` · ${esc(publicRubroName(item.rubro))}`:"";
               const itemName=esc(item.name||"Producto");
               const comboDetail=isOfferCartItem(item)&&Array.isArray(item.items)&&item.items.length
                 ? `<span class="cart-combo-items">${item.items.map((part)=>`<span>${esc(part.cantidad||1)} ${esc(part.unidad||"kg")} · ${esc(part.nombre||"Producto")}</span>`).join("")}</span>`
                 : "";
               return `<div class="cart-line"><div><strong>${itemName}</strong><small>${esc(cartQtyLabel(item))}${rubro} · ${money(cartLineTotal(item))}</small>${comboDetail}</div><div class="cart-line-actions"><button type="button" data-cart-minus="${key}" aria-label="Reducir cantidad de ${itemName}" title="Reducir cantidad">−</button><span class="cart-line-quantity">${esc(cartQtyLabel(item))}</span><button type="button" data-cart-plus="${key}" aria-label="Aumentar cantidad de ${itemName}" title="Aumentar cantidad">+</button><button type="button" class="cart-remove" data-cart-remove="${key}" aria-label="Quitar ${itemName} del pedido" title="Quitar">Quitar</button></div></div>`;
             }).join("")}</div>`
-          : `<div class="empty">Agregá productos u ofertas para armar tu pedido.</div>`;
+          : `<div class="empty">Agregá productos u ofertas para armar tu pedido.<br><a class="cart-empty-action" href="#precios">Ver productos</a></div>`;
 
         const totalHtml=cartItems.length
           ? `<div class="cart-total"><span>Total estimado</span><strong>${money(cartTotal())}</strong></div>`
@@ -1571,7 +1600,7 @@
           ? `${whatsappIconSvg()} Pedir · ${money(cartTotal())}`
           : `${whatsappIconSvg()} Enviar pedido`;
 
-        return `<section class="section cart-section" id="pedido" data-cart-root><div class="cart-card"><div class="cart-head"><div><h2>🛒 Tu pedido</h2><p>Revisá y enviá por WhatsApp.</p></div><span class="cart-badge">${count} ítem${count===1?"":"s"}</span></div>${itemsHtml}${totalHtml}<div class="cart-form"><label>Tu nombre<input id="cartCustomerName" type="text" value="${esc(customer.name||"")}" placeholder="Ej: Juan" autocomplete="name" enterkeyhint="next" aria-describedby="cartCustomerNameError"><span class="cart-field-error" id="cartCustomerNameError" data-cart-error="name" aria-live="polite"></span></label><label>Tu teléfono<input id="cartCustomerPhone" type="tel" inputmode="tel" value="${esc(customer.phone||"")}" placeholder="Ej: 3462 555555" autocomplete="tel" enterkeyhint="next" aria-describedby="cartCustomerPhoneError"><span class="cart-field-error" id="cartCustomerPhoneError" data-cart-error="phone" aria-live="polite"></span></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartDelivery" value="retiro" ${delivery==="retiro"?"checked":""}><span>Retiro en el local<small>Pasás por la carnicería.</small></span></label><label class="cart-choice"><input type="radio" name="cartDelivery" value="envio" ${delivery==="envio"?"checked":""}><span>Envío con cadete<small>Dejanos la dirección.</small></span></label></div><div class="cart-form cart-form--single"><label class="cart-address-wrap" ${delivery==="envio"?"":"hidden"}>Dirección para envío<input id="cartCustomerAddress" type="text" value="${esc(customer.address||"")}" placeholder="Ej: Mitre 1234, barrio, entre calles" autocomplete="street-address" enterkeyhint="done" aria-describedby="cartCustomerAddressError"><span class="cart-field-error" id="cartCustomerAddressError" data-cart-error="address" aria-live="polite"></span></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartPayment" value="efectivo" ${payment==="efectivo"?"checked":""}><span>Efectivo<small>Al retirar o al cadete.</small></span></label><label class="cart-choice"><input type="radio" name="cartPayment" value="transferencia" ${payment==="transferencia"?"checked":""}><span>Transferencia<small>Coordinás con la carnicería.</small></span></label></div><div class="cart-actions"><button class="btn btn-ghost" type="button" data-cart-clear="true" ${cartItems.length?"":"disabled"}>Vaciar pedido</button><button class="btn btn-primary" type="button" data-cart-send-order="true" ${cartItems.length?"":"disabled"}>${sendLabel}</button></div></div></section>`;
+        return `<section class="section cart-section" id="pedido" data-cart-root><div class="cart-card"><div class="cart-head"><div><h2>🛒 Tu pedido</h2><p>Revisá y enviá por WhatsApp.</p></div><span class="cart-badge">${count} ítem${count===1?"":"s"}</span></div>${itemsHtml}${totalHtml}<div class="cart-form"><label>Tu nombre<input id="cartCustomerName" type="text" value="${esc(customer.name||"")}" placeholder="Ej: Juan" autocomplete="name" enterkeyhint="next" aria-describedby="cartCustomerNameError"><span class="cart-field-error" id="cartCustomerNameError" data-cart-error="name" aria-live="polite"></span></label><label>Tu teléfono<input id="cartCustomerPhone" type="tel" inputmode="tel" value="${esc(customer.phone||"")}" placeholder="Ej: 3462 555555" autocomplete="tel" enterkeyhint="next" aria-describedby="cartCustomerPhoneError"><span class="cart-field-error" id="cartCustomerPhoneError" data-cart-error="phone" aria-live="polite"></span></label></div><div class="cart-memory"><label><input type="checkbox" data-cart-remember ${remember?"checked":""}>Recordar mi nombre y teléfono en este dispositivo</label>${remember?'<button type="button" class="cart-forget" data-cart-forget>Olvidar mis datos</button>':""}</div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartDelivery" value="retiro" ${delivery==="retiro"?"checked":""}><span>Retiro en el local<small>Pasás por la carnicería.</small></span></label><label class="cart-choice"><input type="radio" name="cartDelivery" value="envio" ${delivery==="envio"?"checked":""}><span>Envío con cadete<small>Dejanos la dirección.</small></span></label></div><div class="cart-form cart-form--single"><label class="cart-address-wrap" ${delivery==="envio"?"":"hidden"}>Dirección para envío<input id="cartCustomerAddress" type="text" value="${esc(customer.address||"")}" placeholder="Ej: Mitre 1234, barrio, entre calles" autocomplete="street-address" enterkeyhint="done" aria-describedby="cartCustomerAddressError"><span class="cart-field-error" id="cartCustomerAddressError" data-cart-error="address" aria-live="polite"></span></label></div><div class="cart-choice-grid"><label class="cart-choice"><input type="radio" name="cartPayment" value="efectivo" ${payment==="efectivo"?"checked":""}><span>Efectivo<small>Al retirar o al cadete.</small></span></label><label class="cart-choice"><input type="radio" name="cartPayment" value="transferencia" ${payment==="transferencia"?"checked":""}><span>Transferencia<small>Coordinás con la carnicería.</small></span></label></div><div class="cart-actions"><button class="btn btn-ghost" type="button" data-cart-clear="true" ${cartItems.length?"":"disabled"}>Vaciar pedido</button><button class="btn btn-primary" type="button" data-cart-send-order="true" ${cartItems.length?"":"disabled"}>${sendLabel}</button></div></div><span class="cart-live-status" data-cart-live-status aria-live="polite" aria-atomic="true"></span></section>`;
       }
 
       function renderFloatingCartHtml(){const count=cartItems.length;if(!count)return"";return `<div class="cart-floating" data-cart-floating><a href="#pedido"><strong>🛒 Ver pedido</strong><span>${count} ítem${count===1?"":"s"} · ${money(cartTotal())}</span></a></div>`}
@@ -1579,11 +1608,24 @@
       function renderMobileNavHtml(){
         const count=cartItems.length;
         const total=count?money(cartTotal()):"";
-        return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#buscar-productos" data-nav-search><span class="nav-icon">🔍</span><span class="nav-label">Buscar</span></a><a href="#promos"><span class="nav-icon">🏷️</span><span class="nav-label">Promos</span></a><a href="#ofertas-dia"><span class="nav-icon">🔥</span><span class="nav-label">Hoy</span></a><a class="nav-cart${count?" has-cart":""}" href="#pedido"><span class="nav-icon">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span>${count?`<span class="mobile-nav-cart-total">${total}</span>`:""}</a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener"><span class="nav-icon">${whatsappIconSvg()}</span><span class="nav-label">WhatsApp</span></a></nav>`;
+        return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#app" data-nav-home aria-label="Ir al inicio" title="Inicio"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Inicio</span></a><a href="#buscar-productos" data-nav-search aria-label="Buscar productos" title="Buscar"><span class="nav-icon" aria-hidden="true">🔍</span><span class="nav-label">Buscar</span></a><a href="#promos" aria-label="Ir a promociones" title="Promos"><span class="nav-icon" aria-hidden="true">🏷️</span><span class="nav-label">Promos</span></a><a href="#ofertas-dia" aria-label="Ir a Ofertas de hoy" title="Hoy"><span class="nav-icon" aria-hidden="true">🔥</span><span class="nav-label">Hoy</span></a><a class="nav-cart${count?" has-cart":""}" href="#pedido" aria-label="Ir al carrito${count?`, ${count} ítem${count===1?"":"s"}, total ${total}`:""}" title="Carrito"><span class="nav-icon" aria-hidden="true">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span>${count?`<span class="mobile-nav-cart-total">${total}</span>`:""}</a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de la carnicería" title="WhatsApp"><span class="nav-icon" aria-hidden="true">${whatsappIconSvg()}</span><span class="nav-label">WhatsApp</span></a></nav>`;
       }
 
-      function refreshCart(){
-        const customer=currentCartCustomer();
+      let checkoutVisibilityFrame=0;
+      function updateCheckoutFloatingState(){
+        checkoutVisibilityFrame=0;
+        const checkout=app.querySelector("[data-cart-root]");
+        if(!checkout)return;
+        const rect=checkout.getBoundingClientRect();
+        const checkoutVisible=rect.top<window.innerHeight-72&&rect.bottom>72;
+        app.querySelector("[data-cart-floating]")?.classList.toggle("is-checkout-hidden",checkoutVisible);
+        app.querySelector(".carniza-web")?.classList.toggle("is-checkout-hidden",checkoutVisible);
+      }
+      function scheduleCheckoutFloatingState(){if(checkoutVisibilityFrame)return;checkoutVisibilityFrame=requestAnimationFrame(updateCheckoutFloatingState)}
+      function announceCart(message=""){const status=app.querySelector("[data-cart-live-status]");if(status)status.textContent=message}
+
+      function refreshCart(customerOverride=null){
+        const customer=customerOverride||currentCartCustomer();
         const root=app.querySelector("[data-cart-root]");
         if(root)root.outerHTML=renderCartHtml(customer);
         const floating=app.querySelector("[data-cart-floating]");
@@ -1595,6 +1637,7 @@
         const nextMobileNav=renderMobileNavHtml();
         if(mobileNav)mobileNav.outerHTML=nextMobileNav;
         else app.insertAdjacentHTML("beforeend",nextMobileNav);
+        scheduleCheckoutFloatingState();
       }
 
       function clearCartFieldErrors(){
@@ -1639,7 +1682,7 @@
               });
             }
           }else{
-            rows.push(`- ${cartQtyLabel(item)} ${item.name}${item.rubro?` - ${item.rubro}`:""} - ${total}`);
+            rows.push(`- ${cartQtyLabel(item)} ${item.name}${item.rubro?` - ${publicRubroName(item.rubro)}`:""} - ${total}`);
           }
         });
 
@@ -1710,7 +1753,7 @@
       }).join("")}</div>${combos.length>4?`<div class="offers-more-wrap"><button type="button" class="offers-more-btn" data-offers-toggle>Ver todas (${combos.length})</button></div>`:""}`:(dailyOffers.length?"":`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`);
       const offersHtml=dailyOffersHtml+regularOffersHtml;
       const showcaseHtml=randomShowcase.length
-        ? `<section class="section showcase-section" aria-label="Productos destacados"><div class="section-head"><div><h2>Productos destacados</h2><small>Novillo, cerdo y pollo</small></div><div class="showcase-head-actions"><button type="button" class="showcase-control" data-showcase-prev aria-label="Anterior">‹</button><button type="button" class="showcase-control" data-showcase-next aria-label="Siguiente">›</button></div></div><div class="showcase-track" data-showcase-track>${randomShowcase.map(item=>`<a class="showcase-card" href="#${esc(item.anchor)}" data-showcase-product="${esc(item.anchor)}" data-showcase-rubro="${esc(item.rubro)}"><img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy"><span class="showcase-card-copy"><strong>${esc(item.name)}</strong>${item.price>0?`<span>${money(item.price)}/kg</span>`:""}</span></a>`).join("")}</div></section>`
+        ? `<section class="section showcase-section" aria-label="Productos destacados"><div class="section-head"><div><h2>Productos destacados</h2><small>${esc(publicRubroName("Novillo"))}, cerdo y pollo</small></div><div class="showcase-head-actions"><button type="button" class="showcase-control" data-showcase-prev aria-label="Anterior">‹</button><button type="button" class="showcase-control" data-showcase-next aria-label="Siguiente">›</button></div></div><div class="showcase-track" data-showcase-track>${randomShowcase.map(item=>`<a class="showcase-card" href="#${esc(item.anchor)}" data-showcase-product="${esc(item.anchor)}" data-showcase-rubro="${esc(item.rubro)}"><img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy"><span class="showcase-card-copy"><strong>${esc(item.name)}</strong>${item.price>0?`<span>${money(item.price)}/kg</span>`:""}</span></a>`).join("")}</div></section>`
         : "";
 
       function applyOfferView(){
@@ -1732,12 +1775,12 @@
       let activeProductSearch=savedViewState.search||"";
       let activeProductRubro=validSavedRubro||(activeProductSearch.trim()?"Todos":(isMobileProductView?"":"Todos"));
       const productRubroFilterHtml=(data.showPriceList&&products.length)
-        ? `<div class="product-filter-panel" id="buscar-productos"><input class="product-search" type="search" inputmode="search" autocomplete="off" placeholder="Buscar un corte o producto" aria-label="Buscar productos" data-product-search value="${esc(activeProductSearch)}"><select id="productRubroSelect" class="product-rubro-select" data-product-rubro-select aria-label="Más rubros"><option value="" ${!activeProductRubro?"selected":""}>Más rubros</option><option value="Todos" ${activeProductRubro==="Todos"?"selected":""}>Todos los rubros (${products.length})</option>${secondaryProductRubros.map((r)=>{const count=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).length;return `<option value="${esc(r)}" ${activeProductRubro===r?"selected":""}>${icon(r,"")} ${esc(r)} (${count})</option>`;}).join("")}</select><div class="product-quick-rubros" aria-label="Rubros principales">${mainProductRubros.map(r=>{const count=products.filter(p=>(String(p.rubro||"").trim())===r).length;return `<button type="button" class="product-quick-rubro" data-product-rubro-quick="${esc(r)}">${icon(r,"")} ${esc(r)} (${count})</button>`;}).join("")}</div><div class="product-filter-result" data-product-filter-result>${isMobileProductView?"Elegí un rubro o buscá un producto.":`${products.length} productos`}</div></div>`
+        ? `<div class="product-filter-panel" id="buscar-productos"><input class="product-search" type="search" inputmode="search" autocomplete="off" placeholder="Buscar un corte o producto" aria-label="Buscar productos" data-product-search value="${esc(activeProductSearch)}"><select id="productRubroSelect" class="product-rubro-select" data-product-rubro-select aria-label="Más rubros"><option value="" ${!activeProductRubro?"selected":""}>Más rubros</option><option value="Todos" ${activeProductRubro==="Todos"?"selected":""}>Todos los rubros (${products.length})</option>${secondaryProductRubros.map((r)=>{const count=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).length;return `<option value="${esc(r)}" ${activeProductRubro===r?"selected":""}>${icon(r,"")} ${esc(publicRubroName(r))} (${count})</option>`;}).join("")}</select><div class="product-quick-rubros" aria-label="Rubros principales">${mainProductRubros.map(r=>{const count=products.filter(p=>(String(p.rubro||"").trim())===r).length;return `<button type="button" class="product-quick-rubro" data-product-rubro-quick="${esc(r)}">${icon(r,"")} ${esc(publicRubroName(r))} (${count})</button>`;}).join("")}</div><div class="product-filter-result" data-product-filter-result>${isMobileProductView?"Elegí un rubro o buscá un producto.":`${products.length} productos`}</div></div>`
         : "";
 
       const pricesHtml=(data.showPriceList&&products.length)?`${productRubroFilterHtml}<div class="price-list">${rubroNames.map(r=>{
         const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-        return `<div class="card rubro" data-rubro-card="${esc(r)}"><h3>${icon(r,"")} ${esc(r)}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; const thumbnailPath=getProductThumbnailPath(p); const anchor=productAnchorId(p,products.indexOf(p)); return `<div class="product" id="${esc(anchor)}" data-product-name="${esc(normalizeSlug(p.nombre||"Producto"))}"><span class="product-thumb-wrap">${thumbnailPath?`<img class="product-thumb" src="${thumbnailPath}" alt="" loading="lazy" onerror="this.parentElement.style.visibility='hidden'" />`:""}</span><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}/kg</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
+        return `<div class="card rubro" data-rubro-card="${esc(r)}"><h3>${icon(r,"")} ${esc(publicRubroName(r))}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; const thumbnailPath=getProductThumbnailPath(p); const anchor=productAnchorId(p,products.indexOf(p)); return `<div class="product" id="${esc(anchor)}" data-product-name="${esc(normalizeSlug(p.nombre||"Producto"))}"><span class="product-thumb-wrap">${thumbnailPath?`<img class="product-thumb" src="${thumbnailPath}" alt="" loading="lazy" onerror="this.parentElement.style.visibility='hidden'" />`:""}</span><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}/kg</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
       }).join("")}</div><div class="product-filter-message" data-product-filter-message hidden></div>`:"";
 
       const headerName = esc(String(shortName).toUpperCase());
@@ -1766,6 +1809,7 @@
       const dailySection=`<section class="section" id="ofertas-dia"><div class="section-head"><h2>🔥 Ofertas de hoy</h2><small>Hasta agotar stock</small></div>${dailyOffersHtml||`<div class="empty">Hoy todavía no hay ofertas publicadas.</div>`}</section>`;
       const promosSection=`<section class="section" id="promos"><div class="section-head"><h2>🏷️ Promos</h2><small>Combos y promociones de la carnicería</small></div>${regularOffersHtml}</section>`;
       app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><a class="btn btn-primary" href="#precios">🥩 Productos</a><a class="btn btn-light" href="#promos">🏷️ Promos</a><a class="btn btn-light" href="#ofertas-dia">🔥 Ofertas de hoy</a></div></section>${showcaseHtml}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span class="apppromos-signature-copy"><small>Esta carnicería online funciona con</small><strong>AppPromos</strong><span>Conocé AppPromos →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
+      scheduleCheckoutFloatingState();
       applyOfferView();
 
       function applyProductView(){
@@ -1787,10 +1831,10 @@
         const result=app.querySelector("[data-product-filter-result]");
         const message=app.querySelector("[data-product-filter-message]");
         const label=visibleCount===1?"producto":"productos";
-        if(result)result.textContent=!activeProductRubro?"Elegí un rubro o buscá un producto.":`${visibleCount} ${label}${activeProductRubro!=="Todos"?` de ${activeProductRubro}`:""}`;
+        if(result)result.textContent=!activeProductRubro?"Elegí un rubro o buscá un producto.":`${visibleCount} ${label}${activeProductRubro!=="Todos"?` de ${publicRubroName(activeProductRubro)}`:""}`;
         if(message){
           message.hidden=Boolean(activeProductRubro)&&visibleCount>0;
-          message.textContent=!activeProductRubro?"Elegí Novillo, Cerdo, Pollo o ingresá a Más rubros.":"No encontramos productos con esa búsqueda.";
+          message.textContent=!activeProductRubro?`Elegí ${publicRubroName("Novillo")}, Cerdo, Pollo o ingresá a Más rubros.`:"No encontramos productos con esa búsqueda.";
         }
       }
       applyProductView();
@@ -1801,6 +1845,8 @@
         window.setTimeout(()=>{restoringViewState=false;saveViewState()},180);
       }));
       window.addEventListener("scroll",scheduleViewStateSave,{passive:true});
+      window.addEventListener("scroll",scheduleCheckoutFloatingState,{passive:true});
+      window.addEventListener("resize",scheduleCheckoutFloatingState,{passive:true});
 
       const showcaseTrack=app.querySelector("[data-showcase-track]");
       function moveShowcase(direction=1){
@@ -1816,6 +1862,12 @@
       app.onclick=(event)=>{
         const target=event.target instanceof Element?event.target:event.target?.parentElement;
         if(!target)return;
+        const navHome=target.closest("[data-nav-home]");
+        if(navHome){
+          event.preventDefault();
+          window.scrollTo({top:0,behavior:"smooth"});
+          return;
+        }
         const navSearch=target.closest("[data-nav-search]");
         if(navSearch){
           event.preventDefault();
@@ -1878,13 +1930,21 @@
         }
 
         const addButton=target.closest("[data-cart-add]");
-        if(addButton){event.preventDefault();const item=decodeCartItem(addButton.dataset.cartAdd||"");if(item){addCartItem(item);const original=addButton.textContent;addButton.textContent="Agregado ✓";addButton.classList.add("is-added");setTimeout(()=>{addButton.textContent=original;addButton.classList.remove("is-added")},1100)}return}
+        if(addButton){event.preventDefault();const item=decodeCartItem(addButton.dataset.cartAdd||"");if(item){addCartItem(item);announceCart(`${item.name||item.nombre||"Producto"} agregado al pedido`);const original=addButton.textContent;addButton.textContent="Agregado ✓";addButton.classList.add("is-added");setTimeout(()=>{addButton.textContent=original;addButton.classList.remove("is-added")},1400)}return}
         const plusButton=target.closest("[data-cart-plus]");
         if(plusButton){event.preventDefault();changeCartItem(plusButton.dataset.cartPlus||"",1);return}
         const minusButton=target.closest("[data-cart-minus]");
         if(minusButton){event.preventDefault();changeCartItem(minusButton.dataset.cartMinus||"",-1);return}
         const removeButton=target.closest("[data-cart-remove]");
         if(removeButton){event.preventDefault();removeCartItem(removeButton.dataset.cartRemove||"");return}
+        const forgetButton=target.closest("[data-cart-forget]");
+        if(forgetButton){
+          event.preventDefault();
+          const customer=currentCartCustomer();
+          forgetRememberedCustomer();
+          refreshCart({...customer,name:"",phone:"",remember:false});
+          return;
+        }
         const clearButton=target.closest("[data-cart-clear]");
         if(clearButton){event.preventDefault();if(cartItems.length&&confirm("¿Vaciar el pedido?")){cartItems=[];saveCartItems();refreshCart()}return}
         const sendButton=target.closest("[data-cart-send-order]");
@@ -1900,6 +1960,13 @@
           return;
         }
         if(!(target instanceof HTMLInputElement))return;
+        if(target.matches("[data-cart-remember]")){
+          rememberCustomer=target.checked;
+          if(rememberCustomer)saveRememberedCustomer(currentCartCustomer());
+          else forgetRememberedCustomer();
+          refreshCart();
+          return;
+        }
         if(target.name==="cartDelivery" || target.name==="cartPayment"){
           refreshCart();
         }
@@ -1927,6 +1994,7 @@
               ? "address"
               : "";
         if(!field)return;
+        if(rememberCustomer&&(field==="name"||field==="phone"))saveRememberedCustomer(currentCartCustomer());
         const error=app.querySelector(`[data-cart-error="${field}"]`);
         if(error){
           error.textContent="";

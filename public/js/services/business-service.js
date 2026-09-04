@@ -313,7 +313,7 @@ export async function getUserBusinesses() {
   }));
 
   if (session.appMode === "guest") {
-    return [{ businessId: "demo", name: "Demo" }];
+    return [];
   }
 
   if (session.appMode === "client") {
