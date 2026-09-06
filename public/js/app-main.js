@@ -14,6 +14,7 @@ import { renderAdminUsers } from "./modules/admin-users-module.js";
 import { renderMarket } from "./modules/market-module.js";
 import { renderWhatsApp } from "./modules/whatsapp-module.js";
 import { renderWebPremium } from "./modules/web-module.js";
+import { renderPrintCenter } from "./modules/print-center-module.js";
 import { initCarniza, updateCarnizaContext } from "./modules/carniza-module.js";
 import { renderPublicAuth } from "./modules/public-auth-module.js";
 import { trackCarnizaSignal } from "./services/carniza-signals-service.js";
@@ -24,7 +25,7 @@ import {
   trackWebShared
 } from "./services/tracking-service.js";
 
-import { updateBusinessBasicData, getPublicWebUrl, saveWebConfig, syncPublicWebSnapshot } from "./services/web-premium-service.js";
+import { updateBusinessBasicData, getPublicWebUrl, saveWebConfig, syncPublicWebSnapshot, buildPublicWebPayload } from "./services/web-premium-service.js";
 import { finishDailyPromo, getArgentinaDayKey, getDailyPromosForManagement, publishDailyPromo } from "./services/daily-promos-service.js";
 import {
   uploadBusinessLogo,
@@ -63,6 +64,7 @@ const whatsappPanel = document.getElementById("whatsappPanel");
 const usersPanel = document.getElementById("usersPanel");
 const marketPanel = document.getElementById("marketPanel");
 const webPanel = document.getElementById("webPanel");
+const printPanel = document.getElementById("printPanel");
 const moreLinks = document.getElementById("moreLinks");
 
 let currentPayload = null;
@@ -1718,6 +1720,11 @@ function renderCurrentDashboard() {
     {
       showBrandReminder: currentSession?.appMode !== "superadmin" && currentSession?.isDemo !== true,
       onEditBusinessData: () => openAccountSheet("edit"),
+      onOpenQr: () => {
+        // Entrada directa al submódulo QR: el Centro consume esta señal al renderizarse.
+        globalThis.__APPPROMOS_PRINT_CENTER_OPEN_QR__ = true;
+        goToPanel("printPanel");
+      },
       onBusinessDataSave: async (formData) => {
         const result = await updateBusinessBasicData(
           currentPayload.businessId,
@@ -2737,6 +2744,7 @@ function updateMobileBottomNavActive() {
     savedPanel: "saved",
     marketPanel: "more",
     webPanel: "more",
+    printPanel: "more",
     usersPanel: "more"
   };
   const activeKey = map[currentPanelId] || "home";
@@ -2769,6 +2777,7 @@ function openMobileBottomMenu(kind) {
       <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
       <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
       <button type="button" data-mobile-action="how-to-sell"><strong>🧭 Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
+      <button type="button" data-mobile-action="print-center"><strong>🖨️ Centro de Impresiones</strong><span>Pedidos, listas, carteles y folletos.</span></button>
       <button type="button" data-mobile-action="install-app"><strong>📲 <span data-pwa-install-label>INSTALAR</span></strong><span>Entrá desde el icono de tu pantalla.</span></button>
       <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
       ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
@@ -2800,6 +2809,7 @@ async function handleMobileBottomAction(action) {
   if (action === "saved") return goToPanel("savedPanel");
   if (action === "market") return goToPanel("marketPanel");
   if (action === "web") return goToPanel("webPanel");
+  if (action === "print-center") return goToPanel("printPanel");
   if (action === "admin") return goToPanel("usersPanel");
   if (action === "how-to-sell") {
     window.open("/como-vender.html", "_blank", "noopener,noreferrer");
@@ -3348,6 +3358,42 @@ async function syncProductDrivenViews(updatedProducts = null, updateResult = nul
   await syncCurrentPublicWebSnapshot("products_reloaded");
 }
 
+function buildPrintCenterPayload(meta = {}, state = {}, products = []) {
+  const printableState = {
+    ...(state || {}),
+    dailyPromos: getDailyPromosForManagement({
+      state: state || {},
+      isDemo: currentSession?.isDemo === true
+    })
+  };
+
+  const web = printableState?.web || {};
+  const publicPayload = buildPublicWebPayload({
+    businessId: currentPayload?.businessId || currentBusinessId || "",
+    slug: web?.slug || "",
+    meta: meta || {},
+    state: printableState,
+    web,
+    phoneKey: meta?.phoneKey || meta?.telefono || meta?.phone || "",
+    plan: "web_premium",
+    createdFrom: "print_center"
+  });
+
+  const APPPROMOS_PRODUCTION_ORIGIN = "https://apppromos.web.app";
+  const cleanSlug = String(web?.slug || publicPayload?.slug || "").trim();
+  const publicWebUrl = cleanSlug
+    ? `${APPPROMOS_PRODUCTION_ORIGIN}/${cleanSlug}`
+    : "";
+
+  return {
+    businessMeta: meta || {},
+    products: Array.isArray(products) ? products : [],
+    publicOffers: Array.isArray(publicPayload?.publicOffers) ? publicPayload.publicOffers : [],
+    dailyOffers: Array.isArray(publicPayload?.dailyOffers) ? publicPayload.dailyOffers : [],
+    publicWebUrl
+  };
+}
+
 async function renderBusinessWorkspace(options = {}) {
   const payload = await openBusiness(currentBusinessId);
   const root = currentSession?.isDemo ? null : await readBusinessRoot(currentBusinessId).catch(() => null);
@@ -3393,6 +3439,7 @@ async function renderBusinessWorkspace(options = {}) {
     usersPanel.innerHTML = `<div>Sin datos.</div>`;
     marketPanel.innerHTML = `<div>Sin datos.</div>`;
     if (webPanel) webPanel.innerHTML = `<div>Sin datos.</div>`;
+    if (printPanel) renderPrintCenter(printPanel, buildPrintCenterPayload(currentPayload?.meta || {}, currentPayload?.state || {}, []));
     return;
   }
 
@@ -3439,6 +3486,8 @@ async function renderBusinessWorkspace(options = {}) {
     webPanel.dataset.rendered = "";
     webPanel.innerHTML = `<div style="padding:18px;color:#6e6e6e;">Tu carnicería online se cargará al abrir este módulo.</div>`;
   }
+
+  if (printPanel) renderPrintCenter(printPanel, buildPrintCenterPayload(currentPayload?.meta || {}, data.state || currentPayload?.state || {}, catalogProducts));
 
   console.info("📊 AppPromos Firestore reads:", getReadDebug());
 }
