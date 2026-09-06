@@ -1,4 +1,4 @@
-﻿import {
+import {
   normalizeProductsFromState,
   normalizeSavedCombosFromState
 } from "../services/business-service.js";
@@ -25,24 +25,24 @@ function getBusinessFields(meta = {}) {
 
 function renderBusinessView(meta, state, updatedAt) {
   const fields = getBusinessFields(meta);
-  const businessName = fields.name || "CarnicerÃ­a";
-  const address = fields.direccion || "Sin direcciÃ³n";
-  const phone = fields.telefono || "Sin telÃ©fono";
+  const businessName = fields.name || "Carnicería";
+  const address = fields.direccion || "Sin dirección";
+  const phone = fields.telefono || "Sin teléfono";
   const city = fields.ciudad || "Sin ciudad";
-  const currentWebStatus = state?.web?.slug ? "Vidriera activa" : "TodavÃ­a sin vidriera activa";
+  const currentWebStatus = state?.web?.slug ? "Vidriera activa" : "Todavía sin vidriera activa";
 
   return `
     <div class="dash-business-head">
       <h3>Datos del negocio activo</h3>
-      <button type="button" class="dash-mini-btn" data-business-edit>âœï¸ Editar datos</button>
+      <button type="button" class="dash-mini-btn" data-business-edit>✏️ Editar datos</button>
     </div>
     <div class="dash-list">
-      <div class="dash-list-item"><span class="dash-muted">CarnicerÃ­a</span><strong>${escapeHtml(businessName)}</strong></div>
-      <div class="dash-list-item"><span class="dash-muted">DirecciÃ³n</span><strong>${escapeHtml(address)}</strong></div>
-      <div class="dash-list-item"><span class="dash-muted">TelÃ©fono</span><strong>${escapeHtml(phone)}</strong></div>
+      <div class="dash-list-item"><span class="dash-muted">Carnicería</span><strong>${escapeHtml(businessName)}</strong></div>
+      <div class="dash-list-item"><span class="dash-muted">Dirección</span><strong>${escapeHtml(address)}</strong></div>
+      <div class="dash-list-item"><span class="dash-muted">Teléfono</span><strong>${escapeHtml(phone)}</strong></div>
       <div class="dash-list-item"><span class="dash-muted">Ciudad</span><strong>${escapeHtml(city)}</strong></div>
       <div class="dash-list-item"><span class="dash-muted">Mi web</span><strong>${escapeHtml(currentWebStatus)}</strong></div>
-      <div class="dash-list-item"><span class="dash-muted">Ãšltima actualizaciÃ³n</span><strong>${escapeHtml(updatedAt)}</strong></div>
+      <div class="dash-list-item"><span class="dash-muted">Última actualización</span><strong>${escapeHtml(updatedAt)}</strong></div>
     </div>
   `;
 }
@@ -52,7 +52,7 @@ function getSlugPreview(businessId, draft = {}) {
     const slug = buildBusinessSlug(draft, businessId);
     return { slug, url: getPublicWebUrl(businessId, slug), error: "" };
   } catch (error) {
-    return { slug: "", url: "CompletÃ¡ nombre y telÃ©fono vÃ¡lido para generar el link", error: error?.message || "" };
+    return { slug: "", url: "Completá nombre y teléfono válido para generar el link", error: error?.message || "" };
   }
 }
 
@@ -63,19 +63,19 @@ function renderBusinessEditForm(businessId, meta = {}, state = {}) {
   return `
     <div class="dash-business-head">
       <h3>Editar datos del negocio</h3>
-      <span class="dash-form-hint">El link se genera solo con nombre + telÃ©fono.</span>
+      <span class="dash-form-hint">El link se genera solo con nombre + teléfono.</span>
     </div>
     <form class="dash-business-form" data-business-form>
       <label>
         <span>Nombre comercial *</span>
-        <input name="name" required value="${escapeHtml(fields.name)}" placeholder="CarnicerÃ­a Sur" />
+        <input name="name" required value="${escapeHtml(fields.name)}" placeholder="Carnicería Sur" />
       </label>
       <label>
-        <span>TelÃ©fono / WhatsApp *</span>
+        <span>Teléfono / WhatsApp *</span>
         <input name="telefono" required value="${escapeHtml(fields.telefono)}" placeholder="3462 555555" />
       </label>
       <label>
-        <span>DirecciÃ³n *</span>
+        <span>Dirección *</span>
         <input name="direccion" required value="${escapeHtml(fields.direccion)}" placeholder="Patagonia 28" />
       </label>
       <label>
@@ -85,7 +85,7 @@ function renderBusinessEditForm(businessId, meta = {}, state = {}) {
       <div class="dash-link-preview">
         <span>Enlace de tu vidriera</span>
         <strong data-slug-preview>${escapeHtml(preview.url)}</strong>
-        <small>Si cambiÃ¡s nombre o WhatsApp, cambia el enlace de tu vidriera y el anterior deja de funcionar.</small>
+        <small>Si cambiás nombre o WhatsApp, cambia el enlace de tu vidriera y el anterior deja de funcionar.</small>
       </div>
       <div class="dash-form-error" data-business-error></div>
       <div class="dash-form-actions">
@@ -229,8 +229,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       ${showBrandReminder ? `
         <section class="dash-brand-reminder" data-brand-reminder>
           <div class="dash-brand-reminder-copy">
-            <strong>ðŸ“¸ PersonalizÃ¡ tu carnicerÃ­a online</strong>
-            <span>SubÃ­ tu logo y una foto real del frente para que tus clientes reconozcan tu negocio.</span>
+            <strong>📸 Personalizá tu carnicería online</strong>
+            <span>Subí tu logo y una foto real del frente para que tus clientes reconozcan tu negocio.</span>
             <small>Te falta: ${missingBrandParts.join(" y ")}.</small>
           </div>
           <button type="button" class="dash-brand-reminder-btn" data-brand-reminder-open>Completar ahora</button>
@@ -238,28 +238,28 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       ` : ""}
       <div class="dash-main-card">
         <div class="dash-kicker">Hoy</div>
-        <h2 class="dash-main-title">Â¿QuÃ© querÃ©s hacer?</h2>
+        <h2 class="dash-main-title">¿Qué querés hacer?</h2>
         <p class="dash-main-subtitle">Todo lo importante, a un toque.</p>
         <div class="dash-actions">
-          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon">ðŸŒ</span><strong>Mi carnicerÃ­a</strong><span>Ver como cliente</span></button>
-          <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon">ðŸ’²</span><strong>Precios</strong><span>Actualizar precios</span></button>
-          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">ðŸ”¥</span><strong>Vender o crear promo</strong><span>Consulta puntual o combo</span></button>
-          <button class="dash-action-btn" data-action-panel="webPanel"><span class="dash-action-icon">âš™ï¸</span><strong>Gestionar mi web</strong><span>Datos e identidad de tu vidriera</span></button>
+          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon">🌐</span><strong>Mi carnicería</strong><span>Ver como cliente</span></button>
+          <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon">💲</span><strong>Precios</strong><span>Actualizar precios</span></button>
+          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">🔥</span><strong>Vender o crear promo</strong><span>Consulta puntual o combo</span></button>
+          <button class="dash-action-btn" data-action-panel="webPanel"><span class="dash-action-icon">⚙️</span><strong>Gestionar mi web</strong><span>Datos e identidad de tu vidriera</span></button>
         </div>
 
         <div class="dash-whatsapp-sales">
           <button type="button" data-action-panel="whatsappPanel">
-            <span>ðŸ’¬</span>
+            <span>💬</span>
             <strong>Enviar promos por WhatsApp</strong>
-            <small>UsÃ¡ tus promociones guardadas para vender por mensaje.</small>
+            <small>Usá tus promociones guardadas para vender por mensaje.</small>
           </button>
         </div>
 
         <div class="dash-share-block">
-          <div class="dash-share-head"><strong>Compartir mi web</strong><span>ElegÃ­ cÃ³mo querÃ©s acercar tu vidriera a tus clientes.</span></div>
+          <div class="dash-share-head"><strong>Compartir mi web</strong><span>Elegí cómo querés acercar tu vidriera a tus clientes.</span></div>
           <div class="dash-secondary-actions">
-            <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>ðŸ’¬ Compartir link por WhatsApp</button>
-            <button type="button" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>ðŸ“± Compartir con QR</button>
+            <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>💬 Compartir link por WhatsApp</button>
+            <button type="button" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Compartir con QR</button>
           </div>
         </div>
       </div>
@@ -274,7 +274,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
 
   container.querySelector("[data-dashboard-share-web]")?.addEventListener("click", () => {
     if (!publicWebUrl) return;
-    const text = `Â¡Hola! ðŸ‘‹ MirÃ¡ nuestra carnicerÃ­a online. PodÃ©s ver precios y ofertas, armar tu pedido y mandÃ¡rnoslo por WhatsApp: ${publicWebUrl}`;
+    const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicWebUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   });
 
@@ -338,9 +338,9 @@ function bindBusinessForm(card, businessId, meta, state, options) {
 
     if (slugWillChange) {
       const ok = window.confirm(
-        "âš ï¸ Cambiar el nombre o WhatsApp cambiarÃ¡ el enlace de tu vidriera.\n\n" +
-        "El link anterior dejarÃ¡ de funcionar.\n\n" +
-        "Â¿QuerÃ©s continuar?"
+        "⚠️ Cambiar el nombre o WhatsApp cambiará el enlace de tu vidriera.\n\n" +
+        "El link anterior dejará de funcionar.\n\n" +
+        "¿Querés continuar?"
       );
       if (!ok) return;
     }
