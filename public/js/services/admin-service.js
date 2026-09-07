@@ -1108,6 +1108,16 @@ export async function deleteTestBusiness(businessId) {
 
 export async function trackBusinessLogin(businessId) {
   if (!businessId || businessId === "demo") return;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return;
+  }
+
   try {
     await setDoc(doc(db, "businesses", businessId), {
       lastLoginAt: new Date().toISOString(),
@@ -1120,6 +1130,16 @@ export async function trackBusinessLogin(businessId) {
 
 export async function trackBusinessActivityThrottled(businessId, minMinutes = 60) {
   if (!businessId || businessId === "demo") return;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return;
+  }
+
   const key = `apppromos_last_activity_write:${businessId}`;
   const nowMs = Date.now();
   try {
