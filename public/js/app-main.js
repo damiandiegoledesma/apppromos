@@ -2287,6 +2287,11 @@ function injectMobileBottomNavStyles() {
     .app-mobile-bottom-nav,
     .app-mobile-bottom-menu { display: none; }
 
+    body.module-focus-admin .app-mobile-bottom-nav,
+    body.module-focus-admin .app-mobile-bottom-menu {
+      display: none !important;
+    }
+
     /* V12.22-A2-FIX3B: en desktop reutilizamos la navegación inferior
        probada en mobile, con una presentación más compacta. */
     @media (min-width: 761px) {
@@ -3231,6 +3236,7 @@ async function refreshUsersModule() {
   }
 
   await renderAdminUsers(usersPanel, {
+    showBackToApp: Boolean(currentBusinessId),
     onEnterAsBusiness: async (businessId) => {
       await changeActiveBusiness(businessId);
       goToPanel("dashboardPanel");
@@ -3289,7 +3295,7 @@ async function refreshWebModule() {
 }
 
 async function renderLazyPanel(panelId) {
-  if (!currentBusinessId || lazyRenderInProgress === panelId) return;
+  if ((!currentBusinessId && panelId !== "usersPanel") || lazyRenderInProgress === panelId) return;
 
   try {
     lazyRenderInProgress = panelId;
@@ -3548,23 +3554,34 @@ async function boot() {
       await loadMarketCacheOnce();
     }
 
-    let businessId = null;
-
     if (session.appMode === "client") {
-      businessId = session.businessId;
-    } else if (session.appMode === "superadmin") {
-      // V11.4.1A: por seguridad operativa, el superadmin arranca siempre en DEMO.
-      // Si quiere trabajar sobre una carnicería real, debe seleccionarla explícitamente desde Admin.
-      businessId = "demo";
-    } else {
-      throw new Error("Modo inválido");
+      currentBusinessId = session.businessId;
+      restartBusinessControlListener(currentBusinessId);
+      await renderBusinessWorkspace();
+      initializeAppPanelHistory("dashboardPanel");
+      goToPanel("dashboardPanel", { historyMode: "none" });
+      return;
     }
 
-    currentBusinessId = businessId;
-    restartBusinessControlListener(currentBusinessId);
-    await renderBusinessWorkspace();
-    initializeAppPanelHistory("dashboardPanel");
-    goToPanel("dashboardPanel", { historyMode: "none" });
+    if (session.appMode === "superadmin") {
+      currentBusinessId = null;
+      currentPayload = null;
+      currentBusinessControl = null;
+      restartBusinessControlListener(null);
+
+      try {
+        localStorage.removeItem("activeBusinessId");
+        localStorage.removeItem("apppromos_active_business_id");
+      } catch (error) {
+        console.warn("No se pudo limpiar la empresa activa anterior del SuperAdmin", error);
+      }
+
+      initializeAppPanelHistory("usersPanel");
+      goToPanel("usersPanel", { historyMode: "none" });
+      return;
+    }
+
+    throw new Error("Modo inválido");
   } catch (error) {
     console.error("BOOT ERROR:", error);
 

@@ -1112,7 +1112,7 @@ function renderDetail(row = {}) {
 
 export async function renderAdminUsers(container, options = {}) {
   if (!container) return;
-  const { onEnterAsBusiness = null } = options;
+  const { onEnterAsBusiness = null, showBackToApp = false } = options;
 
   const state = {
     view: "home",
@@ -1254,7 +1254,7 @@ export async function renderAdminUsers(container, options = {}) {
           <p>Tablero para trabajar: clientes, cobranzas, tracking y acciones. Sin ficha gigante en la pantalla principal.</p>
         </div>
         <div class="admin-top-actions">
-          <button data-action-panel="dashboardPanel" type="button">← Volver a la app</button>
+
           <button id="reloadAdminBtn" class="primary" type="button">Recargar</button>
         </div>
       </div>
