@@ -53,6 +53,9 @@ export function renderPrices(container, products = [], businessId = null, option
   const onProductsUpdated = typeof options.onProductsUpdated === "function"
     ? options.onProductsUpdated
     : null;
+  const onPricesSaved = typeof options.onPricesSaved === "function"
+    ? options.onPricesSaved
+    : null;
   const canWrite = options.canWrite !== false;
   const isDemoPriceSession =
     businessId === "demo" ||
@@ -283,6 +286,9 @@ export function renderPrices(container, products = [], businessId = null, option
 
     const result = await updateProductPricesBatch(changes, businessId);
     const updatedProducts = result.updatedProducts || safeProducts;
+    if (Number(result?.changed || 0) > 0) {
+      await onPricesSaved?.(result);
+    }
     /* V12.23-A3: esperamos la regeneración pública antes de confirmar el guardado. */
     await updateLocalProducts(updatedProducts, result);
 

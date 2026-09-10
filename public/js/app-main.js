@@ -53,7 +53,8 @@ import {
   buildBusinessDefaults,
   trackBusinessLogin,
   trackBusinessActivityThrottled,
-  subscribeBusinessControl
+  subscribeBusinessControl,
+  trackBusinessCommercialEvent
 } from "./services/admin-service.js";
 
 const dashboardPanel = document.getElementById("dashboardPanel");
@@ -358,14 +359,19 @@ function registerDemoPromoSaveAttempt(payload = {}) {
 
 function getDemoActionOptions() {
   return {
-    onBeforeWhatsapp: ({ source } = {}) => registerDemoWhatsappAttempt(source || "demo"),
+    onBeforeWhatsapp: ({ source } = {}) => {
+      const cleanSource = source || "builder";
+      const allowed = registerDemoWhatsappAttempt(cleanSource);
+      if (allowed !== false) trackSellerWhatsappCommercial(cleanSource);
+      return allowed;
+    },
     onBeforePromoSave: ({ payload } = {}) => registerDemoPromoSaveAttempt(payload || {})
   };
 }
 
 function getBuilderOptions() {
   return {
-    businessId: currentBusinessId,
+businessId: currentBusinessId,
     businessMeta: currentPayload?.meta || {},
     ...getWriteOptions(),
     ...getDemoActionOptions(),
@@ -377,9 +383,36 @@ function getBuilderOptions() {
   };
 }
 
+function trackSellerWhatsappCommercial(source = "unknown") {
+  void trackBusinessCommercialEvent(currentBusinessId, "seller_whatsapp", {
+    source: String(source || "unknown")
+  });
+}
+
+function trackSellerWebCommercial(eventType, source = "unknown") {
+  void trackBusinessCommercialEvent(currentBusinessId, eventType, {
+    source: String(source || "unknown")
+  });
+}
+
+document.addEventListener("apppromos:seller-whatsapp", (event) => {
+  trackSellerWhatsappCommercial(event?.detail?.source || "unknown");
+});
+document.addEventListener("apppromos:seller-web-open", (event) => {
+  trackSellerWebCommercial("web_open", event?.detail?.source || "unknown");
+});
+
+document.addEventListener("apppromos:seller-web-share", (event) => {
+  trackSellerWebCommercial("web_share", event?.detail?.source || "unknown");
+});
+
 function getShareOptions(source = "saved") {
   return {
-    onBeforeWhatsapp: () => registerDemoWhatsappAttempt(source)
+    onBeforeWhatsapp: () => {
+      const allowed = registerDemoWhatsappAttempt(source);
+      if (allowed !== false && source !== "saved") trackSellerWhatsappCommercial(source);
+      return allowed;
+    }
   };
 }
 
@@ -996,6 +1029,7 @@ function renderCarnizaUrgentStockCard(container) {
       const cleanName = cleanExternalOfferTitle(nameInput?.value || "");
       if (!cleanName) { event.preventDefault(); if (error) error.style.display = "block"; nameInput?.focus(); return; }
       if (!registerDemoWhatsappAttempt("vender_urgente")) { event.preventDefault(); return; }
+      trackSellerWhatsappCommercial("promo_del_dia");
       trackCarnizaSignal("whatsapp_abierto", { source: "liquidador", offerName: cleanName, businessId: currentPayload?.businessId || currentBusinessId || null });
     });
     resultEl.querySelectorAll("[data-copy-message]").forEach((node) => node.addEventListener("click", async () => {
@@ -1688,6 +1722,7 @@ function renderActivationOnboarding() {
   card.querySelector("[data-onboarding-view-web]")?.addEventListener("click", () => {
     if (!publicUrl) return;
     trackWebOpened({ source: "onboarding_activation", business_id: currentBusinessId || null });
+    trackSellerWebCommercial("web_open", "onboarding_activation");
     window.open(publicUrl, "_blank", "noopener,noreferrer");
   });
   card.querySelector("[data-onboarding-share-web]")?.addEventListener("click", () => {
@@ -1695,6 +1730,7 @@ function renderActivationOnboarding() {
     const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicUrl}`;
     try { localStorage.setItem(getActivationSharedKey(), "1"); } catch (_) {}
     trackWebShared({ source: "onboarding_activation", business_id: currentBusinessId || null });
+    trackSellerWebCommercial("web_share", "onboarding_activation");
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
     renderActivationOnboarding();
   });
@@ -2043,7 +2079,10 @@ function openAccountSheet(mode = "view") {
     const web = event.target.closest("[data-account-web]");
     if (web) {
       const url = getBusinessAccountFields().publicUrl;
-      if (url) window.open(url, "_blank", "noopener");
+      if (url) {
+        trackSellerWebCommercial("web_open", "account");
+        window.open(url, "_blank", "noopener");
+      }
     }
   });
 
@@ -3065,8 +3104,24 @@ function syncNavForRole(session) {
   }
 }
 
-async function refreshSavedModule() {
+async function refreshSavedModule(savedCombo = null, saveContext = {}) {
   if (!currentBusinessId) return;
+
+  const savedComboId = String(savedCombo?.id || savedCombo?.comboId || "").trim();
+  const previousSavedCombos = Array.isArray(currentPayload?.state?.savedCombos)
+    ? currentPayload.state.savedCombos
+    : [];
+  const existedBeforeSave = savedComboId
+    ? previousSavedCombos.some((item = {}) =>
+        String(item?.id || item?.comboId || "").trim() === savedComboId
+      )
+    : false;
+
+  const createdNow = saveContext?.created === true || Boolean(savedComboId && !existedBeforeSave);
+
+  if (createdNow) {
+    await trackBusinessCommercialEvent(currentBusinessId, "offer_created");
+  }
   const data = await loadActiveBusinessData(currentBusinessId);
   currentPayload = {
     businessId: data.businessId,
@@ -3217,6 +3272,9 @@ function getSavedModuleOptions(businessMeta = {}) {
         ...(latest.state || currentPayload.state || {}),
         web: nextWeb
       };
+      if (publish) {
+        await trackBusinessCommercialEvent(currentBusinessId, "offer_published");
+      }
       renderSavedModule(currentPayload.state, latest.meta || businessMeta);
       if (webPanel) webPanel.dataset.rendered = "";
     }
@@ -3461,6 +3519,9 @@ async function renderBusinessWorkspace(options = {}) {
     // Builder/ofertas sigue recibiendo solo productos activos con precio real.
     renderPrices(pricesPanel, catalogProducts, currentBusinessId, {
       ...getWriteOptions(),
+      onPricesSaved: async () => {
+        await trackBusinessCommercialEvent(currentBusinessId, "price_save");
+      },
       onProductsUpdated: async (...args) => {
         await trackBusinessActivityThrottled(currentBusinessId, 60);
         return syncProductDrivenViews(...args);
@@ -3558,6 +3619,7 @@ async function boot() {
       currentBusinessId = session.businessId;
       restartBusinessControlListener(currentBusinessId);
       await renderBusinessWorkspace();
+      await trackBusinessCommercialEvent(currentBusinessId, "app_open");
       initializeAppPanelHistory("dashboardPanel");
       goToPanel("dashboardPanel", { historyMode: "none" });
       return;

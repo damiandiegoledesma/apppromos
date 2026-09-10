@@ -268,6 +268,9 @@ export function renderSaved(container, state, options = {}) {
       const combo = savedCombos[index];
       if (!combo) return;
       if (!canRunOptionHook(options?.onBeforeWhatsapp, { source: "saved", combo })) return;
+      document.dispatchEvent(new CustomEvent("apppromos:seller-whatsapp", {
+        detail: { source: "saved" }
+      }));
       openWhatsapp(combo, options?.businessMeta || {});
     });
   });

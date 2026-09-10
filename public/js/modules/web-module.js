@@ -1,4 +1,5 @@
 import { loadActiveBusinessData } from "../services/data-service.js";
+import { trackBusinessCommercialEvent } from "../services/admin-service.js";
 import { loadWebConfig, saveWebConfig, getPublicWebUrl, buildBusinessSlug } from "../services/web-premium-service.js";
 
 function escapeHtml(value = "") {
@@ -167,11 +168,15 @@ export async function renderWebPremium(container, businessId, options = {}) {
 
     container.querySelector("#wpOpen")?.addEventListener("click", () => {
       if (!fields.publicUrl) return;
+      void trackBusinessCommercialEvent(businessId, "web_open");
       window.open(fields.publicUrl, "_blank", "noopener,noreferrer");
     });
 
     container.querySelector("#wpShare")?.addEventListener("click", () => {
       if (!fields.publicUrl) return;
+      document.dispatchEvent(new CustomEvent("apppromos:seller-web-share", {
+        detail: { source: "web_panel" }
+      }));
       const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${fields.publicUrl}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
     });
