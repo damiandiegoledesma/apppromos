@@ -481,6 +481,75 @@ function commercialStatus(row = {}) {
   return { key: "activating", label: "Activándose", tone: "warn", reason, priority: 2 };
 }
 
+function recommendedNextStep(row = {}) {
+  const status = commercialStatus(row);
+  const stage = activationStage(row);
+  const commercialDays = daysSince(commercialLastAt(row));
+
+  if (status.key === "attention" && stage.rank === 0) {
+    return {
+      tone: "danger",
+      eyebrow: "Próximo paso recomendado",
+      title: "Contactarla y ayudarla a empezar",
+      text: "Todavía no cargó precios. Conviene escribirle y acompañarla a cargar sus primeros precios."
+    };
+  }
+
+  if (["attention", "risk"].includes(status.key) && stage.rank > 0) {
+    return {
+      tone: status.key === "attention" ? "danger" : "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Retomar contacto",
+      text: commercialDays !== null
+        ? `Hace ${commercialDays} días que no registra una acción comercial. Conviene escribirle y destrabar el próximo paso.`
+        : "Conviene escribirle y destrabar el próximo paso comercial."
+    };
+  }
+
+  if (stage.key === "registered") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Cargar los primeros precios",
+      text: "Ayudala a cargar algunos precios para que empiece a construir su vidriera online."
+    };
+  }
+
+  if (stage.key === "prices") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Abrir la vidriera online",
+      text: "Ya tiene precios cargados. El siguiente objetivo es que vea su carnicería online y avance con la vidriera."
+    };
+  }
+
+  if (stage.key === "storefront") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Compartir la web",
+      text: "La vidriera ya está lista. Pedile que la comparta por WhatsApp para empezar a llevar clientes."
+    };
+  }
+
+  if (stage.key === "sharing") {
+    return {
+      tone: "ok",
+      eyebrow: "Próximo paso recomendado",
+      title: "Dar el salto a la venta",
+      text: "Ya compartió su web. Ayudala a crear o publicar su primera promo y moverla por WhatsApp."
+    };
+  }
+
+  return {
+    tone: "ok",
+    eyebrow: "Próximo paso recomendado",
+    title: "Seguir acompañando",
+    text: "Ya está usando AppPromos comercialmente. Conviene seguir observando su actividad y ayudar cuando aparezca una traba."
+  };
+}
+
 function matchesSearch(row = {}, query = "") {
   const q = String(query || "").trim().toLowerCase();
   if (!q) return true;
@@ -1114,6 +1183,7 @@ function renderDetail(row = {}) {
   const webShareCount = metricNumber(row, "webShareCount");
 
   const yesNoChip = (value) => value ? chip("Sí", "ok") : chip("No", "neutral");
+  const nextStep = recommendedNextStep(row);
 
   return `
     <div class="admin-detail-page admin-operational-detail">
@@ -1131,10 +1201,18 @@ function renderDetail(row = {}) {
         </div>
       </div>
 
-      <div class="admin-operational-actions">
-        <button type="button" class="primary-action" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
-        <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
-      </div>
+
+      <section class="admin-panel-card admin-next-step ${nextStep.tone}">
+        <div class="admin-next-step-copy">
+          <span class="admin-eyebrow">${escapeHtml(nextStep.eyebrow)}</span>
+          <h3>${escapeHtml(nextStep.title)}</h3>
+          <p>${escapeHtml(nextStep.text)}</p>
+        </div>
+        <div class="admin-next-step-actions">
+          <button type="button" class="primary-action" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+          <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
+        </div>
+      </section>
 
       <section class="admin-panel-card admin-operational-summary ${status.tone}">
         <div>
@@ -1405,6 +1483,19 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-operational-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
       .admin-operational-actions button{min-height:40px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
       .admin-operational-actions .primary-action{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-next-step{display:flex;align-items:center;justify-content:space-between;gap:18px;border-left:5px solid #64748b;}
+      .admin-next-step.warn{border-left-color:#d97706;background:#fffaf0;}
+      .admin-next-step.danger{border-left-color:#dc2626;background:#fff7f7;}
+      .admin-next-step.ok{border-left-color:#16a34a;background:#f5fff7;}
+      .admin-next-step-copy{min-width:0;}
+      .admin-next-step-copy h3{margin:4px 0 6px;font-size:1.12rem;}
+      .admin-next-step-copy p{margin:0;line-height:1.45;}
+      .admin-next-step-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
+      @media (max-width:760px){
+        .admin-next-step{align-items:stretch;flex-direction:column;}
+        .admin-next-step-actions{width:100%;}
+        .admin-next-step-actions button{flex:1 1 160px;}
+      }
       .admin-operational-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;margin-bottom:12px;}
       .admin-operational-summary.ok{border-color:#b9dfc6;background:#f7fcf8;}
       .admin-operational-summary.warn{border-color:#f0d49b;background:#fffaf0;}
