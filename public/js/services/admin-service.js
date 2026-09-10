@@ -288,6 +288,28 @@ export async function listAdminBusinesses() {
     try { meta = await readPath(`businesses/${businessId}/core/meta`); }
     catch (error) { console.warn("No se pudo leer meta", businessId, error); }
 
+    let operationalState = null;
+    try { operationalState = await readPath(`businesses/${businessId}/core/state`); }
+    catch (error) { console.warn("No se pudo leer estado operativo", businessId, error); }
+
+    const operationalProducts = Array.isArray(operationalState?.products)
+      ? operationalState.products
+      : [];
+    const pricedProductCount = operationalProducts.filter((product) => {
+      const price = Number(product?.precio ?? product?.price ?? 0);
+      return Number.isFinite(price) && price > 0;
+    }).length;
+    const activePricedProductCount = operationalProducts.filter((product) => {
+      const price = Number(product?.precio ?? product?.price ?? 0);
+      const active = product?.active !== false && product?.activo !== false;
+      return active && Number.isFinite(price) && price > 0;
+    }).length;
+    const operationalStateSummary = {
+      productCount: operationalProducts.length,
+      pricedProductCount,
+      activePricedProductCount,
+      hasLoadedPrices: pricedProductCount > 0
+    };
     const owner = usersByBusiness.get(businessId) || null;
     const phoneIndex = phoneKeyByBusiness.get(businessId) || null;
     const normalized = buildBusinessDefaults({
@@ -303,6 +325,8 @@ export async function listAdminBusinesses() {
     return {
       ...normalized,
       billing: { ...(normalized.billing || {}), ...(root.billing || {}) },
+      metrics: root.metrics && typeof root.metrics === "object" ? root.metrics : {},
+      operationalState: operationalStateSummary,
       internalNote: root.internalNote || root.adminNote || root.commercialNote || root.notes?.internal || root.admin?.note || "",
       adminNote: root.adminNote || root.internalNote || root.commercialNote || "",
       lastPaymentAt: root.lastPaymentAt || root.billing?.lastPaymentAt || null,
