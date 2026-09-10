@@ -453,11 +453,13 @@ function relativeCommercialAction(row = {}) {
 
 function commercialStatus(row = {}) {
   const stage = activationStage(row);
-  const commercialDays = daysSince(commercialLastAt(row));
-  const appDays = daysSince(commercialMetricValue(row, "lastAppOpenAt") || lastActivityValue(row));
+  const commercialAt = commercialLastAt(row);
+  const commercialDays = daysSince(commercialAt);
+  const knownActivityAt = commercialMetricValue(row, "lastAppOpenAt") || lastActivityValue(row);
+  const knownActivityDays = daysSince(knownActivityAt);
 
   if (stage.rank === 0) {
-    if (appDays !== null && appDays < 7) {
+    if (knownActivityDays !== null && knownActivityDays < 7) {
       return { key: "activating", label: "Activándose", tone: "warn", reason: "Todavía no cargó precios", priority: 2 };
     }
     return { key: "attention", label: "Requiere atención", tone: "danger", reason: "Todavía no empezó a usar AppPromos", priority: 0 };
@@ -469,6 +471,14 @@ function commercialStatus(row = {}) {
 
   if (commercialDays !== null && commercialDays >= 7) {
     return { key: "risk", label: "En riesgo", tone: "warn", reason: `Se frenó hace ${commercialDays} días`, priority: 1 };
+  }
+
+  if (!commercialAt && knownActivityDays !== null && knownActivityDays >= 14) {
+    return { key: "attention", label: "Requiere atenci\u00f3n", tone: "danger", reason: `Sin actividad conocida hace ${knownActivityDays} d\u00edas`, priority: 0 };
+  }
+
+  if (!commercialAt && knownActivityDays !== null && knownActivityDays >= 7) {
+    return { key: "risk", label: "En riesgo", tone: "warn", reason: `Sin actividad conocida hace ${knownActivityDays} d\u00edas`, priority: 1 };
   }
 
   if (stage.rank >= 3) {
