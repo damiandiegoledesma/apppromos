@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Carnicería online | AppPromos</title>
   <link id="businessFavicon" rel="icon" href="/assets/logo/apppromos-favicon-transparent.png" />
+
+  <!-- V12.26-G1 - Analytics de intencion de pedido publico -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBJM7TQRSN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EBJM7TQRSN');
+  </script>
   <style>
     :root{
       --red:#b63b2b;
@@ -2106,6 +2115,20 @@
           firstInvalid.scrollIntoView({behavior:"smooth",block:"center"});
           window.setTimeout(()=>firstInvalid.focus({preventScroll:true}),220);
           return;
+        }
+        if(typeof window.gtag==="function"){
+          window.gtag("event","order_whatsapp_started",{
+            business_id:String(data.businessId||""),
+            business_slug:String(data.slug||""),
+            source:"public_cart",
+            order_item_count:cartItems.length,
+            value:cartTotal(),
+            currency:"ARS",
+            delivery_type:customer.delivery||"retiro",
+            payment_type:customer.payment||"efectivo",
+            contains_offer:cartItems.some((item)=>item.type==="combo"),
+            contains_daily_offer:cartItems.some((item)=>item.type==="daily_offer")
+          });
         }
         window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer");
       }
