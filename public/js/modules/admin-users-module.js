@@ -1094,24 +1094,108 @@ function renderAccountLedger(row = {}, persistedMovements = []) {
 
 function renderDetail(row = {}) {
   const status = commercialStatus(row);
+  const stage = activationStage(row);
   const b = billing(row);
+  const metrics = row.metrics && typeof row.metrics === "object" ? row.metrics : {};
+  const operationalState = row.operationalState && typeof row.operationalState === "object" ? row.operationalState : {};
   const internalNote = firstText(row.internalNote, row.adminNote, row.commercialNote, row.notes?.internal, row.admin?.note, "");
   const modules = { ...DEFAULT_MODULES, ...(row.modules || {}) };
 
+  const pricesLoaded = hasLoadedPrices(row);
+  const webOpened = Boolean(commercialMetricValue(row, "firstWebOpenedAt"));
+  const webShared = metricNumber(row, "webShareCount") > 0;
+  const selling = metricNumber(row, "offerPublishedCount") > 0 || metricNumber(row, "sellerWhatsappCount") > 0;
+
+  const appOpenCount = metricNumber(row, "appOpenCount");
+  const priceSaveCount = metricNumber(row, "priceSaveCount");
+  const offerCreatedCount = metricNumber(row, "offerCreatedCount");
+  const offerPublishedCount = metricNumber(row, "offerPublishedCount");
+  const sellerWhatsappCount = metricNumber(row, "sellerWhatsappCount");
+  const webShareCount = metricNumber(row, "webShareCount");
+
+  const yesNoChip = (value) => value ? chip("Sí", "ok") : chip("No", "neutral");
+
   return `
-    <div class="admin-detail-page">
+    <div class="admin-detail-page admin-operational-detail">
       <div class="admin-detail-top">
-        <button type="button" data-close-detail>← Volver</button>
+        <button type="button" data-close-detail>← Centro de Control</button>
         <div>
           <h3>${escapeHtml(businessName(row))}</h3>
           <p>${escapeHtml(businessOwner(row))} · ${escapeHtml(businessPhone(row) || "Sin WhatsApp")} · ${escapeHtml(businessLocation(row))}</p>
         </div>
-        <div class="admin-mini-chips">${adminChip(row)} ${planChip(row)} ${accessChip(row)} ${paymentChip(row)} ${chip(status.label, status.tone)}</div>
+        <div class="admin-mini-chips">
+          ${chip(status.label, status.tone)}
+          ${chip(stage.label, stage.rank >= 3 ? "ok" : stage.rank > 0 ? "warn" : "neutral")}
+          ${planChip(row)}
+          ${paymentChip(row)}
+        </div>
       </div>
 
-      <div class="admin-detail-grid-real">
+      <div class="admin-operational-actions">
+        <button type="button" class="primary-action" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+        <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
+      </div>
+
+      <section class="admin-panel-card admin-operational-summary ${status.tone}">
+        <div>
+          <span class="admin-eyebrow">Situación comercial</span>
+          <h3>${escapeHtml(status.label)}</h3>
+          <p>${escapeHtml(status.reason)}</p>
+        </div>
+        <div class="admin-operational-stage">
+          <span>Etapa actual</span>
+          <strong>${escapeHtml(stage.label)}</strong>
+          <small>${escapeHtml(relativeCommercialAction(row))}</small>
+        </div>
+      </section>
+
+      <div class="admin-detail-grid-real admin-operational-grid">
         <section class="admin-panel-card">
-          <h3>Datos básicos</h3>
+          <h3>Activación</h3>
+          <p class="admin-card-help">Qué tan lejos llegó esta carnicería dentro del circuito comercial.</p>
+          <dl class="admin-dl admin-activation-list">
+            <dt>Etapa</dt><dd>${chip(stage.label, stage.rank >= 3 ? "ok" : stage.rank > 0 ? "warn" : "neutral")}</dd>
+            <dt>Precios</dt><dd>${yesNoChip(pricesLoaded)}</dd>
+            <dt>Vidriera</dt><dd>${yesNoChip(webOpened)}</dd>
+            <dt>Compartió web</dt><dd>${yesNoChip(webShared)}</dd>
+            <dt>Vendiendo</dt><dd>${yesNoChip(selling)}</dd>
+          </dl>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Actividad</h3>
+          <p class="admin-card-help">Actividad real registrada desde Tracking Comercial V1.</p>
+          <dl class="admin-dl">
+            <dt>Última acción</dt><dd>${escapeHtml(relativeCommercialAction(row))}</dd>
+            ${(() => {
+              const trackedAppOpen = commercialMetricValue(row, "lastAppOpenAt");
+              return trackedAppOpen
+                ? `<dt>Última apertura</dt><dd>${escapeHtml(dateTime(trackedAppOpen))}</dd>`
+                : `<dt>Última actividad conocida</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>`;
+            })()}
+            <dt>Aperturas app</dt><dd>${appOpenCount}</dd>
+            <dt>Guardados precios</dt><dd>${priceSaveCount}</dd>
+            <dt>Promos creadas</dt><dd>${offerCreatedCount}</dd>
+            <dt>Promos publicadas</dt><dd>${offerPublishedCount}</dd>
+            <dt>WhatsApp vendedor</dt><dd>${sellerWhatsappCount}</dd>
+            <dt>Web compartida</dt><dd>${webShareCount}</dd>
+          </dl>
+          <small class="admin-detail-note">Los negocios anteriores a Tracking V1 pueden tener estado real sin historial completo.</small>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Estado actual</h3>
+          <p class="admin-card-help">Lo que existe hoy en la carnicería, independientemente del historial de tracking.</p>
+          <dl class="admin-dl">
+            <dt>Productos</dt><dd>${Number(operationalState.productCount || 0)}</dd>
+            <dt>Con precio</dt><dd>${Number(operationalState.pricedProductCount || 0)}</dd>
+            <dt>Activos con precio</dt><dd>${Number(operationalState.activePricedProductCount || 0)}</dd>
+            <dt>Última actividad app</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>
+          </dl>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Datos de la carnicería</h3>
           <dl class="admin-dl">
             <dt>Responsable</dt><dd>${escapeHtml(businessOwner(row))}</dd>
             <dt>Email</dt><dd>${escapeHtml(businessEmail(row))}</dd>
@@ -1122,20 +1206,55 @@ function renderDetail(row = {}) {
           </dl>
         </section>
 
+        <section class="admin-panel-card important admin-account-operational">
+          <h3>Cuenta y acceso</h3>
+          <p class="admin-card-help">La situación comercial se mantiene separada de pago y acceso.</p>
+          <div class="admin-account-chips">${planChip(row)} ${paymentChip(row)} ${accessChip(row)}</div>
+          <div class="admin-form-grid">
+            <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
+            <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((paymentStatus) => `<option value="${escapeHtml(paymentStatus)}" ${String(paymentStatus) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(paymentStatus))}</option>`).join("")}</select></label>
+            <label>Vence<input type="date" data-detail-due value="${escapeHtml(dateInput(dueValue(row)))}" /></label>
+            <label>Acceso<select data-detail-access>${ACCESS_STATUSES.map((accessStatus) => `<option value="${escapeHtml(accessStatus)}" ${String(accessStatus) === accessKey(row) ? "selected" : ""}>${escapeHtml(accessLabel(accessStatus))}</option>`).join("")}</select></label>
+          </div>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-commercial="${safeBusinessId(row)}">Guardar plan/pago</button>
+          </div>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Módulos</h3>
+          <div class="admin-modules-list">
+            ${Object.keys(DEFAULT_MODULES).map((key) => `
+              <label class="admin-module-toggle">
+                <input type="checkbox" data-module-key="${escapeHtml(key)}" ${modules[key] ? "checked" : ""} />
+                <span>${escapeHtml(MODULE_LABELS[key] || key)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-access-modules="${safeBusinessId(row)}">Guardar acceso/módulos</button>
+          </div>
+        </section>
+
+        <section class="admin-panel-card note admin-followup-card">
+          <h3>Seguimiento</h3>
+          <p class="admin-card-help">Nota interna para recordar qué hablaste y qué falta hacer.</p>
+          <textarea data-detail-note rows="5" placeholder="Anotar seguimiento, pago hablado, próxima acción...">${escapeHtml(internalNote)}</textarea>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-note="${safeBusinessId(row)}">Guardar nota</button>
+            <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+            <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
+          </div>
+        </section>
+
         <section class="admin-panel-card important admin-ledger-panel-wide">
           <h3>Cobranzas</h3>
           ${renderAccountLedger(row, BILLING_MOVEMENTS_BY_BUSINESS.get(safeBusinessId(row)) || [])}
-          <div class="admin-form-grid">
-            <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
-            <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(status))}</option>`).join("")}</select></label>
-            <label>Vence<input type="date" data-detail-due value="${escapeHtml(dateInput(dueValue(row)))}" /></label>
-          </div>
           ${(() => {
             const mpLink = mpLinkForBusiness(row);
             const hasMpLink = Boolean(mpPaymentUrl(mpLink));
             return `
               <div class="admin-row-actions left">
-                <button type="button" data-save-commercial="${safeBusinessId(row)}">Guardar gestión</button>
                 <button type="button" data-generate-mp-link="${safeBusinessId(row)}">Generar link MP</button>
                 <button type="button" data-load-mp-link="${safeBusinessId(row)}">Último link</button>
                 <button type="button" data-copy-mp-link="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Copiar link</button>
@@ -1147,47 +1266,10 @@ function renderDetail(row = {}) {
           })()}
         </section>
 
-        <section class="admin-panel-card">
-          <h3>Tracking simple</h3>
-          <dl class="admin-dl">
-            <dt>Salud</dt><dd>${escapeHtml(status.label)} — ${escapeHtml(status.reason)}</dd>
-            <dt>Última actividad</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>
-            <dt>Ofertas</dt><dd>${metricNumber(row, "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount")}</dd>
-            <dt>WhatsApps</dt><dd>${metricNumber(row, "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks")}</dd>
-            <dt>Precios</dt><dd>${metricNumber(row, "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount")}</dd>
-          </dl>
-          <div class="admin-row-actions left"><button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">Escribir seguimiento</button></div>
-        </section>
-
-        <section class="admin-panel-card">
-          <h3>Acceso y módulos</h3>
-          <div class="admin-form-grid">
-            <label>Acceso<select data-detail-access>${ACCESS_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === accessKey(row) ? "selected" : ""}>${escapeHtml(accessLabel(status))}</option>`).join("")}</select></label>
-          </div>
-          <div class="admin-modules-list">
-            ${Object.keys(DEFAULT_MODULES).map((key) => `
-              <label class="admin-module-toggle">
-                <input type="checkbox" data-module-key="${escapeHtml(key)}" ${modules[key] ? "checked" : ""} />
-                <span>${escapeHtml(MODULE_LABELS[key] || key)}</span>
-              </label>
-            `).join("")}
-          </div>
+        <section class="admin-panel-card danger-zone admin-technical-actions">
+          <h3>Administración</h3>
+          <p class="admin-card-help">Acciones poco frecuentes. No forman parte del seguimiento diario.</p>
           <div class="admin-row-actions left">
-            <button type="button" data-save-access-modules="${safeBusinessId(row)}">Guardar acceso/módulos</button>
-            <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar como cliente</button>
-          </div>
-        </section>
-
-        <section class="admin-panel-card note">
-          <h3>Nota interna</h3>
-          <textarea data-detail-note rows="5" placeholder="Anotar seguimiento, pago hablado, próxima acción...">${escapeHtml(internalNote)}</textarea>
-          <div class="admin-row-actions left"><button type="button" data-save-note="${safeBusinessId(row)}">Guardar nota</button></div>
-        </section>
-
-        <section class="admin-panel-card danger-zone">
-          <h3>Acciones</h3>
-          <div class="admin-row-actions left">
-            <button type="button" data-whatsapp-business="${safeBusinessId(row)}">WhatsApp</button>
             ${isArchived(row)
               ? `<button type="button" data-restore-business="${safeBusinessId(row)}">Restaurar</button>`
               : `<button type="button" data-archive-business="${safeBusinessId(row)}">Archivar</button>`}
@@ -1320,6 +1402,23 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-ledger-table td:nth-child(5){text-align:right;white-space:nowrap;}
       .admin-ledger-help{display:block;color:#6e6e6e;font-size:11px;line-height:1.35;margin-top:8px;}
 
+      .admin-operational-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+      .admin-operational-actions button{min-height:40px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
+      .admin-operational-actions .primary-action{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-operational-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;margin-bottom:12px;}
+      .admin-operational-summary.ok{border-color:#b9dfc6;background:#f7fcf8;}
+      .admin-operational-summary.warn{border-color:#f0d49b;background:#fffaf0;}
+      .admin-operational-summary.danger{border-color:#efb5af;background:#fff7f6;}
+      .admin-eyebrow{display:block;color:#6e6e6e;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+      .admin-operational-stage{min-width:170px;padding:10px 12px;border:1px solid #eee6dc;border-radius:12px;background:#fff;}
+      .admin-operational-stage span,.admin-operational-stage small{display:block;color:#6e6e6e;font-size:11px;font-weight:800;}
+      .admin-operational-stage strong{display:block;font-size:18px;margin:2px 0;}
+      .admin-operational-grid{align-items:start;}
+      .admin-card-help{margin-bottom:10px!important;}
+      .admin-detail-note{display:block;margin-top:10px;color:#6e6e6e;font-size:11px;line-height:1.35;}
+      .admin-account-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
+      .admin-followup-card textarea{width:100%;box-sizing:border-box;min-height:110px;}
+      .admin-ledger-panel-wide,.admin-followup-card,.admin-technical-actions{grid-column:1/-1;}
       .admin-detail-top{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:start;margin-bottom:12px;border-bottom:1px solid #eee6dc;padding-bottom:12px;}
       .admin-detail-top h3{margin:0;font-size:22px;}
       .admin-detail-top p{margin:4px 0 0;color:#6e6e6e;font-size:13px;}
