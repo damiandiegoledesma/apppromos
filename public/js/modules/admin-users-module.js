@@ -321,6 +321,24 @@ function metricNumber(row = {}, ...keys) {
   return 0;
 }
 
+function metricOptionalNumber(row = {}, ...keys) {
+  const sources = [row.metrics, row.usage, row.activity, row.stats, row];
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    for (const key of keys) {
+      const raw = source[key];
+      if (raw === undefined || raw === null || raw === "") continue;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : 0;
+    }
+  }
+  return null;
+}
+
+function trackingMetricDisplay(value) {
+  return value === null ? "—" : String(value);
+}
+
 function isArchived(row = {}) {
   return row.archived === true || String(row.status || "").toLowerCase() === "archived";
 }
@@ -382,10 +400,68 @@ function accessChip(row = {}) {
   return chip(accessLabel(key), tone);
 }
 
-function paymentChip(row = {}) {
+function billingPaymentPresentation(row = {}) {
   const key = paymentKey(row);
-  const tone = key === "active" || key === "paid" ? "ok" : key === "pending" || key === "manual" ? "warn" : "danger";
-  return chip(paymentLabel(key), tone);
+  const plan = planKey(row);
+  const days = daysUntil(dueValue(row));
+
+  if (key === "manual") {
+    return { label: "Bonificado", tone: "warn" };
+  }
+
+  if (key === "overdue") {
+    return { label: "Vencido", tone: "danger" };
+  }
+
+  if (key === "suspended") {
+    return { label: "Suspendido", tone: "danger" };
+  }
+
+  if (plan === "trial" && days !== null && days < 0 && ["active", "paid", "pending"].includes(key)) {
+    return { label: "Prueba vencida", tone: "danger" };
+  }
+
+  if (days !== null && days < 0 && key === "pending") {
+    return { label: "Vencido", tone: "danger" };
+  }
+
+  if (days !== null && days < 0 && ["active", "paid"].includes(key)) {
+    return { label: "Revisar vencimiento", tone: "warn" };
+  }
+
+  const tone = key === "active" || key === "paid" ? "ok" : key === "pending" ? "warn" : "danger";
+  return { label: paymentLabel(key), tone };
+}
+
+function paymentChip(row = {}) {
+  const visual = billingPaymentPresentation(row);
+  return chip(visual.label, visual.tone);
+}
+
+function billingDuePresentation(row = {}) {
+  const key = paymentKey(row);
+  const due = dueValue(row);
+  const days = daysUntil(due);
+
+  if (key === "manual") {
+    return { date: "—", detail: "Sin vencimiento mientras esté bonificado" };
+  }
+
+  if (!due || days === null) {
+    return { date: "—", detail: "Sin fecha" };
+  }
+
+  if (days < 0) {
+    const detail = ["active", "paid"].includes(key)
+      ? `Fecha pasada hace ${Math.abs(days)} día(s) · revisar estado`
+      : `${Math.abs(days)} día(s) vencido`;
+    return { date: dateOnly(due), detail };
+  }
+
+  return {
+    date: dateOnly(due),
+    detail: `${days} día(s) para vencer`
+  };
 }
 
 function planChip(row = {}) {
@@ -400,28 +476,164 @@ function adminChip(row = {}) {
   return chip("Real", "ok");
 }
 
-function commercialStatus(row = {}) {
-  const access = accessKey(row);
-  const pay = paymentKey(row);
-  const dueDays = daysUntil(dueValue(row));
-  const inactiveDays = daysSince(lastActivityValue(row));
-  const whatsapp = metricNumber(row, "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks", "whatsapp_count");
-  const offers = metricNumber(row, "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount", "offers_count");
+function commercialMetricValue(row = {}, key = "") {
+  const metrics = row.metrics && typeof row.metrics === "object" ? row.metrics : {};
+  return metrics[key];
+}
 
-  if (isArchived(row)) return { label: "Archivada", tone: "neutral", reason: "Fuera del uso normal", action: "Restaurar si vuelve" };
-  if (["suspended", "disabled"].includes(access) || ["overdue", "suspended"].includes(pay)) {
-    return { label: "Urgente", tone: "danger", reason: "Pago/acceso para resolver", action: "Escribir o cobrar" };
+function hasLoadedPrices(row = {}) {
+  const state = row.operationalState || {};
+  if (state.hasLoadedPrices === true) return true;
+  if (Number(state.pricedProductCount || 0) > 0) return true;
+  return metricNumber(row, "priceSaveCount") > 0;
+}
+function commercialLastAt(row = {}) {
+  return commercialMetricValue(row, "lastCommercialActionAt") || "";
+}
+
+function activationStage(row = {}) {
+  const sellerWhatsapp = metricNumber(row, "sellerWhatsappCount");
+  const offerPublished = metricNumber(row, "offerPublishedCount");
+  const webShare = metricNumber(row, "webShareCount");
+  const webOpened = commercialMetricValue(row, "firstWebOpenedAt");
+  const priceSave = metricNumber(row, "priceSaveCount");
+
+  if (sellerWhatsapp > 0 || offerPublished > 0) return { key: "selling", label: "Vendiendo", rank: 4 };
+  if (webShare > 0) return { key: "sharing", label: "Compartiendo", rank: 3 };
+  if (webOpened) return { key: "storefront", label: "Vidriera", rank: 2 };
+  if (hasLoadedPrices(row)) return { key: "prices", label: "Precios", rank: 1 };
+  return { key: "registered", label: "Registrada", rank: 0 };
+}
+
+function commercialActionLabel(type = "") {
+  const labels = {
+    price_save: "Guardó precios",
+    offer_created: "Creó una promo",
+    offer_published: "Publicó una promo",
+    seller_whatsapp: "Abrió WhatsApp",
+    web_share: "Compartió su web"
+  };
+  return labels[String(type || "")] || "Sin acción comercial";
+}
+
+function relativeCommercialAction(row = {}) {
+  const at = commercialLastAt(row);
+  if (!at && hasLoadedPrices(row)) return "Sin registro reciente";
+  if (!at) return "Nunca";
+  const days = daysSince(at);
+  const label = commercialActionLabel(commercialMetricValue(row, "lastCommercialActionType"));
+  if (days === 0) return `${label} · hoy`;
+  if (days === 1) return `${label} · ayer`;
+  return `${label} · hace ${days}d`;
+}
+
+function commercialStatus(row = {}) {
+  const stage = activationStage(row);
+  const commercialAt = commercialLastAt(row);
+  const commercialDays = daysSince(commercialAt);
+  const knownActivityAt = commercialMetricValue(row, "lastAppOpenAt") || lastActivityValue(row);
+  const knownActivityDays = daysSince(knownActivityAt);
+
+  if (stage.rank === 0) {
+    if (knownActivityDays !== null && knownActivityDays < 7) {
+      return { key: "activating", label: "Activándose", tone: "warn", reason: "Todavía no cargó precios", priority: 2 };
+    }
+    return { key: "attention", label: "Requiere atención", tone: "danger", reason: "Todavía no empezó a usar AppPromos", priority: 0 };
   }
-  if (dueDays !== null && dueDays <= 2) {
-    return { label: "Urgente", tone: "danger", reason: `Vence en ${dueDays} día${dueDays === 1 ? "" : "s"}`, action: "Prevenir corte" };
+
+  if (commercialDays !== null && commercialDays >= 14) {
+    return { key: "attention", label: "Requiere atención", tone: "danger", reason: `Sin acción comercial hace ${commercialDays} días`, priority: 0 };
   }
-  if (isTrial(row) && (whatsapp + offers) === 0) {
-    return { label: "Revisar", tone: "warn", reason: "Prueba sin uso comercial", action: "Acompañar demo" };
+
+  if (commercialDays !== null && commercialDays >= 7) {
+    return { key: "risk", label: "En riesgo", tone: "warn", reason: `Se frenó hace ${commercialDays} días`, priority: 1 };
   }
-  if (inactiveDays !== null && inactiveDays >= 7) {
-    return { label: "Riesgo", tone: "warn", reason: `${inactiveDays} días sin actividad`, action: "Seguimiento" };
+
+  if (!commercialAt && knownActivityDays !== null && knownActivityDays >= 14) {
+    return { key: "attention", label: "Requiere atenci\u00f3n", tone: "danger", reason: `Sin actividad conocida hace ${knownActivityDays} d\u00edas`, priority: 0 };
   }
-  return { label: "Bien", tone: "ok", reason: "Sin alerta fuerte", action: "Mantener" };
+
+  if (!commercialAt && knownActivityDays !== null && knownActivityDays >= 7) {
+    return { key: "risk", label: "En riesgo", tone: "warn", reason: `Sin actividad conocida hace ${knownActivityDays} d\u00edas`, priority: 1 };
+  }
+
+  if (stage.rank >= 3) {
+    return { key: "active", label: "Activa", tone: "ok", reason: "Uso comercial reciente", priority: 3 };
+  }
+
+  const reason = stage.key === "prices"
+    ? "Ya cargó precios; falta avanzar con su vidriera"
+    : "La vidriera está lista; falta compartir";
+  return { key: "activating", label: "Activándose", tone: "warn", reason, priority: 2 };
+}
+
+function recommendedNextStep(row = {}) {
+  const status = commercialStatus(row);
+  const stage = activationStage(row);
+  const commercialDays = daysSince(commercialLastAt(row));
+
+  if (status.key === "attention" && stage.rank === 0) {
+    return {
+      tone: "danger",
+      eyebrow: "Próximo paso recomendado",
+      title: "Contactarla y ayudarla a empezar",
+      text: "Todavía no cargó precios. Conviene escribirle y acompañarla a cargar sus primeros precios."
+    };
+  }
+
+  if (["attention", "risk"].includes(status.key) && stage.rank > 0) {
+    return {
+      tone: status.key === "attention" ? "danger" : "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Retomar contacto",
+      text: commercialDays !== null
+        ? `Hace ${commercialDays} días que no registra una acción comercial. Conviene escribirle y destrabar el próximo paso.`
+        : "Conviene escribirle y destrabar el próximo paso comercial."
+    };
+  }
+
+  if (stage.key === "registered") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Cargar los primeros precios",
+      text: "Ayudala a cargar algunos precios para que empiece a construir su vidriera online."
+    };
+  }
+
+  if (stage.key === "prices") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Abrir la vidriera online",
+      text: "Ya tiene precios cargados. El siguiente objetivo es que vea su carnicería online y avance con la vidriera."
+    };
+  }
+
+  if (stage.key === "storefront") {
+    return {
+      tone: "warn",
+      eyebrow: "Próximo paso recomendado",
+      title: "Compartir la web",
+      text: "La vidriera ya está lista. Pedile que la comparta por WhatsApp para empezar a llevar clientes."
+    };
+  }
+
+  if (stage.key === "sharing") {
+    return {
+      tone: "ok",
+      eyebrow: "Próximo paso recomendado",
+      title: "Dar el salto a la venta",
+      text: "Ya compartió su web. Ayudala a crear o publicar su primera promo y moverla por WhatsApp."
+    };
+  }
+
+  return {
+    tone: "ok",
+    eyebrow: "Próximo paso recomendado",
+    title: "Seguir acompañando",
+    text: "Ya está usando AppPromos comercialmente. Conviene seguir observando su actividad y ayudar cuando aparezca una traba."
+  };
 }
 
 function matchesSearch(row = {}, query = "") {
@@ -458,56 +670,92 @@ function renderNav(activeView) {
   `;
 }
 
+function realOperationalBusinesses(businesses = []) {
+  return businesses.filter((row) => !isArchived(row) && !isTest(row));
+}
+
 function renderQuickStats(businesses = []) {
-  const active = businesses.filter((b) => !isArchived(b) && accessKey(b) === "active").length;
-  const tests = businesses.filter(isTest).length;
-  const urgent = businesses.filter((b) => commercialStatus(b).tone === "danger").length;
-  const review = businesses.filter((b) => commercialStatus(b).tone === "warn").length;
+  const rows = realOperationalBusinesses(businesses);
+  const statuses = rows.map((row) => commercialStatus(row));
+  const active = statuses.filter((status) => status.key === "active").length;
+  const activating = statuses.filter((status) => status.key === "activating").length;
+  const attention = statuses.filter((status) => ["attention", "risk"].includes(status.key)).length;
+
   return `
-    <div class="admin-kpis">
-      <div><b>${businesses.length}</b><span>Clientes</span></div>
-      <div><b>${active}</b><span>Activos</span></div>
-      <div><b>${urgent}</b><span>Urgentes</span></div>
-      <div><b>${review}</b><span>Revisar</span></div>
-      <div><b>${tests}</b><span>TEST</span></div>
+    <div class="admin-kpis admin-control-kpis">
+      <div><b>${rows.length}</b><span>Carnicerías reales</span></div>
+      <div><b>${active}</b><span>Activas</span></div>
+      <div><b>${activating}</b><span>Activándose</span></div>
+      <div><b>${attention}</b><span>Necesitan atención</span></div>
     </div>
   `;
 }
 
-function renderHome(businesses = []) {
-  const urgent = businesses.filter((b) => commercialStatus(b).tone === "danger").slice(0, 8);
-  const review = businesses.filter((b) => commercialStatus(b).tone === "warn").slice(0, 8);
-  const dueSoon = businesses
-    .filter((b) => {
-      const days = daysUntil(dueValue(b));
-      return days !== null && days >= 0 && days <= 7 && !["overdue", "suspended"].includes(paymentKey(b));
+function renderHome(businesses = [], state = {}) {
+  const filter = state.homeFilter || "all";
+  const query = state.homeSearch || "";
+  const rows = realOperationalBusinesses(businesses)
+    .filter((row) => matchesSearch(row, query))
+    .filter((row) => {
+      const status = commercialStatus(row);
+      if (filter === "attention") return ["attention", "risk"].includes(status.key);
+      if (filter === "activating") return status.key === "activating";
+      if (filter === "active") return status.key === "active";
+      return true;
     })
-    .slice(0, 8);
+    .sort((a, b) => {
+      const aStatus = commercialStatus(a);
+      const bStatus = commercialStatus(b);
+      if (aStatus.priority !== bStatus.priority) return aStatus.priority - bStatus.priority;
+      const aDate = toDate(commercialLastAt(a))?.getTime() || 0;
+      const bDate = toDate(commercialLastAt(b))?.getTime() || 0;
+      return aDate - bDate;
+    });
 
   return `
     ${renderQuickStats(businesses)}
-    <div class="admin-home-grid">
-      <section class="admin-panel-card highlight">
-        <div class="admin-panel-head">
-          <h3>Para resolver hoy</h3>
-          <button type="button" data-admin-view="billing">Ir a cobranzas</button>
-        </div>
-        ${renderSmallQueue(urgent, "No hay urgencias fuertes.", "cobranza")}
-      </section>
-      <section class="admin-panel-card">
-        <div class="admin-panel-head">
-          <h3>Clientes para revisar</h3>
-          <button type="button" data-admin-view="tracking">Ir a tracking</button>
-        </div>
-        ${renderSmallQueue(review, "No hay clientes fríos detectados.", "seguimiento")}
-      </section>
-      <section class="admin-panel-card">
-        <div class="admin-panel-head">
-          <h3>Vencimientos próximos</h3>
-          <button type="button" data-admin-view="billing" data-set-billing-filter="soon">Ver a vencer</button>
-        </div>
-        ${renderSmallQueue(dueSoon, "No hay vencimientos próximos cargados.", "cobranza")}
-      </section>
+    <div class="admin-section-head admin-control-head">
+      <div>
+        <h3>Centro de Control</h3>
+        <p>Primero aparece lo que necesita tu atención.</p>
+      </div>
+      <div class="admin-filter-tabs">
+        ${[["all", "Todos"], ["attention", "Atención"], ["activating", "Activándose"], ["active", "Activas"]]
+          .map(([key, label]) => `<button type="button" data-home-filter="${key}" class="${filter === key ? "active" : ""}">${label}</button>`).join("")}
+      </div>
+    </div>
+    <div class="admin-control-search">
+      <input id="adminHomeSearch" value="${escapeHtml(query)}" placeholder="Buscar carnicería" />
+      <span>${rows.length} carnicería${rows.length === 1 ? "" : "s"}</span>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-control-table">
+        <thead>
+          <tr>
+            <th>Carnicería</th>
+            <th>Salud</th>
+            <th>Última acción</th>
+            <th>Qué pasa</th>
+            <th>WhatsApp</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => {
+            const status = commercialStatus(row);
+            return `
+              <tr>
+                <td><strong>${escapeHtml(businessName(row))}</strong><small>${escapeHtml(businessLocation(row))}</small></td>
+                <td>${chip(status.label, status.tone)}</td>
+                <td>${escapeHtml(relativeCommercialAction(row))}</td>
+                <td><strong>${escapeHtml(status.reason)}</strong></td>
+                <td><button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button></td>
+                <td><button type="button" data-view-business="${safeBusinessId(row)}">Ver</button></td>
+              </tr>
+            `;
+          }).join("") || `<tr><td colspan="6"><div class="admin-empty">No hay carnicerías en este filtro.</div></td></tr>`}
+        </tbody>
+      </table>
     </div>
   `;
 }
@@ -629,7 +877,7 @@ function renderClientsTable(rows = [], source = "clients") {
                 <td>${accessChip(row)}</td>
                 <td>
                   ${paymentChip(row)}
-                  <small>Vence: ${escapeHtml(dateOnly(dueValue(row)))}</small>
+                  <small>${escapeHtml(billingDuePresentation(row).detail)}</small>
                 </td>
                 <td><small>${escapeHtml(dateTime(lastActivityValue(row)))}</small></td>
                 <td>${chip(status.label, status.tone)}<small>${escapeHtml(status.reason)}</small></td>
@@ -682,8 +930,7 @@ function renderBilling(businesses = [], state = {}) {
 
     <div class="admin-billing-list">
       ${rows.map((row) => {
-        const days = daysUntil(dueValue(row));
-        const daysLabel = days === null ? "Sin fecha" : days < 0 ? `${Math.abs(days)} día(s) vencido` : `${days} día(s) para vencer`;
+        const duePresentation = billingDuePresentation(row);
         const mpLink = mpLinkForBusiness(row);
         const hasMpLink = Boolean(mpPaymentUrl(mpLink));
         const amount = mpAmount(mpLink);
@@ -702,8 +949,8 @@ function renderBilling(businesses = [], state = {}) {
             <div class="admin-billing-info">
               <div>
                 <b>Vence</b>
-                <span>${escapeHtml(dateOnly(dueValue(row)))}</span>
-                <small>${escapeHtml(daysLabel)}</small>
+                <span>${escapeHtml(duePresentation.date)}</span>
+                <small>${escapeHtml(duePresentation.detail)}</small>
               </div>
               <div>
                 <b>Mercado Pago</b>
@@ -743,6 +990,7 @@ function renderTracking(businesses = [], state = {}) {
       <div>
         <h3>Tracking</h3>
         <p>Uso comercial simple: actividad, ofertas, WhatsApp y salud del cliente.</p>
+        <small>— = sin historial disponible en Tracking V1. No significa cero actividad histórica.</small>
       </div>
       <div class="admin-filter-tabs">
         ${[["all", "Todos"], ["demo", "Demo / TEST"], ["trial", "Prueba"], ["prod", "Producción"]]
@@ -766,17 +1014,17 @@ function renderTracking(businesses = [], state = {}) {
         <tbody>
           ${rows.map((row) => {
             const status = commercialStatus(row);
-            const offers = metricNumber(row, "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount");
-            const whatsapp = metricNumber(row, "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks");
-            const prices = metricNumber(row, "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount");
+            const offers = metricOptionalNumber(row, "offerCreatedCount", "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount");
+            const whatsapp = metricOptionalNumber(row, "sellerWhatsappCount", "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks");
+            const prices = metricOptionalNumber(row, "priceSaveCount", "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount");
             return `
               <tr>
                 <td><strong>${escapeHtml(businessName(row))}</strong><small>${escapeHtml(businessEmail(row))}</small></td>
                 <td>${adminChip(row)} ${planChip(row)}</td>
                 <td>${escapeHtml(dateTime(lastActivityValue(row)))}</td>
-                <td>${offers}</td>
-                <td>${whatsapp}</td>
-                <td>${prices}</td>
+                <td>${escapeHtml(trackingMetricDisplay(offers))}</td>
+                <td>${escapeHtml(trackingMetricDisplay(whatsapp))}</td>
+                <td>${escapeHtml(trackingMetricDisplay(prices))}</td>
                 <td>${chip(status.label, status.tone)}<small>${escapeHtml(status.reason)}</small></td>
                 <td>
                   <div class="admin-row-actions">
@@ -1001,24 +1249,117 @@ function renderAccountLedger(row = {}, persistedMovements = []) {
 
 function renderDetail(row = {}) {
   const status = commercialStatus(row);
+  const stage = activationStage(row);
   const b = billing(row);
+  const metrics = row.metrics && typeof row.metrics === "object" ? row.metrics : {};
+  const operationalState = row.operationalState && typeof row.operationalState === "object" ? row.operationalState : {};
   const internalNote = firstText(row.internalNote, row.adminNote, row.commercialNote, row.notes?.internal, row.admin?.note, "");
   const modules = { ...DEFAULT_MODULES, ...(row.modules || {}) };
 
+  const pricesLoaded = hasLoadedPrices(row);
+  const webOpened = Boolean(commercialMetricValue(row, "firstWebOpenedAt"));
+  const webShared = metricNumber(row, "webShareCount") > 0;
+  const selling = metricNumber(row, "offerPublishedCount") > 0 || metricNumber(row, "sellerWhatsappCount") > 0;
+
+  const appOpenCount = metricNumber(row, "appOpenCount");
+  const priceSaveCount = metricNumber(row, "priceSaveCount");
+  const offerCreatedCount = metricNumber(row, "offerCreatedCount");
+  const offerPublishedCount = metricNumber(row, "offerPublishedCount");
+  const sellerWhatsappCount = metricNumber(row, "sellerWhatsappCount");
+  const webShareCount = metricNumber(row, "webShareCount");
+
+  const yesNoChip = (value) => value ? chip("Sí", "ok") : chip("No", "neutral");
+  const nextStep = recommendedNextStep(row);
+
   return `
-    <div class="admin-detail-page">
+    <div class="admin-detail-page admin-operational-detail">
       <div class="admin-detail-top">
-        <button type="button" data-close-detail>← Volver</button>
+        <button type="button" data-close-detail>← Centro de Control</button>
         <div>
           <h3>${escapeHtml(businessName(row))}</h3>
           <p>${escapeHtml(businessOwner(row))} · ${escapeHtml(businessPhone(row) || "Sin WhatsApp")} · ${escapeHtml(businessLocation(row))}</p>
         </div>
-        <div class="admin-mini-chips">${adminChip(row)} ${planChip(row)} ${accessChip(row)} ${paymentChip(row)} ${chip(status.label, status.tone)}</div>
+        <div class="admin-mini-chips">
+          ${chip(status.label, status.tone)}
+          ${chip(stage.label, stage.rank >= 3 ? "ok" : stage.rank > 0 ? "warn" : "neutral")}
+          ${planChip(row)}
+          ${paymentChip(row)}
+        </div>
       </div>
 
-      <div class="admin-detail-grid-real">
+
+      <section class="admin-panel-card admin-next-step ${nextStep.tone}">
+        <div class="admin-next-step-copy">
+          <span class="admin-eyebrow">${escapeHtml(nextStep.eyebrow)}</span>
+          <h3>${escapeHtml(nextStep.title)}</h3>
+          <p>${escapeHtml(nextStep.text)}</p>
+        </div>
+        <div class="admin-next-step-actions">
+          <button type="button" class="primary-action" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+          <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
+        </div>
+      </section>
+
+      <section class="admin-panel-card admin-operational-summary ${status.tone}">
+        <div>
+          <span class="admin-eyebrow">Situación comercial</span>
+          <h3>${escapeHtml(status.label)}</h3>
+          <p>${escapeHtml(status.reason)}</p>
+        </div>
+        <div class="admin-operational-stage">
+          <span>Etapa actual</span>
+          <strong>${escapeHtml(stage.label)}</strong>
+          <small>${escapeHtml(relativeCommercialAction(row))}</small>
+        </div>
+      </section>
+
+      <div class="admin-detail-grid-real admin-operational-grid">
         <section class="admin-panel-card">
-          <h3>Datos básicos</h3>
+          <h3>Activación</h3>
+          <p class="admin-card-help">Qué tan lejos llegó esta carnicería dentro del circuito comercial.</p>
+          <dl class="admin-dl admin-activation-list">
+            <dt>Etapa</dt><dd>${chip(stage.label, stage.rank >= 3 ? "ok" : stage.rank > 0 ? "warn" : "neutral")}</dd>
+            <dt>Precios</dt><dd>${yesNoChip(pricesLoaded)}</dd>
+            <dt>Vidriera</dt><dd>${yesNoChip(webOpened)}</dd>
+            <dt>Compartió web</dt><dd>${yesNoChip(webShared)}</dd>
+            <dt>Vendiendo</dt><dd>${yesNoChip(selling)}</dd>
+          </dl>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Actividad</h3>
+          <p class="admin-card-help">Actividad real registrada desde Tracking Comercial V1.</p>
+          <dl class="admin-dl">
+            <dt>Última acción</dt><dd>${escapeHtml(relativeCommercialAction(row))}</dd>
+            ${(() => {
+              const trackedAppOpen = commercialMetricValue(row, "lastAppOpenAt");
+              return trackedAppOpen
+                ? `<dt>Última apertura</dt><dd>${escapeHtml(dateTime(trackedAppOpen))}</dd>`
+                : `<dt>Última actividad conocida</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>`;
+            })()}
+            <dt>Aperturas app</dt><dd>${appOpenCount}</dd>
+            <dt>Guardados precios</dt><dd>${priceSaveCount}</dd>
+            <dt>Promos creadas</dt><dd>${offerCreatedCount}</dd>
+            <dt>Promos publicadas</dt><dd>${offerPublishedCount}</dd>
+            <dt>WhatsApp vendedor</dt><dd>${sellerWhatsappCount}</dd>
+            <dt>Web compartida</dt><dd>${webShareCount}</dd>
+          </dl>
+          <small class="admin-detail-note">Los negocios anteriores a Tracking V1 pueden tener estado real sin historial completo.</small>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Estado actual</h3>
+          <p class="admin-card-help">Lo que existe hoy en la carnicería, independientemente del historial de tracking.</p>
+          <dl class="admin-dl">
+            <dt>Productos</dt><dd>${Number(operationalState.productCount || 0)}</dd>
+            <dt>Con precio</dt><dd>${Number(operationalState.pricedProductCount || 0)}</dd>
+            <dt>Activos con precio</dt><dd>${Number(operationalState.activePricedProductCount || 0)}</dd>
+            <dt>Última actividad app</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>
+          </dl>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Datos de la carnicería</h3>
           <dl class="admin-dl">
             <dt>Responsable</dt><dd>${escapeHtml(businessOwner(row))}</dd>
             <dt>Email</dt><dd>${escapeHtml(businessEmail(row))}</dd>
@@ -1029,20 +1370,55 @@ function renderDetail(row = {}) {
           </dl>
         </section>
 
+        <section class="admin-panel-card important admin-account-operational">
+          <h3>Cuenta y acceso</h3>
+          <p class="admin-card-help">La situación comercial se mantiene separada de pago y acceso.</p>
+          <div class="admin-account-chips">${planChip(row)} ${paymentChip(row)} ${accessChip(row)}</div>
+          <div class="admin-form-grid">
+            <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
+            <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((paymentStatus) => `<option value="${escapeHtml(paymentStatus)}" ${String(paymentStatus) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(paymentStatus))}</option>`).join("")}</select></label>
+            <label>Vence<input type="date" data-detail-due value="${escapeHtml(dateInput(dueValue(row)))}" /></label>
+            <label>Acceso<select data-detail-access>${ACCESS_STATUSES.map((accessStatus) => `<option value="${escapeHtml(accessStatus)}" ${String(accessStatus) === accessKey(row) ? "selected" : ""}>${escapeHtml(accessLabel(accessStatus))}</option>`).join("")}</select></label>
+          </div>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-commercial="${safeBusinessId(row)}">Guardar plan/pago</button>
+          </div>
+        </section>
+
+        <section class="admin-panel-card">
+          <h3>Módulos</h3>
+          <div class="admin-modules-list">
+            ${Object.keys(DEFAULT_MODULES).map((key) => `
+              <label class="admin-module-toggle">
+                <input type="checkbox" data-module-key="${escapeHtml(key)}" ${modules[key] ? "checked" : ""} />
+                <span>${escapeHtml(MODULE_LABELS[key] || key)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-access-modules="${safeBusinessId(row)}">Guardar acceso/módulos</button>
+          </div>
+        </section>
+
+        <section class="admin-panel-card note admin-followup-card">
+          <h3>Seguimiento</h3>
+          <p class="admin-card-help">Nota interna para recordar qué hablaste y qué falta hacer.</p>
+          <textarea data-detail-note rows="5" placeholder="Anotar seguimiento, pago hablado, próxima acción...">${escapeHtml(internalNote)}</textarea>
+          <div class="admin-row-actions left">
+            <button type="button" data-save-note="${safeBusinessId(row)}">Guardar nota</button>
+            <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+            <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
+          </div>
+        </section>
+
         <section class="admin-panel-card important admin-ledger-panel-wide">
           <h3>Cobranzas</h3>
           ${renderAccountLedger(row, BILLING_MOVEMENTS_BY_BUSINESS.get(safeBusinessId(row)) || [])}
-          <div class="admin-form-grid">
-            <label>Plan<select data-detail-plan>${ADMIN_PLANS.map((plan) => `<option value="${escapeHtml(plan)}" ${String(plan) === String(b.plan || "trial") ? "selected" : ""}>${escapeHtml(planLabel(plan))}</option>`).join("")}</select></label>
-            <label>Pago<select data-detail-payment>${PAYMENT_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === String(b.status || "active") ? "selected" : ""}>${escapeHtml(paymentLabel(status))}</option>`).join("")}</select></label>
-            <label>Vence<input type="date" data-detail-due value="${escapeHtml(dateInput(dueValue(row)))}" /></label>
-          </div>
           ${(() => {
             const mpLink = mpLinkForBusiness(row);
             const hasMpLink = Boolean(mpPaymentUrl(mpLink));
             return `
               <div class="admin-row-actions left">
-                <button type="button" data-save-commercial="${safeBusinessId(row)}">Guardar gestión</button>
                 <button type="button" data-generate-mp-link="${safeBusinessId(row)}">Generar link MP</button>
                 <button type="button" data-load-mp-link="${safeBusinessId(row)}">Último link</button>
                 <button type="button" data-copy-mp-link="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Copiar link</button>
@@ -1054,47 +1430,10 @@ function renderDetail(row = {}) {
           })()}
         </section>
 
-        <section class="admin-panel-card">
-          <h3>Tracking simple</h3>
-          <dl class="admin-dl">
-            <dt>Salud</dt><dd>${escapeHtml(status.label)} — ${escapeHtml(status.reason)}</dd>
-            <dt>Última actividad</dt><dd>${escapeHtml(dateTime(lastActivityValue(row)))}</dd>
-            <dt>Ofertas</dt><dd>${metricNumber(row, "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount")}</dd>
-            <dt>WhatsApps</dt><dd>${metricNumber(row, "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks")}</dd>
-            <dt>Precios</dt><dd>${metricNumber(row, "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount")}</dd>
-          </dl>
-          <div class="admin-row-actions left"><button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">Escribir seguimiento</button></div>
-        </section>
-
-        <section class="admin-panel-card">
-          <h3>Acceso y módulos</h3>
-          <div class="admin-form-grid">
-            <label>Acceso<select data-detail-access>${ACCESS_STATUSES.map((status) => `<option value="${escapeHtml(status)}" ${String(status) === accessKey(row) ? "selected" : ""}>${escapeHtml(accessLabel(status))}</option>`).join("")}</select></label>
-          </div>
-          <div class="admin-modules-list">
-            ${Object.keys(DEFAULT_MODULES).map((key) => `
-              <label class="admin-module-toggle">
-                <input type="checkbox" data-module-key="${escapeHtml(key)}" ${modules[key] ? "checked" : ""} />
-                <span>${escapeHtml(MODULE_LABELS[key] || key)}</span>
-              </label>
-            `).join("")}
-          </div>
+        <section class="admin-panel-card danger-zone admin-technical-actions">
+          <h3>Administración</h3>
+          <p class="admin-card-help">Acciones poco frecuentes. No forman parte del seguimiento diario.</p>
           <div class="admin-row-actions left">
-            <button type="button" data-save-access-modules="${safeBusinessId(row)}">Guardar acceso/módulos</button>
-            <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar como cliente</button>
-          </div>
-        </section>
-
-        <section class="admin-panel-card note">
-          <h3>Nota interna</h3>
-          <textarea data-detail-note rows="5" placeholder="Anotar seguimiento, pago hablado, próxima acción...">${escapeHtml(internalNote)}</textarea>
-          <div class="admin-row-actions left"><button type="button" data-save-note="${safeBusinessId(row)}">Guardar nota</button></div>
-        </section>
-
-        <section class="admin-panel-card danger-zone">
-          <h3>Acciones</h3>
-          <div class="admin-row-actions left">
-            <button type="button" data-whatsapp-business="${safeBusinessId(row)}">WhatsApp</button>
             ${isArchived(row)
               ? `<button type="button" data-restore-business="${safeBusinessId(row)}">Restaurar</button>`
               : `<button type="button" data-archive-business="${safeBusinessId(row)}">Archivar</button>`}
@@ -1112,10 +1451,12 @@ function renderDetail(row = {}) {
 
 export async function renderAdminUsers(container, options = {}) {
   if (!container) return;
-  const { onEnterAsBusiness = null } = options;
+  const { onEnterAsBusiness = null, showBackToApp = false } = options;
 
   const state = {
     view: "home",
+    homeFilter: "all",
+    homeSearch: "",
     search: "",
     clientFilter: "all",
     clientAccessFilter: "all",
@@ -1144,6 +1485,12 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-nav button.active{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
       .admin-content{overflow:auto;border:1px solid #e7e1d8;border-radius:16px;background:#fff;padding:14px;min-height:360px;}
       .admin-kpis{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-bottom:14px;}
+      .admin-control-kpis{grid-template-columns:repeat(4,minmax(130px,1fr));}
+      .admin-control-search{display:flex;align-items:center;gap:10px;margin:0 0 12px;}
+      .admin-control-search input{flex:1;min-height:40px;border:1px solid #ded6ca;border-radius:10px;padding:0 12px;font-weight:800;box-sizing:border-box;}
+      .admin-control-search span{color:#6e6e6e;font-size:12px;font-weight:900;white-space:nowrap;}
+      .admin-control-table{min-width:860px;}
+      .admin-control-table button{min-height:34px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
       .admin-kpis div{border:1px solid #eee6dc;border-radius:16px;background:#fffaf5;padding:12px;}
       .admin-kpis b{display:block;font-size:28px;line-height:1;font-weight:1000;}
       .admin-kpis span{display:block;margin-top:5px;color:#6e6e6e;font-size:12px;font-weight:900;text-transform:uppercase;}
@@ -1219,6 +1566,36 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-ledger-table td:nth-child(5){text-align:right;white-space:nowrap;}
       .admin-ledger-help{display:block;color:#6e6e6e;font-size:11px;line-height:1.35;margin-top:8px;}
 
+      .admin-operational-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+      .admin-operational-actions button{min-height:40px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
+      .admin-operational-actions .primary-action{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-next-step{display:flex;align-items:center;justify-content:space-between;gap:18px;border-left:5px solid #64748b;}
+      .admin-next-step.warn{border-left-color:#d97706;background:#fffaf0;}
+      .admin-next-step.danger{border-left-color:#dc2626;background:#fff7f7;}
+      .admin-next-step.ok{border-left-color:#16a34a;background:#f5fff7;}
+      .admin-next-step-copy{min-width:0;}
+      .admin-next-step-copy h3{margin:4px 0 6px;font-size:1.12rem;}
+      .admin-next-step-copy p{margin:0;line-height:1.45;}
+      .admin-next-step-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
+      @media (max-width:760px){
+        .admin-next-step{align-items:stretch;flex-direction:column;}
+        .admin-next-step-actions{width:100%;}
+        .admin-next-step-actions button{flex:1 1 160px;}
+      }
+      .admin-operational-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;margin-bottom:12px;}
+      .admin-operational-summary.ok{border-color:#b9dfc6;background:#f7fcf8;}
+      .admin-operational-summary.warn{border-color:#f0d49b;background:#fffaf0;}
+      .admin-operational-summary.danger{border-color:#efb5af;background:#fff7f6;}
+      .admin-eyebrow{display:block;color:#6e6e6e;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+      .admin-operational-stage{min-width:170px;padding:10px 12px;border:1px solid #eee6dc;border-radius:12px;background:#fff;}
+      .admin-operational-stage span,.admin-operational-stage small{display:block;color:#6e6e6e;font-size:11px;font-weight:800;}
+      .admin-operational-stage strong{display:block;font-size:18px;margin:2px 0;}
+      .admin-operational-grid{align-items:start;}
+      .admin-card-help{margin-bottom:10px!important;}
+      .admin-detail-note{display:block;margin-top:10px;color:#6e6e6e;font-size:11px;line-height:1.35;}
+      .admin-account-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
+      .admin-followup-card textarea{width:100%;box-sizing:border-box;min-height:110px;}
+      .admin-ledger-panel-wide,.admin-followup-card,.admin-technical-actions{grid-column:1/-1;}
       .admin-detail-top{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:start;margin-bottom:12px;border-bottom:1px solid #eee6dc;padding-bottom:12px;}
       .admin-detail-top h3{margin:0;font-size:22px;}
       .admin-detail-top p{margin:4px 0 0;color:#6e6e6e;font-size:13px;}
@@ -1240,6 +1617,8 @@ export async function renderAdminUsers(container, options = {}) {
       @media(max-width:760px){
         .admin-ledger-summary{grid-template-columns:1fr;}
         .admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .admin-control-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .admin-control-search{align-items:stretch;flex-direction:column;}
         .admin-toolbar-simple{grid-template-columns:1fr;}
         .admin-content{padding:10px;}
         .admin-detail-top{grid-template-columns:1fr;}
@@ -1250,11 +1629,11 @@ export async function renderAdminUsers(container, options = {}) {
     <div class="admin-shell">
       <div class="admin-top">
         <div>
-          <h2>Panel Admin AppPromos</h2>
-          <p>Tablero para trabajar: clientes, cobranzas, tracking y acciones. Sin ficha gigante en la pantalla principal.</p>
+          <h2>Centro de Control AppPromos</h2>
+          <p>Qué carnicerías funcionan, cuáles se están activando y cuáles necesitan tu atención.</p>
         </div>
         <div class="admin-top-actions">
-          <button data-action-panel="dashboardPanel" type="button">← Volver a la app</button>
+
           <button id="reloadAdminBtn" class="primary" type="button">Recargar</button>
         </div>
       </div>
@@ -1284,7 +1663,7 @@ export async function renderAdminUsers(container, options = {}) {
       content.innerHTML = `<div class="admin-empty">Cargando datos admin...</div>`;
       return;
     }
-    if (state.view === "home") content.innerHTML = renderHome(businesses);
+    if (state.view === "home") content.innerHTML = renderHome(businesses, state);
     if (state.view === "clients") content.innerHTML = renderClients(businesses, state);
     if (state.view === "billing") content.innerHTML = renderBilling(businesses, state);
     if (state.view === "tracking") content.innerHTML = renderTracking(businesses, state);
@@ -1422,6 +1801,24 @@ export async function renderAdminUsers(container, options = {}) {
       setView(nav.dataset.adminView || "home");
       return;
     }
+
+    const homeFilter = target.closest("[data-home-filter]");
+
+    if (homeFilter) {
+
+      state.homeFilter = homeFilter.dataset.homeFilter || "all";
+
+      state.view = "home";
+
+      state.selectedBusinessId = "";
+
+      render();
+
+      return;
+
+    }
+
+
 
     const billingFilter = target.closest("[data-billing-filter]");
     if (billingFilter) {
@@ -1683,6 +2080,21 @@ export async function renderAdminUsers(container, options = {}) {
   });
 
   container.addEventListener("input", (event) => {
+    const homeSearch = event.target.closest("#adminHomeSearch");
+    if (homeSearch) {
+      state.homeSearch = homeSearch.value || "";
+      const cursorStart = homeSearch.selectionStart ?? state.homeSearch.length;
+      const cursorEnd = homeSearch.selectionEnd ?? cursorStart;
+      render();
+      requestAnimationFrame(() => {
+        const nextSearch = container.querySelector("#adminHomeSearch");
+        if (!nextSearch) return;
+        nextSearch.focus();
+        nextSearch.setSelectionRange(cursorStart, cursorEnd);
+      });
+      return;
+    }
+
     const search = event.target.closest("#adminSearch");
     if (search) {
       state.search = search.value || "";

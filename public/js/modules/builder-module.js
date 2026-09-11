@@ -390,7 +390,12 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     } else {
       combo = await saveCombo(payload, options?.businessId || null);
     }
-    if (typeof onComboSaved === "function") await onComboSaved(combo);
+    if (typeof onComboSaved === "function") {
+      await onComboSaved(combo, {
+        created: !editingCombo,
+        updated: Boolean(editingCombo)
+      });
+    }
     if (editingCombo && typeof options?.onAfterComboUpdated === "function") {
       await options.onAfterComboUpdated(combo, { published: Boolean(options?.initialComboPublished) });
     }

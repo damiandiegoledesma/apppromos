@@ -16,7 +16,9 @@ import {
   deleteDoc,
   addDoc,
   serverTimestamp,
-  onSnapshot
+  onSnapshot,
+  increment,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { getCurrentAuthUser, resolveSession } from "./auth-service.js";
@@ -73,6 +75,113 @@ function normalizeAdminDateValue(value = null) {
   return date.toISOString();
 }
 
+const BUSINESS_COMMERCIAL_EVENTS = {
+  app_open: {
+    counter: "appOpenCount",
+    lastAt: "lastAppOpenAt"
+  },
+  price_save: {
+    counter: "priceSaveCount",
+    firstAt: "firstPriceSavedAt",
+    lastAt: "lastPriceSaveAt",
+    commercial: true
+  },
+  offer_created: {
+    counter: "offerCreatedCount",
+    firstAt: "firstOfferCreatedAt",
+    lastAt: "lastOfferCreatedAt",
+    commercial: true
+  },
+  offer_published: {
+    counter: "offerPublishedCount",
+    lastAt: "lastOfferPublishedAt",
+    commercial: true
+  },
+  seller_whatsapp: {
+    counter: "sellerWhatsappCount",
+    lastAt: "lastSellerWhatsappAt",
+    commercial: true
+  },
+  web_open: {
+    firstAt: "firstWebOpenedAt"
+  },
+  web_share: {
+    counter: "webShareCount",
+    firstAt: "firstWebSharedAt",
+    lastAt: "lastWebSharedAt",
+    commercial: true
+  }
+};
+
+export async function trackBusinessCommercialEvent(
+  businessId,
+  eventType,
+  options = {}
+) {
+  if (!businessId || businessId === "demo") return false;
+
+  const config = BUSINESS_COMMERCIAL_EVENTS[eventType];
+  if (!config) {
+    console.warn("Evento comercial desconocido", eventType);
+    return false;
+  }
+
+  const session = await resolveSession().catch(() => null);
+
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return false;
+  }
+
+  const businessRef = doc(db, "businesses", businessId);
+  const now = new Date().toISOString();
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(businessRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data() || {};
+      const metrics = data.metrics || {};
+      const updates = {};
+
+      if (config.counter) {
+        updates[`metrics.${config.counter}`] = increment(1);
+      }
+
+      if (config.firstAt && !metrics[config.firstAt]) {
+        updates[`metrics.${config.firstAt}`] = now;
+      }
+
+      if (config.lastAt) {
+        updates[`metrics.${config.lastAt}`] = now;
+      }
+
+      if (eventType === "seller_whatsapp" && options.source) {
+        updates["metrics.lastSellerWhatsappSource"] = String(options.source);
+      }
+
+      if (config.commercial) {
+        updates["metrics.lastCommercialActionAt"] = now;
+        updates["metrics.lastCommercialActionType"] = eventType;
+      }
+
+      transaction.update(businessRef, updates);
+    });
+
+    return true;
+  } catch (error) {
+    console.warn("No se pudo registrar evento comercial", {
+      businessId,
+      eventType,
+      error
+    });
+    return false;
+  }
+}
 export async function getAdminProfile(uid = null) {
   const cleanUid = uid || getCurrentAuthUser()?.uid;
   if (!cleanUid) return null;
@@ -179,6 +288,28 @@ export async function listAdminBusinesses() {
     try { meta = await readPath(`businesses/${businessId}/core/meta`); }
     catch (error) { console.warn("No se pudo leer meta", businessId, error); }
 
+    let operationalState = null;
+    try { operationalState = await readPath(`businesses/${businessId}/core/state`); }
+    catch (error) { console.warn("No se pudo leer estado operativo", businessId, error); }
+
+    const operationalProducts = Array.isArray(operationalState?.products)
+      ? operationalState.products
+      : [];
+    const pricedProductCount = operationalProducts.filter((product) => {
+      const price = Number(product?.precio ?? product?.price ?? 0);
+      return Number.isFinite(price) && price > 0;
+    }).length;
+    const activePricedProductCount = operationalProducts.filter((product) => {
+      const price = Number(product?.precio ?? product?.price ?? 0);
+      const active = product?.active !== false && product?.activo !== false;
+      return active && Number.isFinite(price) && price > 0;
+    }).length;
+    const operationalStateSummary = {
+      productCount: operationalProducts.length,
+      pricedProductCount,
+      activePricedProductCount,
+      hasLoadedPrices: pricedProductCount > 0
+    };
     const owner = usersByBusiness.get(businessId) || null;
     const phoneIndex = phoneKeyByBusiness.get(businessId) || null;
     const normalized = buildBusinessDefaults({
@@ -194,6 +325,8 @@ export async function listAdminBusinesses() {
     return {
       ...normalized,
       billing: { ...(normalized.billing || {}), ...(root.billing || {}) },
+      metrics: root.metrics && typeof root.metrics === "object" ? root.metrics : {},
+      operationalState: operationalStateSummary,
       internalNote: root.internalNote || root.adminNote || root.commercialNote || root.notes?.internal || root.admin?.note || "",
       adminNote: root.adminNote || root.internalNote || root.commercialNote || "",
       lastPaymentAt: root.lastPaymentAt || root.billing?.lastPaymentAt || null,
@@ -1108,6 +1241,16 @@ export async function deleteTestBusiness(businessId) {
 
 export async function trackBusinessLogin(businessId) {
   if (!businessId || businessId === "demo") return;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return;
+  }
+
   try {
     await setDoc(doc(db, "businesses", businessId), {
       lastLoginAt: new Date().toISOString(),
@@ -1120,6 +1263,16 @@ export async function trackBusinessLogin(businessId) {
 
 export async function trackBusinessActivityThrottled(businessId, minMinutes = 60) {
   if (!businessId || businessId === "demo") return;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return;
+  }
+
   const key = `apppromos_last_activity_write:${businessId}`;
   const nowMs = Date.now();
   try {

@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Carnicería online | AppPromos</title>
   <link id="businessFavicon" rel="icon" href="/assets/logo/apppromos-favicon-transparent.png" />
+
+  <!-- V12.26-G1 - Analytics de intencion de pedido publico -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBJM7TQRSN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EBJM7TQRSN');
+  </script>
   <style>
     :root{
       --red:#b63b2b;
@@ -1534,7 +1543,7 @@
   <div id="app" class="page"><div class="disabled"><h1>Cargando web...</h1><p>Estamos preparando la vidriera online.</p></div></div>
 
   <script type="module">
-    import "./js/services/auth-service.js";
+    import { resolveSession } from "./js/services/auth-service.js";
     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -1647,6 +1656,29 @@
       throw new Error("Falta identificar la carnicería. Usá un link público válido.");
     }
 
+    async function shouldTrackPublicWebView(data={}){
+      if(typeof window.gtag!=="function") return false;
+
+      try{
+        const session=await resolveSession();
+
+        if(session?.appMode==="superadmin") return false;
+
+        if(
+          session?.appMode==="client" &&
+          String(session.businessId||"") &&
+          String(session.businessId||"")===String(data.businessId||"")
+        ){
+          return false;
+        }
+
+        return true;
+      }catch(error){
+        console.warn("No se pudo resolver sesion para analytics publico",error);
+        return true;
+      }
+    }
+
     function buildPayloadFromPrivateData(meta={},state={},businessId=""){
       const web=state?.web||{};
       const rawName=web.publicDisplayName||meta.publicDisplayName||meta.publicName||meta.name||meta.nombre||"Carnicería";
@@ -1720,10 +1752,20 @@
       if(/oferta|promo|combo|dia|hoy|salvaventas/.test(text)) return base+"combo-oferta-dia.webp";
       return base+"combo-default.webp";
     }
-    function renderWeb(data={}){
+    async function renderWeb(data={}){
       if(data.active===false || data.enabled===false || data.published===false){
         app.innerHTML='<div class="disabled"><h1>Web no disponible</h1><p>Esta carnicería todavía no tiene su web activa.</p></div>';
         return;
+      }
+
+      const trackExternalAnalytics=await shouldTrackPublicWebView(data);
+
+      if(trackExternalAnalytics){
+        window.gtag("event","public_web_view",{
+          business_id:String(data.businessId||""),
+          business_slug:String(data.slug||""),
+          source:"public_web"
+        });
       }
 
       const rawName=data.publicDisplayName||data.businessName||data.publicName||data.name||data.nombre||"Carnicería";
@@ -2107,6 +2149,20 @@
           window.setTimeout(()=>firstInvalid.focus({preventScroll:true}),220);
           return;
         }
+        if(trackExternalAnalytics && typeof window.gtag==="function"){
+          window.gtag("event","order_whatsapp_started",{
+            business_id:String(data.businessId||""),
+            business_slug:String(data.slug||""),
+            source:"public_cart",
+            order_item_count:cartItems.length,
+            value:cartTotal(),
+            currency:"ARS",
+            delivery_type:customer.delivery||"retiro",
+            payment_type:customer.payment||"efectivo",
+            contains_offer:cartItems.some((item)=>item.type==="combo"),
+            contains_daily_offer:cartItems.some((item)=>item.type==="daily_offer")
+          });
+        }
         window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer");
       }
 
@@ -2446,7 +2502,7 @@
       try{
         const source=await resolveWebSource();
         const payload=await loadPayload(source);
-        renderWeb(payload);
+        await renderWeb(payload);
       }catch(e){console.error(e);app.innerHTML=`<div class="disabled"><h1>Error cargando web</h1><p>${esc(e.message||"No se pudo cargar")}</p></div>`}
     }
     boot();

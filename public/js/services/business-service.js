@@ -32,7 +32,7 @@ import { createDemoBusinessPayload } from "../data/demo-business-data.js";
 import { assertBusinessCanWrite } from "./write-guard-service.js";
 
 const STORAGE_KEY = "activeBusinessId";
-const DEFAULT_ID = "demo";
+const DEFAULT_ID = null;
 
 export async function getResolvedBusinessId() {
   const session = await resolveSession();
@@ -50,10 +50,10 @@ export async function getResolvedBusinessId() {
     }
 
     const firebaseId = getFirebaseActiveBusinessId();
-    return firebaseId || DEFAULT_ID;
+    return firebaseId || null;
   }
 
-  return DEFAULT_ID;
+  return null;
 }
 
 export function getActiveBusinessId() {
@@ -67,7 +67,7 @@ export function getActiveBusinessId() {
   }
 
   const firebaseId = getFirebaseActiveBusinessId();
-  return firebaseId || DEFAULT_ID;
+  return firebaseId || null;
 }
 
 export async function setActiveBusinessId(id) {
