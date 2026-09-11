@@ -321,6 +321,24 @@ function metricNumber(row = {}, ...keys) {
   return 0;
 }
 
+function metricOptionalNumber(row = {}, ...keys) {
+  const sources = [row.metrics, row.usage, row.activity, row.stats, row];
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    for (const key of keys) {
+      const raw = source[key];
+      if (raw === undefined || raw === null || raw === "") continue;
+      const value = Number(raw);
+      return Number.isFinite(value) ? value : 0;
+    }
+  }
+  return null;
+}
+
+function trackingMetricDisplay(value) {
+  return value === null ? "—" : String(value);
+}
+
 function isArchived(row = {}) {
   return row.archived === true || String(row.status || "").toLowerCase() === "archived";
 }
@@ -382,10 +400,68 @@ function accessChip(row = {}) {
   return chip(accessLabel(key), tone);
 }
 
-function paymentChip(row = {}) {
+function billingPaymentPresentation(row = {}) {
   const key = paymentKey(row);
-  const tone = key === "active" || key === "paid" ? "ok" : key === "pending" || key === "manual" ? "warn" : "danger";
-  return chip(paymentLabel(key), tone);
+  const plan = planKey(row);
+  const days = daysUntil(dueValue(row));
+
+  if (key === "manual") {
+    return { label: "Bonificado", tone: "warn" };
+  }
+
+  if (key === "overdue") {
+    return { label: "Vencido", tone: "danger" };
+  }
+
+  if (key === "suspended") {
+    return { label: "Suspendido", tone: "danger" };
+  }
+
+  if (plan === "trial" && days !== null && days < 0 && ["active", "paid", "pending"].includes(key)) {
+    return { label: "Prueba vencida", tone: "danger" };
+  }
+
+  if (days !== null && days < 0 && key === "pending") {
+    return { label: "Vencido", tone: "danger" };
+  }
+
+  if (days !== null && days < 0 && ["active", "paid"].includes(key)) {
+    return { label: "Revisar vencimiento", tone: "warn" };
+  }
+
+  const tone = key === "active" || key === "paid" ? "ok" : key === "pending" ? "warn" : "danger";
+  return { label: paymentLabel(key), tone };
+}
+
+function paymentChip(row = {}) {
+  const visual = billingPaymentPresentation(row);
+  return chip(visual.label, visual.tone);
+}
+
+function billingDuePresentation(row = {}) {
+  const key = paymentKey(row);
+  const due = dueValue(row);
+  const days = daysUntil(due);
+
+  if (key === "manual") {
+    return { date: "—", detail: "Sin vencimiento mientras esté bonificado" };
+  }
+
+  if (!due || days === null) {
+    return { date: "—", detail: "Sin fecha" };
+  }
+
+  if (days < 0) {
+    const detail = ["active", "paid"].includes(key)
+      ? `Fecha pasada hace ${Math.abs(days)} día(s) · revisar estado`
+      : `${Math.abs(days)} día(s) vencido`;
+    return { date: dateOnly(due), detail };
+  }
+
+  return {
+    date: dateOnly(due),
+    detail: `${days} día(s) para vencer`
+  };
 }
 
 function planChip(row = {}) {
@@ -801,7 +877,7 @@ function renderClientsTable(rows = [], source = "clients") {
                 <td>${accessChip(row)}</td>
                 <td>
                   ${paymentChip(row)}
-                  <small>Vence: ${escapeHtml(dateOnly(dueValue(row)))}</small>
+                  <small>${escapeHtml(billingDuePresentation(row).detail)}</small>
                 </td>
                 <td><small>${escapeHtml(dateTime(lastActivityValue(row)))}</small></td>
                 <td>${chip(status.label, status.tone)}<small>${escapeHtml(status.reason)}</small></td>
@@ -854,8 +930,7 @@ function renderBilling(businesses = [], state = {}) {
 
     <div class="admin-billing-list">
       ${rows.map((row) => {
-        const days = daysUntil(dueValue(row));
-        const daysLabel = days === null ? "Sin fecha" : days < 0 ? `${Math.abs(days)} día(s) vencido` : `${days} día(s) para vencer`;
+        const duePresentation = billingDuePresentation(row);
         const mpLink = mpLinkForBusiness(row);
         const hasMpLink = Boolean(mpPaymentUrl(mpLink));
         const amount = mpAmount(mpLink);
@@ -874,8 +949,8 @@ function renderBilling(businesses = [], state = {}) {
             <div class="admin-billing-info">
               <div>
                 <b>Vence</b>
-                <span>${escapeHtml(dateOnly(dueValue(row)))}</span>
-                <small>${escapeHtml(daysLabel)}</small>
+                <span>${escapeHtml(duePresentation.date)}</span>
+                <small>${escapeHtml(duePresentation.detail)}</small>
               </div>
               <div>
                 <b>Mercado Pago</b>
@@ -915,6 +990,7 @@ function renderTracking(businesses = [], state = {}) {
       <div>
         <h3>Tracking</h3>
         <p>Uso comercial simple: actividad, ofertas, WhatsApp y salud del cliente.</p>
+        <small>— = sin historial disponible en Tracking V1. No significa cero actividad histórica.</small>
       </div>
       <div class="admin-filter-tabs">
         ${[["all", "Todos"], ["demo", "Demo / TEST"], ["trial", "Prueba"], ["prod", "Producción"]]
@@ -938,17 +1014,17 @@ function renderTracking(businesses = [], state = {}) {
         <tbody>
           ${rows.map((row) => {
             const status = commercialStatus(row);
-            const offers = metricNumber(row, "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount");
-            const whatsapp = metricNumber(row, "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks");
-            const prices = metricNumber(row, "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount");
+            const offers = metricOptionalNumber(row, "offerCreatedCount", "offersCreatedCount", "savedOffersCount", "demoOfferCreatedCount");
+            const whatsapp = metricOptionalNumber(row, "sellerWhatsappCount", "whatsappSentCount", "demoWhatsappClickedCount", "whatsappClicks");
+            const prices = metricOptionalNumber(row, "priceSaveCount", "priceUpdatesCount", "pricesUpdatedCount", "itemsUpdatedCount", "productsUpdatedCount");
             return `
               <tr>
                 <td><strong>${escapeHtml(businessName(row))}</strong><small>${escapeHtml(businessEmail(row))}</small></td>
                 <td>${adminChip(row)} ${planChip(row)}</td>
                 <td>${escapeHtml(dateTime(lastActivityValue(row)))}</td>
-                <td>${offers}</td>
-                <td>${whatsapp}</td>
-                <td>${prices}</td>
+                <td>${escapeHtml(trackingMetricDisplay(offers))}</td>
+                <td>${escapeHtml(trackingMetricDisplay(whatsapp))}</td>
+                <td>${escapeHtml(trackingMetricDisplay(prices))}</td>
                 <td>${chip(status.label, status.tone)}<small>${escapeHtml(status.reason)}</small></td>
                 <td>
                   <div class="admin-row-actions">
