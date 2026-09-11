@@ -1758,7 +1758,9 @@
         return;
       }
 
-      if(await shouldTrackPublicWebView(data)){
+      const trackExternalAnalytics=await shouldTrackPublicWebView(data);
+
+      if(trackExternalAnalytics){
         window.gtag("event","public_web_view",{
           business_id:String(data.businessId||""),
           business_slug:String(data.slug||""),
@@ -2147,7 +2149,7 @@
           window.setTimeout(()=>firstInvalid.focus({preventScroll:true}),220);
           return;
         }
-        if(typeof window.gtag==="function"){
+        if(trackExternalAnalytics && typeof window.gtag==="function"){
           window.gtag("event","order_whatsapp_started",{
             business_id:String(data.businessId||""),
             business_slug:String(data.slug||""),
