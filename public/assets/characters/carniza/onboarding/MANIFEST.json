@@ -1,0 +1,19 @@
+{
+  "source": "a_clean_composite_image_asset_sheet_on_a_transpa.png",
+  "count": 11,
+  "target_repo_path": "public/assets/characters/carniza/onboarding/",
+  "files": [
+    "carniza-onboarding-bienvenida.webp",
+    "carniza-onboarding-rubros.webp",
+    "carniza-onboarding-precios.webp",
+    "carniza-onboarding-progreso.webp",
+    "carniza-onboarding-identidad.webp",
+    "carniza-onboarding-preview.webp",
+    "carniza-onboarding-publicar.webp",
+    "carniza-onboarding-whatsapp.webp",
+    "carniza-onboarding-online.webp",
+    "carniza-onboarding-compartir.webp",
+    "carniza-onboarding-retomar.webp"
+  ],
+  "note": "Assets cropped from the approved V12.27 Carniza onboarding sheet."
+}

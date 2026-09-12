@@ -1546,6 +1546,11 @@
     import { resolveSession } from "./js/services/auth-service.js";
     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
+    import { createStarterProducts } from "./js/data/starter-products.js";
+    import {
+      loadActivationDraft,
+      setActivationDraftStep
+    } from "./js/services/activation-draft-service.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const params = new URLSearchParams(location.search);
@@ -1627,8 +1632,159 @@
       probe.src=candidate;
     }
 
+    // V12.27-A5.3 - preview temporal del onboarding sin Firebase/Auth.
+    function isActivationPreview(){
+      return params.get("preview")==="activation";
+    }
+
+    function starterProductKey(product={}){
+      return String(product.productKey||product.id||"").trim();
+    }
+
+    function buildActivationPreviewPayload(draft={}){
+      const selectedRubros=new Set(
+        Array.isArray(draft?.selectedRubros)
+          ? draft.selectedRubros.map((value)=>String(value||"").trim()).filter(Boolean)
+          : []
+      );
+      const prices=(draft?.prices&&typeof draft.prices==="object"&&!Array.isArray(draft.prices))
+        ? draft.prices
+        : {};
+
+      const publicProducts=createStarterProducts()
+        .filter((product)=>!selectedRubros.size||selectedRubros.has(String(product.rubro||"").trim()))
+        .map((product)=>{
+          const key=starterProductKey(product);
+          const price=Number(prices[key]||0);
+          return {
+            id:product.id||key||product.nombre||"",
+            productKey:key,
+            nombre:product.nombre||product.name||"Producto",
+            rubro:String(product.rubro||"Sin rubro").trim()||"Sin rubro",
+            precio:Number.isFinite(price)&&price>0?price:0
+          };
+        })
+        .filter((product)=>validPublicPrice(product));
+
+      function previewStableScore(product={}){
+        const text=String(product.productKey||product.id||product.nombre||"");
+        let hash=2166136261;
+        for(let i=0;i<text.length;i++){
+          hash^=text.charCodeAt(i);
+          hash=Math.imul(hash,16777619);
+        }
+        return hash>>>0;
+      }
+
+      const promoCandidates=[...publicProducts]
+        .sort((a,b)=>previewStableScore(a)-previewStableScore(b))
+        .slice(0,3);
+
+      const discountedPrice=(price)=>Math.max(1,Math.round((Number(price)||0)*0.90));
+      const previewOfferFor=(product,index)=>({
+        id:`preview-promo-${index+1}`,
+        name:`Promo 10% · ${product.nombre}`,
+        category:"1 kg",
+        total:discountedPrice(product.precio),
+        items:[{
+          nombre:product.nombre,
+          rubro:product.rubro,
+          cantidad:1,
+          unidad:"kg"
+        }]
+      });
+
+      const publicOffers=promoCandidates.slice(1,3).map((product,index)=>previewOfferFor(product,index));
+      const dailyProduct=promoCandidates[0]||null;
+      const dailyOffers=dailyProduct?[{
+        id:"preview-daily-1",
+        name:`Oferta del día · ${dailyProduct.nombre}`,
+        status:"active",
+        expiresAt:new Date(Date.now()+24*60*60*1000).toISOString(),
+        total:discountedPrice(dailyProduct.precio),
+        items:[{
+          nombre:dailyProduct.nombre,
+          rubro:dailyProduct.rubro,
+          cantidad:1,
+          unidad:"kg"
+        }]
+      }]:[];
+
+      const businessName=String(draft?.identity?.businessName||"Tu carnicería").trim()||"Tu carnicería";
+      const locality=String(draft?.identity?.locality||"").trim();
+      const province=String(draft?.identity?.province||"").trim();
+      const phone=String(draft?.publish?.telefono||"").trim();
+
+      return {
+        __activationPreview:true,
+        businessId:"",
+        slug:"",
+        active:true,
+        enabled:true,
+        published:true,
+        mode:"activation_preview",
+        priceListStatus:"ready",
+        businessName,
+        publicDisplayName:businessName,
+        address:"",
+        city:locality,
+        province,
+        phone,
+        phoneKey:"",
+        whatsapp:phone,
+        logoUrl:"",
+        frontPhotoUrl:"",
+        showPriceList:true,
+        publicRubroNames:{Novillo:"Ternera/Vaca"},
+        publicOffers,
+        dailyOffers,
+        publicProducts
+      };
+    }
+
+    function renderActivationPreviewBar(){
+      if(!isActivationPreview())return;
+      document.querySelector("[data-activation-preview-bar]")?.remove();
+
+      const bar=document.createElement("div");
+      bar.dataset.activationPreviewBar="true";
+      bar.style.cssText="position:sticky;top:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#7f1d1d;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.18);font-family:inherit;";
+      bar.innerHTML=`
+        <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+          <img src="/assets/characters/carniza/onboarding/carniza-onboarding-preview.webp" alt="Carniza" style="width:44px;height:44px;object-fit:contain;flex:0 0 auto;">
+          <div style="min-width:0;">
+            <strong style="display:block;font-size:14px;line-height:1.15;">Vista previa</strong>
+            <small style="display:block;opacity:.9;line-height:1.2;">Así van a ver tu carnicería tus clientes.</small>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+          <button type="button" data-activation-preview-back style="flex:0 0 auto;min-height:38px;padding:0 12px;border:0;border-radius:11px;background:#fff;color:#7f1d1d;font-weight:1000;cursor:pointer;">← Seguir editando</button>
+          <button type="button" data-activation-preview-publish style="flex:0 0 auto;min-height:38px;padding:0 13px;border:0;border-radius:11px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;box-shadow:0 8px 20px rgba(22,163,74,.24);">Publicar mi carnicería</button>
+        </div>
+      `;
+      bar.querySelector("[data-activation-preview-back]")?.addEventListener("click",()=>{
+        try{setActivationDraftStep("identity")}catch(_){}
+        location.href="/crear-carniceria.html?resume=1";
+      });
+      bar.querySelector("[data-activation-preview-publish]")?.addEventListener("click",()=>{
+        try{setActivationDraftStep("publish")}catch(_){}
+        location.href="/crear-carniceria.html?publish=1";
+      });
+      document.body.prepend(bar);
+    }
+
     // V12.13-C4-FIX1 - slug como índice: la web lee precios vivos desde meta/state
     async function resolveWebSource(){
+      if(isActivationPreview()){
+        const draft=loadActivationDraft();
+        if(!draft){
+          return {type:"activation_preview_missing"};
+        }
+        return {
+          type:"activation_preview",
+          data:buildActivationPreviewPayload(draft)
+        };
+      }
       const legacyId=params.get("biz")||params.get("businessId")||"";
       const slug=normalizeSlug(params.get("slug")||getSlugFromPath()||"");
 
@@ -1725,6 +1881,12 @@
     }
 
     async function loadPayload(source){
+      if(source.type==="activation_preview"){
+        return source.data;
+      }
+      if(source.type==="activation_preview_missing"){
+        throw new Error("La vista previa venció o ya no está disponible. Volvé al onboarding para continuar.");
+      }
       if(source.type==="public"){
         // V12.18 QA-PROD01-FIX1: snapshot público autosuficiente.
         return source.data;
@@ -1758,7 +1920,9 @@
         return;
       }
 
-      const trackExternalAnalytics=await shouldTrackPublicWebView(data);
+      const trackExternalAnalytics=data.__activationPreview===true
+        ? false
+        : await shouldTrackPublicWebView(data);
 
       if(trackExternalAnalytics){
         window.gtag("event","public_web_view",{
@@ -2252,6 +2416,7 @@
       const promosSection=`<section class="section store-view${activeStoreView==="promos"?" is-active":""}" id="promos" data-store-view="promos"><div class="section-head"><h2>🏷️ Promos</h2><small>Combos y promociones de la carnicería</small></div>${regularOffersHtml}</section>`;
       const homeSection=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home"><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><button type="button" class="btn btn-primary" data-store-view-target="products">🥩 Productos</button><button type="button" class="btn btn-light" data-store-view-target="promos">🏷️ Promos</button><button type="button" class="btn btn-light" data-store-view-target="daily">🔥 Ofertas de hoy</button></div></section>${showcaseHtml}</div>`;
       app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div>${homeSection}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span class="apppromos-signature-copy"><small>Esta carnicería online funciona con</small><strong>AppPromos</strong><span>Conocé AppPromos →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
+      renderActivationPreviewBar();
       scheduleCheckoutFloatingState();
       applyOfferView();
 
@@ -2503,7 +2668,11 @@
         const source=await resolveWebSource();
         const payload=await loadPayload(source);
         await renderWeb(payload);
-      }catch(e){console.error(e);app.innerHTML=`<div class="disabled"><h1>Error cargando web</h1><p>${esc(e.message||"No se pudo cargar")}</p></div>`}
+      }catch(e){
+        console.error(e);
+        const preview=isActivationPreview();
+        app.innerHTML=`<div class="disabled"><h1>${preview?"Vista previa no disponible":"Error cargando web"}</h1><p>${esc(e.message||"No se pudo cargar")}</p>${preview?'<p><a href="/crear-carniceria.html?resume=1" style="display:inline-flex;min-height:42px;align-items:center;justify-content:center;padding:0 14px;border-radius:12px;background:#991b1b;color:#fff;text-decoration:none;font-weight:900;">Volver a AppPromos</a></p>':""}</div>`;
+      }
     }
     boot();
   </script>
