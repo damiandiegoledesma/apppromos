@@ -15,5 +15,9 @@
     "carniza-onboarding-compartir.webp",
     "carniza-onboarding-retomar.webp"
   ],
-  "note": "Assets cropped from the approved V12.27 Carniza onboarding sheet."
+  "note": "Assets cropped from the approved V12.27 Carniza onboarding sheet.",
+  "cleanup": {
+    "version": "V12.27-A7.3-FIX2",
+    "note": "Assets limpiados: sin fragmentos laterales de tiles vecinos; nombres y dimensiones preservados."
+  }
 }

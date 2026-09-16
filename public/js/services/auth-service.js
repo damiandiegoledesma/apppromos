@@ -219,6 +219,14 @@ function normalizeActivationPrices(prices = {}) {
   return clean;
 }
 
+function normalizeActivationRubros(values = []) {
+  return [...new Set(
+    (Array.isArray(values) ? values : [])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  )];
+}
+
 function applyActivationPrices(templateProducts = [], prices = {}) {
   const cleanPrices = normalizeActivationPrices(prices);
 
@@ -531,7 +539,16 @@ export async function registerClientAndBusiness(data) {
     const { starterMeta, starterState, templateProducts } = await loadStarterTemplate();
     const registrationProducts = applyActivationPrices(templateProducts, data?.activationPrices);
     const pricedCount = registrationPricedCount(registrationProducts);
-    const starterWeb = buildRegistrationWebConfig(starterWebBase, registrationProducts, now);
+    const selectedRubros = normalizeActivationRubros(data?.activationRubros);
+    const starterWeb = {
+      ...buildRegistrationWebConfig(starterWebBase, registrationProducts, now),
+      visibleRubros: selectedRubros
+    };
+    const businessPreferences = {
+      selectedRubros,
+      source: "activation_onboarding",
+      updatedAt: now
+    };
     const activePriceListId = starterState.activePriceListId || starterMeta.activePriceListId || "v1";
     const modules = {
       prices: true,
@@ -575,6 +592,7 @@ export async function registerClientAndBusiness(data) {
       businessId,
       products: registrationProducts,
       savedCombos: [],
+      businessPreferences,
       web: starterWeb
     };
 
@@ -656,6 +674,7 @@ export async function registerClientAndBusiness(data) {
       activePriceListId,
       products: registrationProducts,
       savedCombos: [],
+      businessPreferences,
       dashboard: {},
       web: starterWeb,
       updatedAt: now

@@ -10,6 +10,7 @@ import {
 import { getBusinessStore, patchBusinessStore } from "./business-store.js";
 import { loadBusinessCache, saveBusinessCache } from "./cache-service.js";
 import { assertBusinessCanWrite } from "./write-guard-service.js";
+import { normalizeStorefrontTheme } from "./storefront-theme-service.js";
 
 export function normalizeSlug(value = "") {
   return String(value || "")
@@ -94,6 +95,7 @@ export function buildDefaultWebConfig(meta = {}, businessId = "") {
 
   return {
     enabled: false,
+    storefrontTheme: "standard",
     slug,
     selectedOffers: [],
     showPriceList: false,
@@ -108,6 +110,7 @@ export function buildStarterWebConfig(meta = {}, businessId = "", now = new Date
   const slug = buildBusinessSlug(meta, businessId);
   return {
     enabled: true,
+    storefrontTheme: "standard",
     published: true,
     active: true,
     mode: "starter",
@@ -230,6 +233,7 @@ export function buildPublicWebPayload({
   const selected = new Set(Array.isArray(web?.selectedOffers) ? web.selectedOffers.map(String) : []);
   const visibleRubros = new Set(Array.isArray(web?.visibleRubros) ? web.visibleRubros.map((r) => toPublicText(r)).filter(Boolean) : []);
   const publicNovilloName = toPublicText(web?.publicRubroNames?.Novillo || "Novillo") || "Novillo";
+  const storefrontTheme = normalizeStorefrontTheme(web?.storefrontTheme || "standard");
   const savedCombos = Array.isArray(state?.savedCombos) ? state.savedCombos : [];
   const publicOffers = isStarter ? [] : savedCombos
     .filter((combo = {}) => selected.has(String(combo.id || combo.comboId || "")))
@@ -274,6 +278,7 @@ export function buildPublicWebPayload({
     showPriceList: Boolean(web?.showPriceList) && canShowRealPrices,
     visibleRubros: [...visibleRubros],
     publicRubroNames: { Novillo: publicNovilloName },
+    storefrontTheme,
     publicOffers,
     dailyOffers,
     publicProducts,

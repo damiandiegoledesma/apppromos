@@ -78,6 +78,28 @@ export function renderPrices(container, products = [], businessId = null, option
   let lastMassAdjustment = null;
   let usageFilter = "active";
 
+  const initialSelectedRubros = [...new Set(
+    (Array.isArray(options.selectedRubros) ? options.selectedRubros : [])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  )];
+
+  const rubrosWithRealPrice = [...new Set(
+    safeProducts
+      .filter((product = {}) => {
+        const price = Number(product.precio ?? product.price ?? 0);
+        return product.active !== false &&
+          product.activo !== false &&
+          Number.isFinite(price) &&
+          price > 0;
+      })
+      .map((product = {}) => String(product.rubro || "").trim())
+      .filter(Boolean)
+  )];
+
+  const preferredRubros = new Set([...initialSelectedRubros, ...rubrosWithRealPrice]);
+  let showAllRubros = preferredRubros.size === 0;
+
   async function updateLocalProducts(updatedProducts = [], updateResult = null) {
     safeProducts.splice(0, safeProducts.length, ...updatedProducts);
     await onProductsUpdated?.(updatedProducts, updateResult);
@@ -114,9 +136,18 @@ export function renderPrices(container, products = [], businessId = null, option
     const set = new Set();
     safeProducts.forEach((p) => {
       if (!isProductVisibleByUsage(p)) return;
+
       const rubro = String(p.rubro || "").trim();
-      if (rubro) set.add(rubro);
+      if (!rubro) return;
+
+      const allowedByPreference =
+        showAllRubros ||
+        preferredRubros.size === 0 ||
+        preferredRubros.has(rubro);
+
+      if (allowedByPreference) set.add(rubro);
     });
+
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }
 
@@ -138,7 +169,12 @@ export function renderPrices(container, products = [], businessId = null, option
 
       const matchSearch = !term || nombre.includes(term) || rubro.includes(term);
       const matchRubro = !rubroFilter || rubro === rubroFilter.toLowerCase();
-      return matchSearch && matchRubro;
+      const matchPreferredRubro =
+        showAllRubros ||
+        preferredRubros.size === 0 ||
+        preferredRubros.has(String(p.rubro || "").trim());
+
+      return matchSearch && matchRubro && matchPreferredRubro;
     });
 
     items.sort((a, b) => {
@@ -1357,6 +1393,18 @@ export function renderPrices(container, products = [], businessId = null, option
         </details>
       </div>
 
+      ${preferredRubros.size ? `
+        <div class="prices-preferred-rubros" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid #fed7aa;border-radius:14px;background:#fff7ed;color:#7c2d12;">
+          <div style="display:grid;gap:2px;">
+            <strong style="font-size:12px;font-weight:1000;">Tus rubros</strong>
+            <span style="font-size:12px;font-weight:850;">${[...preferredRubros].join(" \u00b7 ")}</span>
+          </div>
+          <button type="button" data-toggle-all-rubros style="min-height:36px;padding:0 12px;border:1px solid #fdba74;border-radius:999px;background:#fff;color:#9a3412;font-size:12px;font-weight:1000;cursor:pointer;">
+            ${showAllRubros ? "Ver solo mis rubros" : "+ Agregar otros rubros"}
+          </button>
+        </div>
+      ` : ""}
+
       <div id="list" class="prices-list"></div>
       <div id="pricesToast" class="prices-toast" data-tone="ok"></div>
       <div id="pricesDesktopFloatingSummary" class="prices-desktop-floating-summary" role="status" aria-live="polite">
@@ -1384,6 +1432,24 @@ export function renderPrices(container, products = [], businessId = null, option
       if (rubroSelect) rubroSelect.dataset.loaded = "";
       draw();
     });
+  });
+
+  container.querySelector("[data-toggle-all-rubros]")?.addEventListener("click", () => {
+    showAllRubros = !showAllRubros;
+    rubroFilter = "";
+
+    const rubroSelect = container.querySelector("#rubroFilter");
+    if (rubroSelect) {
+      rubroSelect.dataset.loaded = "";
+      rubroSelect.value = "";
+    }
+
+    draw();
+
+    const toggle = container.querySelector("[data-toggle-all-rubros]");
+    if (toggle) {
+      toggle.textContent = showAllRubros ? "Ver solo mis rubros" : "+ Agregar otros rubros";
+    }
   });
 
   container.querySelector("#saveAllBtn").onclick = saveAllPendingChanges;

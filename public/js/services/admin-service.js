@@ -110,6 +110,35 @@ const BUSINESS_COMMERCIAL_EVENTS = {
     firstAt: "firstWebSharedAt",
     lastAt: "lastWebSharedAt",
     commercial: true
+  },
+  daily_promo_published: {
+    counter: "dailyPromoPublishedCount",
+    firstAt: "firstDailyPromoPublishedAt",
+    lastAt: "lastDailyPromoPublishedAt",
+    commercial: true
+  },
+  storefront_theme_offered: {
+    counter: "storefrontThemeOfferedCount",
+    firstAt: "firstStorefrontThemeOfferedAt",
+    lastAt: "lastStorefrontThemeOfferedAt",
+    commercial: true
+  },
+  storefront_theme_previewed: {
+    counter: "storefrontThemePreviewedCount",
+    firstAt: "firstStorefrontThemePreviewedAt",
+    lastAt: "lastStorefrontThemePreviewedAt",
+    commercial: true
+  },
+  storefront_theme_selected: {
+    counter: "storefrontThemeSelectedCount",
+    firstAt: "firstStorefrontThemeSelectedAt",
+    lastAt: "lastStorefrontThemeSelectedAt",
+    commercial: true
+  },
+  storefront_theme_deferred: {
+    counter: "storefrontThemeDeferredCount",
+    lastAt: "lastStorefrontThemeDeferredAt",
+    commercial: true
   }
 };
 
@@ -182,6 +211,102 @@ export async function trackBusinessCommercialEvent(
     return false;
   }
 }
+
+export async function ensureBusinessCommercialActivated(
+  businessId,
+  { pricedCount = 0, webShareCount = 0 } = {}
+) {
+  if (!businessId || businessId === "demo") return false;
+  if (Number(pricedCount || 0) < 10 || Number(webShareCount || 0) < 1) return false;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return false;
+  }
+
+  const businessRef = doc(db, "businesses", businessId);
+  const now = new Date().toISOString();
+
+  try {
+    let changed = false;
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(businessRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data() || {};
+      const metrics = data.metrics || {};
+      if (metrics.commercialActivatedAt) return;
+
+      transaction.update(businessRef, {
+        "metrics.commercialActivatedAt": now
+      });
+      changed = true;
+    });
+    return changed;
+  } catch (error) {
+    console.warn("No se pudo marcar activación comercial", {
+      businessId,
+      error
+    });
+    return false;
+  }
+}
+
+export async function updateBusinessCommercialAssistant(
+  businessId,
+  patch = {}
+) {
+  if (!businessId || businessId === "demo") return false;
+
+  const session = await resolveSession().catch(() => null);
+  if (
+    session?.appMode !== "client" ||
+    !session?.businessId ||
+    session.businessId !== businessId
+  ) {
+    return false;
+  }
+
+  const cleanPatch = patch && typeof patch === "object" && !Array.isArray(patch)
+    ? patch
+    : {};
+  const updates = {};
+
+  [
+    "currentObjective",
+    "lastStrongPromptAt",
+    "lastDismissedAt",
+    "lastActionAt"
+  ].forEach((key) => {
+    if (cleanPatch[key] !== undefined) {
+      updates[`commercialAssistant.${key}`] = cleanPatch[key] || null;
+    }
+  });
+
+  if (cleanPatch.strongPromptCount !== undefined) {
+    const count = Number(cleanPatch.strongPromptCount || 0);
+    updates["commercialAssistant.strongPromptCount"] =
+      Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
+  }
+
+  if (!Object.keys(updates).length) return false;
+
+  try {
+    await updateDoc(doc(db, "businesses", businessId), updates);
+    return true;
+  } catch (error) {
+    console.warn("No se pudo actualizar memoria comercial de Carniza", {
+      businessId,
+      error
+    });
+    return false;
+  }
+}
+
 export async function getAdminProfile(uid = null) {
   const cleanUid = uid || getCurrentAuthUser()?.uid;
   if (!cleanUid) return null;

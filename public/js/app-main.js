@@ -1,4 +1,4 @@
-import {
+﻿import {
   openBusiness,
   setActiveBusinessId,
   getResolvedBusinessId
@@ -26,6 +26,7 @@ import {
 } from "./services/tracking-service.js";
 
 import { updateBusinessBasicData, getPublicWebUrl, saveWebConfig, syncPublicWebSnapshot, buildPublicWebPayload } from "./services/web-premium-service.js";
+import { STOREFRONT_THEMES, getStorefrontTheme, normalizeStorefrontTheme } from "./services/storefront-theme-service.js";
 import { finishDailyPromo, getArgentinaDayKey, getDailyPromosForManagement, publishDailyPromo } from "./services/daily-promos-service.js";
 import {
   uploadBusinessLogo,
@@ -54,7 +55,9 @@ import {
   trackBusinessLogin,
   trackBusinessActivityThrottled,
   subscribeBusinessControl,
-  trackBusinessCommercialEvent
+  trackBusinessCommercialEvent,
+  ensureBusinessCommercialActivated,
+  updateBusinessCommercialAssistant
 } from "./services/admin-service.js";
 
 const dashboardPanel = document.getElementById("dashboardPanel");
@@ -78,8 +81,15 @@ let currentPanelId = "dashboardPanel";
 let currentActiveProducts = [];
 let pendingBuilderInitialMode = null;
 let pendingBuilderEditCombo = null;
+// La elección de la vista previa no se persiste hasta confirmar. Se conserva
+// aquí para que un refresh del listener no vuelva la tarjeta a Estándar.
+let transientStorefrontThemePreview = null;
+let transientStorefrontPreviewView = "products";
 
 const publicSnapshotSyncedBusinesses = new Set();
+// Evita que una tarjeta fuerte de Carniza escriba nuevamente al re-renderizarse
+// por el listener de la misma empresa.
+const strongCommercialPromptsRecorded = new Set();
 
 async function syncCurrentPublicWebSnapshot(reason = "app") {
   if (!currentPayload?.businessId || !currentPayload?.meta || !currentPayload?.state) return null;
@@ -1072,6 +1082,13 @@ function renderCarnizaUrgentStockCard(container) {
             : "Visible en el snapshot de tu carnicería hasta las 23:59 de Argentina. No se guardó en Promos.";
         }
         trackCarnizaSignal("daily_promo_published", { businessId: currentPayload.businessId || currentBusinessId || null, promoId: result.promo?.id || null, demo: result.demo === true });
+        if (!result.demo) {
+          void (async () => {
+            await trackBusinessCommercialEvent(currentBusinessId, "daily_promo_published");
+            await refreshCommercialBusinessControl();
+            renderCurrentDashboard();
+          })();
+        }
       } catch (publishError) {
         publishButton.disabled = false;
         publishButton.textContent = previousText;
@@ -1627,13 +1644,80 @@ function renderSuperadminBusinessContextBanner() {
   dashboardPanel.prepend(banner);
 }
 
-function isActivationOnboarding() {
-  if (currentSession?.isDemo || currentSession?.appMode === "superadmin") return false;
+const CARNIZA_ACTIVATION_MIN_PRICES = 10;
+const CARNIZA_RECOMMENDED_PRICES = 15;
+const CARNIZA_REACTIVATION_DAYS = 7;
+
+function getCommercialQaForce() {
   try {
-    return new URLSearchParams(window.location.search || "").get("onboarding") === "1";
+    const params = new URLSearchParams(window.location.search || "");
+    return params.get("commercialQa") === "1" || params.get("onboarding") === "1";
   } catch (_) {
     return false;
   }
+}
+
+function getCommercialMetrics() {
+  return currentBusinessControl?.metrics && typeof currentBusinessControl.metrics === "object"
+    ? currentBusinessControl.metrics
+    : {};
+}
+
+function getCommercialAssistantMemory() {
+  return currentBusinessControl?.commercialAssistant &&
+    typeof currentBusinessControl.commercialAssistant === "object"
+    ? currentBusinessControl.commercialAssistant
+    : {};
+}
+
+function patchCommercialAssistantLocal(patch = {}) {
+  if (!currentBusinessControl || !patch || typeof patch !== "object") return;
+  currentBusinessControl = {
+    ...currentBusinessControl,
+    commercialAssistant: {
+      ...(currentBusinessControl.commercialAssistant || {}),
+      ...patch
+    }
+  };
+}
+
+async function refreshCommercialBusinessControl() {
+  if (!currentBusinessId || currentSession?.isDemo) return currentBusinessControl;
+  const root = await readBusinessRoot(currentBusinessId).catch(() => null);
+  if (!root) return currentBusinessControl;
+
+  currentBusinessControl = buildBusinessDefaults({
+    ...root,
+    businessId: currentBusinessId,
+    name: root?.name || currentPayload?.meta?.name || currentBusinessId
+  });
+
+  updateCarnizaContext({
+    businessControl: currentBusinessControl,
+    payload: currentPayload,
+    panelId: currentPanelId,
+    appMode: currentSession?.appMode || "client"
+  });
+
+  return currentBusinessControl;
+}
+
+function getCommercialQaDismissKey(objective = "") {
+  return `apppromos_commercial_qa_dismissed_${currentBusinessId || "business"}_${String(objective || "objective")}`;
+}
+
+function isCommercialQaDismissed(state = {}) {
+  try {
+    return sessionStorage.getItem(getCommercialQaDismissKey(state.objective)) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function markCommercialQaDismissed(state = {}) {
+  try {
+    sessionStorage.setItem(getCommercialQaDismissKey(state.objective), "1");
+  } catch (_) {}
 }
 
 function getActivationPublicUrl() {
@@ -1642,108 +1726,751 @@ function getActivationPublicUrl() {
   return web?.publicUrl || (currentBusinessId ? getPublicWebUrl(currentBusinessId, slug) : "");
 }
 
+function getStorefrontThemePreviewUrl(themeId = "standard", previewView = "products") {
+  const publicUrl = getActivationPublicUrl();
+  if (!publicUrl) return "";
+  try {
+    const url = new URL(publicUrl, window.location.origin);
+    url.searchParams.set("themePreview", normalizeStorefrontTheme(themeId));
+    url.searchParams.set("previewView", previewView === "promos" ? "promos" : (previewView === "home" ? "home" : "products"));
+    return url.toString();
+  } catch (_) {
+    return "";
+  }
+}
+
+function getCurrentStorefrontThemeConfig() {
+  return currentPayload?.state?.web || {};
+}
+
+function patchCurrentStorefrontThemeConfig(nextWeb = {}) {
+  if (!currentPayload?.state) return;
+  currentPayload.state.web = { ...(currentPayload.state.web || {}), ...(nextWeb || {}) };
+}
+
+async function saveStorefrontThemeConfig(patch = {}) {
+  if (!currentBusinessId) throw new Error("No encontramos tu carnicería.");
+  const nextWeb = await saveWebConfig(currentBusinessId, patch);
+  patchCurrentStorefrontThemeConfig(nextWeb);
+  return nextWeb;
+}
+
 function getActivationPricedCount() {
   const products = Array.isArray(currentPayload?.state?.products) ? currentPayload.state.products : [];
   return products.filter((product = {}) => {
     const price = Number(product.precio ?? product.price ?? 0);
-    return product.active !== false && product.activo !== false && Number.isFinite(price) && price > 0;
+    return product.active !== false &&
+      product.activo !== false &&
+      Number.isFinite(price) &&
+      price > 0;
   }).length;
 }
 
-function getActivationSharedKey() {
+function getLocalActivationSharedKey() {
   return `apppromos_onboarding_web_shared_${currentBusinessId || "business"}`;
 }
 
-function wasActivationWebShared() {
-  try { return localStorage.getItem(getActivationSharedKey()) === "1"; } catch (_) { return false; }
+function wasActivationWebSharedLocally() {
+  try {
+    return localStorage.getItem(getLocalActivationSharedKey()) === "1";
+  } catch (_) {
+    return false;
+  }
 }
 
-function renderActivationOnboarding() {
-  if (!dashboardPanel || !currentPayload || !isActivationOnboarding()) return;
+function getCommercialWebShareCount() {
+  const metrics = getCommercialMetrics();
+  const persistent = Number(metrics.webShareCount || 0);
+  return Math.max(Number.isFinite(persistent) ? persistent : 0, wasActivationWebSharedLocally() ? 1 : 0);
+}
+
+function markActivationWebShared(source = "commercial_activation") {
+  try {
+    localStorage.setItem(getLocalActivationSharedKey(), "1");
+  } catch (_) {}
+
+  trackWebShared({ source, business_id: currentBusinessId || null });
+  trackSellerWebCommercial("web_share", source);
+
+  void ensureBusinessCommercialActivated(currentBusinessId, {
+    pricedCount: getActivationPricedCount(),
+    webShareCount: 1
+  });
+}
+
+function daysSinceCommercialDate(raw = "") {
+  const time = Date.parse(String(raw || ""));
+  if (!Number.isFinite(time)) return null;
+  return Math.max(0, (Date.now() - time) / (24 * 60 * 60 * 1000));
+}
+
+function getCarnizaCommercialState() {
+  const metrics = getCommercialMetrics();
+  const web = getCurrentStorefrontThemeConfig();
+  const pricedCount = getActivationPricedCount();
+  const webShareCount = getCommercialWebShareCount();
+  const offerCreatedCount = Number(metrics.offerCreatedCount || 0);
+  const offerPublishedCount = Number(metrics.offerPublishedCount || 0);
+  const dailyPromoPublishedCount = Number(metrics.dailyPromoPublishedCount || 0);
+  const activated = pricedCount >= CARNIZA_ACTIVATION_MIN_PRICES && webShareCount >= 1;
+  const lastCommercialActionAt = String(metrics.lastCommercialActionAt || "");
+  const inactiveDays = daysSinceCommercialDate(lastCommercialActionAt);
+
+  if (pricedCount < CARNIZA_ACTIVATION_MIN_PRICES) {
+    return {
+      phase: "activation",
+      objective: "complete_storefront",
+      priority: 1,
+      intensity: "strong",
+      pricedCount,
+      webShareCount,
+      activated: false,
+      title: "Antes de compartirla, dejemos tu vidriera bien completa.",
+      message: `Tenés ${pricedCount} precio${pricedCount === 1 ? "" : "s"} cargado${pricedCount === 1 ? "" : "s"}. Con ${CARNIZA_ACTIVATION_MIN_PRICES} ya tenés una vidriera lista para mostrar.`,
+      status: `Te faltan ${Math.max(0, CARNIZA_ACTIVATION_MIN_PRICES - pricedCount)} precio${Math.max(0, CARNIZA_ACTIVATION_MIN_PRICES - pricedCount) === 1 ? "" : "s"} para poder compartirla.`,
+      primaryAction: "prices",
+      primaryLabel: pricedCount ? "Seguir cargando precios" : "Cargar precios",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-precios.webp"
+    };
+  }
+
+  // La personalización se habilita cuando ya publicó su primera promo O cuando
+  // difundió el link. Una promo publicada ya es una señal comercial suficiente.
+  if (webShareCount < 1 && offerPublishedCount < 1) {
+    return {
+      phase: "activation",
+      objective: "share_storefront",
+      priority: 2,
+      intensity: "strong",
+      pricedCount,
+      webShareCount,
+      activated: false,
+      title: "Tu carnicería ya está lista para hacerse conocer.",
+      message: `Tenés ${pricedCount} productos con precio. Revisala y compartila para que tus clientes puedan verla, armar el carrito y pedirte por WhatsApp.`,
+      status: "La activación se completa cuando pongas tu vidriera frente a tus clientes.",
+      primaryAction: "share",
+      primaryLabel: "Compartir mi carnicería",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-compartir.webp"
+    };
+  }
+
+  if (!metrics.commercialActivatedAt) {
+    void ensureBusinessCommercialActivated(currentBusinessId, {
+      pricedCount,
+      webShareCount
+    });
+  }
+
+  if (inactiveDays !== null && inactiveDays >= CARNIZA_REACTIVATION_DAYS) {
+    return {
+      phase: "reactivation",
+      objective: "reactivate_share",
+      priority: 3,
+      intensity: "medium",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Hace unos días que no movemos tu carnicería.",
+      message: "Ya tenés la vidriera armada. Volvamos a ponerla frente a tus clientes con una difusión rápida.",
+      status: `${Math.floor(inactiveDays)} días sin una acción comercial registrada.`,
+      primaryAction: "share",
+      primaryLabel: "Volver a compartir",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-retomar.webp"
+    };
+  }
+
+  if (pricedCount < CARNIZA_RECOMMENDED_PRICES) {
+    return {
+      phase: "growth",
+      objective: "complete_catalog",
+      priority: 4,
+      intensity: "medium",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Tu carnicería ya está activada. Ahora podemos mejorar la vidriera.",
+      message: `Ya tenés ${pricedCount} precios y la vidriera circulando. Si llegás a ${CARNIZA_RECOMMENDED_PRICES} productos va a quedar todavía más completa.`,
+      status: "Esto ya no bloquea nada: es una mejora comercial.",
+      primaryAction: "prices",
+      primaryLabel: "Completar un poco más",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-progreso.webp"
+    };
+  }
+
+  if (offerCreatedCount < 1) {
+    return {
+      phase: "growth",
+      objective: "first_promo",
+      priority: 5,
+      intensity: "medium",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Tu vidriera ya funciona. ¿Le damos un motivo para comprar?",
+      message: "Probá armar tu primera promo con los precios que ya cargaste. Es opcional: tu carnicería ya está activada.",
+      status: "Siguiente oportunidad de crecimiento: primera promo.",
+      primaryAction: "first_promo",
+      primaryLabel: "Crear mi primera promo",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-online.webp"
+    };
+  }
+
+  if (offerPublishedCount < 1) {
+    return {
+      phase: "growth",
+      objective: "publish_promo",
+      priority: 6,
+      intensity: "medium",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Ya creaste una promo. Falta ponerla frente a tus clientes.",
+      message: "Entrá al Centro de Promos, revisala y publicala cuando quieras.",
+      status: "Tenés una oportunidad comercial lista para publicar.",
+      primaryAction: "saved_promos",
+      primaryLabel: "Ver mis promos",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-publicar.webp"
+    };
+  }
+
+  const storefrontThemePromptSeen = Boolean(web?.storefrontThemePromptSeenAt || web?.storefrontThemeSelectedAt);
+  if (!storefrontThemePromptSeen) {
+    return {
+      phase: "growth",
+      objective: "personalize_storefront",
+      priority: 7,
+      intensity: "strong",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Tu carnicería ya está lista para vender. Ahora hacela tuya.",
+      message: "Elegí el estilo que mejor representa a tu negocio. Tus productos, promos, carrito y enlace siguen igual.",
+      status: "Último paso opcional: personalizá el diseño de tu vidriera.",
+      primaryAction: "storefront_theme",
+      primaryLabel: "Elegir estilo",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-online.webp"
+    };
+  }
+
+  if (dailyPromoPublishedCount < 1) {
+    return {
+      phase: "growth",
+      objective: "first_daily_promo",
+      priority: 7,
+      intensity: "medium",
+      pricedCount,
+      webShareCount,
+      activated: true,
+      title: "Ya sabés publicar promos. Te queda otra herramienta para vender hoy.",
+      message: "Si alguna vez necesitás mover mercadería rápido, Carniza puede armar una Promo del día y publicarla hasta las 23:59.",
+      status: "Probala cuando tengas una oportunidad real; no es obligatoria.",
+      primaryAction: "daily_promo",
+      primaryLabel: "Ver Promo del día",
+      asset: "/assets/characters/carniza/onboarding/carniza-onboarding-whatsapp.webp"
+    };
+  }
+
+  return {
+    phase: "active",
+    objective: "active",
+    priority: 99,
+    intensity: "light",
+    pricedCount,
+    webShareCount,
+    activated: true,
+    title: "",
+    message: "",
+    status: "",
+    primaryAction: "",
+    primaryLabel: "",
+    asset: ""
+  };
+}
+
+function renderStorefrontThemeChoices(selectedTheme = "standard") {
+  const currentTheme = normalizeStorefrontTheme(selectedTheme);
+  return STOREFRONT_THEMES.map((theme) => {
+    const selected = theme.id === currentTheme;
+    return `<button type="button" data-storefront-theme-choice="${theme.id}" aria-pressed="${selected}" style="display:grid;gap:7px;padding:10px;border:2px solid ${selected ? "#c2410c" : "#eaded7"};border-radius:16px;background:#fff;text-align:left;cursor:pointer;font:inherit;box-shadow:${selected ? "0 8px 18px rgba(124,45,18,.10)" : "none"};"><span style="height:38px;border-radius:10px;display:flex;overflow:hidden;">${theme.colors.map((color) => `<i style="flex:1;background:${color};"></i>`).join("")}</span><strong style="color:#2b2724;font-size:12px;line-height:1.15;">${escapeCarnizaHtml(theme.label)}</strong><small style="color:#8a5c51;font-size:10px;font-weight:850;">${escapeCarnizaHtml(theme.caption)}</small></button>`;
+  }).join("");
+}
+
+function renderStorefrontThemePrompt(state = {}) {
+  setCommercialActivationUi(true);
+  if (!dashboardPanel) return;
+
+  dashboardPanel.querySelector(".dash-main-card")?.style.setProperty("display", "none", "important");
+  dashboardPanel.querySelector(".dash-two")?.style.setProperty("display", "none", "important");
+
+  const web = getCurrentStorefrontThemeConfig();
+  const selectedTheme = normalizeStorefrontTheme(transientStorefrontThemePreview || web?.storefrontTheme || "standard");
+  const card = document.createElement("section");
+  card.dataset.carnizaCommercialMotor = "storefront-theme";
+  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #fed7aa;border-radius:22px;background:linear-gradient(180deg,#fffaf0,#fff);box-shadow:0 12px 30px rgba(124,45,18,.10);";
+  card.innerHTML = `
+    <style>
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-layout{display:grid;grid-template-columns:minmax(120px,.34fr) minmax(0,.88fr) minmax(280px,.78fr);gap:18px;align-items:center}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame{position:relative;min-height:430px;overflow:hidden;border:8px solid #2c211d;border-radius:24px;background:#fff;box-shadow:0 14px 28px rgba(74,24,17,.18)}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame iframe{display:block;width:100%;height:430px;border:0;background:#fff;pointer-events:none}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1;padding:5px 9px;border-radius:999px;background:rgba(74,24,17,.9);color:#fff;font-size:11px;font-weight:900;white-space:nowrap}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-tab{min-height:32px;border:1px solid #eaded7;border-radius:999px;background:#fff;padding:0 10px;color:#7c2d12;font-weight:900;cursor:pointer}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-tab[aria-pressed="true"]{border-color:#c2410c;background:#fff0e7;color:#9a3412}
+      @media(max-width:980px){[data-carniza-commercial-motor="storefront-theme"] .theme-preview-layout{grid-template-columns:minmax(110px,.3fr) minmax(0,1fr)}[data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame{grid-column:1/-1;max-width:480px;width:100%;justify-self:center}}
+      @media(max-width:620px){[data-carniza-commercial-motor="storefront-theme"] .theme-preview-layout{grid-template-columns:1fr}[data-carniza-commercial-motor="storefront-theme"] .theme-preview-layout>img{display:none}[data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame{min-height:390px}[data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame iframe{height:390px}}
+    </style>
+    <div class="theme-preview-layout">
+      <img src="${state.asset}" alt="Carniza" style="width:min(100%,190px);max-height:205px;object-fit:contain;justify-self:center;">
+      <div>
+        <span style="display:inline-flex;padding:5px 9px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Diseño de tu vidriera</span>
+        <h2 style="margin:9px 0 6px;color:#4a1811;font-size:clamp(24px,4vw,34px);line-height:1.03;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
+        <p style="margin:0;color:#6b4b3e;font-weight:800;line-height:1.42;">Probá cada alternativa en una vista previa de tu propia vidriera. Nada cambia hasta que confirmes.</p>
+        <div data-storefront-theme-choices style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:9px;margin-top:15px;"></div>
+        <div class="theme-preview-tabs" aria-label="Contenido de la vista previa">
+          <button type="button" class="theme-preview-tab" data-storefront-preview-view="products" aria-pressed="true">Ver productos</button>
+          <button type="button" class="theme-preview-tab" data-storefront-preview-view="promos" aria-pressed="false">Ver promos</button>
+          <button type="button" class="theme-preview-tab" data-storefront-preview-view="home" aria-pressed="false">Ver inicio</button>
+        </div>
+        <p data-storefront-theme-status style="min-height:20px;margin:10px 0 0;color:#7c2d12;font-weight:900;font-size:13px;">Vista previa: ${escapeCarnizaHtml(getStorefrontTheme(selectedTheme).label)}</p>
+        <div class="theme-preview-actions">
+          <button type="button" data-storefront-theme-defer style="min-height:42px;border:0;background:transparent;color:#9a3412;font-weight:900;cursor:pointer;padding:0 10px;">Ver después</button>
+          <button type="button" data-storefront-theme-apply style="min-height:42px;border:0;border-radius:13px;background:#c2410c;color:#fff;font-weight:950;cursor:pointer;padding:0 16px;">Aplicar este estilo</button>
+        </div>
+      </div>
+      <div class="theme-preview-frame" aria-label="Vista previa de tu vidriera">
+        <span class="theme-preview-badge">Vista previa · no se guarda todavía</span>
+        <iframe data-storefront-theme-preview title="Vista previa de tu vidriera" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>`;
+
+  const choices = card.querySelector("[data-storefront-theme-choices]");
+  if (choices) choices.innerHTML = renderStorefrontThemeChoices(selectedTheme);
+  const status = card.querySelector("[data-storefront-theme-status]");
+  const preview = card.querySelector("[data-storefront-theme-preview]");
+  const applyButton = card.querySelector("[data-storefront-theme-apply]");
+  let previewTheme = selectedTheme;
+  let previewView = transientStorefrontPreviewView || "products";
+
+  const enforcePreviewTheme = () => {
+    try {
+      const previewDocument = preview?.contentDocument;
+      if (previewDocument?.documentElement) previewDocument.documentElement.dataset.storefrontTheme = previewTheme;
+    } catch (_) {}
+  };
+
+  const showPreview = (nextTheme, nextView = previewView) => {
+    previewTheme = normalizeStorefrontTheme(nextTheme);
+    previewView = ["home", "products", "promos"].includes(nextView) ? nextView : "products";
+    transientStorefrontThemePreview = previewTheme;
+    transientStorefrontPreviewView = previewView;
+    const theme = getStorefrontTheme(previewTheme);
+    const previewUrl = getStorefrontThemePreviewUrl(previewTheme, previewView);
+    if (preview) preview.src = previewUrl || "about:blank";
+    card.querySelectorAll("[data-storefront-theme-choice]").forEach((choice) => {
+      const active = choice.getAttribute("data-storefront-theme-choice") === previewTheme;
+      choice.setAttribute("aria-pressed", String(active));
+      choice.style.borderColor = active ? "#c2410c" : "#eaded7";
+      choice.style.boxShadow = active ? "0 8px 18px rgba(124,45,18,.10)" : "none";
+    });
+    card.querySelectorAll("[data-storefront-preview-view]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.getAttribute("data-storefront-preview-view") === previewView));
+    });
+    if (status) status.textContent = previewUrl
+      ? `Vista previa: ${theme.label}. Confirmá sólo si te gusta cómo queda.`
+      : "No pudimos preparar la vista previa. Probá recargar la página.";
+    if (applyButton) applyButton.disabled = !previewUrl;
+  };
+
+  preview?.addEventListener("load", enforcePreviewTheme);
+
+  if (!web?.storefrontThemePromptShownAt) {
+    const shownAt = new Date().toISOString();
+    patchCurrentStorefrontThemeConfig({ storefrontThemePromptShownAt: shownAt });
+    void saveStorefrontThemeConfig({ storefrontThemePromptShownAt: shownAt, updatedFrom: "commercial_theme_offer" });
+    void trackBusinessCommercialEvent(currentBusinessId, "storefront_theme_offered", { source: "commercial_activation" });
+  }
+
+  card.querySelectorAll("[data-storefront-theme-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const themeId = normalizeStorefrontTheme(button.getAttribute("data-storefront-theme-choice"));
+      showPreview(themeId);
+      void trackBusinessCommercialEvent(currentBusinessId, "storefront_theme_previewed", { theme: themeId, source: "commercial_activation" });
+    });
+  });
+
+  card.querySelectorAll("[data-storefront-preview-view]").forEach((button) => {
+    button.addEventListener("click", () => showPreview(previewTheme, button.getAttribute("data-storefront-preview-view")));
+  });
+
+  showPreview(selectedTheme);
+
+  applyButton?.addEventListener("click", async () => {
+      const theme = getStorefrontTheme(previewTheme);
+      if (status) status.textContent = "Guardando el estilo elegido...";
+      try {
+        await saveStorefrontThemeConfig({
+          storefrontTheme: previewTheme,
+          storefrontThemeSelectedAt: new Date().toISOString(),
+          storefrontThemePromptSeenAt: web?.storefrontThemePromptSeenAt || new Date().toISOString(),
+          updatedFrom: "commercial_theme_selection"
+        });
+        transientStorefrontThemePreview = null;
+        transientStorefrontPreviewView = "products";
+        void trackBusinessCommercialEvent(currentBusinessId, "storefront_theme_selected", { theme: previewTheme, source: "commercial_activation" });
+        if (status) status.textContent = `✅ Listo: tu vidriera usa el estilo ${theme.label}.`;
+        await dismissCommercialPrompt(state);
+      } catch (error) {
+        console.error(error);
+        if (status) status.textContent = "No se pudo aplicar el estilo. Probá de nuevo.";
+      }
+  });
+
+  card.querySelector("[data-storefront-theme-defer]")?.addEventListener("click", async () => {
+    try {
+      await saveStorefrontThemeConfig({
+        storefrontThemePromptSeenAt: new Date().toISOString(),
+        storefrontThemeDeferredAt: new Date().toISOString(),
+        updatedFrom: "commercial_theme_defer"
+      });
+      void trackBusinessCommercialEvent(currentBusinessId, "storefront_theme_deferred", { source: "commercial_activation" });
+    } catch (error) {
+      console.warn("No se pudo recordar la postergación del tema", error);
+    }
+    transientStorefrontThemePreview = null;
+    transientStorefrontPreviewView = "products";
+    await dismissCommercialPrompt(state);
+  });
+
+  dashboardPanel.prepend(card);
+}
+
+function getCommercialPromptCooldownMs(state = {}) {
+  if (state.phase === "activation") return 24 * 60 * 60 * 1000;
+  if (state.phase === "reactivation") return 48 * 60 * 60 * 1000;
+  return 72 * 60 * 60 * 1000;
+}
+
+function shouldShowCommercialPrompt(state = {}) {
+  if (!state || state.phase === "active") return false;
+  if (isCommercialQaDismissed(state)) return false;
+  if (getCommercialQaForce()) return true;
+
+  const memory = getCommercialAssistantMemory();
+  if (String(memory.currentObjective || "") !== String(state.objective || "")) return true;
+
+  const dismissedAt = Date.parse(String(memory.lastDismissedAt || ""));
+  if (!Number.isFinite(dismissedAt)) return true;
+
+  return Date.now() - dismissedAt >= getCommercialPromptCooldownMs(state);
+}
+
+function setCommercialActivationUi(active = false) {
+  const enabled = Boolean(active);
+  document.body?.classList.toggle("app-commercial-activation-active", enabled);
+
+  let style = document.getElementById("commercialActivationUiStyle");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "commercialActivationUiStyle";
+    style.textContent = `
+      /* La activaciÃ³n comercial acompaÃ±a, pero nunca bloquea la navegaciÃ³n.
+         El carnicero siempre conserva un camino visible para salir de Precios. */
+      body.app-commercial-activation-active #carnizaFloatingLiquidatorFab {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (enabled) {
+    document.querySelector(".app-mobile-bottom-menu")?.classList.remove("is-open");
+  }
+}
+
+async function rememberCommercialPrompt(state = {}, patch = {}) {
+  if (!currentBusinessId || currentSession?.isDemo) return;
+  const memory = getCommercialAssistantMemory();
+  const next = {
+    currentObjective: state.objective || "",
+    strongPromptCount: Number(memory.strongPromptCount || 0) + (patch.incrementPrompt ? 1 : 0),
+    ...patch
+  };
+
+  patchCommercialAssistantLocal(next);
+  await updateBusinessCommercialAssistant(currentBusinessId, next);
+}
+
+
+function rememberStrongCommercialPromptOnce(state = {}) {
+  const objective = String(state?.objective || "").trim() || "objective";
+  const key = `${currentBusinessId || "business"}:${objective}`;
+
+  if (strongCommercialPromptsRecorded.has(key)) return;
+  strongCommercialPromptsRecorded.add(key);
+
+  void rememberCommercialPrompt(state, {
+    lastStrongPromptAt: new Date().toISOString(),
+    incrementPrompt: true
+  });
+}
+async function dismissCommercialPrompt(state = {}) {
+  const now = new Date().toISOString();
+  markCommercialQaDismissed(state);
+  patchCommercialAssistantLocal({
+    currentObjective: state.objective || "",
+    lastDismissedAt: now,
+    lastStrongPromptAt: state.intensity === "strong" ? now : getCommercialAssistantMemory().lastStrongPromptAt
+  });
+
+  setCommercialActivationUi(false);
+  dashboardPanel?.querySelectorAll("[data-carniza-commercial-motor]").forEach((node) => node.remove());
+  renderCurrentDashboard();
+
+  await rememberCommercialPrompt(state, {
+    lastDismissedAt: now,
+    lastStrongPromptAt: state.intensity === "strong" ? now : undefined
+  });
+}
+
+function openCommercialShareWhatsapp(publicUrl = "", source = "carniza_motor") {
+  const cleanUrl = String(publicUrl || "").trim();
+  if (!cleanUrl) return;
+
+  const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${cleanUrl}`;
+  markActivationWebShared(source);
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+}
+
+async function copyCommercialPublicUrl(publicUrl = "", source = "carniza_motor_copy") {
+  const cleanUrl = String(publicUrl || "").trim();
+  if (!cleanUrl) return false;
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("clipboard-unavailable");
+    await navigator.clipboard.writeText(cleanUrl);
+  } catch (_) {
+    window.prompt("Copiá el enlace de tu carnicería:", cleanUrl);
+  }
+
+  markActivationWebShared(source);
+  return true;
+}
+
+function executeCommercialAction(state = {}, action = "") {
+  const publicUrl = getActivationPublicUrl();
+  setCommercialActivationUi(false);
+
+  const pauseCurrentObjective = () => {
+    const now = new Date().toISOString();
+    markCommercialQaDismissed(state);
+    dashboardPanel?.querySelectorAll("[data-carniza-commercial-motor]").forEach((node) => node.remove());
+    dashboardPanel?.querySelector(".dash-main-card")?.style.removeProperty("display");
+    dashboardPanel?.querySelector(".dash-two")?.style.removeProperty("display");
+    void rememberCommercialPrompt(state, {
+      lastActionAt: now,
+      lastDismissedAt: now,
+      lastStrongPromptAt: state.intensity === "strong" ? now : undefined
+    });
+  };
+
+  if (action === "prices") {
+    pauseCurrentObjective();
+    goToPanel("pricesPanel");
+    return;
+  }
+
+  if (action === "first_promo") {
+    pauseCurrentObjective();
+    pendingBuilderInitialMode = "discount";
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    goToPanel("builderPanel");
+    return;
+  }
+
+  if (action === "saved_promos") {
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    goToPanel("savedPanel");
+    return;
+  }
+
+  if (action === "daily_promo") {
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    openCarnizaUrgentFlowDirect();
+    return;
+  }
+
+  if (action === "view_web") {
+    if (!publicUrl) return;
+    trackWebOpened({ source: "carniza_motor", business_id: currentBusinessId || null });
+    trackSellerWebCommercial("web_open", "carniza_motor");
+    window.open(publicUrl, "_blank", "noopener,noreferrer");
+  }
+}
+
+function renderCommercialShareActions(container, state = {}) {
+  const publicUrl = getActivationPublicUrl();
+  if (!container || !publicUrl) return;
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;">
+      <button type="button" data-commercial-share-wa style="min-height:48px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;">💬 WhatsApp</button>
+      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🔗 Copiar enlace</button>
+      <button type="button" data-commercial-show-qr style="min-height:48px;border:1px solid #ddd6fe;border-radius:14px;background:#f5f3ff;color:#5b21b6;font-weight:1000;cursor:pointer;">📱 Mostrar QR</button>
+    </div>
+  `;
+
+  container.querySelector("[data-commercial-share-wa]")?.addEventListener("click", () => {
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    openCommercialShareWhatsapp(publicUrl, "carniza_motor_whatsapp");
+    renderCurrentDashboard();
+  });
+
+  container.querySelector("[data-commercial-copy-link]")?.addEventListener("click", async () => {
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    await copyCommercialPublicUrl(publicUrl);
+    renderCurrentDashboard();
+  });
+
+  container.querySelector("[data-commercial-show-qr]")?.addEventListener("click", () => {
+    markActivationWebShared("carniza_motor_qr");
+    void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+    globalThis.__APPPROMOS_PRINT_CENTER_OPEN_QR__ = true;
+    setCommercialActivationUi(false);
+    goToPanel("printPanel");
+  });
+}
+
+function renderStrongCommercialPrompt(state = {}) {
+  setCommercialActivationUi(true);
 
   const oldMain = dashboardPanel.querySelector(".dash-main-card");
   const oldRoute = dashboardPanel.querySelector(".dash-two");
   if (oldMain) oldMain.style.display = "none";
   if (oldRoute) oldRoute.style.display = "none";
 
-  dashboardPanel.querySelector("[data-activation-onboarding]")?.remove();
-
-  const businessName =
-    currentPayload?.meta?.name ||
-    currentPayload?.meta?.nombre ||
-    "Tu carnicería";
-  const pricedCount = getActivationPricedCount();
-  const web = currentPayload?.state?.web || {};
-  const webReady = web?.priceListStatus === "ready" && web?.showPriceList === true;
-  const publicUrl = getActivationPublicUrl();
-  const shared = wasActivationWebShared();
-  const suggestedGoal = 5;
-  const goalReached = pricedCount >= suggestedGoal;
-  const access = getAccessState(currentBusinessControl || {});
-  const trialDaysLeft = Number.isFinite(Number(access?.trialDaysLeft))
-    ? Math.max(0, Math.ceil(Number(access.trialDaysLeft)))
-    : null;
-  const trialWelcome = access?.level === "trial"
-    ? `<div style="padding:13px 15px;border:1px solid #fed7aa;border-radius:16px;background:#fff7ed;color:#9a3412;font-weight:900;line-height:1.4;">🎁 <strong>Tu acceso gratis por 90 días ya está activo.</strong>${trialDaysLeft === null ? "" : ` Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"}.`}</div>`
-    : "";
-
   const card = document.createElement("section");
-  card.dataset.activationOnboarding = "true";
-  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #bbf7d0;border-radius:24px;background:linear-gradient(180deg,#f0fdf4,#ffffff);box-shadow:0 14px 34px rgba(22,163,74,.10);display:grid;gap:16px;";
+  card.dataset.carnizaCommercialMotor = "strong";
+  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #fecaca;border-radius:24px;background:linear-gradient(180deg,#fff7f5,#ffffff);box-shadow:0 14px 34px rgba(127,29,29,.10);";
+
+  const progress = Math.min(100, Math.round((Number(state.pricedCount || 0) / CARNIZA_RECOMMENDED_PRICES) * 100));
+
   card.innerHTML = `
-    <div style="display:grid;gap:6px;">
-      <span style="width:max-content;max-width:100%;padding:6px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Tu carnicería online</span>
-      <h2 style="margin:0;color:#14532d;font-size:clamp(26px,6vw,38px);line-height:1;letter-spacing:-.04em;">🎉 ¡${escapeCarnizaHtml(businessName)} ya está creada!</h2>
-      <p style="margin:0;color:#3f5f4a;font-weight:800;line-height:1.4;">Ahora cargá tus precios reales. AppPromos publica automáticamente los productos que tengan precio y deja afuera los que estén en $0.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;align-items:center;">
+      <div style="min-height:260px;border-radius:20px;background:#fff1ed;display:grid;place-items:center;overflow:hidden;">
+        <img src="${state.asset}" alt="Carniza" style="display:block;width:100%;height:100%;max-height:390px;object-fit:contain;">
+      </div>
+      <div style="display:grid;gap:14px;">
+        <span style="width:max-content;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:12px;font-weight:1000;text-transform:uppercase;">Activación comercial</span>
+        <h2 style="margin:0;color:#451a03;font-size:clamp(27px,5vw,40px);line-height:1.02;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
+        <p style="margin:0;color:#6b3f32;font-weight:850;line-height:1.45;">${escapeCarnizaHtml(state.message)}</p>
+        <div style="padding:12px 14px;border-radius:16px;background:#fff7ed;color:#9a3412;font-weight:900;">${escapeCarnizaHtml(state.status)}</div>
+        <div style="display:grid;gap:7px;">
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:1000;color:#7c2d12;">
+            <span>${state.pricedCount} precios cargados</span>
+            <span>${state.pricedCount < CARNIZA_ACTIVATION_MIN_PRICES ? `mínimo ${CARNIZA_ACTIVATION_MIN_PRICES}` : `objetivo ${CARNIZA_RECOMMENDED_PRICES}`}</span>
+          </div>
+          <div style="height:11px;border-radius:999px;background:#fee2e2;overflow:hidden;">
+            <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#b91c1c,#ef4444);border-radius:999px;"></div>
+          </div>
+        </div>
+        <div data-commercial-main-actions style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;"></div>
+        <div data-commercial-share-actions></div>
+        <button type="button" data-commercial-dismiss style="min-height:42px;border:0;background:transparent;color:#7c2d12;font-weight:900;cursor:pointer;">Ahora no</button>
+      </div>
     </div>
-
-    ${trialWelcome}
-
-    <div style="display:grid;gap:8px;">
-      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:#166534;"><span>✅</span><span>Cuenta creada</span></div>
-      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:#166534;"><span>✅</span><span>Vidriera online creada</span></div>
-      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${pricedCount ? "#166534" : "#6b7280"};"><span>${pricedCount ? "✅" : "○"}</span><span>${pricedCount} producto${pricedCount === 1 ? "" : "s"} con precio real ${goalReached ? "· objetivo inicial cumplido" : `· cargá ${Math.max(0, suggestedGoal - pricedCount)} más para una buena primera vidriera`}</span></div>
-      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${webReady ? "#166534" : "#6b7280"};"><span>${webReady ? "✅" : "○"}</span><span>${webReady ? "Vidriera actualizada automáticamente" : "La vidriera se actualizará cuando guardes tus primeros precios"}</span></div>
-      <div style="display:flex;gap:9px;align-items:center;font-weight:900;color:${shared ? "#166534" : "#6b7280"};"><span>${shared ? "✅" : "○"}</span><span>${shared ? "Vidriera compartida" : "Compartila con tu primer cliente"}</span></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;">
-      <button type="button" data-onboarding-prices style="min-height:52px;border:0;border-radius:15px;background:#16a34a;color:#fff;font-weight:1000;font-size:15px;cursor:pointer;">⚡ ${pricedCount ? "Seguir cargando precios" : "Cargar mis primeros precios"}</button>
-      <button type="button" data-onboarding-view-web ${publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:#fff;color:#166534;font-weight:1000;font-size:15px;cursor:pointer;">🌐 Ver mi carnicería</button>
-      <button type="button" data-onboarding-share-web ${webReady && publicUrl ? "" : "disabled"} style="min-height:52px;border:1px solid #86efac;border-radius:15px;background:${webReady ? "#dcfce7" : "#f3f4f6"};color:${webReady ? "#166534" : "#9ca3af"};font-weight:1000;font-size:15px;cursor:pointer;">📲 Compartir por WhatsApp</button>
-    </div>
-
-    ${webReady ? `<div style="padding:12px 14px;border-radius:16px;background:#ecfdf5;color:#166534;font-weight:900;line-height:1.35;">🔥 Tu carnicería ya está lista para recibir pedidos. Después podés responder consultas, crear promos o combos y publicar una Promo del día.</div>` : ""}
-
-    ${goalReached && webReady ? `<button type="button" data-onboarding-finish style="justify-self:start;min-height:42px;padding:0 14px;border:0;border-radius:13px;background:#14532d;color:#fff;font-weight:1000;cursor:pointer;">Listo, ir al Inicio →</button>` : ""}
   `;
 
-  card.querySelector("[data-onboarding-prices]")?.addEventListener("click", () => goToPanel("pricesPanel"));
-  card.querySelector("[data-onboarding-view-web]")?.addEventListener("click", () => {
-    if (!publicUrl) return;
-    trackWebOpened({ source: "onboarding_activation", business_id: currentBusinessId || null });
-    trackSellerWebCommercial("web_open", "onboarding_activation");
-    window.open(publicUrl, "_blank", "noopener,noreferrer");
-  });
-  card.querySelector("[data-onboarding-share-web]")?.addEventListener("click", () => {
-    if (!publicUrl || !webReady) return;
-    const text = `¡Hola! 👋 Mirá nuestra carnicería online. Podés ver precios y ofertas, armar tu pedido y mandárnoslo por WhatsApp: ${publicUrl}`;
-    try { localStorage.setItem(getActivationSharedKey(), "1"); } catch (_) {}
-    trackWebShared({ source: "onboarding_activation", business_id: currentBusinessId || null });
-    trackSellerWebCommercial("web_share", "onboarding_activation");
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-    renderActivationOnboarding();
-  });
-  card.querySelector("[data-onboarding-finish]")?.addEventListener("click", () => {
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("onboarding");
-      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-    } catch (_) {}
-    renderCurrentDashboard();
+  const main = card.querySelector("[data-commercial-main-actions]");
+  if (state.primaryAction !== "share") {
+    main.innerHTML = `
+      <button type="button" data-commercial-primary style="min-height:50px;border:0;border-radius:14px;background:#b91c1c;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🌐 Ver mi carnicería</button>
+    `;
+    main.querySelector("[data-commercial-primary]")?.addEventListener("click", () => executeCommercialAction(state, state.primaryAction));
+    main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
+  } else {
+    main.innerHTML = `
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🌐 Revisar mi carnicería</button>
+    `;
+    main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
+    renderCommercialShareActions(card.querySelector("[data-commercial-share-actions]"), state);
+  }
+
+  card.querySelector("[data-commercial-dismiss]")?.addEventListener("click", () => {
+    void dismissCommercialPrompt(state);
   });
 
   dashboardPanel.prepend(card);
+  rememberStrongCommercialPromptOnce(state);
+}
+
+function renderCompactCommercialPrompt(state = {}) {
+  setCommercialActivationUi(false);
+
+  const card = document.createElement("section");
+  card.dataset.carnizaCommercialMotor = "compact";
+  card.style.cssText = "margin:0 0 14px;padding:14px 16px;border:1px solid #fed7aa;border-radius:18px;background:linear-gradient(180deg,#fffaf0,#fff);box-shadow:0 8px 22px rgba(124,45,18,.08);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;";
+
+  card.innerHTML = `
+    <img src="${state.asset}" alt="Carniza" style="width:74px;height:74px;object-fit:contain;border-radius:14px;background:#fff7ed;">
+    <div style="min-width:0;">
+      <strong style="display:block;color:#7c2d12;font-size:15px;line-height:1.25;">${escapeCarnizaHtml(state.title)}</strong>
+      <span style="display:block;margin-top:4px;color:#6b4b3e;font-size:13px;font-weight:800;line-height:1.35;">${escapeCarnizaHtml(state.message)}</span>
+    </div>
+    <div style="display:grid;gap:7px;min-width:150px;">
+      <button type="button" data-commercial-compact-primary style="min-height:42px;border:0;border-radius:12px;background:#c2410c;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
+      <button type="button" data-commercial-compact-dismiss style="min-height:34px;border:0;background:transparent;color:#9a3412;font-size:12px;font-weight:900;cursor:pointer;">Ahora no</button>
+    </div>
+  `;
+
+  card.querySelector("[data-commercial-compact-primary]")?.addEventListener("click", () => {
+    if (state.primaryAction === "share") {
+      openCommercialShareWhatsapp(getActivationPublicUrl(), "carniza_growth_share");
+      void rememberCommercialPrompt(state, { lastActionAt: new Date().toISOString() });
+      renderCurrentDashboard();
+      return;
+    }
+    executeCommercialAction(state, state.primaryAction);
+  });
+
+  card.querySelector("[data-commercial-compact-dismiss]")?.addEventListener("click", () => {
+    void dismissCommercialPrompt(state);
+  });
+
+  dashboardPanel.prepend(card);
+}
+
+function renderCarnizaCommercialMotor() {
+  if (!dashboardPanel || !currentPayload || currentSession?.isDemo || currentSession?.appMode === "superadmin") {
+    setCommercialActivationUi(false);
+    return;
+  }
+
+  dashboardPanel.querySelectorAll("[data-carniza-commercial-motor]").forEach((node) => node.remove());
+
+  const state = getCarnizaCommercialState();
+  if (!state || state.phase === "active") {
+    setCommercialActivationUi(false);
+    return;
+  }
+
+  if (!shouldShowCommercialPrompt(state)) {
+    setCommercialActivationUi(false);
+    return;
+  }
+
+  if (state.objective === "personalize_storefront") {
+    renderStorefrontThemePrompt(state);
+    return;
+  }
+
+  if (state.intensity === "strong") {
+    renderStrongCommercialPrompt(state);
+    return;
+  }
+
+  renderCompactCommercialPrompt(state);
 }
 
 function renderCurrentDashboard() {
@@ -1781,7 +2508,7 @@ function renderCurrentDashboard() {
       }
     }
   );
-  renderActivationOnboarding();
+  renderCarnizaCommercialMotor();
   renderSuperadminBusinessContextBanner();
   trackCarnizaSignal("carniza_home_seen", { businessId: currentPayload?.businessId || currentBusinessId || null, appMode: currentSession?.appMode || "client" });
   void renderCarnizaCommercialLayer(dashboardPanel);
@@ -3121,6 +3848,7 @@ async function refreshSavedModule(savedCombo = null, saveContext = {}) {
 
   if (createdNow) {
     await trackBusinessCommercialEvent(currentBusinessId, "offer_created");
+    await refreshCommercialBusinessControl();
   }
   const data = await loadActiveBusinessData(currentBusinessId);
   currentPayload = {
@@ -3274,8 +4002,10 @@ function getSavedModuleOptions(businessMeta = {}) {
       };
       if (publish) {
         await trackBusinessCommercialEvent(currentBusinessId, "offer_published");
+        await refreshCommercialBusinessControl();
       }
       renderSavedModule(currentPayload.state, latest.meta || businessMeta);
+      renderCurrentDashboard();
       if (webPanel) webPanel.dataset.rendered = "";
     }
   };
@@ -3519,6 +4249,9 @@ async function renderBusinessWorkspace(options = {}) {
     // Builder/ofertas sigue recibiendo solo productos activos con precio real.
     renderPrices(pricesPanel, catalogProducts, currentBusinessId, {
       ...getWriteOptions(),
+      selectedRubros: Array.isArray(data.state?.businessPreferences?.selectedRubros)
+        ? data.state.businessPreferences.selectedRubros
+        : [],
       onPricesSaved: async () => {
         await trackBusinessCommercialEvent(currentBusinessId, "price_save");
       },

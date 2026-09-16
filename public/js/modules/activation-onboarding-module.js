@@ -619,7 +619,8 @@ function renderPublish() {
         locality: current.identity.locality,
         province: current.identity.province,
         provinceId: current.identity.provinceId,
-        activationPrices: current.prices
+        activationPrices: current.prices,
+        activationRubros: current.selectedRubros || []
       });
 
       trackTrialRegistered({
