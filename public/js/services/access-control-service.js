@@ -96,6 +96,10 @@ export function normalizeBusinessControl(business = {}) {
     isTemplateBusiness: business?.isTemplateBusiness === true,
     modules: normalizeModules(business?.modules || {}),
     billing,
+    metrics: business?.metrics && typeof business.metrics === "object" ? business.metrics : {},
+    commercialAssistant: business?.commercialAssistant && typeof business.commercialAssistant === "object"
+      ? business.commercialAssistant
+      : {},
     createdAt: business?.createdAt || null,
     updatedAt: business?.updatedAt || null,
     lastLoginAt: business?.lastLoginAt || null,

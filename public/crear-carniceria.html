@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#7f1d1d">
+  <title>Creá tu carnicería online | AppPromos</title>
+  <link rel="icon" href="/assets/logo/apppromos-square-transparent.png">
+  <style>
+    :root{
+      --bg:#fff8f3;
+      --card:#ffffff;
+      --ink:#32140d;
+      --muted:#7c5b50;
+      --line:#ead8d0;
+      --red:#991b1b;
+      --red2:#7f1d1d;
+      --green:#16a34a;
+      --cream:#fff1e8;
+      --shadow:0 18px 55px rgba(83,31,14,.12);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at top left,#fff 0,#fff8f3 42%,#f8eee8 100%);
+      color:var(--ink);
+      min-height:100vh;
+    }
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(980px,calc(100% - 24px));margin:0 auto;padding:18px 0 40px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-bottom:14px;
+    }
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+    .brand img{width:42px;height:42px;object-fit:contain}
+    .brand strong{font-size:18px}
+    .login-link{font-size:13px;font-weight:900;color:var(--red);text-decoration:none}
+    .progress{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 14px;
+    }
+    .progress span{
+      height:7px;border-radius:999px;background:#ead8d0;transition:.2s ease;
+    }
+    .progress span.is-on{background:var(--red)}
+    .panel{
+      background:rgba(255,255,255,.92);border:1px solid var(--line);
+      border-radius:26px;box-shadow:var(--shadow);overflow:hidden;
+    }
+    .scene{
+      display:grid;grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr);
+      align-items:center;gap:20px;padding:24px;
+      min-height:560px;
+    }
+    .carniza-wrap{
+      align-self:stretch;display:flex;align-items:flex-end;justify-content:center;
+      background:linear-gradient(180deg,#fff7f2,#f4ddd4);
+      border-radius:22px;overflow:hidden;min-height:420px;
+    }
+    .carniza-wrap img{
+      width:min(100%,360px);max-height:500px;object-fit:contain;object-position:center bottom;
+      filter:drop-shadow(0 18px 25px rgba(71,28,13,.18));
+    }
+    .copy{padding:6px 4px}
+    .eyebrow{
+      color:var(--red);font-size:12px;font-weight:1000;text-transform:uppercase;
+      letter-spacing:.08em;margin-bottom:8px;
+    }
+    h1{font-size:clamp(34px,6vw,58px);line-height:.98;letter-spacing:-.045em;margin:0 0 14px}
+    h2{font-size:clamp(28px,4vw,40px);line-height:1.02;letter-spacing:-.035em;margin:0 0 12px}
+    .lead{font-size:18px;line-height:1.45;color:var(--muted);font-weight:700;margin:0 0 20px}
+    .hint{font-size:13px;line-height:1.35;color:var(--muted);font-weight:750}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .btn{
+      min-height:50px;border:0;border-radius:15px;padding:0 18px;font-weight:1000;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));color:#fff}
+    .btn-green{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+    .btn-light{background:#fff;border:1px solid var(--line);color:var(--ink)}
+    .btn-link{background:transparent;color:var(--red);padding-inline:4px}
+    .rubros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+    .rubro{
+      min-height:58px;border:1px solid var(--line);border-radius:15px;background:#fff;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;
+      font-weight:950;color:var(--ink);
+    }
+    .rubro small{color:var(--muted);font-weight:800}
+    .rubro.is-selected{border-color:#ef4444;background:#fff1f2;box-shadow:0 0 0 2px rgba(239,68,68,.08)}
+    .rubro .mark{width:22px;height:22px;border-radius:7px;border:2px solid #d6c1b8;display:grid;place-items:center}
+    .rubro.is-selected .mark{background:var(--red);border-color:var(--red);color:#fff}
+    .price-toolbar{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      position:sticky;top:0;background:rgba(255,255,255,.97);z-index:3;
+      padding:4px 0 12px;margin-bottom:4px;border-bottom:1px solid var(--line);
+    }
+    .counter{font-weight:1000;color:var(--red)}
+    .price-list{display:grid;gap:14px;max-height:62vh;overflow:auto;padding-right:4px}
+    .price-group{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .price-group h3{margin:0;padding:12px 14px;background:#fff6f1;font-size:17px}
+    .price-row{
+      display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:center;gap:12px;
+      padding:10px 14px;border-top:1px solid #f1e5df;
+    }
+    .price-row strong{display:block}
+    .price-row small{color:var(--muted);font-weight:750}
+    .price-input{
+      width:100%;min-height:44px;border:1px solid #d8c4bb;border-radius:12px;
+      padding:0 11px;text-align:right;font-weight:1000;color:var(--ink);background:#fff;
+    }
+    .price-input:focus,.field input:focus{outline:3px solid rgba(153,27,27,.12);border-color:var(--red)}
+    .field{display:grid;gap:7px;margin:13px 0}
+    .field label{font-size:13px;font-weight:1000}
+    .field input{
+      width:100%;min-height:50px;border:1px solid #d8c4bb;border-radius:13px;
+      padding:0 13px;font-weight:850;color:var(--ink);background:#fff;
+    }
+    .resume-box{
+      border:1px solid #f1c9b8;background:#fff5ef;border-radius:18px;padding:15px;margin-top:16px;
+    }
+    .resume-box strong{display:block;margin-bottom:5px}
+    .notice{
+      display:none;margin:12px 0;padding:11px 13px;border-radius:13px;
+      background:#fff1f2;color:#991b1b;font-weight:850;font-size:13px;
+    }
+    .notice.is-on{display:block}
+    .mobile-carniza{display:none}
+    .footer-note{text-align:center;color:var(--muted);font-size:12px;font-weight:750;margin-top:14px}
+    @media(max-width:760px){
+      .shell{width:min(100% - 14px,620px);padding-top:10px}
+      .scene{grid-template-columns:1fr;padding:14px;gap:12px;min-height:0}
+      .carniza-wrap{min-height:220px;max-height:280px}
+      .carniza-wrap img{max-height:300px;width:auto}
+      .copy{padding:4px 2px 8px}
+      h1{font-size:38px}
+      .lead{font-size:16px}
+      .rubros{grid-template-columns:1fr}
+      .price-list{max-height:none;overflow:visible}
+      .price-toolbar{top:0}
+      .price-row{grid-template-columns:minmax(0,1fr) 124px;padding:9px 10px}
+      .actions .btn{flex:1 1 100%}
+      .topbar{padding:0 4px}
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a class="brand" href="/">
+        <img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos">
+        <strong>AppPromos</strong>
+      </a>
+      <a class="login-link" href="/app.html">Ya tengo cuenta</a>
+    </div>
+
+    <div class="progress" aria-label="Progreso">
+      <span data-progress="1"></span>
+      <span data-progress="2"></span>
+      <span data-progress="3"></span>
+      <span data-progress="4"></span>
+    </div>
+
+    <section class="panel" id="activationRoot" aria-live="polite"></section>
+    <p class="footer-note">Todavía no estás creando una cuenta. Primero vas a ver cómo queda tu carnicería.</p>
+  </main>
+
+  <script src="/js/vendor/localidades-ar.plugin.js"></script>
+  <script type="module" src="/js/modules/activation-onboarding-module.js"></script>
+</body>
+</html>

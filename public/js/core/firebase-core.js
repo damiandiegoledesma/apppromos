@@ -1,6 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
+  getAuth,
+  connectAuthEmulator
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
   getFirestore,
+  connectFirestoreEmulator,
   doc,
   getDoc,
   getDocs,
@@ -9,7 +14,10 @@ import {
   writeBatch,
   collection
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+import {
+  getStorage,
+  connectStorageEmulator
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC5e2yOOdP9QnN3751RdoSHEWZUDHUUbJU",
@@ -22,10 +30,72 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { app, db, storage, doc, writeBatch, collection };
+const host = String(globalThis.location?.hostname || "").toLowerCase();
+const isLocalQa =
+  host === "127.0.0.1" ||
+  host === "localhost" ||
+  host === "::1";
+
+if (isLocalQa) {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", {
+    disableWarnings: true
+  });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
+
+  globalThis.__APPPROMOS_ENV__ = Object.freeze({
+    mode: "qa-local",
+    firebase: "emulators",
+    auth: "127.0.0.1:9099",
+    firestore: "127.0.0.1:8080",
+    storage: "127.0.0.1:9199"
+  });
+
+  const mountQaBanner = () => {
+    if (!globalThis.document || document.getElementById("apppromosQaLocalBanner")) return;
+
+    const banner = document.createElement("div");
+    banner.id = "apppromosQaLocalBanner";
+    banner.setAttribute("role", "status");
+    banner.textContent = "🧪 ENTORNO QA LOCAL — FIREBASE EMULATORS — NO PRODUCCIÓN";
+    banner.style.cssText = [
+      "position:fixed",
+      "top:0",
+      "left:0",
+      "right:0",
+      "z-index:2147483647",
+      "padding:6px 12px",
+      "background:#7f1d1d",
+      "color:#fff",
+      "font:900 12px/1.2 system-ui,sans-serif",
+      "letter-spacing:.03em",
+      "text-align:center",
+      "box-shadow:0 2px 8px rgba(0,0,0,.18)"
+    ].join(";");
+
+    document.body.appendChild(banner);
+    document.documentElement.style.scrollPaddingTop = "34px";
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountQaBanner, { once: true });
+  } else {
+    mountQaBanner();
+  }
+
+  console.info("[AppPromos] QA LOCAL: Auth, Firestore y Storage conectados a emulators.");
+} else {
+  globalThis.__APPPROMOS_ENV__ = Object.freeze({
+    mode: "production",
+    firebase: "production"
+  });
+}
+
+export { app, auth, db, storage, isLocalQa, doc, writeBatch, collection };
 
 export const LOCAL_ACTIVE_BUSINESS_KEY = "apppromos_active_business_id";
 

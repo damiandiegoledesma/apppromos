@@ -1537,6 +1537,38 @@
       .apppromos-signature{margin-bottom:calc(100px + var(--safe-bottom));}
       #buscar-productos,#promos,#ofertas-dia,#pedido{scroll-margin-top:64px;scroll-margin-bottom:calc(96px + var(--safe-bottom));}
     }
+
+    /* V12.27 — temas de vidriera. El contenido y la URL no cambian. */
+    html[data-storefront-theme="minimal_light"]{--red:#1f2937;--red-2:#111827;--red-3:#030712;--dark:#111827;--ink:#18181b;--muted:#71717a;--line:#e4e4e7;--soft:#fafaf9;--paper:#fff;--green:#287957;--green-dark:#1f694b;--gold:#b88829;--shadow:0 18px 50px rgba(24,24,27,.10)}
+    html[data-storefront-theme="minimal_light"] body{background:linear-gradient(180deg,#fafaf9,#f2f0ea)}
+    html[data-storefront-theme="minimal_light"] .hero{background-image:linear-gradient(135deg,rgba(28,28,28,.84),rgba(57,57,57,.58)),url('/assets/web-arranque/headers/header-mostrador-carniceria.webp');border-radius:10px}
+    html[data-storefront-theme="minimal_light"] .card,html[data-storefront-theme="minimal_light"] .offer-card,html[data-storefront-theme="minimal_light"] .product-filter-panel{border-radius:8px}
+    html[data-storefront-theme="minimal_light"] .product{border-color:#e4e4e7}
+    html[data-storefront-theme="minimal_light"] .product-thumb-wrap{background:#f4f4f5;border-color:#e4e4e7}
+
+    html[data-storefront-theme="minimal_dark"]{--red:#fff3cf;--red-2:#f8edcf;--red-3:#fff8e9;--dark:#121416;--ink:#f4f1ea;--muted:#b6b8b9;--line:#303538;--soft:#171a1c;--paper:#1b1f22;--green:#d3a94c;--green-dark:#f0c96c;--gold:#d3a94c;--shadow:0 18px 50px rgba(0,0,0,.34)}
+    html[data-storefront-theme="minimal_dark"] body{background:linear-gradient(180deg,#151719,#25292b)}
+    html[data-storefront-theme="minimal_dark"] .hero{background-image:linear-gradient(135deg,rgba(12,14,15,.92),rgba(37,42,43,.84)),url('/assets/web-arranque/headers/header-mostrador-carniceria.webp')}
+    html[data-storefront-theme="minimal_dark"] .card,html[data-storefront-theme="minimal_dark"] .offer-card,html[data-storefront-theme="minimal_dark"] .product-filter-panel,html[data-storefront-theme="minimal_dark"] .cart-line,html[data-storefront-theme="minimal_dark"] .mobile-store-nav,html[data-storefront-theme="minimal_dark"] .carniza-web{background:#1b1f22;color:#f4f1ea;border-color:#303538}
+    html[data-storefront-theme="minimal_dark"] .product span,html[data-storefront-theme="minimal_dark"] .rubro h3,html[data-storefront-theme="minimal_dark"] .cart-line strong{color:#f4f1ea}
+    html[data-storefront-theme="minimal_dark"] .product{border-color:#303538}
+    html[data-storefront-theme="minimal_dark"] .product-thumb-wrap{background:#252a2d;border-color:#3b4246}
+    html[data-storefront-theme="minimal_dark"] .cart-add-mini,html[data-storefront-theme="minimal_dark"] .btn-ghost{background:#252a2d;color:#f8edcf;border-color:#4a5357}
+
+    html[data-storefront-theme="butcher_red"]{--red:#b82020;--red-2:#8f1717;--red-3:#5d1010;--dark:#40100f;--ink:#36100e;--muted:#8c5d58;--line:#f1d9d5;--soft:#fff8f5;--paper:#fff;--green:#2b8b56;--green-dark:#196c40;--gold:#e45332;--shadow:0 18px 50px rgba(120,20,18,.16)}
+    html[data-storefront-theme="butcher_red"] body{background:linear-gradient(180deg,#fff8f5,#fae9e5)}
+    html[data-storefront-theme="butcher_red"] .hero{background-image:linear-gradient(135deg,rgba(122,20,20,.88),rgba(216,61,46,.72)),url('/assets/web-arranque/headers/header-mostrador-carniceria.webp')}
+    html[data-storefront-theme="butcher_red"] .rubro h3{background:#fff0ec;border-color:#efbbb3}
+    html[data-storefront-theme="butcher_red"] .product-thumb-wrap{background:#fff3ef;border-color:#f2c9c1}
+
+    html[data-storefront-theme="offer"]{--red:#171717;--red-2:#2f74c0;--red-3:#1f5593;--dark:#171717;--ink:#332c11;--muted:#746c4b;--line:#ebdf9f;--soft:#fffdf4;--paper:#fffef7;--green:#198754;--green-dark:#12653d;--gold:#ffe600;--shadow:0 18px 50px rgba(89,77,10,.15)}
+    html[data-storefront-theme="offer"] body{background:linear-gradient(180deg,#fffdf4,#fff4bb)}
+    html[data-storefront-theme="offer"] .hero{color:#171717;background-image:linear-gradient(135deg,rgba(255,230,0,.90),rgba(255,245,130,.72)),url('/assets/web-arranque/headers/header-mostrador-carniceria.webp')}
+    html[data-storefront-theme="offer"] .hero p,html[data-storefront-theme="offer"] .badge{color:#332c11}
+    html[data-storefront-theme="offer"] .btn-light{color:#2f5590}
+    html[data-storefront-theme="offer"] .card{border-radius:10px;box-shadow:0 8px 0 rgba(126,104,0,.08)}
+    html[data-storefront-theme="offer"] .rubro h3{background:#ffe600;border-color:#e5ce00;color:#171717}
+    html[data-storefront-theme="offer"] .product-thumb-wrap{background:#fff9d6;border-color:#ebdf9f}
   </style>
 </head>
 <body>
@@ -1546,6 +1578,11 @@
     import { resolveSession } from "./js/services/auth-service.js";
     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
+    import { createStarterProducts } from "./js/data/starter-products.js";
+    import {
+      loadActivationDraft,
+      setActivationDraftStep
+    } from "./js/services/activation-draft-service.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const params = new URLSearchParams(location.search);
@@ -1627,8 +1664,159 @@
       probe.src=candidate;
     }
 
+    // V12.27-A5.3 - preview temporal del onboarding sin Firebase/Auth.
+    function isActivationPreview(){
+      return params.get("preview")==="activation";
+    }
+
+    function starterProductKey(product={}){
+      return String(product.productKey||product.id||"").trim();
+    }
+
+    function buildActivationPreviewPayload(draft={}){
+      const selectedRubros=new Set(
+        Array.isArray(draft?.selectedRubros)
+          ? draft.selectedRubros.map((value)=>String(value||"").trim()).filter(Boolean)
+          : []
+      );
+      const prices=(draft?.prices&&typeof draft.prices==="object"&&!Array.isArray(draft.prices))
+        ? draft.prices
+        : {};
+
+      const publicProducts=createStarterProducts()
+        .filter((product)=>!selectedRubros.size||selectedRubros.has(String(product.rubro||"").trim()))
+        .map((product)=>{
+          const key=starterProductKey(product);
+          const price=Number(prices[key]||0);
+          return {
+            id:product.id||key||product.nombre||"",
+            productKey:key,
+            nombre:product.nombre||product.name||"Producto",
+            rubro:String(product.rubro||"Sin rubro").trim()||"Sin rubro",
+            precio:Number.isFinite(price)&&price>0?price:0
+          };
+        })
+        .filter((product)=>validPublicPrice(product));
+
+      function previewStableScore(product={}){
+        const text=String(product.productKey||product.id||product.nombre||"");
+        let hash=2166136261;
+        for(let i=0;i<text.length;i++){
+          hash^=text.charCodeAt(i);
+          hash=Math.imul(hash,16777619);
+        }
+        return hash>>>0;
+      }
+
+      const promoCandidates=[...publicProducts]
+        .sort((a,b)=>previewStableScore(a)-previewStableScore(b))
+        .slice(0,3);
+
+      const discountedPrice=(price)=>Math.max(1,Math.round((Number(price)||0)*0.90));
+      const previewOfferFor=(product,index)=>({
+        id:`preview-promo-${index+1}`,
+        name:`Promo 10% · ${product.nombre}`,
+        category:"1 kg",
+        total:discountedPrice(product.precio),
+        items:[{
+          nombre:product.nombre,
+          rubro:product.rubro,
+          cantidad:1,
+          unidad:"kg"
+        }]
+      });
+
+      const publicOffers=promoCandidates.slice(1,3).map((product,index)=>previewOfferFor(product,index));
+      const dailyProduct=promoCandidates[0]||null;
+      const dailyOffers=dailyProduct?[{
+        id:"preview-daily-1",
+        name:`Oferta del día · ${dailyProduct.nombre}`,
+        status:"active",
+        expiresAt:new Date(Date.now()+24*60*60*1000).toISOString(),
+        total:discountedPrice(dailyProduct.precio),
+        items:[{
+          nombre:dailyProduct.nombre,
+          rubro:dailyProduct.rubro,
+          cantidad:1,
+          unidad:"kg"
+        }]
+      }]:[];
+
+      const businessName=String(draft?.identity?.businessName||"Tu carnicería").trim()||"Tu carnicería";
+      const locality=String(draft?.identity?.locality||"").trim();
+      const province=String(draft?.identity?.province||"").trim();
+      const phone=String(draft?.publish?.telefono||"").trim();
+
+      return {
+        __activationPreview:true,
+        businessId:"",
+        slug:"",
+        active:true,
+        enabled:true,
+        published:true,
+        mode:"activation_preview",
+        priceListStatus:"ready",
+        businessName,
+        publicDisplayName:businessName,
+        address:"",
+        city:locality,
+        province,
+        phone,
+        phoneKey:"",
+        whatsapp:phone,
+        logoUrl:"",
+        frontPhotoUrl:"",
+        showPriceList:true,
+        publicRubroNames:{Novillo:"Ternera/Vaca"},
+        publicOffers,
+        dailyOffers,
+        publicProducts
+      };
+    }
+
+    function renderActivationPreviewBar(){
+      if(!isActivationPreview())return;
+      document.querySelector("[data-activation-preview-bar]")?.remove();
+
+      const bar=document.createElement("div");
+      bar.dataset.activationPreviewBar="true";
+      bar.style.cssText="position:sticky;top:0;z-index:9999;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#7f1d1d;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.18);font-family:inherit;";
+      bar.innerHTML=`
+        <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+          <img src="/assets/characters/carniza/onboarding/carniza-onboarding-preview.webp" alt="Carniza" style="width:44px;height:44px;object-fit:contain;flex:0 0 auto;">
+          <div style="min-width:0;">
+            <strong style="display:block;font-size:14px;line-height:1.15;">Vista previa</strong>
+            <small style="display:block;opacity:.9;line-height:1.2;">Así van a ver tu carnicería tus clientes.</small>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+          <button type="button" data-activation-preview-back style="flex:0 0 auto;min-height:38px;padding:0 12px;border:0;border-radius:11px;background:#fff;color:#7f1d1d;font-weight:1000;cursor:pointer;">← Seguir editando</button>
+          <button type="button" data-activation-preview-publish style="flex:0 0 auto;min-height:38px;padding:0 13px;border:0;border-radius:11px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;box-shadow:0 8px 20px rgba(22,163,74,.24);">Publicar mi carnicería</button>
+        </div>
+      `;
+      bar.querySelector("[data-activation-preview-back]")?.addEventListener("click",()=>{
+        try{setActivationDraftStep("identity")}catch(_){}
+        location.href="/crear-carniceria.html?resume=1";
+      });
+      bar.querySelector("[data-activation-preview-publish]")?.addEventListener("click",()=>{
+        try{setActivationDraftStep("publish")}catch(_){}
+        location.href="/crear-carniceria.html?publish=1";
+      });
+      document.body.prepend(bar);
+    }
+
     // V12.13-C4-FIX1 - slug como índice: la web lee precios vivos desde meta/state
     async function resolveWebSource(){
+      if(isActivationPreview()){
+        const draft=loadActivationDraft();
+        if(!draft){
+          return {type:"activation_preview_missing"};
+        }
+        return {
+          type:"activation_preview",
+          data:buildActivationPreviewPayload(draft)
+        };
+      }
       const legacyId=params.get("biz")||params.get("businessId")||"";
       const slug=normalizeSlug(params.get("slug")||getSlugFromPath()||"");
 
@@ -1719,12 +1907,19 @@
         frontPhotoUrl:meta?.brand?.frontPhotoUrl||"",
         showPriceList:Boolean(web.showPriceList)&&canShowRealPrices,
         publicRubroNames:{Novillo:String(web?.publicRubroNames?.Novillo||"Novillo").trim()||"Novillo"},
+        storefrontTheme:String(web?.storefrontTheme||"standard").trim()||"standard",
         publicOffers,
         publicProducts:products
       };
     }
 
     async function loadPayload(source){
+      if(source.type==="activation_preview"){
+        return source.data;
+      }
+      if(source.type==="activation_preview_missing"){
+        throw new Error("La vista previa venció o ya no está disponible. Volvé al onboarding para continuar.");
+      }
       if(source.type==="public"){
         // V12.18 QA-PROD01-FIX1: snapshot público autosuficiente.
         return source.data;
@@ -1758,7 +1953,9 @@
         return;
       }
 
-      const trackExternalAnalytics=await shouldTrackPublicWebView(data);
+      const trackExternalAnalytics=data.__activationPreview===true
+        ? false
+        : await shouldTrackPublicWebView(data);
 
       if(trackExternalAnalytics){
         window.gtag("event","public_web_view",{
@@ -1769,6 +1966,16 @@
       }
 
       const rawName=data.publicDisplayName||data.businessName||data.publicName||data.name||data.nombre||"Carnicería";
+      const knownStorefrontThemes=new Set(["standard","minimal_light","minimal_dark","butcher_red","offer"]);
+      // Sólo para la vista previa dentro de AppPromos: nunca modifica la
+      // configuración publicada ni el enlace público de la carnicería.
+      const previewStorefrontTheme=String(params.get("themePreview")||"").trim();
+      const savedStorefrontTheme=String(data.storefrontTheme||"").trim();
+      const isStorefrontThemePreview=knownStorefrontThemes.has(previewStorefrontTheme);
+      const storefrontTheme=isStorefrontThemePreview
+        ? previewStorefrontTheme
+        : (knownStorefrontThemes.has(savedStorefrontTheme)?savedStorefrontTheme:"standard");
+      document.documentElement.dataset.storefrontTheme=storefrontTheme;
       const name=publicBusinessName(rawName);
       const shortName=businessShortName(rawName);
       const isStarter=data.mode==="starter" || data.priceListStatus==="pending_real_prices";
@@ -1961,7 +2168,10 @@
       function loadViewState(){try{const parsed=JSON.parse(sessionStorage.getItem(viewStateKey)||"{}");return parsed&&typeof parsed==="object"?{search:String(parsed.search||""),rubro:String(parsed.rubro||""),view:String(parsed.view||"home"),productScrollY:Math.max(0,Number(parsed.productScrollY??parsed.scrollY)||0)}:{}}catch(error){return{}}}
       const savedViewState=loadViewState();
       const validStoreViews=new Set(["home","products","promos","daily","cart"]);
-      let activeStoreView=validStoreViews.has(savedViewState.view)?savedViewState.view:"home";
+      const previewView=String(params.get("previewView")||"").trim();
+      let activeStoreView=isStorefrontThemePreview && validStoreViews.has(previewView)
+        ? previewView
+        : (validStoreViews.has(savedViewState.view)?savedViewState.view:"home");
       let productScrollY=Math.max(0,Number(savedViewState.productScrollY)||0);
       let restoringViewState=true;
       let viewStateFrame=0;
@@ -2210,7 +2420,9 @@
         }
       }
 
-      const isMobileProductView=window.matchMedia("(max-width:640px)").matches;
+      // En la previsualización se muestran las fichas aunque el marco sea angosto.
+      // Así el carnicero puede comparar el estilo sobre productos reales.
+      const isMobileProductView=window.matchMedia("(max-width:640px)").matches && !isStorefrontThemePreview;
       const mainProductRubros=["Novillo","Cerdo","Pollo"].filter(rubro=>rubroNames.includes(rubro));
       const secondaryProductRubros=rubroNames.filter(rubro=>!mainProductRubros.includes(rubro));
       const validSavedRubro=savedViewState.rubro==="Todos"||rubroNames.includes(savedViewState.rubro)?savedViewState.rubro:"";
@@ -2252,6 +2464,7 @@
       const promosSection=`<section class="section store-view${activeStoreView==="promos"?" is-active":""}" id="promos" data-store-view="promos"><div class="section-head"><h2>🏷️ Promos</h2><small>Combos y promociones de la carnicería</small></div>${regularOffersHtml}</section>`;
       const homeSection=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home"><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><button type="button" class="btn btn-primary" data-store-view-target="products">🥩 Productos</button><button type="button" class="btn btn-light" data-store-view-target="promos">🏷️ Promos</button><button type="button" class="btn btn-light" data-store-view-target="daily">🔥 Ofertas de hoy</button></div></section>${showcaseHtml}</div>`;
       app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div>${homeSection}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span class="apppromos-signature-copy"><small>Esta carnicería online funciona con</small><strong>AppPromos</strong><span>Conocé AppPromos →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
+      renderActivationPreviewBar();
       scheduleCheckoutFloatingState();
       applyOfferView();
 
@@ -2503,7 +2716,11 @@
         const source=await resolveWebSource();
         const payload=await loadPayload(source);
         await renderWeb(payload);
-      }catch(e){console.error(e);app.innerHTML=`<div class="disabled"><h1>Error cargando web</h1><p>${esc(e.message||"No se pudo cargar")}</p></div>`}
+      }catch(e){
+        console.error(e);
+        const preview=isActivationPreview();
+        app.innerHTML=`<div class="disabled"><h1>${preview?"Vista previa no disponible":"Error cargando web"}</h1><p>${esc(e.message||"No se pudo cargar")}</p>${preview?'<p><a href="/crear-carniceria.html?resume=1" style="display:inline-flex;min-height:42px;align-items:center;justify-content:center;padding:0 14px;border-radius:12px;background:#991b1b;color:#fff;text-decoration:none;font-weight:900;">Volver a AppPromos</a></p>':""}</div>`;
+      }
     }
     boot();
   </script>

@@ -204,6 +204,73 @@ async function loadStarterTemplate() {
   };
 }
 
+
+function normalizeActivationPrices(prices = {}) {
+  const clean = {};
+  if (!prices || typeof prices !== "object" || Array.isArray(prices)) return clean;
+
+  Object.entries(prices).forEach(([rawKey, rawValue]) => {
+    const key = String(rawKey || "").trim();
+    const value = Number(rawValue);
+    if (!key || !Number.isFinite(value) || value <= 0) return;
+    clean[key] = Math.round(value * 100) / 100;
+  });
+
+  return clean;
+}
+
+function normalizeActivationRubros(values = []) {
+  return [...new Set(
+    (Array.isArray(values) ? values : [])
+      .map((value) => String(value || "").trim())
+      .filter(Boolean)
+  )];
+}
+
+function applyActivationPrices(templateProducts = [], prices = {}) {
+  const cleanPrices = normalizeActivationPrices(prices);
+
+  return (Array.isArray(templateProducts) ? templateProducts : []).map((product = {}) => {
+    const key = String(product.productKey || product.id || "").trim();
+    const price = Number(cleanPrices[key] || 0);
+
+    if (!key || !Number.isFinite(price) || price <= 0) return product;
+
+    return {
+      ...product,
+      precio: price
+    };
+  });
+}
+
+function registrationPricedCount(products = []) {
+  return (Array.isArray(products) ? products : []).filter((product = {}) => {
+    const price = Number(product.precio ?? product.price ?? 0);
+    return product.active !== false &&
+      product.activo !== false &&
+      Number.isFinite(price) &&
+      price > 0;
+  }).length;
+}
+
+function buildRegistrationWebConfig(baseWeb = {}, products = [], now = new Date().toISOString()) {
+  const pricedCount = registrationPricedCount(products);
+  if (!pricedCount) return baseWeb;
+
+  return {
+    ...baseWeb,
+    enabled: true,
+    published: true,
+    active: true,
+    mode: "web_premium",
+    priceListStatus: "ready",
+    showPriceList: true,
+    visibleRubros: [],
+    updatedFrom: "activation_onboarding",
+    updatedAt: now
+  };
+}
+
 /* =========================
    SESIÓN
 ========================= */
@@ -466,10 +533,22 @@ export async function registerClientAndBusiness(data) {
   const businessId = `biz_${Date.now()}`;
   const publicBusinessName = buildPublicBusinessName(businessName);
   const slug = buildBusinessSlug({ name: publicBusinessName, telefono: identity.phone }, businessId);
-  const starterWeb = buildStarterWebConfig({ name: publicBusinessName, telefono: identity.phone }, businessId, now);
+  const starterWebBase = buildStarterWebConfig({ name: publicBusinessName, telefono: identity.phone }, businessId, now);
 
   try {
     const { starterMeta, starterState, templateProducts } = await loadStarterTemplate();
+    const registrationProducts = applyActivationPrices(templateProducts, data?.activationPrices);
+    const pricedCount = registrationPricedCount(registrationProducts);
+    const selectedRubros = normalizeActivationRubros(data?.activationRubros);
+    const starterWeb = {
+      ...buildRegistrationWebConfig(starterWebBase, registrationProducts, now),
+      visibleRubros: selectedRubros
+    };
+    const businessPreferences = {
+      selectedRubros,
+      source: "activation_onboarding",
+      updatedAt: now
+    };
     const activePriceListId = starterState.activePriceListId || starterMeta.activePriceListId || "v1";
     const modules = {
       prices: true,
@@ -511,8 +590,9 @@ export async function registerClientAndBusiness(data) {
 
     const publicState = {
       businessId,
-      products: templateProducts,
+      products: registrationProducts,
       savedCombos: [],
+      businessPreferences,
       web: starterWeb
     };
 
@@ -592,8 +672,9 @@ export async function registerClientAndBusiness(data) {
       businessName,
       createdAt: now,
       activePriceListId,
-      products: templateProducts,
+      products: registrationProducts,
       savedCombos: [],
+      businessPreferences,
       dashboard: {},
       web: starterWeb,
       updatedAt: now
@@ -637,7 +718,10 @@ export async function registerClientAndBusiness(data) {
 
     return {
       uid,
-      businessId
+      businessId,
+      slug,
+      publicUrl: starterWeb.publicUrl || "",
+      pricedCount
     };
   } catch (error) {
     await rollbackIncompleteRegistration(cred, businessId, error);
