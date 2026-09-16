@@ -1569,6 +1569,12 @@
     html[data-storefront-theme="offer"] .card{border-radius:10px;box-shadow:0 8px 0 rgba(126,104,0,.08)}
     html[data-storefront-theme="offer"] .rubro h3{background:#ffe600;border-color:#e5ce00;color:#171717}
     html[data-storefront-theme="offer"] .product-thumb-wrap{background:#fff9d6;border-color:#ebdf9f}
+    /* V12.27.1 FIX2 - Business front photo keeps original colors. */
+    .hero.hero--business-photo,
+    html[data-storefront-theme="minimal_light"] .hero.hero--business-photo,
+    html[data-storefront-theme="minimal_dark"] .hero.hero--business-photo,
+    html[data-storefront-theme="butcher_red"] .hero.hero--business-photo,
+    html[data-storefront-theme="offer"] .hero.hero--business-photo{background-image:var(--business-front)}
   </style>
 </head>
 <body>
