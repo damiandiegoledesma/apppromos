@@ -35,6 +35,61 @@ const ADMIN_ALLOWED_BILLING_PLANS = Array.from(new Set([
 
 const ADMIN_ALLOWED_PAYMENT_STATUSES = ["active", "paid", "pending", "overdue", "suspended", "manual", "bonus", "bonificado"];
 
+export const COMMERCIAL_EVENT_SCHEMA_VERSION = 1;
+
+export const COMMERCIAL_EVENT_TYPES = Object.freeze([
+  "business_registered",
+  "first_login",
+  "app_open",
+  "price_save",
+  "price_milestone_reached",
+  "web_open",
+  "web_share",
+  "offer_created",
+  "offer_published",
+  "seller_whatsapp",
+  "daily_promo_published",
+  "storefront_theme_offered",
+  "storefront_theme_previewed",
+  "storefront_theme_selected",
+  "storefront_theme_deferred"
+]);
+
+const PRICE_MILESTONES = Object.freeze([5, 12, 15]);
+
+function cleanCommercialEventMetadata(metadata = {}) {
+  const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata
+    : {};
+  const clean = {};
+  Object.entries(source).slice(0, 12).forEach(([key, value]) => {
+    const safeKey = String(key || "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 40);
+    if (!safeKey || value === undefined || value === null) return;
+    if (typeof value === "string") clean[safeKey] = value.slice(0, 160);
+    else if (typeof value === "number" && Number.isFinite(value)) clean[safeKey] = value;
+    else if (typeof value === "boolean") clean[safeKey] = value;
+  });
+  return clean;
+}
+
+function commercialEventPayload(businessId, type, now, options = {}) {
+  const metadata = {
+    ...(options.metadata && typeof options.metadata === "object" ? options.metadata : {}),
+    ...(options.theme ? { theme: options.theme } : {})
+  };
+  return {
+    businessId,
+    type,
+    occurredAt: now,
+    createdAt: serverTimestamp(),
+    origin: String(options.origin || "app").slice(0, 40),
+    actorType: String(options.actorType || "owner").slice(0, 20),
+    source: String(options.source || "unknown").slice(0, 80),
+    metadata: cleanCommercialEventMetadata(metadata),
+    schemaVersion: COMMERCIAL_EVENT_SCHEMA_VERSION
+  };
+}
+
 function normalizeAdminPlan(plan = "trial") {
   const clean = String(plan || "trial").trim().toLowerCase();
   const map = {
@@ -78,7 +133,8 @@ function normalizeAdminDateValue(value = null) {
 const BUSINESS_COMMERCIAL_EVENTS = {
   app_open: {
     counter: "appOpenCount",
-    lastAt: "lastAppOpenAt"
+    lastAt: "lastAppOpenAt",
+    timeline: false
   },
   price_save: {
     counter: "priceSaveCount",
@@ -198,6 +254,33 @@ export async function trackBusinessCommercialEvent(
         updates["metrics.lastCommercialActionType"] = eventType;
       }
 
+      if (config.timeline !== false) {
+        const eventRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+        transaction.set(eventRef, commercialEventPayload(businessId, eventType, now, options));
+      }
+
+      if (eventType === "price_save") {
+        const pricedCount = Number(options?.metadata?.pricedProductCount || 0);
+        const previousMax = Number(metrics.maxPricedProductCount || 0);
+        if (Number.isFinite(pricedCount) && pricedCount > previousMax) {
+          updates["metrics.maxPricedProductCount"] = pricedCount;
+          for (const milestone of PRICE_MILESTONES) {
+            if (previousMax < milestone && pricedCount >= milestone) {
+              const milestoneRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+              transaction.set(milestoneRef, commercialEventPayload(
+                businessId,
+                "price_milestone_reached",
+                now,
+                {
+                  source: options.source || "prices_panel",
+                  metadata: { milestone, pricedProductCount: pricedCount }
+                }
+              ));
+            }
+          }
+        }
+      }
+
       transaction.update(businessRef, updates);
     });
 
@@ -210,6 +293,21 @@ export async function trackBusinessCommercialEvent(
     });
     return false;
   }
+}
+
+export async function listBusinessCommercialEvents(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) return [];
+  const maxItems = Math.min(100, Math.max(1, Number(options.limit || 40)));
+  const snap = await trackedGetDocs(
+    collection(db, "businesses", businessId, "commercialEvents"),
+    `businesses/${businessId}/commercialEvents`
+  );
+  const rows = [];
+  snap.forEach((eventSnap) => rows.push({ id: eventSnap.id, ...(eventSnap.data() || {}) }));
+  return rows
+    .sort((a, b) => new Date(b.occurredAt || 0).getTime() - new Date(a.occurredAt || 0).getTime())
+    .slice(0, maxItems);
 }
 
 export async function ensureBusinessCommercialActivated(
@@ -1377,10 +1475,22 @@ export async function trackBusinessLogin(businessId) {
   }
 
   try {
-    await setDoc(doc(db, "businesses", businessId), {
-      lastLoginAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    const businessRef = doc(db, "businesses", businessId);
+    const now = new Date().toISOString();
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(businessRef);
+      if (!snap.exists()) return;
+      const data = snap.data() || {};
+      const updates = { lastLoginAt: now, updatedAt: now };
+      if (!data.firstLoginAt) {
+        updates.firstLoginAt = now;
+        const eventRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+        transaction.set(eventRef, commercialEventPayload(businessId, "first_login", now, {
+          source: "app_session"
+        }));
+      }
+      transaction.update(businessRef, updates);
+    });
   } catch (error) {
     console.warn("No se pudo actualizar lastLoginAt", error);
   }

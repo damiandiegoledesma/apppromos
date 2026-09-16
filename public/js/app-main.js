@@ -4252,8 +4252,17 @@ async function renderBusinessWorkspace(options = {}) {
       selectedRubros: Array.isArray(data.state?.businessPreferences?.selectedRubros)
         ? data.state.businessPreferences.selectedRubros
         : [],
-      onPricesSaved: async () => {
-        await trackBusinessCommercialEvent(currentBusinessId, "price_save");
+      onPricesSaved: async (result = {}) => {
+        const pricedProductCount = Array.isArray(result.updatedProducts)
+          ? result.updatedProducts.filter((product) => Number(product?.precio ?? product?.price ?? 0) > 0).length
+          : 0;
+        await trackBusinessCommercialEvent(currentBusinessId, "price_save", {
+          source: "prices_panel",
+          metadata: {
+            pricedProductCount,
+            changedProductCount: Number(result.changed || 0)
+          }
+        });
       },
       onProductsUpdated: async (...args) => {
         await trackBusinessActivityThrottled(currentBusinessId, 60);

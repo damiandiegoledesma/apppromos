@@ -77,6 +77,29 @@ async function ensureAuth(email) {
   }
 }
 
+async function seedQaSuperadmin() {
+  const email = "qa-superadmin@apppromos.test";
+  const uid = await ensureAuth(email);
+  await putDoc(`users/${uid}`, {
+    uid,
+    email,
+    displayName: "QA Superadmin",
+    role: "superadmin",
+    status: "active",
+    createdAt: iso(),
+    updatedAt: iso()
+  });
+  await putDoc(`admins/${uid}`, {
+    uid,
+    email,
+    role: "superadmin",
+    active: true,
+    createdAt: iso(),
+    updatedAt: iso()
+  });
+  return email;
+}
+
 function firestoreUrl(path) {
   return `${FIRESTORE}/v1/projects/${PROJECT_ID}/databases/(default)/documents/${path}`;
 }
@@ -158,6 +181,8 @@ function buildMetrics(scenario) {
   const activatedAt = scenario.share && scenario.prices >= 10 ? daysAgo(1) : undefined;
   const lastCommercialActionAt = scenario.inactiveDays ? daysAgo(scenario.inactiveDays) : iso();
   const metrics = {
+    priceSaveCount: scenario.prices > 0 ? 1 : 0,
+    maxPricedProductCount: scenario.prices,
     webShareCount: scenario.share,
     offerCreatedCount: scenario.created,
     offerPublishedCount: scenario.published,
@@ -171,6 +196,42 @@ function buildMetrics(scenario) {
   if (scenario.published) metrics.lastOfferPublishedAt = daysAgo(1);
   if (scenario.daily) Object.assign(metrics, { firstDailyPromoPublishedAt: daysAgo(1), lastDailyPromoPublishedAt: daysAgo(1) });
   return metrics;
+}
+
+function buildCommercialEvents(scenario, businessId) {
+  const events = [
+    ["001_registered", "business_registered", daysAgo(3), { pricedProductCount: 0 }],
+    ["002_first_login", "first_login", daysAgo(3), {}]
+  ];
+  for (const milestone of [5, 12, 15]) {
+    if (scenario.prices >= milestone) {
+      events.push([
+        `01${milestone}_prices`,
+        "price_milestone_reached",
+        daysAgo(2),
+        { milestone, pricedProductCount: scenario.prices }
+      ]);
+    }
+  }
+  if (scenario.share) events.push(["020_web_share", "web_share", daysAgo(1), {}]);
+  if (scenario.created) events.push(["030_offer_created", "offer_created", daysAgo(1), {}]);
+  if (scenario.published) events.push(["040_offer_published", "offer_published", daysAgo(1), {}]);
+  if (scenario.daily) events.push(["050_daily_promo", "daily_promo_published", daysAgo(1), {}]);
+
+  return events.map(([id, type, occurredAt, metadata]) => ({
+    id,
+    data: {
+      businessId,
+      type,
+      occurredAt,
+      createdAt: occurredAt,
+      origin: "qa_seed",
+      actorType: "owner",
+      source: "qa_scenario",
+      metadata,
+      schemaVersion: 1
+    }
+  }));
 }
 
 async function verifyScenarioState(scenario, businessId) {
@@ -191,6 +252,23 @@ async function verifyScenarioState(scenario, businessId) {
   const activeAt = metrics.commercialActivatedAt?.stringValue || "";
   if (scenario.share && scenario.prices >= 10 && !activeAt) {
     throw new Error(`${businessId}: falta metrics.commercialActivatedAt`);
+  }
+
+  const timeline = await getDoc(`businesses/${businessId}/commercialEvents`);
+  const eventTypes = (timeline?.documents || [])
+    .map((item) => item?.fields?.type?.stringValue || "")
+    .filter(Boolean);
+  if (!eventTypes.includes("business_registered")) {
+    throw new Error(`${businessId}: falta evento business_registered`);
+  }
+  for (const milestone of [5, 12, 15]) {
+    if (scenario.prices < milestone) continue;
+    const found = (timeline?.documents || []).some((item) => {
+      const fields = item?.fields || {};
+      return fields.type?.stringValue === "price_milestone_reached"
+        && readNumber(fields.metadata?.mapValue?.fields?.milestone) === milestone;
+    });
+    if (!found) throw new Error(`${businessId}: falta hito de ${milestone} precios`);
   }
 }
 
@@ -347,16 +425,22 @@ async function seedScenario(scenario) {
     updatedAt: iso()
   });
 
+  for (const event of buildCommercialEvents(scenario, businessId)) {
+    await putDoc(`businesses/${businessId}/commercialEvents/${event.id}`, event.data);
+  }
+
   await verifyScenarioState(scenario, businessId);
   console.log(`OK  ${scenario.email.padEnd(32)} -> ${businessId} | ${scenario.expected}`);
 }
 
 await assertEmulators();
-console.log("\n===== APPPROMOS A7.6.6 — RESEED QA LOCAL =====");
+console.log("\n===== APPPROMOS V12.28-A1 — RESEED QA LOCAL =====");
 console.log("Destino EXCLUSIVO: Firebase Emulators 127.0.0.1\n");
+const qaSuperadminEmail = await seedQaSuperadmin();
 for (const scenario of scenarios) await seedScenario(scenario);
 console.log("\n===== CREDENCIALES =====");
 console.log(`Contraseña común: ${PASSWORD}`);
+console.log(`Superadmin QA: ${qaSuperadminEmail}`);
 console.log("Emulator UI: http://127.0.0.1:4000");
 console.log("App QA:      http://127.0.0.1:5000/app.html?commercialQa=1");
 console.log("\nSeed terminado y estados comerciales verificados. No se escribió Firebase producción.");

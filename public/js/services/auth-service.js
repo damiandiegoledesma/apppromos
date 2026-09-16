@@ -629,6 +629,11 @@ export async function registerClientAndBusiness(data) {
       createdBy: "self_register",
       modules,
       billing,
+      metrics: {
+        priceSaveCount: pricedCount > 0 ? 1 : 0,
+        maxPricedProductCount: pricedCount,
+        ...(pricedCount > 0 ? { firstPriceSavedAt: now, lastPriceSaveAt: now, lastCommercialActionAt: now, lastCommercialActionType: "price_save" } : {})
+      },
       createdAt: now,
       updatedAt: now
     });
@@ -713,6 +718,33 @@ export async function registerClientAndBusiness(data) {
       createdAt: now,
       updatedAt: now
     });
+
+    await setDoc(doc(db, "businesses", businessId, "commercialEvents", "business_registered"), {
+      businessId,
+      type: "business_registered",
+      occurredAt: now,
+      createdAt: now,
+      origin: "app",
+      actorType: "owner",
+      source: "self_register",
+      metadata: { pricedProductCount: pricedCount },
+      schemaVersion: 1
+    });
+
+    for (const milestone of [5, 12, 15]) {
+      if (pricedCount < milestone) continue;
+      await setDoc(doc(db, "businesses", businessId, "commercialEvents", `price_milestone_${milestone}`), {
+        businessId,
+        type: "price_milestone_reached",
+        occurredAt: now,
+        createdAt: now,
+        origin: "app",
+        actorType: "owner",
+        source: "self_register",
+        metadata: { milestone, pricedProductCount: pricedCount },
+        schemaVersion: 1
+      });
+    }
 
     resetSessionCache();
 

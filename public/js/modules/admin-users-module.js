@@ -23,7 +23,8 @@ import {
   archiveBusiness,
   restoreBusiness,
   setUserDisabled,
-  ensureBusinessAdminDefaults
+  ensureBusinessAdminDefaults,
+  listBusinessCommercialEvents
 } from "../services/admin-service.js";
 
 const ADMIN_PLANS = Array.from(new Set([...(BILLING_PLANS || []), "dueno"]));
@@ -32,6 +33,25 @@ const ACCESS_STATUSES = ["active", "trial", "suspended", "disabled"];
 const MP_BACKEND_URL = "http://127.0.0.1:8000";
 const MP_LINKS_BY_BUSINESS = new Map();
 const BILLING_MOVEMENTS_BY_BUSINESS = new Map();
+const COMMERCIAL_EVENTS_BY_BUSINESS = new Map();
+
+const COMMERCIAL_EVENT_LABELS = Object.freeze({
+  business_registered: "Se registró en AppPromos",
+  first_login: "Ingresó por primera vez",
+  app_open: "Abrió AppPromos",
+  price_save: "Guardó precios",
+  price_milestone_reached: "Alcanzó un hito de precios",
+  web_open: "Abrió su vidriera",
+  web_share: "Compartió su vidriera",
+  offer_created: "Creó una promo",
+  offer_published: "Publicó una promo",
+  seller_whatsapp: "Abrió WhatsApp para vender",
+  daily_promo_published: "Publicó una Promo del día",
+  storefront_theme_offered: "Recibió la propuesta de estilo",
+  storefront_theme_previewed: "Previsualizó un estilo",
+  storefront_theme_selected: "Eligió un estilo",
+  storefront_theme_deferred: "Postergó elegir un estilo"
+});
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -1246,6 +1266,49 @@ function renderAccountLedger(row = {}, persistedMovements = []) {
   `;
 }
 
+function commercialEventDetail(event = {}) {
+  const metadata = event.metadata && typeof event.metadata === "object" ? event.metadata : {};
+  if (event.type === "price_milestone_reached") {
+    return `${Number(metadata.milestone || 0)} precios cargados`;
+  }
+  if (event.type === "price_save" && Number(metadata.pricedProductCount || 0) > 0) {
+    return `${Number(metadata.pricedProductCount)} productos con precio`;
+  }
+  if (String(event.type || "").startsWith("storefront_theme_") && metadata.theme) {
+    return `Estilo: ${String(metadata.theme)}`;
+  }
+  if (event.type === "seller_whatsapp" && event.source) {
+    return `Origen: ${String(event.source).replaceAll("_", " ")}`;
+  }
+  return "";
+}
+
+function renderCommercialTimeline(businessId = "") {
+  const events = COMMERCIAL_EVENTS_BY_BUSINESS.get(businessId);
+  if (!events) {
+    return `<div class="admin-empty">Cargando línea de tiempo...</div>`;
+  }
+  if (!events.length) {
+    return `<div class="admin-empty">Todavía no hay eventos V12.28-A1 para esta carnicería. Los contadores históricos continúan disponibles arriba.</div>`;
+  }
+  return `
+    <ol class="admin-commercial-timeline">
+      ${events.map((event) => {
+        const detail = commercialEventDetail(event);
+        return `
+          <li>
+            <span class="admin-timeline-dot" aria-hidden="true"></span>
+            <div>
+              <strong>${escapeHtml(COMMERCIAL_EVENT_LABELS[event.type] || event.type || "Evento comercial")}</strong>
+              <span>${escapeHtml(dateTime(event.occurredAt || event.createdAt))}${detail ? ` · ${escapeHtml(detail)}` : ""}</span>
+            </div>
+          </li>
+        `;
+      }).join("")}
+    </ol>
+  `;
+}
+
 
 function renderDetail(row = {}) {
   const status = commercialStatus(row);
@@ -1409,6 +1472,12 @@ function renderDetail(row = {}) {
             <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
             <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
           </div>
+        </section>
+
+        <section class="admin-panel-card admin-timeline-card">
+          <h3>Línea de tiempo comercial</h3>
+          <p class="admin-card-help">Acciones inmutables registradas desde V12.28-A1. No contiene datos del comprador final.</p>
+          ${renderCommercialTimeline(String(row.businessId || row.id || ""))}
         </section>
 
         <section class="admin-panel-card important admin-ledger-panel-wide">
@@ -1595,7 +1664,13 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-detail-note{display:block;margin-top:10px;color:#6e6e6e;font-size:11px;line-height:1.35;}
       .admin-account-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
       .admin-followup-card textarea{width:100%;box-sizing:border-box;min-height:110px;}
-      .admin-ledger-panel-wide,.admin-followup-card,.admin-technical-actions{grid-column:1/-1;}
+      .admin-commercial-timeline{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0;}
+      .admin-commercial-timeline li{position:relative;display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;padding:0 0 16px;}
+      .admin-commercial-timeline li:not(:last-child)::before{content:"";position:absolute;left:6px;top:13px;bottom:0;width:2px;background:#e7e1d8;}
+      .admin-timeline-dot{position:relative;z-index:1;width:12px;height:12px;margin-top:3px;border-radius:999px;background:#b63b2b;box-shadow:0 0 0 3px #f8e9e5;}
+      .admin-commercial-timeline strong{display:block;font-size:13px;}
+      .admin-commercial-timeline span{display:block;margin-top:2px;color:#6e6e6e;font-size:12px;line-height:1.35;}
+      .admin-ledger-panel-wide,.admin-followup-card,.admin-timeline-card,.admin-technical-actions{grid-column:1/-1;}
       .admin-detail-top{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:start;margin-bottom:12px;border-bottom:1px solid #eee6dc;padding-bottom:12px;}
       .admin-detail-top h3{margin:0;font-size:22px;}
       .admin-detail-top p{margin:4px 0 0;color:#6e6e6e;font-size:13px;}
@@ -1734,6 +1809,19 @@ export async function renderAdminUsers(container, options = {}) {
     }
   }
 
+  async function refreshCommercialEventsForBusiness(businessId) {
+    if (!businessId) return [];
+    try {
+      const rows = await listBusinessCommercialEvents(businessId, { limit: 40 });
+      COMMERCIAL_EVENTS_BY_BUSINESS.set(businessId, rows);
+      return rows;
+    } catch (error) {
+      console.warn("No se pudo leer la línea de tiempo comercial", error);
+      COMMERCIAL_EVENTS_BY_BUSINESS.set(businessId, []);
+      return [];
+    }
+  }
+
   async function recordBillingMovementSafe(businessId, movement = {}) {
     if (!businessId) return null;
     try {
@@ -1843,7 +1931,10 @@ export async function renderAdminUsers(container, options = {}) {
       const businessId = viewButton.dataset.viewBusiness || "";
       state.selectedBusinessId = businessId;
       render();
-      await refreshBillingMovementsForBusiness(businessId);
+      await Promise.all([
+        refreshBillingMovementsForBusiness(businessId),
+        refreshCommercialEventsForBusiness(businessId)
+      ]);
       render();
       return;
     }
