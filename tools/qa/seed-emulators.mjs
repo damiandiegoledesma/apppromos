@@ -261,6 +261,31 @@ function buildPublicSignals(scenario, businessId) {
   }));
 }
 
+function buildFollowupEvents(scenario, businessId) {
+  if (scenario.key !== "reactivacion") return [];
+  return [
+    ["001_pending", "pending", daysAgo(3), "Revisar inactividad", "Escribir por WhatsApp", daysAgo(2)],
+    ["002_contacted", "contacted", daysAgo(2), "Se envió mensaje de ayuda", "Esperar respuesta", daysAgo(1)],
+    ["003_no_response", "no_response", daysAgo(1), "Todavía no respondió", "Volver a contactar", daysAgo(-1)]
+  ].map(([id, status, occurredAt, outcome, nextAction, nextContactAt]) => ({
+    id,
+    data: {
+      businessId,
+      type: "manual_followup_updated",
+      occurredAt,
+      createdAt: occurredAt,
+      status,
+      outcome,
+      nextAction,
+      nextContactAt,
+      note: "Seguimiento QA interno",
+      operatorUid: "qa-superadmin",
+      operatorEmail: "qa-superadmin@apppromos.test",
+      schemaVersion: 1
+    }
+  }));
+}
+
 async function verifyScenarioState(scenario, businessId) {
   const root = await getDoc(`businesses/${businessId}`);
   const metrics = root?.fields?.metrics?.mapValue?.fields || {};
@@ -316,6 +341,16 @@ async function verifyScenarioState(scenario, businessId) {
       }
     }
   }
+
+
+  if (scenario.key === "reactivacion") {
+    const followups = await getDoc(`businesses/${businessId}/followupEvents`);
+    const followupDocs = followups?.documents || [];
+    const statuses = followupDocs.map((item) => item?.fields?.status?.stringValue || "");
+    for (const expected of ["pending", "contacted", "no_response"]) {
+      if (!statuses.includes(expected)) throw new Error(`${businessId}: falta seguimiento ${expected}`);
+    }
+  }
 }
 
 async function seedScenario(scenario) {
@@ -352,6 +387,16 @@ async function seedScenario(scenario) {
     }))
     : [];
   const metrics = buildMetrics(scenario);
+  const followup = scenario.key === "reactivacion" ? {
+    status: "no_response",
+    outcome: "Todavía no respondió",
+    nextAction: "Volver a contactar",
+    nextContactAt: daysAgo(-1),
+    note: "Seguimiento QA interno",
+    updatedAt: daysAgo(1),
+    updatedByUid: "qa-superadmin",
+    updatedByEmail: "qa-superadmin@apppromos.test"
+  } : undefined;
   const web = {
     enabled: true,
     published: true,
@@ -477,13 +522,19 @@ async function seedScenario(scenario) {
   for (const signal of buildPublicSignals(scenario, businessId)) {
     await putDoc(`businesses/${businessId}/publicSignals/${signal.id}`, signal.data);
   }
+  for (const event of buildFollowupEvents(scenario, businessId)) {
+    await putDoc(`businesses/${businessId}/followupEvents/${event.id}`, event.data);
+  }
+  if (followup) {
+    await putDoc(`businesses/${businessId}/followupState/current`, followup);
+  }
 
   await verifyScenarioState(scenario, businessId);
   console.log(`OK  ${scenario.email.padEnd(32)} -> ${businessId} | ${scenario.expected}`);
 }
 
 await assertEmulators();
-console.log("\n===== APPPROMOS V12.28-A2 — RESEED QA LOCAL =====");
+console.log("\n===== APPPROMOS V12.28-A3 — RESEED QA LOCAL =====");
 console.log("Destino EXCLUSIVO: Firebase Emulators 127.0.0.1\n");
 const qaSuperadminEmail = await seedQaSuperadmin();
 for (const scenario of scenarios) await seedScenario(scenario);
@@ -492,4 +543,4 @@ console.log(`Contraseña común: ${PASSWORD}`);
 console.log(`Superadmin QA: ${qaSuperadminEmail}`);
 console.log("Emulator UI: http://127.0.0.1:4000");
 console.log("App QA:      http://127.0.0.1:5000/app.html?commercialQa=1");
-console.log("\nSeed terminado y estados comerciales verificados. No se escribió Firebase producción.");
+console.log("\nSeed terminado: estados comerciales, señales públicas y seguimiento manual verificados. No se escribió Firebase producción.");

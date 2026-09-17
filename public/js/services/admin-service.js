@@ -37,6 +37,16 @@ const ADMIN_ALLOWED_PAYMENT_STATUSES = ["active", "paid", "pending", "overdue", 
 
 export const COMMERCIAL_EVENT_SCHEMA_VERSION = 1;
 
+export const FOLLOWUP_STATUSES = Object.freeze([
+  "pending",
+  "contacted",
+  "helped",
+  "resolved",
+  "no_response"
+]);
+
+export const FOLLOWUP_EVENT_SCHEMA_VERSION = 1;
+
 export const COMMERCIAL_EVENT_TYPES = Object.freeze([
   "business_registered",
   "first_login",
@@ -322,7 +332,7 @@ export async function listBusinessCommercialEvents(businessId, options = {}) {
   await requireAdmin();
   if (!businessId) return [];
   const maxItems = Math.min(100, Math.max(1, Number(options.limit || 40)));
-  const [snap, publicSnap] = await Promise.all([
+  const [snap, publicSnap, followupSnap] = await Promise.all([
     trackedGetDocs(
       collection(db, "businesses", businessId, "commercialEvents"),
       `businesses/${businessId}/commercialEvents`
@@ -330,6 +340,10 @@ export async function listBusinessCommercialEvents(businessId, options = {}) {
     trackedGetDocs(
       collection(db, "businesses", businessId, "publicSignals"),
       `businesses/${businessId}/publicSignals`
+    ),
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "followupEvents"),
+      `businesses/${businessId}/followupEvents`
     )
   ]);
   const rows = [];
@@ -337,6 +351,12 @@ export async function listBusinessCommercialEvents(businessId, options = {}) {
   publicSnap.forEach((eventSnap) => rows.push({
     id: eventSnap.id,
     actorType: "external",
+    ...(eventSnap.data() || {})
+  }));
+  followupSnap.forEach((eventSnap) => rows.push({
+    id: eventSnap.id,
+    actorType: "admin",
+    stream: "followup",
     ...(eventSnap.data() || {})
   }));
   return rows
@@ -549,6 +569,10 @@ export async function listAdminBusinesses() {
     try { operationalState = await readPath(`businesses/${businessId}/core/state`); }
     catch (error) { console.warn("No se pudo leer estado operativo", businessId, error); }
 
+    let followupState = null;
+    try { followupState = await readPath(`businesses/${businessId}/followupState/current`); }
+    catch (error) { console.warn("No se pudo leer seguimiento interno", businessId, error); }
+
     const operationalProducts = Array.isArray(operationalState?.products)
       ? operationalState.products
       : [];
@@ -565,7 +589,8 @@ export async function listAdminBusinesses() {
       productCount: operationalProducts.length,
       pricedProductCount,
       activePricedProductCount,
-      hasLoadedPrices: pricedProductCount > 0
+      hasLoadedPrices: pricedProductCount > 0,
+      publicUrl: operationalState?.web?.publicUrl || ""
     };
     const owner = usersByBusiness.get(businessId) || null;
     const phoneIndex = phoneKeyByBusiness.get(businessId) || null;
@@ -584,6 +609,7 @@ export async function listAdminBusinesses() {
       billing: { ...(normalized.billing || {}), ...(root.billing || {}) },
       metrics: root.metrics && typeof root.metrics === "object" ? root.metrics : {},
       operationalState: operationalStateSummary,
+      followup: followupState && typeof followupState === "object" ? followupState : {},
       internalNote: root.internalNote || root.adminNote || root.commercialNote || root.notes?.internal || root.admin?.note || "",
       adminNote: root.adminNote || root.internalNote || root.commercialNote || "",
       lastPaymentAt: root.lastPaymentAt || root.billing?.lastPaymentAt || null,
@@ -927,6 +953,68 @@ export async function updateBusinessInternalNote(businessId, internalNote = "") 
     updatedAt: now
   }, { merge: true });
   await logAdminAction({ action: "business_internal_note_changed", targetBusinessId: businessId, before: { internalNote: before?.internalNote || before?.adminNote || "" }, after: { internalNote: cleanNote } });
+}
+
+function cleanFollowupText(value = "", maxLength = 500) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function cleanFollowupDate(value = null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
+export async function updateBusinessFollowup(businessId, values = {}) {
+  const { session, admin } = await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const status = String(values.status || "pending").trim().toLowerCase();
+  if (!FOLLOWUP_STATUSES.includes(status)) throw new Error("Estado de seguimiento inválido");
+
+  const now = new Date().toISOString();
+  const user = session.firebaseUser;
+  const followup = {
+    status,
+    outcome: cleanFollowupText(values.outcome, 240),
+    nextAction: cleanFollowupText(values.nextAction, 240),
+    nextContactAt: cleanFollowupDate(values.nextContactAt),
+    note: cleanFollowupText(values.note, 1000),
+    updatedAt: now,
+    updatedByUid: user?.uid || admin.uid || "",
+    updatedByEmail: user?.email || admin.email || ""
+  };
+
+  const businessRef = doc(db, "businesses", businessId);
+  const followupStateRef = doc(db, "businesses", businessId, "followupState", "current");
+  const eventRef = doc(collection(db, "businesses", businessId, "followupEvents"));
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(businessRef);
+    if (!snap.exists()) throw new Error("La carnicería no existe");
+    transaction.set(followupStateRef, followup);
+    transaction.set(eventRef, {
+      businessId,
+      type: "manual_followup_updated",
+      occurredAt: now,
+      createdAt: serverTimestamp(),
+      status: followup.status,
+      outcome: followup.outcome,
+      nextAction: followup.nextAction,
+      nextContactAt: followup.nextContactAt,
+      note: followup.note,
+      operatorUid: followup.updatedByUid,
+      operatorEmail: followup.updatedByEmail,
+      schemaVersion: FOLLOWUP_EVENT_SCHEMA_VERSION
+    });
+  });
+
+  await logAdminAction({
+    action: "business_followup_updated",
+    targetBusinessId: businessId,
+    after: { status, nextAction: followup.nextAction, nextContactAt: followup.nextContactAt }
+  });
+  return followup;
 }
 
 export async function updateBusinessModule(businessId, moduleKey, enabled) {

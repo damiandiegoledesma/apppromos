@@ -125,12 +125,74 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /businesses/{businessId}/followupEvents/{eventId} {
+      allow read: if isAdmin() || isSuperadmin();
+      allow create: if (isAdmin() || isSuperadmin())
+        && request.resource.data.keys().hasAll([
+          'businessId', 'type', 'occurredAt', 'createdAt', 'status',
+          'outcome', 'nextAction', 'nextContactAt', 'note',
+          'operatorUid', 'operatorEmail', 'schemaVersion'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'businessId', 'type', 'occurredAt', 'createdAt', 'status',
+          'outcome', 'nextAction', 'nextContactAt', 'note',
+          'operatorUid', 'operatorEmail', 'schemaVersion'
+        ])
+        && request.resource.data.businessId == businessId
+        && request.resource.data.type == 'manual_followup_updated'
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.status in [
+          'pending', 'contacted', 'helped', 'resolved', 'no_response'
+        ]
+        && request.resource.data.occurredAt is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.outcome is string
+        && request.resource.data.outcome.size() <= 240
+        && request.resource.data.nextAction is string
+        && request.resource.data.nextAction.size() <= 240
+        && (request.resource.data.nextContactAt == null || request.resource.data.nextContactAt is string)
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 1000
+        && request.resource.data.operatorUid is string
+        && request.resource.data.operatorEmail is string;
+      allow update, delete: if false;
+    }
+
+    match /businesses/{businessId}/followupState/{stateId} {
+      allow read: if isAdmin() || isSuperadmin();
+      allow create, update: if (isAdmin() || isSuperadmin())
+        && stateId == 'current'
+        && request.resource.data.keys().hasAll([
+          'status', 'outcome', 'nextAction', 'nextContactAt', 'note',
+          'updatedAt', 'updatedByUid', 'updatedByEmail'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'status', 'outcome', 'nextAction', 'nextContactAt', 'note',
+          'updatedAt', 'updatedByUid', 'updatedByEmail'
+        ])
+        && request.resource.data.status in [
+          'pending', 'contacted', 'helped', 'resolved', 'no_response'
+        ]
+        && request.resource.data.outcome is string
+        && request.resource.data.outcome.size() <= 240
+        && request.resource.data.nextAction is string
+        && request.resource.data.nextAction.size() <= 240
+        && (request.resource.data.nextContactAt == null || request.resource.data.nextContactAt is string)
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 1000
+        && request.resource.data.updatedAt is string
+        && request.resource.data.updatedByUid is string
+        && request.resource.data.updatedByEmail is string;
+      allow delete: if false;
+    }
+
     match /businesses/{businessId}/{collectionId}/{document=**} {
-      allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
-      allow create: if collectionId != 'commercialEvents' && collectionId != 'publicSignals'
+      allow read: if collectionId != 'followupEvents' && collectionId != 'followupState'
+        && (ownsBusiness(businessId) || isAdmin() || isSuperadmin());
+      allow create: if collectionId != 'commercialEvents' && collectionId != 'publicSignals' && collectionId != 'followupEvents' && collectionId != 'followupState'
         && signedIn()
         && (ownsBusiness(businessId) || isAdmin() || isSuperadmin() || request.resource.data.ownerUid == request.auth.uid);
-      allow update, delete: if collectionId != 'commercialEvents' && collectionId != 'publicSignals'
+      allow update, delete: if collectionId != 'commercialEvents' && collectionId != 'publicSignals' && collectionId != 'followupEvents' && collectionId != 'followupState'
         && (ownsBusiness(businessId) || isAdmin() || isSuperadmin());
     }
 

@@ -15,7 +15,7 @@ import {
   markBusinessPaymentReceived,
   listBusinessBillingMovements,
   recordBusinessBillingMovement,
-  updateBusinessInternalNote,
+  updateBusinessFollowup,
   setBusinessTestFlag,
   markExistingBusinessesAsTest,
   cloneBusinessAsTest,
@@ -34,6 +34,14 @@ const MP_BACKEND_URL = "http://127.0.0.1:8000";
 const MP_LINKS_BY_BUSINESS = new Map();
 const BILLING_MOVEMENTS_BY_BUSINESS = new Map();
 const COMMERCIAL_EVENTS_BY_BUSINESS = new Map();
+
+const FOLLOWUP_STATUS_OPTIONS = Object.freeze([
+  ["pending", "Pendiente"],
+  ["contacted", "Contactado"],
+  ["helped", "Ayudado"],
+  ["resolved", "Resuelto"],
+  ["no_response", "Sin respuesta"]
+]);
 
 const COMMERCIAL_EVENT_LABELS = Object.freeze({
   business_registered: "Se registró en AppPromos",
@@ -55,7 +63,8 @@ const COMMERCIAL_EVENT_LABELS = Object.freeze({
   storefront_theme_offered: "Recibió la propuesta de estilo",
   storefront_theme_previewed: "Previsualizó un estilo",
   storefront_theme_selected: "Eligió un estilo",
-  storefront_theme_deferred: "Postergó elegir un estilo"
+  storefront_theme_deferred: "Postergó elegir un estilo",
+  manual_followup_updated: "Se actualizó el seguimiento"
 });
 
 function escapeHtml(value) {
@@ -257,6 +266,76 @@ function openWhatsapp(row = {}, reason = "base") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+function publicStorefrontUrl(row = {}) {
+  return firstText(row.publicUrl, row.web?.publicUrl, row.operationalState?.publicUrl, row.meta?.publicUrl, "");
+}
+
+function supportMessageLibrary(row = {}) {
+  const shop = businessName(row);
+  const owner = businessOwner(row) === "Sin responsable" ? "" : businessOwner(row);
+  const greeting = owner ? `Hola ${owner}, soy Damian de AppPromos.` : "¡Hola! Soy Damian de AppPromos.";
+  const prices = Number(row.operationalState?.pricedProductCount || metricNumber(row, "maxPricedProductCount") || 0);
+  const days = daysSince(commercialMetricValue(row, "lastCommercialActionAt") || lastActivityValue(row));
+  const trialDays = daysUntil(dueValue(row));
+  const url = publicStorefrontUrl(row);
+  const messages = [
+    ["welcome", "Bienvenida y solicitud de datos", ["¡Hola! 👋 Soy Damian, de AppPromos.", "", "Quiero acompañarte para que puedas poner tu carnicería online de manera simple.", "", "Para comenzar, ¿me pasás estos tres datos?", "", "• Tu nombre", "• El nombre de tu carnicería", "• Tu número de WhatsApp", "", "Con eso dejamos registrado tu contacto y podemos ayudarte con los próximos pasos. 🥩"].join("\n")],
+    ["no_prices", "Todavía no cargó precios", `${greeting}\n\nVi que ${shop} todavía no cargó sus primeros precios. Si querés, te acompaño para dejar la vidriera lista en pocos minutos.`],
+    ["few_prices", "Cargó entre 1 y 4 precios", `${greeting}\n\nYa empezaste a cargar precios en ${shop}. Tenés ${prices}; sumemos algunos más y dejamos una vidriera que ya puedas compartir.`],
+    ["five_prices", "Llegó a 5 precios y se detuvo", `${greeting}\n\nYa cargaste ${prices} precios en ${shop}. Estás cerca de tener una vidriera completa. ¿Querés que te ayude con el próximo paso?`],
+    ["almost_catalog", "Tiene entre 12 y 14 precios", `${greeting}\n\n¡Muy bien! ${shop} ya tiene ${prices} precios. Te falta muy poco para completar el catálogo inicial y empezar a moverlo por WhatsApp.`],
+    ["ready_no_promo", "Catálogo listo, sin promo", `${greeting}\n\nLa vidriera de ${shop} ya está lista. El próximo paso es crear una primera promo para empezar a venderla por WhatsApp.`],
+    ["promo_unpublished", "Promo creada, sin publicar", `${greeting}\n\nYa creaste una promo en ${shop}. Solo falta publicarla para que aparezca en tu vidriera y puedas compartirla.`],
+    ["storefront_unshared", "Vidriera lista, sin compartir", `${greeting}\n\nTu vidriera ya está lista${url ? `: ${url}` : ""}. Compartila con tus clientes y podrán enviarte el pedido ordenado por WhatsApp.`],
+    ["identity_incomplete", "Identidad incompleta", `${greeting}\n\nPodemos mejorar la presentación de ${shop} completando el logo y la foto del frente. Si querés, te indico dónde hacerlo.`],
+    ["shared_no_visits", "Compartió, sin visitas", `${greeting}\n\nVi que compartiste la vidriera de ${shop}. Probemos volver a publicarla en estados y grupos para empezar a generar visitas.`],
+    ["visits_no_orders", "Tiene visitas, sin pedidos", `${greeting}\n\nTu vidriera ya está recibiendo visitas. Ahora conviene destacar una promo clara para ayudar a que esas visitas se conviertan en pedidos.`],
+    ["order_started", "Un cliente inició un pedido", `${greeting}\n\n¡Buena señal! Un cliente inició un pedido desde la vidriera de ${shop}. Sigamos compartiendo y manteniendo precios y promos actualizados.`],
+    ["inactive", "Usuario inactivo", `${greeting}\n\nHace ${days ?? "varios"} días que no vemos actividad en ${shop}. ¿Necesitás ayuda para retomar precios, promos o la vidriera?`],
+    ["trial_ending", "Prueba próxima a vencer", `${greeting}\n\nA ${shop} le quedan ${trialDays ?? "pocos"} días de prueba. Quiero ayudarte a aprovecharlos y dejar todo funcionando antes del vencimiento.`],
+    ["no_response", "No respondió", `${greeting}\n\nTe escribo nuevamente para saber si pudiste avanzar con ${shop}. Cuando tengas un momento, respondeme y vemos juntos el próximo paso.`],
+    ["resolved", "Cierre de ayuda", `${greeting}\n\nPerfecto, dejamos resuelto este paso de ${shop}. Si aparece otra duda, escribime y lo vemos.`]
+  ];
+  return messages.map(([key, label, text]) => ({ key, label, text }));
+}
+
+function recommendedSupportMessageKey(row = {}) {
+  const events = COMMERCIAL_EVENTS_BY_BUSINESS.get(safeBusinessId(row)) || [];
+  const hasVisit = events.some((event) => event.type === "external_storefront_visit");
+  const hasOrder = events.some((event) => event.type === "public_order_whatsapp_started");
+  const prices = Number(row.operationalState?.pricedProductCount || metricNumber(row, "maxPricedProductCount") || 0);
+  if (row.followup?.status === "resolved") return "resolved";
+  if (row.followup?.status === "no_response") return "no_response";
+  if (hasOrder) return "order_started";
+  if (hasVisit) return "visits_no_orders";
+  if ((daysUntil(dueValue(row)) ?? 99) <= 7) return "trial_ending";
+  if ((daysSince(commercialMetricValue(row, "lastCommercialActionAt") || lastActivityValue(row)) ?? 0) >= 7) return "inactive";
+  if (prices === 0) return "no_prices";
+  if (prices < 5) return "few_prices";
+  if (prices < 12) return "five_prices";
+  if (prices < 15) return "almost_catalog";
+  if (metricNumber(row, "offerCreatedCount") === 0) return "ready_no_promo";
+  if (metricNumber(row, "offerPublishedCount") === 0) return "promo_unpublished";
+  if (metricNumber(row, "webShareCount") === 0) return "storefront_unshared";
+  return "shared_no_visits";
+}
+
+async function copySupportMessage(text = "") {
+  if (!text.trim()) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    window.alert("Mensaje copiado.");
+  } catch (error) {
+    window.prompt("Copiá este mensaje:", text);
+  }
+}
+
+function openSupportWhatsapp(row = {}, text = "") {
+  const number = normalizeWhatsappNumber(businessPhone(row));
+  if (!number) return window.alert("Esta carnicería no tiene WhatsApp válido cargado.");
+  window.open(`https://wa.me/${number}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+}
+
 function toDate(value) {
   if (!value) return null;
   const date = typeof value?.toDate === "function" ? value.toDate() : new Date(value);
@@ -280,6 +359,13 @@ function dateInput(value) {
   if (!date) return "";
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
+}
+
+function dateTimeInput(value) {
+  const date = toDate(value);
+  if (!date) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
 }
 
 function daysUntil(value) {
@@ -1296,6 +1382,12 @@ function commercialEventDetail(event = {}) {
   if (event.type === "external_storefront_visit") {
     return "Señal anónima · sin datos del visitante";
   }
+  if (event.type === "manual_followup_updated") {
+    const status = FOLLOWUP_STATUS_OPTIONS.find(([key]) => key === event.status)?.[1] || event.status;
+    return [status, event.nextAction, event.nextContactAt ? `próximo: ${dateTime(event.nextContactAt)}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+  }
   return "";
 }
 
@@ -1333,6 +1425,10 @@ function renderDetail(row = {}) {
   const metrics = row.metrics && typeof row.metrics === "object" ? row.metrics : {};
   const operationalState = row.operationalState && typeof row.operationalState === "object" ? row.operationalState : {};
   const internalNote = firstText(row.internalNote, row.adminNote, row.commercialNote, row.notes?.internal, row.admin?.note, "");
+  const followup = row.followup && typeof row.followup === "object" ? row.followup : {};
+  const supportMessages = supportMessageLibrary(row);
+  const recommendedMessageKey = recommendedSupportMessageKey(row);
+  const recommendedMessage = supportMessages.find((item) => item.key === recommendedMessageKey) || supportMessages[0];
   const modules = { ...DEFAULT_MODULES, ...(row.modules || {}) };
 
   const pricesLoaded = hasLoadedPrices(row);
@@ -1480,19 +1576,40 @@ function renderDetail(row = {}) {
         </section>
 
         <section class="admin-panel-card note admin-followup-card">
-          <h3>Seguimiento</h3>
-          <p class="admin-card-help">Nota interna para recordar qué hablaste y qué falta hacer.</p>
-          <textarea data-detail-note rows="5" placeholder="Anotar seguimiento, pago hablado, próxima acción...">${escapeHtml(internalNote)}</textarea>
+          <h3>Seguimiento manual</h3>
+          <p class="admin-card-help">Estado interno y próxima acción. Guardar crea un registro inmutable en la línea de tiempo.</p>
+          <div class="admin-form-grid admin-followup-grid">
+            <label>Estado<select data-followup-status>${FOLLOWUP_STATUS_OPTIONS.map(([value, label]) => `<option value="${value}" ${String(followup.status || "pending") === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+            <label>Próximo contacto<input type="datetime-local" data-followup-next-at value="${escapeHtml(dateTimeInput(followup.nextContactAt))}" /></label>
+            <label class="admin-form-wide">Resultado<input type="text" data-followup-outcome maxlength="240" value="${escapeHtml(followup.outcome || "")}" placeholder="Qué pasó en el contacto" /></label>
+            <label class="admin-form-wide">Próxima acción<input type="text" data-followup-next-action maxlength="240" value="${escapeHtml(followup.nextAction || "")}" placeholder="Qué hay que hacer después" /></label>
+          </div>
+          <label class="admin-followup-note">Nota interna<textarea data-detail-note rows="4" maxlength="1000" placeholder="Contexto útil para resolver el problema...">${escapeHtml(followup.note || internalNote)}</textarea></label>
           <div class="admin-row-actions left">
-            <button type="button" data-save-note="${safeBusinessId(row)}">Guardar nota</button>
-            <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+            <button type="button" class="primary-action" data-save-followup="${safeBusinessId(row)}">Guardar seguimiento</button>
             <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
           </div>
         </section>
 
+        <section class="admin-panel-card admin-support-message-card">
+          <h3>Mensaje sugerido para WhatsApp</h3>
+          <p class="admin-card-help">Elegí una situación, editá el texto si hace falta y enviá manualmente. Abrir WhatsApp no cambia el estado del seguimiento.</p>
+          <label>Situación
+            <select data-support-message-select>
+              ${supportMessages.map((item) => `<option value="${escapeHtml(item.key)}" ${item.key === recommendedMessage.key ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
+            </select>
+          </label>
+          <textarea data-support-message-text rows="8">${escapeHtml(recommendedMessage.text)}</textarea>
+          <div class="admin-row-actions left">
+            <button type="button" data-copy-support-message="${safeBusinessId(row)}">Copiar mensaje</button>
+            <button type="button" class="primary-action" data-open-support-whatsapp="${safeBusinessId(row)}">Abrir WhatsApp</button>
+          </div>
+          <small class="admin-detail-note">El contacto solo queda registrado cuando elegís “Contactado” y guardás el seguimiento.</small>
+        </section>
+
         <section class="admin-panel-card admin-timeline-card">
           <h3>Línea de tiempo comercial</h3>
-          <p class="admin-card-help">Acciones inmutables registradas desde V12.28-A1. No contiene datos del comprador final.</p>
+          <p class="admin-card-help">Actividad comercial, señales públicas anónimas y seguimiento interno. No contiene datos del comprador final.</p>
           ${renderCommercialTimeline(String(row.businessId || row.id || ""))}
         </section>
 
@@ -1678,6 +1795,12 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-operational-grid{align-items:start;}
       .admin-card-help{margin-bottom:10px!important;}
       .admin-detail-note{display:block;margin-top:10px;color:#6e6e6e;font-size:11px;line-height:1.35;}
+      .admin-followup-grid{margin-top:12px;}
+      .admin-form-wide{grid-column:1/-1;}
+      .admin-followup-note{display:grid;gap:6px;margin-top:12px;font-size:12px;font-weight:700;}
+      .admin-support-message-card{display:grid;gap:10px;}
+      .admin-support-message-card label{display:grid;gap:6px;font-size:12px;font-weight:700;}
+      .admin-support-message-card select,.admin-support-message-card textarea,.admin-followup-card input,.admin-followup-card select,.admin-followup-card textarea{width:100%;box-sizing:border-box;}
       .admin-account-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
       .admin-followup-card textarea{width:100%;box-sizing:border-box;min-height:110px;}
       .admin-commercial-timeline{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0;}
@@ -2099,14 +2222,33 @@ export async function renderAdminUsers(container, options = {}) {
       return;
     }
 
-    const saveNote = target.closest("[data-save-note]");
-    if (saveNote) {
-      const businessId = saveNote.dataset.saveNote;
-      await withButton(saveNote, "Guardando...", async () => {
-        const note = container.querySelector("[data-detail-note]")?.value || "";
-        await updateBusinessInternalNote(businessId, note);
+    const saveFollowup = target.closest("[data-save-followup]");
+    if (saveFollowup) {
+      const businessId = saveFollowup.dataset.saveFollowup;
+      await withButton(saveFollowup, "Guardando...", async () => {
+        await updateBusinessFollowup(businessId, {
+          status: container.querySelector("[data-followup-status]")?.value || "pending",
+          outcome: container.querySelector("[data-followup-outcome]")?.value || "",
+          nextAction: container.querySelector("[data-followup-next-action]")?.value || "",
+          nextContactAt: container.querySelector("[data-followup-next-at]")?.value || null,
+          note: container.querySelector("[data-detail-note]")?.value || ""
+        });
         await refreshKeepingDetail();
       });
+      return;
+    }
+
+    const copySupport = target.closest("[data-copy-support-message]");
+    if (copySupport) {
+      await copySupportMessage(container.querySelector("[data-support-message-text]")?.value || "");
+      return;
+    }
+
+    const openSupport = target.closest("[data-open-support-whatsapp]");
+    if (openSupport) {
+      const row = rowById(businesses, openSupport.dataset.openSupportWhatsapp);
+      if (!row) return window.alert("No se encontró la carnicería.");
+      openSupportWhatsapp(row, container.querySelector("[data-support-message-text]")?.value || "");
       return;
     }
 
@@ -2210,6 +2352,15 @@ export async function renderAdminUsers(container, options = {}) {
   });
 
   container.addEventListener("change", (event) => {
+    const supportSelect = event.target.closest("[data-support-message-select]");
+    if (supportSelect) {
+      const row = rowById(businesses, state.selectedBusinessId);
+      const message = supportMessageLibrary(row || {}).find((item) => item.key === supportSelect.value);
+      const textarea = container.querySelector("[data-support-message-text]");
+      if (textarea && message) textarea.value = message.text;
+      return;
+    }
+
     const clientFilter = event.target.closest("#adminClientFilter");
     if (clientFilter) {
       state.clientFilter = clientFilter.value || "all";
