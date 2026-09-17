@@ -47,8 +47,11 @@ export const COMMERCIAL_EVENT_TYPES = Object.freeze([
   "web_share",
   "offer_created",
   "offer_published",
+  "offer_shared",
   "seller_whatsapp",
+  "daily_promo_created",
   "daily_promo_published",
+  "business_identity_completed",
   "storefront_theme_offered",
   "storefront_theme_previewed",
   "storefront_theme_selected",
@@ -153,6 +156,12 @@ const BUSINESS_COMMERCIAL_EVENTS = {
     lastAt: "lastOfferPublishedAt",
     commercial: true
   },
+  offer_shared: {
+    counter: "offerSharedCount",
+    firstAt: "firstOfferSharedAt",
+    lastAt: "lastOfferSharedAt",
+    commercial: true
+  },
   seller_whatsapp: {
     counter: "sellerWhatsappCount",
     lastAt: "lastSellerWhatsappAt",
@@ -167,10 +176,22 @@ const BUSINESS_COMMERCIAL_EVENTS = {
     lastAt: "lastWebSharedAt",
     commercial: true
   },
+  daily_promo_created: {
+    counter: "dailyPromoCreatedCount",
+    firstAt: "firstDailyPromoCreatedAt",
+    lastAt: "lastDailyPromoCreatedAt",
+    commercial: true
+  },
   daily_promo_published: {
     counter: "dailyPromoPublishedCount",
     firstAt: "firstDailyPromoPublishedAt",
     lastAt: "lastDailyPromoPublishedAt",
+    commercial: true
+  },
+  business_identity_completed: {
+    counter: "businessIdentityCompletedCount",
+    firstAt: "firstBusinessIdentityCompletedAt",
+    lastAt: "lastBusinessIdentityCompletedAt",
     commercial: true
   },
   storefront_theme_offered: {
@@ -232,6 +253,8 @@ export async function trackBusinessCommercialEvent(
       const data = snap.data() || {};
       const metrics = data.metrics || {};
       const updates = {};
+
+      if (options.once === true && config.firstAt && metrics[config.firstAt]) return;
 
       if (config.counter) {
         updates[`metrics.${config.counter}`] = increment(1);
@@ -299,12 +322,23 @@ export async function listBusinessCommercialEvents(businessId, options = {}) {
   await requireAdmin();
   if (!businessId) return [];
   const maxItems = Math.min(100, Math.max(1, Number(options.limit || 40)));
-  const snap = await trackedGetDocs(
-    collection(db, "businesses", businessId, "commercialEvents"),
-    `businesses/${businessId}/commercialEvents`
-  );
+  const [snap, publicSnap] = await Promise.all([
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "commercialEvents"),
+      `businesses/${businessId}/commercialEvents`
+    ),
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "publicSignals"),
+      `businesses/${businessId}/publicSignals`
+    )
+  ]);
   const rows = [];
   snap.forEach((eventSnap) => rows.push({ id: eventSnap.id, ...(eventSnap.data() || {}) }));
+  publicSnap.forEach((eventSnap) => rows.push({
+    id: eventSnap.id,
+    actorType: "external",
+    ...(eventSnap.data() || {})
+  }));
   return rows
     .sort((a, b) => new Date(b.occurredAt || 0).getTime() - new Date(a.occurredAt || 0).getTime())
     .slice(0, maxItems);

@@ -45,8 +45,13 @@ const COMMERCIAL_EVENT_LABELS = Object.freeze({
   web_share: "Compartió su vidriera",
   offer_created: "Creó una promo",
   offer_published: "Publicó una promo",
+  offer_shared: "Compartió una promo",
   seller_whatsapp: "Abrió WhatsApp para vender",
+  daily_promo_created: "Creó una Promo del día",
   daily_promo_published: "Publicó una Promo del día",
+  business_identity_completed: "Completó la identidad de su carnicería",
+  external_storefront_visit: "Recibió una visita externa",
+  public_order_whatsapp_started: "Un cliente inició un pedido por WhatsApp",
   storefront_theme_offered: "Recibió la propuesta de estilo",
   storefront_theme_previewed: "Previsualizó un estilo",
   storefront_theme_selected: "Eligió un estilo",
@@ -1279,6 +1284,17 @@ function commercialEventDetail(event = {}) {
   }
   if (event.type === "seller_whatsapp" && event.source) {
     return `Origen: ${String(event.source).replaceAll("_", " ")}`;
+  }
+  if (event.type === "public_order_whatsapp_started") {
+    const count = Number(metadata.itemCount || 0);
+    const parts = [];
+    if (count > 0) parts.push(`${count} ítem${count === 1 ? "" : "s"}`);
+    if (metadata.containsOffer === true) parts.push("incluye promo");
+    if (metadata.containsDailyOffer === true) parts.push("incluye Promo del día");
+    return parts.join(" · ");
+  }
+  if (event.type === "external_storefront_visit") {
+    return "Señal anónima · sin datos del visitante";
   }
   return "";
 }

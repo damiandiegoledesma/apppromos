@@ -73,7 +73,9 @@ service cloud.firestore {
         && request.resource.data.type in [
           'business_registered', 'first_login', 'app_open', 'price_save',
           'price_milestone_reached', 'web_open', 'web_share', 'offer_created',
-          'offer_published', 'seller_whatsapp', 'daily_promo_published',
+          'offer_published', 'offer_shared', 'seller_whatsapp',
+          'daily_promo_created', 'daily_promo_published',
+          'business_identity_completed',
           'storefront_theme_offered', 'storefront_theme_previewed',
           'storefront_theme_selected', 'storefront_theme_deferred'
         ]
@@ -94,12 +96,41 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /businesses/{businessId}/publicSignals/{signalId} {
+      allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
+      allow create: if exists(/databases/$(database)/documents/businesses/$(businessId))
+        && signalId.size() <= 120
+        && request.resource.data.keys().hasAll([
+          'businessId', 'type', 'occurredAt', 'createdAt', 'origin',
+          'source', 'metadata', 'schemaVersion'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'businessId', 'type', 'occurredAt', 'createdAt', 'origin',
+          'source', 'metadata', 'schemaVersion'
+        ])
+        && request.resource.data.businessId == businessId
+        && request.resource.data.schemaVersion == 1
+        && request.resource.data.type in [
+          'external_storefront_visit', 'public_order_whatsapp_started'
+        ]
+        && request.resource.data.occurredAt is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.origin == 'public_web'
+        && request.resource.data.source is string
+        && request.resource.data.source.size() <= 40
+        && request.resource.data.metadata is map
+        && request.resource.data.metadata.keys().hasOnly([
+          'itemCount', 'containsOffer', 'containsDailyOffer'
+        ]);
+      allow update, delete: if false;
+    }
+
     match /businesses/{businessId}/{collectionId}/{document=**} {
       allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
-      allow create: if collectionId != 'commercialEvents'
+      allow create: if collectionId != 'commercialEvents' && collectionId != 'publicSignals'
         && signedIn()
         && (ownsBusiness(businessId) || isAdmin() || isSuperadmin() || request.resource.data.ownerUid == request.auth.uid);
-      allow update, delete: if collectionId != 'commercialEvents'
+      allow update, delete: if collectionId != 'commercialEvents' && collectionId != 'publicSignals'
         && (ownsBusiness(businessId) || isAdmin() || isSuperadmin());
     }
 
