@@ -35,6 +35,36 @@ service cloud.firestore {
         && request.resource.data.ownerUid == request.auth.uid;
     }
 
+    function isValidPublicSignalId(signalId, signalType) {
+      return signalId.size() <= 120
+        && (
+          (signalType == 'external_storefront_visit'
+            && signalId.matches('^external_storefront_visit_[0-9]{8}_[A-Za-z0-9]{1,32}$'))
+          || (signalType == 'public_order_whatsapp_started'
+            && signalId.matches('^public_order_whatsapp_started_[0-9]{8}_[A-Za-z0-9]{1,32}$'))
+        );
+    }
+
+    function hasValidPublicSignalMetadata(signalType, metadata) {
+      return metadata is map
+        && (
+          (signalType == 'external_storefront_visit'
+            && metadata.keys().hasOnly([]))
+          || (signalType == 'public_order_whatsapp_started'
+            && metadata.keys().hasAll([
+              'itemCount', 'containsOffer', 'containsDailyOffer'
+            ])
+            && metadata.keys().hasOnly([
+              'itemCount', 'containsOffer', 'containsDailyOffer'
+            ])
+            && metadata.itemCount is int
+            && metadata.itemCount >= 1
+            && metadata.itemCount <= 99
+            && metadata.containsOffer is bool
+            && metadata.containsDailyOffer is bool)
+        );
+    }
+
     match /admins/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || isSuperadmin());
       allow create, update, delete: if isSuperadmin();
@@ -99,7 +129,6 @@ service cloud.firestore {
     match /businesses/{businessId}/publicSignals/{signalId} {
       allow read: if ownsBusiness(businessId) || isAdmin() || isSuperadmin();
       allow create: if exists(/databases/$(database)/documents/businesses/$(businessId))
-        && signalId.size() <= 120
         && request.resource.data.keys().hasAll([
           'businessId', 'type', 'occurredAt', 'createdAt', 'origin',
           'source', 'metadata', 'schemaVersion'
@@ -113,15 +142,24 @@ service cloud.firestore {
         && request.resource.data.type in [
           'external_storefront_visit', 'public_order_whatsapp_started'
         ]
+        && isValidPublicSignalId(signalId, request.resource.data.type)
         && request.resource.data.occurredAt is string
+        && request.resource.data.occurredAt.size() == 24
+        && request.resource.data.occurredAt.matches(
+          '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
+        )
         && request.resource.data.createdAt is timestamp
         && request.resource.data.origin == 'public_web'
-        && request.resource.data.source is string
-        && request.resource.data.source.size() <= 40
-        && request.resource.data.metadata is map
-        && request.resource.data.metadata.keys().hasOnly([
-          'itemCount', 'containsOffer', 'containsDailyOffer'
-        ]);
+        && (
+          (request.resource.data.type == 'external_storefront_visit'
+            && request.resource.data.source == 'storefront_load')
+          || (request.resource.data.type == 'public_order_whatsapp_started'
+            && request.resource.data.source == 'public_cart')
+        )
+        && hasValidPublicSignalMetadata(
+          request.resource.data.type,
+          request.resource.data.metadata
+        );
       allow update, delete: if false;
     }
 
