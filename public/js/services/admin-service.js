@@ -347,21 +347,51 @@ export async function listBusinessCommercialEvents(businessId, options = {}) {
     )
   ]);
   const rows = [];
+  const publicSignals = [];
   snap.forEach((eventSnap) => rows.push({ id: eventSnap.id, ...(eventSnap.data() || {}) }));
-  publicSnap.forEach((eventSnap) => rows.push({
-    id: eventSnap.id,
-    actorType: "external",
-    ...(eventSnap.data() || {})
-  }));
+  publicSnap.forEach((eventSnap) => {
+    const signal = {
+      id: eventSnap.id,
+      actorType: "external",
+      ...(eventSnap.data() || {})
+    };
+    publicSignals.push(signal);
+    rows.push(signal);
+  });
   followupSnap.forEach((eventSnap) => rows.push({
     id: eventSnap.id,
     actorType: "admin",
     stream: "followup",
     ...(eventSnap.data() || {})
   }));
-  return rows
+  const sevenDaysAgo = Date.now() - (7 * 86400000);
+  const visits = publicSignals.filter((signal) => signal.type === "external_storefront_visit");
+  const orderStarts = publicSignals.filter((signal) => signal.type === "public_order_whatsapp_started");
+  const inLastSevenDays = (signal) => {
+    const timestamp = new Date(signal.occurredAt || signal.createdAt || 0).getTime();
+    return Number.isFinite(timestamp) && timestamp >= sevenDaysAgo;
+  };
+  const lastOccurredAt = (signals = []) => signals.reduce((latest, signal) => {
+    const value = String(signal.occurredAt || "");
+    return !latest || new Date(value).getTime() > new Date(latest).getTime() ? value : latest;
+  }, "");
+  const publicSignalSummary = {
+    visitsTotal: visits.length,
+    visitsLast7Days: visits.filter(inLastSevenDays).length,
+    lastVisitAt: lastOccurredAt(visits),
+    orderStartsTotal: orderStarts.length,
+    orderStartsLast7Days: orderStarts.filter(inLastSevenDays).length,
+    lastOrderStartAt: lastOccurredAt(orderStarts)
+  };
+  publicSignalSummary.conversionPercent = publicSignalSummary.visitsTotal > 0
+    ? Math.round((publicSignalSummary.orderStartsTotal / publicSignalSummary.visitsTotal) * 100)
+    : 0;
+
+  const visibleRows = rows
     .sort((a, b) => new Date(b.occurredAt || 0).getTime() - new Date(a.occurredAt || 0).getTime())
     .slice(0, maxItems);
+  visibleRows.publicSignalSummary = publicSignalSummary;
+  return visibleRows;
 }
 
 export async function ensureBusinessCommercialActivated(

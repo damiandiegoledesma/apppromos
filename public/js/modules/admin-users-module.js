@@ -34,6 +34,7 @@ const MP_BACKEND_URL = "http://127.0.0.1:8000";
 const MP_LINKS_BY_BUSINESS = new Map();
 const BILLING_MOVEMENTS_BY_BUSINESS = new Map();
 const COMMERCIAL_EVENTS_BY_BUSINESS = new Map();
+const PUBLIC_SIGNAL_SUMMARY_BY_BUSINESS = new Map();
 
 const FOLLOWUP_STATUS_OPTIONS = Object.freeze([
   ["pending", "Pendiente"],
@@ -767,17 +768,43 @@ function rowById(rows = [], id = "") {
 
 function renderNav(activeView) {
   const tabs = [
-    ["home", "Inicio"],
-    ["clients", "Clientes"],
+    ["home", "Hoy"],
+    ["clients", "Carnicerías"],
     ["billing", "Cobranzas"],
-    ["tracking", "Tracking"],
-    ["users", "Usuarios"],
     ["more", "Más"]
   ];
   return `
-    <div class="admin-nav">
+    <div class="admin-nav admin-nav-top">
       ${tabs.map(([key, label]) => `<button type="button" data-admin-view="${key}" class="${activeView === key ? "active" : ""}">${escapeHtml(label)}</button>`).join("")}
     </div>
+  `;
+}
+
+function renderBottomNav(activeView = "home", selectedRow = null) {
+  const navStyle = "position:fixed!important;z-index:2147483646!important;left:50%!important;bottom:14px!important;transform:translateX(-50%)!important;display:grid!important;grid-template-columns:repeat(4,minmax(86px,1fr))!important;gap:5px!important;width:min(560px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important;padding:7px!important;border:1px solid #d9d2c8!important;border-radius:18px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 14px 38px rgba(0,0,0,.18)!important;";
+  const itemStyle = "display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;min-width:0!important;min-height:48px!important;padding:4px!important;border:0!important;border-radius:12px!important;background:transparent!important;color:#5b534b!important;font:900 11px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;text-decoration:none!important;cursor:pointer!important;box-sizing:border-box!important;";
+  const activeStyle = "background:#1f1f1f!important;color:#fff!important;";
+  if (selectedRow) {
+    return `
+      <nav class="admin-bottom-nav" style="${navStyle}" aria-label="Acciones de la carnicería">
+        <a href="#" role="button" style="${itemStyle}" data-close-detail><span>←</span>Volver</a>
+        <a href="#" role="button" style="${itemStyle}" data-open-support-whatsapp="${safeBusinessId(selectedRow)}"><span>◉</span>WhatsApp</a>
+        <a href="#" role="button" style="${itemStyle}" data-scroll-admin="adminFollowup"><span>✓</span>Seguimiento</a>
+        <a href="#" role="button" style="${itemStyle}" data-scroll-admin="adminExtra"><span>•••</span>Más</a>
+      </nav>
+    `;
+  }
+  const tabs = [
+    ["home", "⌂", "Hoy"],
+    ["clients", "▦", "Carnicerías"],
+    ["billing", "$", "Cobranzas"],
+    ["more", "•••", "Más"]
+  ];
+  const visibleActiveView = ["tracking", "users"].includes(activeView) ? "more" : activeView;
+  return `
+    <nav class="admin-bottom-nav" style="${navStyle}" aria-label="Navegación del Centro de Control">
+      ${tabs.map(([key, icon, label]) => `<a href="#" role="button" data-admin-view="${key}" class="${visibleActiveView === key ? "active" : ""}" style="${itemStyle}${visibleActiveView === key ? activeStyle : ""}"><span>${icon}</span>${label}</a>`).join("")}
+    </nav>
   `;
 }
 
@@ -785,32 +812,44 @@ function realOperationalBusinesses(businesses = []) {
   return businesses.filter((row) => !isArchived(row) && !isTest(row));
 }
 
+function homeOperationalBusinesses(businesses = []) {
+  const real = realOperationalBusinesses(businesses);
+  if (real.length) return real;
+  return businesses.filter((row) => !isArchived(row));
+}
+
+function followupNeedsAttention(row = {}) {
+  const status = String(row.followup?.status || "");
+  if (["pending", "no_response"].includes(status)) return true;
+  const nextAt = toDate(row.followup?.nextContactAt);
+  return Boolean(nextAt && nextAt.getTime() <= Date.now());
+}
+
 function renderQuickStats(businesses = []) {
-  const rows = realOperationalBusinesses(businesses);
+  const rows = homeOperationalBusinesses(businesses);
   const statuses = rows.map((row) => commercialStatus(row));
   const active = statuses.filter((status) => status.key === "active").length;
-  const activating = statuses.filter((status) => status.key === "activating").length;
   const attention = statuses.filter((status) => ["attention", "risk"].includes(status.key)).length;
+  const followups = rows.filter(followupNeedsAttention).length;
 
   return `
     <div class="admin-kpis admin-control-kpis">
-      <div><b>${rows.length}</b><span>Carnicerías reales</span></div>
+      <div><b>${attention}</b><span>Necesitan ayuda</span></div>
+      <div><b>${followups}</b><span>Seguimientos</span></div>
       <div><b>${active}</b><span>Activas</span></div>
-      <div><b>${activating}</b><span>Activándose</span></div>
-      <div><b>${attention}</b><span>Necesitan atención</span></div>
     </div>
   `;
 }
 
 function renderHome(businesses = [], state = {}) {
-  const filter = state.homeFilter || "all";
+  const filter = state.homeFilter || "today";
   const query = state.homeSearch || "";
-  const rows = realOperationalBusinesses(businesses)
+  const sourceRows = homeOperationalBusinesses(businesses);
+  const rows = sourceRows
     .filter((row) => matchesSearch(row, query))
     .filter((row) => {
       const status = commercialStatus(row);
-      if (filter === "attention") return ["attention", "risk"].includes(status.key);
-      if (filter === "activating") return status.key === "activating";
+      if (filter === "today") return ["attention", "risk", "activating"].includes(status.key) || followupNeedsAttention(row);
       if (filter === "active") return status.key === "active";
       return true;
     })
@@ -827,11 +866,11 @@ function renderHome(businesses = [], state = {}) {
     ${renderQuickStats(businesses)}
     <div class="admin-section-head admin-control-head">
       <div>
-        <h3>Centro de Control</h3>
-        <p>Primero aparece lo que necesita tu atención.</p>
+        <h3>A quién ayudar hoy</h3>
+        <p>Primero aparece lo que podés resolver ahora.</p>
       </div>
       <div class="admin-filter-tabs">
-        ${[["all", "Todos"], ["attention", "Atención"], ["activating", "Activándose"], ["active", "Activas"]]
+        ${[["today", "Necesitan ayuda"], ["all", "Todas"], ["active", "Activas"]]
           .map(([key, label]) => `<button type="button" data-home-filter="${key}" class="${filter === key ? "active" : ""}">${label}</button>`).join("")}
       </div>
     </div>
@@ -839,34 +878,29 @@ function renderHome(businesses = [], state = {}) {
       <input id="adminHomeSearch" value="${escapeHtml(query)}" placeholder="Buscar carnicería" />
       <span>${rows.length} carnicería${rows.length === 1 ? "" : "s"}</span>
     </div>
-    <div class="admin-table-wrap">
-      <table class="admin-table admin-control-table">
-        <thead>
-          <tr>
-            <th>Carnicería</th>
-            <th>Salud</th>
-            <th>Última acción</th>
-            <th>Qué pasa</th>
-            <th>WhatsApp</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row) => {
-            const status = commercialStatus(row);
-            return `
-              <tr>
-                <td><strong>${escapeHtml(businessName(row))}</strong><small>${escapeHtml(businessLocation(row))}</small></td>
-                <td>${chip(status.label, status.tone)}</td>
-                <td>${escapeHtml(relativeCommercialAction(row))}</td>
-                <td><strong>${escapeHtml(status.reason)}</strong></td>
-                <td><button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button></td>
-                <td><button type="button" data-view-business="${safeBusinessId(row)}">Ver</button></td>
-              </tr>
-            `;
-          }).join("") || `<tr><td colspan="6"><div class="admin-empty">No hay carnicerías en este filtro.</div></td></tr>`}
-        </tbody>
-      </table>
+    ${sourceRows.length && sourceRows.every(isTest) ? `<div class="admin-qa-note">Entorno QA: se muestran empresas TEST porque no hay carnicerías reales.</div>` : ""}
+    <div class="admin-help-list">
+      ${rows.map((row) => {
+        const status = commercialStatus(row);
+        const nextStep = recommendedNextStep(row);
+        return `
+          <article class="admin-help-card ${status.tone}">
+            <div class="admin-help-main">
+              <div class="admin-help-heading">
+                <div><h4>${escapeHtml(businessName(row))}</h4><span>${escapeHtml(businessOwner(row))} · ${escapeHtml(businessLocation(row))}</span></div>
+                ${chip(status.label, status.tone)}
+              </div>
+              <strong class="admin-help-problem">${escapeHtml(status.reason)}</strong>
+              <p><b>Qué hacer:</b> ${escapeHtml(nextStep.title)}</p>
+              <small>${escapeHtml(relativeCommercialAction(row))}</small>
+            </div>
+            <div class="admin-help-actions">
+              <button type="button" class="primary-action" data-view-business="${safeBusinessId(row)}">Ayudar</button>
+              <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="seguimiento">WhatsApp</button>
+            </div>
+          </article>
+        `;
+      }).join("") || `<div class="admin-empty">No hay carnicerías que necesiten ayuda en este momento.</div>`}
     </div>
   `;
 }
@@ -935,19 +969,24 @@ function renderClients(businesses = [], state = {}) {
   ];
 
   return `
-    <div class="admin-toolbar-simple admin-client-toolbar">
+    <div class="admin-directory-search">
       <input id="adminSearch" value="${escapeHtml(query)}" placeholder="Buscar por nombre, responsable, email, WhatsApp o localidad" />
-      <select id="adminClientFilter" title="Tipo de cliente">
-        <option value="all" ${selectedAttr(clientFilter, "all")}>Clientes: todos</option>
-        <option value="active" ${selectedAttr(clientFilter, "active")}>Clientes activos</option>
-        <option value="real" ${selectedAttr(clientFilter, "real")}>Clientes reales</option>
-        <option value="test" ${selectedAttr(clientFilter, "test")}>Empresas TEST</option>
-        <option value="archived" ${selectedAttr(clientFilter, "archived")}>Archivados</option>
-      </select>
-      <select id="adminAccessFilter" title="Filtro por acceso">${optionList(accessOptions, accessFilter)}</select>
-      <select id="adminPlanFilter" title="Filtro por plan">${optionList(planOptions, planFilter)}</select>
-      <select id="adminPaymentFilter" title="Filtro por pago">${optionList(paymentOptions, paymentFilter)}</select>
     </div>
+    <details class="admin-filter-disclosure">
+      <summary>Filtros</summary>
+      <div class="admin-toolbar-simple admin-client-toolbar">
+        <select id="adminClientFilter" title="Tipo de cliente">
+          <option value="all" ${selectedAttr(clientFilter, "all")}>Carnicerías: todas</option>
+          <option value="active" ${selectedAttr(clientFilter, "active")}>Activas</option>
+          <option value="real" ${selectedAttr(clientFilter, "real")}>Reales</option>
+          <option value="test" ${selectedAttr(clientFilter, "test")}>Empresas TEST</option>
+          <option value="archived" ${selectedAttr(clientFilter, "archived")}>Archivadas</option>
+        </select>
+        <select id="adminAccessFilter" title="Filtro por acceso">${optionList(accessOptions, accessFilter)}</select>
+        <select id="adminPlanFilter" title="Filtro por plan">${optionList(planOptions, planFilter)}</select>
+        <select id="adminPaymentFilter" title="Filtro por pago">${optionList(paymentOptions, paymentFilter)}</select>
+      </div>
+    </details>
     <div class="admin-results-note">${rows.length} de ${businesses.length} carnicerías</div>
     ${renderClientsTable(rows, "clients")}
   `;
@@ -955,55 +994,26 @@ function renderClients(businesses = [], state = {}) {
 function renderClientsTable(rows = [], source = "clients") {
   if (!rows.length) return `<div class="admin-empty">No hay carnicerías para mostrar.</div>`;
   return `
-    <div class="admin-table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Carnicería</th>
-            <th>Contacto</th>
-            <th>Plan</th>
-            <th>Acceso</th>
-            <th>Pago</th>
-            <th>Actividad</th>
-            <th>Salud</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row) => {
-            const status = commercialStatus(row);
-            return `
-              <tr class="${isArchived(row) ? "archived" : ""}">
-                <td>
-                  <strong>${escapeHtml(businessName(row))}</strong>
-                  <small>${escapeHtml(businessLocation(row))} · ID ${escapeHtml(shortId(row.businessId))}</small>
-                  <div class="admin-mini-chips">${adminChip(row)}</div>
-                </td>
-                <td>
-                  <span>${escapeHtml(businessOwner(row))}</span>
-                  <small>${escapeHtml(businessEmail(row))}</small>
-                  <small>WhatsApp: ${escapeHtml(businessPhone(row) || "Sin WhatsApp")}</small>
-                </td>
-                <td>${planChip(row)}</td>
-                <td>${accessChip(row)}</td>
-                <td>
-                  ${paymentChip(row)}
-                  <small>${escapeHtml(billingDuePresentation(row).detail)}</small>
-                </td>
-                <td><small>${escapeHtml(dateTime(lastActivityValue(row)))}</small></td>
-                <td>${chip(status.label, status.tone)}<small>${escapeHtml(status.reason)}</small></td>
-                <td>
-                  <div class="admin-row-actions">
-                    <button type="button" data-view-business="${safeBusinessId(row)}">Ver</button>
-                    <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar</button>
-                    <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="${source === "billing" ? "cobranza" : "base"}">WhatsApp</button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+    <div class="admin-directory-list">
+      ${rows.map((row) => {
+        const status = commercialStatus(row);
+        return `
+          <article class="admin-directory-card ${isArchived(row) ? "archived" : ""}">
+            <div class="admin-directory-main">
+              <div class="admin-directory-title"><h4>${escapeHtml(businessName(row))}</h4>${adminChip(row)}</div>
+              <p>${escapeHtml(businessOwner(row))} · ${escapeHtml(businessPhone(row) || "Sin WhatsApp")}</p>
+              <small>${escapeHtml(businessLocation(row))} · ${escapeHtml(relativeCommercialAction(row))}</small>
+              <div class="admin-mini-chips">${chip(status.label, status.tone)} ${planChip(row)} ${paymentChip(row)}</div>
+              <span class="admin-directory-reason">${escapeHtml(status.reason)}</span>
+            </div>
+            <div class="admin-directory-actions">
+              <button type="button" class="primary-action" data-view-business="${safeBusinessId(row)}">Ver</button>
+              <button type="button" data-whatsapp-business="${safeBusinessId(row)}" data-whatsapp-reason="${source === "billing" ? "cobranza" : "base"}">WhatsApp</button>
+              <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar</button>
+            </div>
+          </article>
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -1190,6 +1200,14 @@ function renderMore(businesses = []) {
   const realCount = businesses.filter((b) => !isTest(b)).length;
   return `
     <div class="admin-home-grid">
+      <section class="admin-panel-card">
+        <h3>Consultas administrativas</h3>
+        <p>Información que no necesitás para el trabajo diario.</p>
+        <div class="admin-more-links">
+          <button type="button" data-admin-view="tracking"><strong>Tracking</strong><span>Embudo y métricas comerciales</span></button>
+          <button type="button" data-admin-view="users"><strong>Usuarios</strong><span>Accesos y cuentas registradas</span></button>
+        </div>
+      </section>
       <section class="admin-panel-card">
         <h3>Herramientas de base</h3>
         <p>Acciones poco frecuentes. Usarlas con cuidado.</p>
@@ -1417,6 +1435,28 @@ function renderCommercialTimeline(businessId = "") {
   `;
 }
 
+function renderPublicImpact(businessId = "") {
+  const summary = PUBLIC_SIGNAL_SUMMARY_BY_BUSINESS.get(businessId);
+  if (!summary) {
+    return `<section class="admin-public-impact"><div class="admin-empty">Cargando resultados de la vidriera...</div></section>`;
+  }
+  const conversion = Number(summary.conversionPercent || 0);
+  return `
+    <section class="admin-public-impact" aria-label="Resultados de la vidriera pública">
+      <div class="admin-impact-heading">
+        <div><span class="admin-eyebrow">Resultados de la vidriera</span><h3>Qué está pasando afuera</h3></div>
+        <small>Señales anónimas registradas por navegador y día.</small>
+      </div>
+      <div class="admin-impact-grid">
+        <div><strong>${Number(summary.visitsLast7Days || 0)}</strong><span>Visitas · 7 días</span><small>Última: ${escapeHtml(dateTime(summary.lastVisitAt))}</small></div>
+        <div><strong>${Number(summary.visitsTotal || 0)}</strong><span>Visitas registradas</span><small>Desde A2</small></div>
+        <div><strong>${Number(summary.orderStartsTotal || 0)}</strong><span>Pedidos iniciados</span><small>${Number(summary.orderStartsLast7Days || 0)} en 7 días</small></div>
+        <div><strong>${conversion}%</strong><span>Conversión aproximada</span><small>Pedidos ÷ visitas</small></div>
+      </div>
+    </section>
+  `;
+}
+
 
 function renderDetail(row = {}) {
   const status = commercialStatus(row);
@@ -1475,20 +1515,46 @@ function renderDetail(row = {}) {
         </div>
       </section>
 
-      <section class="admin-panel-card admin-operational-summary ${status.tone}">
-        <div>
-          <span class="admin-eyebrow">Situación comercial</span>
-          <h3>${escapeHtml(status.label)}</h3>
-          <p>${escapeHtml(status.reason)}</p>
-        </div>
-        <div class="admin-operational-stage">
-          <span>Etapa actual</span>
-          <strong>${escapeHtml(stage.label)}</strong>
-          <small>${escapeHtml(relativeCommercialAction(row))}</small>
-        </div>
-      </section>
+      ${renderPublicImpact(String(row.businessId || row.id || ""))}
 
       <div class="admin-detail-grid-real admin-operational-grid">
+        <section id="adminFollowup" class="admin-panel-card note admin-followup-card">
+          <h3>Resolver y hacer seguimiento</h3>
+          <p class="admin-card-help">Registrá solamente lo necesario para saber qué pasó y qué hacer después.</p>
+          <div class="admin-form-grid admin-followup-grid">
+            <label>Estado<select data-followup-status>${FOLLOWUP_STATUS_OPTIONS.map(([value, label]) => `<option value="${value}" ${String(followup.status || "pending") === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+            <label>Volver a contactar<input type="datetime-local" data-followup-next-at value="${escapeHtml(dateTimeInput(followup.nextContactAt))}" /></label>
+            <label class="admin-form-wide">Qué pasó<input type="text" data-followup-outcome maxlength="240" value="${escapeHtml(followup.outcome || "")}" placeholder="Ej.: respondió y necesita ayuda" /></label>
+            <label class="admin-form-wide">Qué hago después<input type="text" data-followup-next-action maxlength="240" value="${escapeHtml(followup.nextAction || "")}" placeholder="Ej.: ayudarlo a compartir su vidriera" /></label>
+          </div>
+          <details class="admin-inline-details">
+            <summary>Agregar nota interna</summary>
+            <label class="admin-followup-note">Nota<textarea data-detail-note rows="3" maxlength="1000" placeholder="Contexto adicional...">${escapeHtml(followup.note || internalNote)}</textarea></label>
+          </details>
+          <div class="admin-row-actions left">
+            <button type="button" class="primary-action" data-save-followup="${safeBusinessId(row)}">Guardar seguimiento</button>
+          </div>
+        </section>
+
+        <section class="admin-panel-card admin-support-message-card">
+          <h3>Mensaje para WhatsApp</h3>
+          <p class="admin-card-help">El sistema sugiere uno. Podés elegir otro o editarlo antes de abrir WhatsApp.</p>
+          <label>Situación
+            <select data-support-message-select>
+              ${supportMessages.map((item) => `<option value="${escapeHtml(item.key)}" ${item.key === recommendedMessage.key ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
+            </select>
+          </label>
+          <textarea data-support-message-text rows="7">${escapeHtml(recommendedMessage.text)}</textarea>
+          <div class="admin-row-actions left">
+            <button type="button" data-copy-support-message="${safeBusinessId(row)}">Copiar</button>
+            <button type="button" class="primary-action" data-open-support-whatsapp="${safeBusinessId(row)}">Abrir WhatsApp</button>
+          </div>
+          <small class="admin-detail-note">Abrir WhatsApp no marca automáticamente que hubo contacto.</small>
+        </section>
+
+        <details id="adminExtra" class="admin-detail-disclosure">
+          <summary><strong>Actividad y datos de la carnicería</strong><span>Ver métricas, contacto y configuración</span></summary>
+          <div class="admin-secondary-grid">
         <section class="admin-panel-card">
           <h3>Activación</h3>
           <p class="admin-card-help">Qué tan lejos llegó esta carnicería dentro del circuito comercial.</p>
@@ -1574,47 +1640,20 @@ function renderDetail(row = {}) {
             <button type="button" data-save-access-modules="${safeBusinessId(row)}">Guardar acceso/módulos</button>
           </div>
         </section>
-
-        <section class="admin-panel-card note admin-followup-card">
-          <h3>Seguimiento manual</h3>
-          <p class="admin-card-help">Estado interno y próxima acción. Guardar crea un registro inmutable en la línea de tiempo.</p>
-          <div class="admin-form-grid admin-followup-grid">
-            <label>Estado<select data-followup-status>${FOLLOWUP_STATUS_OPTIONS.map(([value, label]) => `<option value="${value}" ${String(followup.status || "pending") === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
-            <label>Próximo contacto<input type="datetime-local" data-followup-next-at value="${escapeHtml(dateTimeInput(followup.nextContactAt))}" /></label>
-            <label class="admin-form-wide">Resultado<input type="text" data-followup-outcome maxlength="240" value="${escapeHtml(followup.outcome || "")}" placeholder="Qué pasó en el contacto" /></label>
-            <label class="admin-form-wide">Próxima acción<input type="text" data-followup-next-action maxlength="240" value="${escapeHtml(followup.nextAction || "")}" placeholder="Qué hay que hacer después" /></label>
           </div>
-          <label class="admin-followup-note">Nota interna<textarea data-detail-note rows="4" maxlength="1000" placeholder="Contexto útil para resolver el problema...">${escapeHtml(followup.note || internalNote)}</textarea></label>
-          <div class="admin-row-actions left">
-            <button type="button" class="primary-action" data-save-followup="${safeBusinessId(row)}">Guardar seguimiento</button>
-            <button type="button" data-enter-business="${safeBusinessId(row)}">Entrar a la carnicería</button>
-          </div>
-        </section>
+        </details>
 
-        <section class="admin-panel-card admin-support-message-card">
-          <h3>Mensaje sugerido para WhatsApp</h3>
-          <p class="admin-card-help">Elegí una situación, editá el texto si hace falta y enviá manualmente. Abrir WhatsApp no cambia el estado del seguimiento.</p>
-          <label>Situación
-            <select data-support-message-select>
-              ${supportMessages.map((item) => `<option value="${escapeHtml(item.key)}" ${item.key === recommendedMessage.key ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
-            </select>
-          </label>
-          <textarea data-support-message-text rows="8">${escapeHtml(recommendedMessage.text)}</textarea>
-          <div class="admin-row-actions left">
-            <button type="button" data-copy-support-message="${safeBusinessId(row)}">Copiar mensaje</button>
-            <button type="button" class="primary-action" data-open-support-whatsapp="${safeBusinessId(row)}">Abrir WhatsApp</button>
-          </div>
-          <small class="admin-detail-note">El contacto solo queda registrado cuando elegís “Contactado” y guardás el seguimiento.</small>
-        </section>
-
-        <section class="admin-panel-card admin-timeline-card">
-          <h3>Línea de tiempo comercial</h3>
+        <details class="admin-detail-disclosure admin-timeline-card">
+          <summary><strong>Historial</strong><span>Actividad comercial y seguimientos anteriores</span></summary>
+          <div class="admin-disclosure-body">
           <p class="admin-card-help">Actividad comercial, señales públicas anónimas y seguimiento interno. No contiene datos del comprador final.</p>
           ${renderCommercialTimeline(String(row.businessId || row.id || ""))}
-        </section>
+          </div>
+        </details>
 
-        <section class="admin-panel-card important admin-ledger-panel-wide">
-          <h3>Cobranzas</h3>
+        <details class="admin-detail-disclosure admin-ledger-panel-wide">
+          <summary><strong>Cobranzas</strong><span>${escapeHtml(paymentChip(row).replace(/<[^>]*>/g, ""))} · ${escapeHtml(billingDuePresentation(row).detail)}</span></summary>
+          <div class="admin-disclosure-body">
           ${renderAccountLedger(row, BILLING_MOVEMENTS_BY_BUSINESS.get(safeBusinessId(row)) || [])}
           ${(() => {
             const mpLink = mpLinkForBusiness(row);
@@ -1630,10 +1669,12 @@ function renderDetail(row = {}) {
               <small>Último pago: ${escapeHtml(dateTime(b.lastPaymentAt || row.lastPaymentAt))} · MP: ${hasMpLink ? `link listo ${escapeHtml(formatMoney(mpAmount(mpLink)))}` : "sin link generado en esta sesión"}</small>
             `;
           })()}
-        </section>
+          </div>
+        </details>
 
-        <section class="admin-panel-card danger-zone admin-technical-actions">
-          <h3>Administración</h3>
+        <details class="admin-detail-disclosure admin-technical-actions">
+          <summary><strong>Herramientas técnicas</strong><span>Acceso, reparación, archivo y empresas TEST</span></summary>
+          <div class="admin-disclosure-body danger-zone">
           <p class="admin-card-help">Acciones poco frecuentes. No forman parte del seguimiento diario.</p>
           <div class="admin-row-actions left">
             ${isArchived(row)
@@ -1645,7 +1686,8 @@ function renderDetail(row = {}) {
             <button type="button" data-delete-test="${safeBusinessId(row)}" ${isTest(row) ? "" : "disabled"}>Eliminar TEST</button>
           </div>
           <small>Eliminar solo está habilitado para TEST. Clientes reales se archivan.</small>
-        </section>
+          </div>
+        </details>
       </div>
     </div>
   `;
@@ -1655,9 +1697,17 @@ export async function renderAdminUsers(container, options = {}) {
   if (!container) return;
   const { onEnterAsBusiness = null, showBackToApp = false } = options;
 
+  // La navegación flotante debe vivir fuera del árbol visual de AppPromos.
+  // Algunos contenedores de la app crean un containing block que impide que
+  // position:fixed se ancle a la ventana y además genera overflow horizontal.
+  document.getElementById("adminControlFloatingNav")?.remove();
+  const floatingNavMount = document.createElement("div");
+  floatingNavMount.id = "adminControlFloatingNav";
+  document.body.appendChild(floatingNavMount);
+
   const state = {
     view: "home",
-    homeFilter: "all",
+    homeFilter: "today",
     homeSearch: "",
     search: "",
     clientFilter: "all",
@@ -1675,7 +1725,7 @@ export async function renderAdminUsers(container, options = {}) {
 
   container.innerHTML = `
     <style>
-      .admin-shell{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f1f1f;}
+      .admin-shell{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f1f1f;padding-bottom:88px;max-width:100%;min-width:0;overflow-x:clip;}
       .admin-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
       .admin-top h2{margin:0;font-size:26px;line-height:1.1;}
       .admin-top p{margin:5px 0 0;color:#6e6e6e;font-size:13px;}
@@ -1685,18 +1735,32 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
       .admin-nav button{border-radius:999px;background:#ece7df;}
       .admin-nav button.active{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
-      .admin-content{overflow:auto;border:1px solid #e7e1d8;border-radius:16px;background:#fff;padding:14px;min-height:360px;}
+      .admin-content{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:clip;border:1px solid #e7e1d8;border-radius:16px;background:#fff;padding:14px;min-height:360px;}
       .admin-kpis{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-bottom:14px;}
-      .admin-control-kpis{grid-template-columns:repeat(4,minmax(130px,1fr));}
+      .admin-control-kpis{grid-template-columns:repeat(3,minmax(130px,1fr));}
       .admin-control-search{display:flex;align-items:center;gap:10px;margin:0 0 12px;}
       .admin-control-search input{flex:1;min-height:40px;border:1px solid #ded6ca;border-radius:10px;padding:0 12px;font-weight:800;box-sizing:border-box;}
       .admin-control-search span{color:#6e6e6e;font-size:12px;font-weight:900;white-space:nowrap;}
       .admin-control-table{min-width:860px;}
       .admin-control-table button{min-height:34px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
+      .primary-action{background:#1f1f1f!important;color:#fff!important;border-color:#1f1f1f!important;}
       .admin-kpis div{border:1px solid #eee6dc;border-radius:16px;background:#fffaf5;padding:12px;}
       .admin-kpis b{display:block;font-size:28px;line-height:1;font-weight:1000;}
       .admin-kpis span{display:block;margin-top:5px;color:#6e6e6e;font-size:12px;font-weight:900;text-transform:uppercase;}
       .admin-home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+      .admin-help-list{display:grid;gap:10px;}
+      .admin-help-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;border:1px solid #eee6dc;border-left:5px solid #64748b;border-radius:16px;background:#fff;padding:14px;box-shadow:0 5px 16px rgba(0,0,0,.035);}
+      .admin-help-card.warn{border-left-color:#d97706;background:#fffdf7;}
+      .admin-help-card.danger{border-left-color:#dc2626;background:#fff9f8;}
+      .admin-help-card.ok{border-left-color:#16a34a;}
+      .admin-help-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+      .admin-help-heading h4{margin:0;font-size:17px;}
+      .admin-help-heading span,.admin-help-main small{display:block;color:#6e6e6e;font-size:12px;margin-top:3px;}
+      .admin-help-problem{display:block;margin-top:10px;font-size:14px;}
+      .admin-help-main p{margin:5px 0;color:#4f4f4f;font-size:13px;}
+      .admin-help-actions{display:grid;gap:7px;min-width:118px;}
+      .admin-help-actions button{min-height:40px;padding:0 13px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
+      .admin-qa-note{margin:0 0 10px;padding:9px 11px;border-radius:10px;background:#fff4df;color:#795600;font-size:12px;font-weight:800;}
       .admin-panel-card{border:1px solid #eee6dc;border-radius:16px;background:#fff;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.035);}
       .admin-panel-card.highlight{border-color:#ffd0a0;background:#fffaf3;}
       .admin-panel-card.important{border-color:#d7e5ff;background:#f8fbff;}
@@ -1705,6 +1769,9 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-panel-card h3,.admin-section-head h3{margin:0 0 6px;font-size:18px;}
       .admin-panel-card p,.admin-section-head p{margin:0;color:#6e6e6e;font-size:13px;line-height:1.35;}
       .admin-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+      .admin-more-links{display:grid;gap:8px;margin-top:12px;}
+      .admin-more-links button{display:grid;gap:2px;text-align:left;min-height:54px;padding:10px 12px;border:1px solid #ded6ca;border-radius:12px;background:#fff;cursor:pointer;}
+      .admin-more-links button span{color:#6e6e6e;font-size:12px;}
       .admin-queue{display:grid;gap:8px;}
       .admin-queue-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-top:1px solid #f0ebe3;padding-top:8px;}
       .admin-queue-row strong{display:block;font-size:14px;}
@@ -1713,6 +1780,21 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-row-actions.left{justify-content:flex-start;}
       .admin-toolbar-simple{display:grid;grid-template-columns:minmax(260px,1fr) repeat(4,minmax(145px,180px));gap:10px;margin-bottom:8px;}
       .admin-client-toolbar{align-items:center;}
+      .admin-directory-search{margin-bottom:8px;}
+      .admin-directory-search input{width:100%;min-height:44px;padding:0 12px;border:1px solid #ded6ca;border-radius:12px;font-weight:800;box-sizing:border-box;}
+      .admin-filter-disclosure{margin-bottom:10px;}
+      .admin-filter-disclosure summary{display:inline-flex;cursor:pointer;color:#5f5147;font-size:12px;font-weight:900;padding:6px 2px;}
+      .admin-filter-disclosure .admin-toolbar-simple{grid-template-columns:repeat(4,minmax(145px,1fr));padding-top:6px;}
+      .admin-directory-list{display:grid;gap:9px;}
+      .admin-directory-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid #eee6dc;border-radius:15px;background:#fff;padding:13px;}
+      .admin-directory-card.archived{background:#f8f7f4;opacity:.76;}
+      .admin-directory-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+      .admin-directory-title h4{margin:0;font-size:16px;}
+      .admin-directory-main p{margin:4px 0 0;font-size:13px;font-weight:750;}
+      .admin-directory-main small{display:block;margin-top:3px;color:#6e6e6e;font-size:12px;}
+      .admin-directory-reason{display:block;margin-top:5px;color:#5f5147;font-size:12px;font-weight:800;}
+      .admin-directory-actions{display:grid;grid-template-columns:repeat(3,auto);gap:6px;}
+      .admin-directory-actions button{min-height:38px;padding:0 11px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
       .admin-results-note{font-size:12px;color:#6e6e6e;font-weight:900;margin:0 0 10px 2px;}
       .admin-toolbar-simple input,.admin-toolbar-simple select,.admin-form-grid input,.admin-form-grid select,.admin-panel-card textarea{width:100%;min-height:38px;border:1px solid #ded6ca;border-radius:10px;padding:0 10px;font-weight:800;background:#fff;box-sizing:border-box;}
       .admin-panel-card textarea{padding:10px;resize:vertical;font-weight:700;line-height:1.4;}
@@ -1779,6 +1861,15 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-next-step-copy h3{margin:4px 0 6px;font-size:1.12rem;}
       .admin-next-step-copy p{margin:0;line-height:1.45;}
       .admin-next-step-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
+      .admin-public-impact{margin:12px 0;border:1px solid #dce8f8;border-radius:16px;background:#f8fbff;padding:14px;}
+      .admin-impact-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;}
+      .admin-impact-heading h3{margin:2px 0 0;font-size:18px;}
+      .admin-impact-heading small{color:#6e6e6e;font-size:11px;max-width:260px;text-align:right;}
+      .admin-impact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
+      .admin-impact-grid>div{min-width:0;border:1px solid #e4edf8;border-radius:13px;background:#fff;padding:11px;}
+      .admin-impact-grid strong{display:block;font-size:25px;line-height:1;}
+      .admin-impact-grid span{display:block;margin-top:5px;font-size:11px;font-weight:950;text-transform:uppercase;}
+      .admin-impact-grid small{display:block;margin-top:3px;color:#6e6e6e;font-size:11px;}
       @media (max-width:760px){
         .admin-next-step{align-items:stretch;flex-direction:column;}
         .admin-next-step-actions{width:100%;}
@@ -1792,7 +1883,9 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-operational-stage{min-width:170px;padding:10px 12px;border:1px solid #eee6dc;border-radius:12px;background:#fff;}
       .admin-operational-stage span,.admin-operational-stage small{display:block;color:#6e6e6e;font-size:11px;font-weight:800;}
       .admin-operational-stage strong{display:block;font-size:18px;margin:2px 0;}
-      .admin-operational-grid{align-items:start;}
+      .admin-operational-grid{align-items:start;grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;min-width:0;}
+      .admin-operational-grid>*{min-width:0;}
+      .admin-operational-grid>.admin-followup-card,.admin-operational-grid>.admin-support-message-card{grid-column:1/-1;width:100%;max-width:100%;box-sizing:border-box;}
       .admin-card-help{margin-bottom:10px!important;}
       .admin-detail-note{display:block;margin-top:10px;color:#6e6e6e;font-size:11px;line-height:1.35;}
       .admin-followup-grid{margin-top:12px;}
@@ -1801,6 +1894,8 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-support-message-card{display:grid;gap:10px;}
       .admin-support-message-card label{display:grid;gap:6px;font-size:12px;font-weight:700;}
       .admin-support-message-card select,.admin-support-message-card textarea,.admin-followup-card input,.admin-followup-card select,.admin-followup-card textarea{width:100%;box-sizing:border-box;}
+      .admin-inline-details{margin:10px 0;border-top:1px solid #eee6dc;padding-top:8px;}
+      .admin-inline-details summary{cursor:pointer;font-size:12px;font-weight:900;color:#5f5147;}
       .admin-account-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px;}
       .admin-followup-card textarea{width:100%;box-sizing:border-box;min-height:110px;}
       .admin-commercial-timeline{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0;}
@@ -1809,7 +1904,15 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-timeline-dot{position:relative;z-index:1;width:12px;height:12px;margin-top:3px;border-radius:999px;background:#b63b2b;box-shadow:0 0 0 3px #f8e9e5;}
       .admin-commercial-timeline strong{display:block;font-size:13px;}
       .admin-commercial-timeline span{display:block;margin-top:2px;color:#6e6e6e;font-size:12px;line-height:1.35;}
-      .admin-ledger-panel-wide,.admin-followup-card,.admin-timeline-card,.admin-technical-actions{grid-column:1/-1;}
+      .admin-ledger-panel-wide,.admin-timeline-card,.admin-technical-actions,.admin-detail-disclosure{grid-column:1/-1;}
+      .admin-detail-disclosure{border:1px solid #eee6dc;border-radius:16px;background:#fff;overflow:hidden;}
+      .admin-detail-disclosure>summary{display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer;padding:14px;list-style:none;}
+      .admin-detail-disclosure>summary::-webkit-details-marker{display:none;}
+      .admin-detail-disclosure>summary::after{content:"⌄";font-size:18px;color:#6e6e6e;}
+      .admin-detail-disclosure[open]>summary::after{content:"⌃";}
+      .admin-detail-disclosure>summary span{margin-left:auto;color:#6e6e6e;font-size:12px;text-align:right;}
+      .admin-disclosure-body{border-top:1px solid #eee6dc;padding:14px;}
+      .admin-secondary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;padding:0 14px 14px;}
       .admin-detail-top{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:12px;align-items:start;margin-bottom:12px;border-bottom:1px solid #eee6dc;padding-bottom:12px;}
       .admin-detail-top h3{margin:0;font-size:22px;}
       .admin-detail-top p{margin:4px 0 0;color:#6e6e6e;font-size:13px;}
@@ -1821,6 +1924,13 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-form-grid label{font-size:12px;color:#6e6e6e;font-weight:1000;display:grid;gap:4px;}
       .admin-modules-list{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 10px;}
       .admin-module-toggle{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:0 9px;border:1px solid #ded6ca;border-radius:999px;background:#fff;font-size:12px;font-weight:900;}
+      #adminNavMount:empty,#adminBottomNavMount:empty{display:none;}
+      .admin-bottom-nav{position:fixed!important;z-index:2147483000;left:50%;bottom:14px;transform:translateX(-50%);display:grid!important;grid-template-columns:repeat(4,minmax(86px,1fr));gap:5px;width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);box-sizing:border-box;padding:7px;border:1px solid #d9d2c8;border-radius:18px;background:rgba(255,255,255,.98);box-shadow:0 14px 38px rgba(0,0,0,.18);backdrop-filter:blur(12px);}
+      body.module-focus-admin{overflow-x:hidden!important;}
+      #adminControlFloatingNav{display:block!important;visibility:visible!important;opacity:1!important;}
+      #adminControlFloatingNav .admin-bottom-nav button{display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:48px;border:0;border-radius:12px;background:transparent;color:#5b534b;font-size:11px;font-weight:900;cursor:pointer;}
+      #adminControlFloatingNav .admin-bottom-nav button span{display:block!important;visibility:visible!important;opacity:1!important;font-size:17px;line-height:1;}
+      .admin-bottom-nav button.active{background:#1f1f1f;color:#fff;}
       button:disabled{opacity:.45;cursor:not-allowed;}
       @media(max-width:980px){
         .admin-ledger-panel-wide{grid-column:span 1;}
@@ -1832,8 +1942,21 @@ export async function renderAdminUsers(container, options = {}) {
         .admin-ledger-summary{grid-template-columns:1fr;}
         .admin-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
         .admin-control-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .admin-nav-top{display:none;}
+        .admin-help-card{grid-template-columns:1fr;}
+        .admin-help-actions{grid-template-columns:1fr 1fr;}
+        .admin-detail-disclosure>summary{align-items:flex-start;}
+        .admin-detail-disclosure>summary span{display:none;}
+        .admin-bottom-nav{bottom:8px;width:calc(100vw - 16px);}
         .admin-control-search{align-items:stretch;flex-direction:column;}
+        .admin-impact-heading{display:block;}
+        .admin-impact-heading small{display:block;margin-top:5px;text-align:left;}
+        .admin-impact-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+        .admin-operational-grid{grid-template-columns:1fr;}
         .admin-toolbar-simple{grid-template-columns:1fr;}
+        .admin-filter-disclosure .admin-toolbar-simple{grid-template-columns:1fr;}
+        .admin-directory-card{grid-template-columns:1fr;}
+        .admin-directory-actions{grid-template-columns:repeat(3,1fr);}
         .admin-content{padding:10px;}
         .admin-detail-top{grid-template-columns:1fr;}
         .admin-table{min-width:860px;}
@@ -1847,18 +1970,17 @@ export async function renderAdminUsers(container, options = {}) {
           <p>Qué carnicerías funcionan, cuáles se están activando y cuáles necesitan tu atención.</p>
         </div>
         <div class="admin-top-actions">
-
+          <button id="exitAdminBtn" type="button">Salir del Centro de Control</button>
           <button id="reloadAdminBtn" class="primary" type="button">Recargar</button>
         </div>
       </div>
-      <div id="adminNavMount"></div>
       <div id="adminContent" class="admin-content"><div class="admin-empty">Cargando panel...</div></div>
     </div>
   `;
 
-  const navMount = container.querySelector("#adminNavMount");
   const content = container.querySelector("#adminContent");
   const reloadBtn = container.querySelector("#reloadAdminBtn");
+  const exitAdminBtn = container.querySelector("#exitAdminBtn");
 
   function setView(view) {
     state.view = view;
@@ -1867,9 +1989,10 @@ export async function renderAdminUsers(container, options = {}) {
   }
 
   function render() {
-    navMount.innerHTML = renderNav(state.selectedBusinessId ? "" : state.view);
+    const selectedRow = state.selectedBusinessId ? rowById(businesses, state.selectedBusinessId) : null;
+    floatingNavMount.innerHTML = renderBottomNav(state.view, selectedRow);
     if (state.selectedBusinessId) {
-      const row = rowById(businesses, state.selectedBusinessId);
+      const row = selectedRow;
       content.innerHTML = row ? renderDetail(row) : `<div class="admin-empty">No se encontró la carnicería seleccionada.</div>`;
       return;
     }
@@ -1953,10 +2076,20 @@ export async function renderAdminUsers(container, options = {}) {
     try {
       const rows = await listBusinessCommercialEvents(businessId, { limit: 40 });
       COMMERCIAL_EVENTS_BY_BUSINESS.set(businessId, rows);
+      PUBLIC_SIGNAL_SUMMARY_BY_BUSINESS.set(businessId, rows.publicSignalSummary || {
+        visitsTotal: 0,
+        visitsLast7Days: 0,
+        lastVisitAt: "",
+        orderStartsTotal: 0,
+        orderStartsLast7Days: 0,
+        lastOrderStartAt: "",
+        conversionPercent: 0
+      });
       return rows;
     } catch (error) {
       console.warn("No se pudo leer la línea de tiempo comercial", error);
       COMMERCIAL_EVENTS_BY_BUSINESS.set(businessId, []);
+      PUBLIC_SIGNAL_SUMMARY_BY_BUSINESS.delete(businessId);
       return [];
     }
   }
@@ -2021,8 +2154,19 @@ export async function renderAdminUsers(container, options = {}) {
     return link;
   }
 
-  container.addEventListener("click", async (event) => {
+  const handleAdminClick = async (event) => {
     const target = event.target;
+    if (target.closest("#adminControlFloatingNav a")) event.preventDefault();
+    const scrollButton = target.closest("[data-scroll-admin]");
+    if (scrollButton) {
+      const destination = container.querySelector(`#${scrollButton.dataset.scrollAdmin}`);
+      if (destination) {
+        if (destination.tagName === "DETAILS") destination.open = true;
+        destination.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
+    }
+
     const nav = target.closest("[data-admin-view]");
     if (nav) {
       setView(nav.dataset.adminView || "home");
@@ -2094,7 +2238,10 @@ export async function renderAdminUsers(container, options = {}) {
 
     const enterButton = target.closest("[data-enter-business]");
     if (enterButton) {
-      if (typeof onEnterAsBusiness === "function") await onEnterAsBusiness(enterButton.dataset.enterBusiness);
+      if (typeof onEnterAsBusiness === "function") {
+        floatingNavMount.remove();
+        await onEnterAsBusiness(enterButton.dataset.enterBusiness);
+      }
       return;
     }
 
@@ -2326,7 +2473,10 @@ export async function renderAdminUsers(container, options = {}) {
       if (typed !== "MARCAR TEST") return window.alert("Cancelado. No se marcó la base.");
       await withButton(markBaseTest, "Marcando...", async () => { await markExistingBusinessesAsTest({ reason: "Base marcada como TEST desde Panel Admin operativo" }); await loadData(); });
     }
-  });
+  };
+
+  container.addEventListener("click", handleAdminClick);
+  floatingNavMount.addEventListener("click", handleAdminClick);
 
   container.addEventListener("input", (event) => {
     const homeSearch = event.target.closest("#adminHomeSearch");
@@ -2390,5 +2540,14 @@ export async function renderAdminUsers(container, options = {}) {
   });
 
   reloadBtn?.addEventListener("click", loadData);
+  exitAdminBtn?.addEventListener("click", () => {
+    floatingNavMount.remove();
+    const dashboardButton = document.querySelector('[data-panel="dashboardPanel"]');
+    if (dashboardButton) {
+      dashboardButton.click();
+      return;
+    }
+    window.location.assign(window.location.pathname);
+  });
   await loadData();
 }
