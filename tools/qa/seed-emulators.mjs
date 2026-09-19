@@ -13,7 +13,7 @@ const scenarios = [
   { key: "15", email: "qa-15@apppromos.test", name: "Carnicería QA 15 Primera Promo", prices: 15, share: 1, created: 0, published: 0, daily: 0, expected: "crear primera promo" },
   { key: "promo", email: "qa-promo@apppromos.test", name: "Carnicería QA Promo Creada", prices: 15, share: 1, created: 1, published: 0, daily: 0, combo: true, expected: "publicar promo" },
   { key: "publicada", email: "qa-publicada@apppromos.test", name: "Carnicería QA Promo Publicada", prices: 15, share: 1, created: 1, published: 1, daily: 0, combo: true, selected: true, expected: "Promo del día" },
-  { key: "completa", email: "qa-completa@apppromos.test", name: "Carnicería QA Completa", prices: 15, share: 1, created: 1, published: 1, daily: 1, combo: true, selected: true, themePromptSeen: true, expected: "activa" },
+  { key: "completa", email: "qa-completa@apppromos.test", name: "Carnicería QA Completa", prices: 15, share: 1, created: 1, published: 1, daily: 1, combo: true, selected: true, themePromptSeen: true, externalVisit: 1, orderStart: 1, expected: "activa + señales públicas" },
   { key: "reactivacion", email: "qa-reactivacion@apppromos.test", name: "Carnicería QA Reactivación", prices: 15, share: 1, created: 1, published: 1, daily: 1, combo: true, selected: true, themePromptSeen: true, inactiveDays: 8, expected: "reactivación" }
 ];
 
@@ -75,6 +75,29 @@ async function ensureAuth(email) {
     });
     return signed.localId;
   }
+}
+
+async function seedQaSuperadmin() {
+  const email = "qa-superadmin@apppromos.test";
+  const uid = await ensureAuth(email);
+  await putDoc(`users/${uid}`, {
+    uid,
+    email,
+    displayName: "QA Superadmin",
+    role: "superadmin",
+    status: "active",
+    createdAt: iso(),
+    updatedAt: iso()
+  });
+  await putDoc(`admins/${uid}`, {
+    uid,
+    email,
+    role: "superadmin",
+    active: true,
+    createdAt: iso(),
+    updatedAt: iso()
+  });
+  return email;
 }
 
 function firestoreUrl(path) {
@@ -158,6 +181,8 @@ function buildMetrics(scenario) {
   const activatedAt = scenario.share && scenario.prices >= 10 ? daysAgo(1) : undefined;
   const lastCommercialActionAt = scenario.inactiveDays ? daysAgo(scenario.inactiveDays) : iso();
   const metrics = {
+    priceSaveCount: scenario.prices > 0 ? 1 : 0,
+    maxPricedProductCount: scenario.prices,
     webShareCount: scenario.share,
     offerCreatedCount: scenario.created,
     offerPublishedCount: scenario.published,
@@ -171,6 +196,94 @@ function buildMetrics(scenario) {
   if (scenario.published) metrics.lastOfferPublishedAt = daysAgo(1);
   if (scenario.daily) Object.assign(metrics, { firstDailyPromoPublishedAt: daysAgo(1), lastDailyPromoPublishedAt: daysAgo(1) });
   return metrics;
+}
+
+function buildCommercialEvents(scenario, businessId) {
+  const events = [
+    ["001_registered", "business_registered", daysAgo(3), { pricedProductCount: 0 }],
+    ["002_first_login", "first_login", daysAgo(3), {}]
+  ];
+  for (const milestone of [5, 12, 15]) {
+    if (scenario.prices >= milestone) {
+      events.push([
+        `01${milestone}_prices`,
+        "price_milestone_reached",
+        daysAgo(2),
+        { milestone, pricedProductCount: scenario.prices }
+      ]);
+    }
+  }
+  if (scenario.share) events.push(["020_web_share", "web_share", daysAgo(1), {}]);
+  if (scenario.created) events.push(["030_offer_created", "offer_created", daysAgo(1), {}]);
+  if (scenario.published) events.push(["040_offer_published", "offer_published", daysAgo(1), {}]);
+  if (scenario.daily) events.push(["050_daily_promo", "daily_promo_published", daysAgo(1), {}]);
+
+  return events.map(([id, type, occurredAt, metadata]) => ({
+    id,
+    data: {
+      businessId,
+      type,
+      occurredAt,
+      createdAt: occurredAt,
+      origin: "qa_seed",
+      actorType: "owner",
+      source: "qa_scenario",
+      metadata,
+      schemaVersion: 1
+    }
+  }));
+}
+
+function buildPublicSignals(scenario, businessId) {
+  const signals = [];
+  if (scenario.externalVisit) {
+    signals.push(["qa_external_visit", "external_storefront_visit", { }]);
+  }
+  if (scenario.orderStart) {
+    signals.push(["qa_order_started", "public_order_whatsapp_started", {
+      itemCount: 3,
+      containsOffer: true,
+      containsDailyOffer: false
+    }]);
+  }
+  return signals.map(([id, type, metadata]) => ({
+    id,
+    data: {
+      businessId,
+      type,
+      occurredAt: iso(),
+      createdAt: iso(),
+      origin: "public_web",
+      source: type === "external_storefront_visit" ? "storefront_load" : "public_cart",
+      metadata,
+      schemaVersion: 1
+    }
+  }));
+}
+
+function buildFollowupEvents(scenario, businessId) {
+  if (scenario.key !== "reactivacion") return [];
+  return [
+    ["001_pending", "pending", daysAgo(3), "Revisar inactividad", "Escribir por WhatsApp", daysAgo(2)],
+    ["002_contacted", "contacted", daysAgo(2), "Se envió mensaje de ayuda", "Esperar respuesta", daysAgo(1)],
+    ["003_no_response", "no_response", daysAgo(1), "Todavía no respondió", "Volver a contactar", daysAgo(-1)]
+  ].map(([id, status, occurredAt, outcome, nextAction, nextContactAt]) => ({
+    id,
+    data: {
+      businessId,
+      type: "manual_followup_updated",
+      occurredAt,
+      createdAt: occurredAt,
+      status,
+      outcome,
+      nextAction,
+      nextContactAt,
+      note: "Seguimiento QA interno",
+      operatorUid: "qa-superadmin",
+      operatorEmail: "qa-superadmin@apppromos.test",
+      schemaVersion: 1
+    }
+  }));
 }
 
 async function verifyScenarioState(scenario, businessId) {
@@ -191,6 +304,52 @@ async function verifyScenarioState(scenario, businessId) {
   const activeAt = metrics.commercialActivatedAt?.stringValue || "";
   if (scenario.share && scenario.prices >= 10 && !activeAt) {
     throw new Error(`${businessId}: falta metrics.commercialActivatedAt`);
+  }
+
+  const timeline = await getDoc(`businesses/${businessId}/commercialEvents`);
+  const eventTypes = (timeline?.documents || [])
+    .map((item) => item?.fields?.type?.stringValue || "")
+    .filter(Boolean);
+  if (!eventTypes.includes("business_registered")) {
+    throw new Error(`${businessId}: falta evento business_registered`);
+  }
+  for (const milestone of [5, 12, 15]) {
+    if (scenario.prices < milestone) continue;
+    const found = (timeline?.documents || []).some((item) => {
+      const fields = item?.fields || {};
+      return fields.type?.stringValue === "price_milestone_reached"
+        && readNumber(fields.metadata?.mapValue?.fields?.milestone) === milestone;
+    });
+    if (!found) throw new Error(`${businessId}: falta hito de ${milestone} precios`);
+  }
+
+  if (scenario.externalVisit || scenario.orderStart) {
+    const publicSignals = await getDoc(`businesses/${businessId}/publicSignals`);
+    const signalDocs = publicSignals?.documents || [];
+    const signalTypes = signalDocs.map((item) => item?.fields?.type?.stringValue || "");
+    if (scenario.externalVisit && !signalTypes.includes("external_storefront_visit")) {
+      throw new Error(`${businessId}: falta señal external_storefront_visit`);
+    }
+    if (scenario.orderStart && !signalTypes.includes("public_order_whatsapp_started")) {
+      throw new Error(`${businessId}: falta señal public_order_whatsapp_started`);
+    }
+    const forbiddenKeys = new Set(["name", "nombre", "phone", "telefono", "address", "direccion", "cart", "pedido", "message", "mensaje"]);
+    for (const signal of signalDocs) {
+      const metadataKeys = Object.keys(signal?.fields?.metadata?.mapValue?.fields || {});
+      if (metadataKeys.some((key) => forbiddenKeys.has(String(key).toLowerCase()))) {
+        throw new Error(`${businessId}: señal pública contiene PII o contenido de pedido`);
+      }
+    }
+  }
+
+
+  if (scenario.key === "reactivacion") {
+    const followups = await getDoc(`businesses/${businessId}/followupEvents`);
+    const followupDocs = followups?.documents || [];
+    const statuses = followupDocs.map((item) => item?.fields?.status?.stringValue || "");
+    for (const expected of ["pending", "contacted", "no_response"]) {
+      if (!statuses.includes(expected)) throw new Error(`${businessId}: falta seguimiento ${expected}`);
+    }
   }
 }
 
@@ -228,6 +387,16 @@ async function seedScenario(scenario) {
     }))
     : [];
   const metrics = buildMetrics(scenario);
+  const followup = scenario.key === "reactivacion" ? {
+    status: "no_response",
+    outcome: "Todavía no respondió",
+    nextAction: "Volver a contactar",
+    nextContactAt: daysAgo(-1),
+    note: "Seguimiento QA interno",
+    updatedAt: daysAgo(1),
+    updatedByUid: "qa-superadmin",
+    updatedByEmail: "qa-superadmin@apppromos.test"
+  } : undefined;
   const web = {
     enabled: true,
     published: true,
@@ -347,16 +516,31 @@ async function seedScenario(scenario) {
     updatedAt: iso()
   });
 
+  for (const event of buildCommercialEvents(scenario, businessId)) {
+    await putDoc(`businesses/${businessId}/commercialEvents/${event.id}`, event.data);
+  }
+  for (const signal of buildPublicSignals(scenario, businessId)) {
+    await putDoc(`businesses/${businessId}/publicSignals/${signal.id}`, signal.data);
+  }
+  for (const event of buildFollowupEvents(scenario, businessId)) {
+    await putDoc(`businesses/${businessId}/followupEvents/${event.id}`, event.data);
+  }
+  if (followup) {
+    await putDoc(`businesses/${businessId}/followupState/current`, followup);
+  }
+
   await verifyScenarioState(scenario, businessId);
   console.log(`OK  ${scenario.email.padEnd(32)} -> ${businessId} | ${scenario.expected}`);
 }
 
 await assertEmulators();
-console.log("\n===== APPPROMOS A7.6.6 — RESEED QA LOCAL =====");
+console.log("\n===== APPPROMOS V12.28-A3 — RESEED QA LOCAL =====");
 console.log("Destino EXCLUSIVO: Firebase Emulators 127.0.0.1\n");
+const qaSuperadminEmail = await seedQaSuperadmin();
 for (const scenario of scenarios) await seedScenario(scenario);
 console.log("\n===== CREDENCIALES =====");
 console.log(`Contraseña común: ${PASSWORD}`);
+console.log(`Superadmin QA: ${qaSuperadminEmail}`);
 console.log("Emulator UI: http://127.0.0.1:4000");
 console.log("App QA:      http://127.0.0.1:5000/app.html?commercialQa=1");
-console.log("\nSeed terminado y estados comerciales verificados. No se escribió Firebase producción.");
+console.log("\nSeed terminado: estados comerciales, señales públicas y seguimiento manual verificados. No se escribió Firebase producción.");

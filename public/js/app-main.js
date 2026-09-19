@@ -421,9 +421,27 @@ function getShareOptions(source = "saved") {
     onBeforeWhatsapp: () => {
       const allowed = registerDemoWhatsappAttempt(source);
       if (allowed !== false && source !== "saved") trackSellerWhatsappCommercial(source);
+      if (allowed !== false && source === "saved") {
+        void trackBusinessCommercialEvent(currentBusinessId, "offer_shared", { source: "saved_promos" });
+      }
       return allowed;
     }
   };
+}
+
+function trackBusinessIdentityCompletedIfReady(source = "business_data") {
+  const meta = currentPayload?.meta || {};
+  const brand = meta.brand || {};
+  const hasBasicIdentity = Boolean(
+    (meta.name || meta.nombre || meta.publicDisplayName) &&
+    (meta.telefono || meta.phone || meta.whatsapp) &&
+    (meta.ciudad || meta.locality || meta.localidad)
+  );
+  if (!hasBasicIdentity || !brand.logoUrl || !brand.frontPhotoUrl) return;
+  void trackBusinessCommercialEvent(currentBusinessId, "business_identity_completed", {
+    source,
+    once: true
+  });
 }
 
 function insertDemoBanner() {
@@ -1084,6 +1102,7 @@ function renderCarnizaUrgentStockCard(container) {
         trackCarnizaSignal("daily_promo_published", { businessId: currentPayload.businessId || currentBusinessId || null, promoId: result.promo?.id || null, demo: result.demo === true });
         if (!result.demo) {
           void (async () => {
+            await trackBusinessCommercialEvent(currentBusinessId, "daily_promo_created");
             await trackBusinessCommercialEvent(currentBusinessId, "daily_promo_published");
             await refreshCommercialBusinessControl();
             renderCurrentDashboard();
@@ -2500,6 +2519,7 @@ function renderCurrentDashboard() {
           meta: result.meta,
           state: result.state
         };
+        trackBusinessIdentityCompletedIfReady("dashboard_business_data");
         await syncCurrentPublicWebSnapshot("business_data_save");
         renderCurrentDashboard();
         renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
@@ -2882,6 +2902,8 @@ function openAccountSheet(mode = "view") {
       if (logoFile || frontFile) {
         await syncCurrentPublicWebSnapshot("brand_upload");
       }
+
+      trackBusinessIdentityCompletedIfReady("account_identity");
 
       renderCurrentDashboard();
       renderWhatsApp(whatsappPanel, currentPayload.state?.savedCombos || [], currentPayload.meta || {}, getShareOptions("whatsapp_panel"));
@@ -4252,8 +4274,17 @@ async function renderBusinessWorkspace(options = {}) {
       selectedRubros: Array.isArray(data.state?.businessPreferences?.selectedRubros)
         ? data.state.businessPreferences.selectedRubros
         : [],
-      onPricesSaved: async () => {
-        await trackBusinessCommercialEvent(currentBusinessId, "price_save");
+      onPricesSaved: async (result = {}) => {
+        const pricedProductCount = Array.isArray(result.updatedProducts)
+          ? result.updatedProducts.filter((product) => Number(product?.precio ?? product?.price ?? 0) > 0).length
+          : 0;
+        await trackBusinessCommercialEvent(currentBusinessId, "price_save", {
+          source: "prices_panel",
+          metadata: {
+            pricedProductCount,
+            changedProductCount: Number(result.changed || 0)
+          }
+        });
       },
       onProductsUpdated: async (...args) => {
         await trackBusinessActivityThrottled(currentBusinessId, 60);

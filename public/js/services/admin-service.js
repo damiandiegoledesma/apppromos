@@ -35,6 +35,74 @@ const ADMIN_ALLOWED_BILLING_PLANS = Array.from(new Set([
 
 const ADMIN_ALLOWED_PAYMENT_STATUSES = ["active", "paid", "pending", "overdue", "suspended", "manual", "bonus", "bonificado"];
 
+export const COMMERCIAL_EVENT_SCHEMA_VERSION = 1;
+
+export const FOLLOWUP_STATUSES = Object.freeze([
+  "pending",
+  "contacted",
+  "helped",
+  "resolved",
+  "no_response"
+]);
+
+export const FOLLOWUP_EVENT_SCHEMA_VERSION = 1;
+
+export const COMMERCIAL_EVENT_TYPES = Object.freeze([
+  "business_registered",
+  "first_login",
+  "app_open",
+  "price_save",
+  "price_milestone_reached",
+  "web_open",
+  "web_share",
+  "offer_created",
+  "offer_published",
+  "offer_shared",
+  "seller_whatsapp",
+  "daily_promo_created",
+  "daily_promo_published",
+  "business_identity_completed",
+  "storefront_theme_offered",
+  "storefront_theme_previewed",
+  "storefront_theme_selected",
+  "storefront_theme_deferred"
+]);
+
+const PRICE_MILESTONES = Object.freeze([5, 12, 15]);
+
+function cleanCommercialEventMetadata(metadata = {}) {
+  const source = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata
+    : {};
+  const clean = {};
+  Object.entries(source).slice(0, 12).forEach(([key, value]) => {
+    const safeKey = String(key || "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 40);
+    if (!safeKey || value === undefined || value === null) return;
+    if (typeof value === "string") clean[safeKey] = value.slice(0, 160);
+    else if (typeof value === "number" && Number.isFinite(value)) clean[safeKey] = value;
+    else if (typeof value === "boolean") clean[safeKey] = value;
+  });
+  return clean;
+}
+
+function commercialEventPayload(businessId, type, now, options = {}) {
+  const metadata = {
+    ...(options.metadata && typeof options.metadata === "object" ? options.metadata : {}),
+    ...(options.theme ? { theme: options.theme } : {})
+  };
+  return {
+    businessId,
+    type,
+    occurredAt: now,
+    createdAt: serverTimestamp(),
+    origin: String(options.origin || "app").slice(0, 40),
+    actorType: String(options.actorType || "owner").slice(0, 20),
+    source: String(options.source || "unknown").slice(0, 80),
+    metadata: cleanCommercialEventMetadata(metadata),
+    schemaVersion: COMMERCIAL_EVENT_SCHEMA_VERSION
+  };
+}
+
 function normalizeAdminPlan(plan = "trial") {
   const clean = String(plan || "trial").trim().toLowerCase();
   const map = {
@@ -78,7 +146,8 @@ function normalizeAdminDateValue(value = null) {
 const BUSINESS_COMMERCIAL_EVENTS = {
   app_open: {
     counter: "appOpenCount",
-    lastAt: "lastAppOpenAt"
+    lastAt: "lastAppOpenAt",
+    timeline: false
   },
   price_save: {
     counter: "priceSaveCount",
@@ -97,6 +166,12 @@ const BUSINESS_COMMERCIAL_EVENTS = {
     lastAt: "lastOfferPublishedAt",
     commercial: true
   },
+  offer_shared: {
+    counter: "offerSharedCount",
+    firstAt: "firstOfferSharedAt",
+    lastAt: "lastOfferSharedAt",
+    commercial: true
+  },
   seller_whatsapp: {
     counter: "sellerWhatsappCount",
     lastAt: "lastSellerWhatsappAt",
@@ -111,10 +186,22 @@ const BUSINESS_COMMERCIAL_EVENTS = {
     lastAt: "lastWebSharedAt",
     commercial: true
   },
+  daily_promo_created: {
+    counter: "dailyPromoCreatedCount",
+    firstAt: "firstDailyPromoCreatedAt",
+    lastAt: "lastDailyPromoCreatedAt",
+    commercial: true
+  },
   daily_promo_published: {
     counter: "dailyPromoPublishedCount",
     firstAt: "firstDailyPromoPublishedAt",
     lastAt: "lastDailyPromoPublishedAt",
+    commercial: true
+  },
+  business_identity_completed: {
+    counter: "businessIdentityCompletedCount",
+    firstAt: "firstBusinessIdentityCompletedAt",
+    lastAt: "lastBusinessIdentityCompletedAt",
     commercial: true
   },
   storefront_theme_offered: {
@@ -177,6 +264,8 @@ export async function trackBusinessCommercialEvent(
       const metrics = data.metrics || {};
       const updates = {};
 
+      if (options.once === true && config.firstAt && metrics[config.firstAt]) return;
+
       if (config.counter) {
         updates[`metrics.${config.counter}`] = increment(1);
       }
@@ -198,6 +287,33 @@ export async function trackBusinessCommercialEvent(
         updates["metrics.lastCommercialActionType"] = eventType;
       }
 
+      if (config.timeline !== false) {
+        const eventRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+        transaction.set(eventRef, commercialEventPayload(businessId, eventType, now, options));
+      }
+
+      if (eventType === "price_save") {
+        const pricedCount = Number(options?.metadata?.pricedProductCount || 0);
+        const previousMax = Number(metrics.maxPricedProductCount || 0);
+        if (Number.isFinite(pricedCount) && pricedCount > previousMax) {
+          updates["metrics.maxPricedProductCount"] = pricedCount;
+          for (const milestone of PRICE_MILESTONES) {
+            if (previousMax < milestone && pricedCount >= milestone) {
+              const milestoneRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+              transaction.set(milestoneRef, commercialEventPayload(
+                businessId,
+                "price_milestone_reached",
+                now,
+                {
+                  source: options.source || "prices_panel",
+                  metadata: { milestone, pricedProductCount: pricedCount }
+                }
+              ));
+            }
+          }
+        }
+      }
+
       transaction.update(businessRef, updates);
     });
 
@@ -210,6 +326,72 @@ export async function trackBusinessCommercialEvent(
     });
     return false;
   }
+}
+
+export async function listBusinessCommercialEvents(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) return [];
+  const maxItems = Math.min(100, Math.max(1, Number(options.limit || 40)));
+  const [snap, publicSnap, followupSnap] = await Promise.all([
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "commercialEvents"),
+      `businesses/${businessId}/commercialEvents`
+    ),
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "publicSignals"),
+      `businesses/${businessId}/publicSignals`
+    ),
+    trackedGetDocs(
+      collection(db, "businesses", businessId, "followupEvents"),
+      `businesses/${businessId}/followupEvents`
+    )
+  ]);
+  const rows = [];
+  const publicSignals = [];
+  snap.forEach((eventSnap) => rows.push({ id: eventSnap.id, ...(eventSnap.data() || {}) }));
+  publicSnap.forEach((eventSnap) => {
+    const signal = {
+      id: eventSnap.id,
+      actorType: "external",
+      ...(eventSnap.data() || {})
+    };
+    publicSignals.push(signal);
+    rows.push(signal);
+  });
+  followupSnap.forEach((eventSnap) => rows.push({
+    id: eventSnap.id,
+    actorType: "admin",
+    stream: "followup",
+    ...(eventSnap.data() || {})
+  }));
+  const sevenDaysAgo = Date.now() - (7 * 86400000);
+  const visits = publicSignals.filter((signal) => signal.type === "external_storefront_visit");
+  const orderStarts = publicSignals.filter((signal) => signal.type === "public_order_whatsapp_started");
+  const inLastSevenDays = (signal) => {
+    const timestamp = new Date(signal.occurredAt || signal.createdAt || 0).getTime();
+    return Number.isFinite(timestamp) && timestamp >= sevenDaysAgo;
+  };
+  const lastOccurredAt = (signals = []) => signals.reduce((latest, signal) => {
+    const value = String(signal.occurredAt || "");
+    return !latest || new Date(value).getTime() > new Date(latest).getTime() ? value : latest;
+  }, "");
+  const publicSignalSummary = {
+    visitsTotal: visits.length,
+    visitsLast7Days: visits.filter(inLastSevenDays).length,
+    lastVisitAt: lastOccurredAt(visits),
+    orderStartsTotal: orderStarts.length,
+    orderStartsLast7Days: orderStarts.filter(inLastSevenDays).length,
+    lastOrderStartAt: lastOccurredAt(orderStarts)
+  };
+  publicSignalSummary.conversionPercent = publicSignalSummary.visitsTotal > 0
+    ? Math.round((publicSignalSummary.orderStartsTotal / publicSignalSummary.visitsTotal) * 100)
+    : 0;
+
+  const visibleRows = rows
+    .sort((a, b) => new Date(b.occurredAt || 0).getTime() - new Date(a.occurredAt || 0).getTime())
+    .slice(0, maxItems);
+  visibleRows.publicSignalSummary = publicSignalSummary;
+  return visibleRows;
 }
 
 export async function ensureBusinessCommercialActivated(
@@ -417,6 +599,10 @@ export async function listAdminBusinesses() {
     try { operationalState = await readPath(`businesses/${businessId}/core/state`); }
     catch (error) { console.warn("No se pudo leer estado operativo", businessId, error); }
 
+    let followupState = null;
+    try { followupState = await readPath(`businesses/${businessId}/followupState/current`); }
+    catch (error) { console.warn("No se pudo leer seguimiento interno", businessId, error); }
+
     const operationalProducts = Array.isArray(operationalState?.products)
       ? operationalState.products
       : [];
@@ -433,7 +619,8 @@ export async function listAdminBusinesses() {
       productCount: operationalProducts.length,
       pricedProductCount,
       activePricedProductCount,
-      hasLoadedPrices: pricedProductCount > 0
+      hasLoadedPrices: pricedProductCount > 0,
+      publicUrl: operationalState?.web?.publicUrl || ""
     };
     const owner = usersByBusiness.get(businessId) || null;
     const phoneIndex = phoneKeyByBusiness.get(businessId) || null;
@@ -452,6 +639,7 @@ export async function listAdminBusinesses() {
       billing: { ...(normalized.billing || {}), ...(root.billing || {}) },
       metrics: root.metrics && typeof root.metrics === "object" ? root.metrics : {},
       operationalState: operationalStateSummary,
+      followup: followupState && typeof followupState === "object" ? followupState : {},
       internalNote: root.internalNote || root.adminNote || root.commercialNote || root.notes?.internal || root.admin?.note || "",
       adminNote: root.adminNote || root.internalNote || root.commercialNote || "",
       lastPaymentAt: root.lastPaymentAt || root.billing?.lastPaymentAt || null,
@@ -795,6 +983,68 @@ export async function updateBusinessInternalNote(businessId, internalNote = "") 
     updatedAt: now
   }, { merge: true });
   await logAdminAction({ action: "business_internal_note_changed", targetBusinessId: businessId, before: { internalNote: before?.internalNote || before?.adminNote || "" }, after: { internalNote: cleanNote } });
+}
+
+function cleanFollowupText(value = "", maxLength = 500) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function cleanFollowupDate(value = null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
+export async function updateBusinessFollowup(businessId, values = {}) {
+  const { session, admin } = await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const status = String(values.status || "pending").trim().toLowerCase();
+  if (!FOLLOWUP_STATUSES.includes(status)) throw new Error("Estado de seguimiento inválido");
+
+  const now = new Date().toISOString();
+  const user = session.firebaseUser;
+  const followup = {
+    status,
+    outcome: cleanFollowupText(values.outcome, 240),
+    nextAction: cleanFollowupText(values.nextAction, 240),
+    nextContactAt: cleanFollowupDate(values.nextContactAt),
+    note: cleanFollowupText(values.note, 1000),
+    updatedAt: now,
+    updatedByUid: user?.uid || admin.uid || "",
+    updatedByEmail: user?.email || admin.email || ""
+  };
+
+  const businessRef = doc(db, "businesses", businessId);
+  const followupStateRef = doc(db, "businesses", businessId, "followupState", "current");
+  const eventRef = doc(collection(db, "businesses", businessId, "followupEvents"));
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(businessRef);
+    if (!snap.exists()) throw new Error("La carnicería no existe");
+    transaction.set(followupStateRef, followup);
+    transaction.set(eventRef, {
+      businessId,
+      type: "manual_followup_updated",
+      occurredAt: now,
+      createdAt: serverTimestamp(),
+      status: followup.status,
+      outcome: followup.outcome,
+      nextAction: followup.nextAction,
+      nextContactAt: followup.nextContactAt,
+      note: followup.note,
+      operatorUid: followup.updatedByUid,
+      operatorEmail: followup.updatedByEmail,
+      schemaVersion: FOLLOWUP_EVENT_SCHEMA_VERSION
+    });
+  });
+
+  await logAdminAction({
+    action: "business_followup_updated",
+    targetBusinessId: businessId,
+    after: { status, nextAction: followup.nextAction, nextContactAt: followup.nextContactAt }
+  });
+  return followup;
 }
 
 export async function updateBusinessModule(businessId, moduleKey, enabled) {
@@ -1377,10 +1627,22 @@ export async function trackBusinessLogin(businessId) {
   }
 
   try {
-    await setDoc(doc(db, "businesses", businessId), {
-      lastLoginAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    const businessRef = doc(db, "businesses", businessId);
+    const now = new Date().toISOString();
+    await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(businessRef);
+      if (!snap.exists()) return;
+      const data = snap.data() || {};
+      const updates = { lastLoginAt: now, updatedAt: now };
+      if (!data.firstLoginAt) {
+        updates.firstLoginAt = now;
+        const eventRef = doc(collection(db, "businesses", businessId, "commercialEvents"));
+        transaction.set(eventRef, commercialEventPayload(businessId, "first_login", now, {
+          source: "app_session"
+        }));
+      }
+      transaction.update(businessRef, updates);
+    });
   } catch (error) {
     console.warn("No se pudo actualizar lastLoginAt", error);
   }

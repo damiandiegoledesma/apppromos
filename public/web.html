@@ -1589,7 +1589,7 @@
       loadActivationDraft,
       setActivationDraftStep
     } from "./js/services/activation-draft-service.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const params = new URLSearchParams(location.search);
     const app = document.getElementById("app");
@@ -1851,8 +1851,6 @@
     }
 
     async function shouldTrackPublicWebView(data={}){
-      if(typeof window.gtag!=="function") return false;
-
       try{
         const session=await resolveSession();
 
@@ -1869,7 +1867,57 @@
         return true;
       }catch(error){
         console.warn("No se pudo resolver sesion para analytics publico",error);
+        // Ante una sesión indeterminada se excluye la señal para evitar contar
+        // por error una inspección del dueño o del superadmin como visita externa.
+        return false;
+      }
+    }
+
+    function publicSignalVisitorId(){
+      const key="apppromos_public_signal_visitor_v1";
+      try{
+        const current=localStorage.getItem(key);
+        if(current)return current;
+        const created=(globalThis.crypto?.randomUUID?.()||`${Date.now()}${Math.random()}`)
+          .replace(/[^a-zA-Z0-9]/g,"").slice(0,32);
+        localStorage.setItem(key,created);
+        return created;
+      }catch(_){
+        return `session${Date.now()}${Math.random().toString(16).slice(2)}`.slice(0,32);
+      }
+    }
+
+    async function recordPublicSignal(data={},type="",metadata={},eligible=false){
+      const businessId=String(data.businessId||"").trim();
+      if(!businessId||eligible!==true)return false;
+      const allowedTypes=new Set(["external_storefront_visit","public_order_whatsapp_started"]);
+      if(!allowedTypes.has(type))return false;
+      const day=new Date().toISOString().slice(0,10).replaceAll("-","");
+      const visitorId=publicSignalVisitorId();
+      const signalId=`${type}_${day}_${visitorId}`.slice(0,120);
+      const localKey=`apppromos_public_signal_${businessId}_${signalId}`;
+      try{
+        if(localStorage.getItem(localKey)==="1")return false;
+        const cleanMetadata={};
+        if(Number.isFinite(Number(metadata.itemCount)))cleanMetadata.itemCount=Math.max(0,Math.min(99,Math.trunc(Number(metadata.itemCount))));
+        if(typeof metadata.containsOffer==="boolean")cleanMetadata.containsOffer=metadata.containsOffer;
+        if(typeof metadata.containsDailyOffer==="boolean")cleanMetadata.containsDailyOffer=metadata.containsDailyOffer;
+        await setDoc(doc(db,"businesses",businessId,"publicSignals",signalId),{
+          businessId,
+          type,
+          occurredAt:new Date().toISOString(),
+          createdAt:serverTimestamp(),
+          origin:"public_web",
+          source:type==="external_storefront_visit"?"storefront_load":"public_cart",
+          metadata:cleanMetadata,
+          schemaVersion:1
+        });
+        localStorage.setItem(localKey,"1");
         return true;
+      }catch(error){
+        // La señal es auxiliar: nunca debe impedir que la vidriera o WhatsApp funcionen.
+        console.warn("No se pudo registrar señal pública anónima",{type,code:error?.code||"unknown"});
+        return false;
       }
     }
 
@@ -1964,11 +2012,14 @@
         : await shouldTrackPublicWebView(data);
 
       if(trackExternalAnalytics){
-        window.gtag("event","public_web_view",{
-          business_id:String(data.businessId||""),
-          business_slug:String(data.slug||""),
-          source:"public_web"
-        });
+        if(typeof window.gtag==="function"){
+          window.gtag("event","public_web_view",{
+            business_id:String(data.businessId||""),
+            business_slug:String(data.slug||""),
+            source:"public_web"
+          });
+        }
+        void recordPublicSignal(data,"external_storefront_visit",{},trackExternalAnalytics);
       }
 
       const rawName=data.publicDisplayName||data.businessName||data.publicName||data.name||data.nombre||"Carnicería";
@@ -2378,6 +2429,13 @@
             contains_offer:cartItems.some((item)=>item.type==="combo"),
             contains_daily_offer:cartItems.some((item)=>item.type==="daily_offer")
           });
+        }
+        if(trackExternalAnalytics){
+          void recordPublicSignal(data,"public_order_whatsapp_started",{
+            itemCount:cartItems.length,
+            containsOffer:cartItems.some((item)=>item.type==="combo"),
+            containsDailyOffer:cartItems.some((item)=>item.type==="daily_offer")
+          },trackExternalAnalytics);
         }
         window.open(waLink(cartMeta,buildCartOrderMessage()),"_blank","noopener,noreferrer");
       }
