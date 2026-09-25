@@ -5,7 +5,23 @@
  * No reemplaza al PromosDepurador futuro: evita seguir generando datos sucios.
  */
 
-import { getPhoneKey, normalizeSlug } from "./web-premium-service.js";
+function getPhoneKey(phone = "") {
+  let digits = String(phone || "").replace(/\D/g, "");
+  digits = digits.replace(/^00+/, "");
+  if (digits.startsWith("54") && digits.length > 10) digits = digits.slice(2);
+  if (digits.startsWith("9") && digits.length === 11) digits = digits.slice(1);
+  return digits.replace(/^0+/, "");
+}
+
+function normalizeSlug(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
 
 export function normalizePhoneAR(input = "") {
   const rawPhone = String(input || "").trim();

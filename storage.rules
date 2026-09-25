@@ -49,16 +49,8 @@ service firebase.storage {
         );
     }
 
-    // Compatibilidad con AppPromos legado:
-    // resolveSession() todavía acepta users/{uid}.role == "superadmin".
-    function isLegacySuperadmin() {
-      return hasUserDoc()
-        && userData().keys().hasAll(["role"])
-        && userData().role == "superadmin";
-    }
-
     function isAdmin() {
-      return hasActiveAdminProfile() || isLegacySuperadmin();
+      return hasActiveAdminProfile();
     }
 
     // Dueño directo de la empresa. Es la relación más fuerte.
@@ -94,11 +86,23 @@ service firebase.storage {
     }
 
     function canManageBusinessBrand(businessId) {
+      let business = businessData(businessId);
+      let billing = business.billing;
+      let enabled = !(business.status in ['disabled', 'suspended', 'inactive']);
+      let bonified = billing.plan != 'trial'
+        && billing.status in ['manual', 'bonus', 'bonificado'];
       return signedIn()
         && (
           isAdmin()
-          || isBusinessOwner(businessId)
-          || userBelongsToBusiness(businessId)
+          || (
+            (isBusinessOwner(businessId) || userBelongsToBusiness(businessId))
+            && enabled
+            && billing is map
+            && (
+              bonified
+              || (billing.writeAccessUntil is timestamp && request.time < billing.writeAccessUntil)
+            )
+          )
         );
     }
 

@@ -11,6 +11,12 @@ import { getBusinessStore, patchBusinessStore } from "./business-store.js";
 import { loadBusinessCache, saveBusinessCache } from "./cache-service.js";
 import { assertBusinessCanWrite } from "./write-guard-service.js";
 import { normalizeStorefrontTheme } from "./storefront-theme-service.js";
+import { buildBusinessIdentity } from "./normalization-service.js";
+
+// V12.29-RC3 — Carnis es la marca pública/canónica de las vidrieras.
+// AppPromos Hosting conserva las rutas históricas porque ambos dominios sirven
+// el mismo proyecto Firebase y resuelven el mismo publicWebSlugs/{slug}.
+export const PUBLIC_STOREFRONT_ORIGIN = "https://carnis.app";
 
 export function normalizeSlug(value = "") {
   return String(value || "")
@@ -200,6 +206,7 @@ function sanitizePublicProduct(product = {}) {
     id: toPublicText(product.id || product.productId || product.nombre || product.name),
     nombre: toPublicText(product.nombre || product.name || "Producto"),
     rubro: toPublicText(product.rubro || product.category || "Sin rubro") || "Sin rubro",
+    unidad: toPublicText(product.unidad || product.unit || "kg") || "kg",
     precio: price
   };
 }
@@ -370,11 +377,14 @@ export async function saveWebConfig(businessId, configPatch = {}) {
     throw new Error("Teléfono / WhatsApp válido requerido para activar o guardar Web Premium");
   }
 
-  const generatedSlug = buildBusinessSlug(meta || {}, businessId);
+  // Un guardado normal de Mi Web nunca debe regenerar un slug productivo ya
+  // existente. El slug sólo cambia en el flujo explícito de cambio de identidad,
+  // donde el anterior queda preservado como alias permanente.
+  const stableSlug = previousSlug || buildBusinessSlug(meta || {}, businessId);
   const nextWeb = {
     ...config,
     ...configPatch,
-    slug: generatedSlug,
+    slug: stableSlug,
     updatedAt: new Date().toISOString()
   };
 
@@ -437,7 +447,16 @@ export async function saveWebConfig(businessId, configPatch = {}) {
   });
 
   if (shouldDeletePreviousSlug) {
-    batch.delete(doc(db, "publicWebSlugs", previousSlug));
+    // RC4: el alias es un puntero, nunca una copia de la vidriera. Así un link
+    // histórico siempre termina leyendo el snapshot canónico vigente.
+    batch.set(doc(db, "publicWebSlugs", previousSlug), {
+      businessId,
+      slug: previousSlug,
+      aliasOf: nextWeb.slug,
+      active: true,
+      createdFrom: "slug_alias",
+      updatedAt
+    });
     if (shouldDeletePreviousPhoneKey) {
       batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
     }
@@ -509,7 +528,14 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   await assertBusinessCanWrite(businessId, "guardar datos de la carnicería");
 
   const nextName = cleanBusinessText(formData.name || formData.nombre);
-  const nextTelefono = cleanBusinessText(formData.telefono || formData.phone);
+  const nextIdentity = buildBusinessIdentity({
+    telefono: formData.telefono || formData.phone,
+    direccion: formData.direccion || formData.address,
+    ciudad: formData.ciudad || formData.city,
+    provincia: currentMeta?.provincia || currentMeta?.province || "",
+    provinceId: currentMeta?.provinceId || currentMeta?.provinciaId || ""
+  });
+  const nextTelefono = nextIdentity.phone;
   const nextDireccion = cleanBusinessText(formData.direccion || formData.address);
   const nextCiudad = cleanBusinessText(formData.ciudad || formData.city);
   const nextResponsable = cleanBusinessText(formData.responsable || formData.responsible || formData.ownerName);
@@ -518,8 +544,8 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
   if (!nextDireccion) throw new Error("Dirección requerida");
   if (!nextCiudad) throw new Error("Ciudad requerida");
 
-  const nextPhoneKey = getPhoneKey(nextTelefono);
-  if (nextPhoneKey.length < 8) throw new Error("Teléfono / WhatsApp válido requerido");
+  const nextPhoneKey = nextIdentity.phoneKey;
+  if (!nextIdentity.isValidPhone || nextPhoneKey.length < 8) throw new Error("Teléfono / WhatsApp válido requerido");
 
   const previousName = cleanBusinessText(currentMeta?.name || currentMeta?.nombre || "");
   const previousTelefono = cleanBusinessText(currentMeta?.telefono || currentMeta?.phone || "");
@@ -531,6 +557,9 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
     name: nextName,
     nombre: nextName,
     telefono: nextTelefono,
+    phone: nextTelefono,
+    phoneE164: nextIdentity.phoneE164,
+    rawPhone: nextIdentity.rawPhone,
     phoneKey: nextPhoneKey,
     direccion: nextDireccion,
     ciudad: nextCiudad,
@@ -585,7 +614,17 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
       updatedAt
     }));
   }
-  if (canDeletePreviousSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
+  if (canDeletePreviousSlug) {
+    // RC4: alias por referencia. No duplica precios, promos ni carrito.
+    batch.set(doc(db, "publicWebSlugs", previousSlug), {
+      businessId,
+      slug: previousSlug,
+      aliasOf: nextSlug,
+      active: true,
+      createdFrom: "slug_alias",
+      updatedAt
+    });
+  }
 
   if (phoneChanged || !previousPhoneKey || shouldChangeSlug) {
     batch.set(doc(db, "publicPhoneKeys", nextPhoneKey), {
@@ -609,10 +648,12 @@ export async function updateBusinessBasicData(businessId, formData = {}, current
 export function getPublicWebUrl(businessId, slug = "") {
   const cleanSlug = normalizeSlug(slug);
   if (cleanSlug) {
-    return `${window.location.origin}/${cleanSlug}`;
+    return `${PUBLIC_STOREFRONT_ORIGIN}/${cleanSlug}`;
   }
 
-  const url = new URL(`${window.location.origin}/web.html`);
+  // Compatibilidad técnica para negocios legacy sin slug. No es una URL
+  // comercial: las nuevas altas siempre deben tener slug antes de publicar.
+  const url = new URL(`${PUBLIC_STOREFRONT_ORIGIN}/web.html`);
   url.searchParams.set("biz", businessId);
   return url.toString();
 }

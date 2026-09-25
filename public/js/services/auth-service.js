@@ -298,20 +298,14 @@ export async function resolveSession() {
     loadAdminProfile(firebaseUser.uid)
   ]);
 
-  // V11: el rol administrativo real vive en admins/{uid}.
-  // Se mantiene compatibilidad con users.role = superadmin/admin para no romper versiones previas.
-  if (adminProfile || normalizeRole(userDoc || {}) === "superadmin") {
+  // RC5: admins/{uid} es la única autoridad administrativa, igual que Firestore Rules.
+  // No aceptar users.role como fallback evita un Centro de Control aparente sin permisos reales.
+  if (adminProfile) {
     sessionCache = {
       firebaseUser,
       userDoc,
-      adminProfile: adminProfile || {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        role: "superadmin",
-        active: true,
-        source: "legacy-users-role"
-      },
-      adminRole: adminProfile?.role || "superadmin",
+      adminProfile,
+      adminRole: adminProfile.role || "superadmin",
       appMode: "superadmin",
       businessId: null
     };
@@ -571,6 +565,7 @@ export async function registerClientAndBusiness(data) {
       plan: "trial",
       trialStartedAt: now,
       trialEndsAt,
+      writeAccessUntil: new Date(trialEndsAt),
       graceEndsAt: null,
       updatedAt: now,
       updatedBy: "system:self_register"
@@ -647,6 +642,16 @@ export async function registerClientAndBusiness(data) {
       updatedAt: now
     });
 
+    await setDoc(doc(db, "users", uid), {
+      uid,
+      email,
+      displayName: resolvedOwnerName,
+      role: "client",
+      businessId,
+      status: "active",
+      createdAt: now,
+      updatedAt: now
+    });
     await setDoc(doc(db, "businesses", businessId, "core", "meta"), {
       businessId,
       name: businessName,
@@ -694,16 +699,6 @@ export async function registerClientAndBusiness(data) {
       updatedAt: now
     });
 
-    await setDoc(doc(db, "users", uid), {
-      uid,
-      email,
-      displayName: resolvedOwnerName,
-      role: "client",
-      businessId,
-      status: "active",
-      createdAt: now,
-      updatedAt: now
-    });
 
     await setDoc(doc(db, "publicWebSlugs", slug), buildPublicWebPayload({
       businessId,

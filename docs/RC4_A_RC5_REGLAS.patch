@@ -1,0 +1,14 @@
+--- /mnt/data/rc4orig/firestore.rules	2026-09-21 08:11:41.000000000 +0000
++++ /mnt/data/rc5work/firestore.rules	2026-09-21 08:43:03.799089847 +0000
+@@ -44,7 +44,10 @@
+       // ya existente en el documento raíz. Debe retirarse después de migrar todos
+       // los negocios con ensureBusinessAdminDefaults.
+       let legacyActive = !('writeAccessUntil' in billing)
+-        && billing.status == 'active';
++        && billing.status == 'active'
++        // RC5: red de seguridad estrictamente temporal para cuentas pre-migración.
++        // Después del 15/10/2026 todo negocio debe tener writeAccessUntil explícito.
++        && request.time < timestamp.date(2026, 10, 15);
+       return businessEnabled
+         && billing is map
+         && (

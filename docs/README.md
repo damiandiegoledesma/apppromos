@@ -9,10 +9,9 @@ Esta carpeta contiene documentación interna del repositorio.
   - No se sirve directamente por Firebase Hosting.
   - Sirve para inventarios, mantenimiento, futures técnicos y archivo histórico interno.
 
-- public/docs/
-  - Documentación que queda dentro de public.
-  - Puede ser servida por Firebase Hosting.
-  - Debe usarse para documentos vigentes o referenciados desde la app.
+- public/
+  - Contiene solamente archivos necesarios para ejecutar la aplicación.
+  - No debe alojar documentación interna, prompts, backups ni informes de QA.
 
 ## Estructura actual
 
@@ -25,9 +24,13 @@ Esta carpeta contiene documentación interna del repositorio.
 - docs/archive/v12-7-2/
   - Documentación histórica de patches V12.7.2.
 
+- docs/history/public-docs/
+  - Documentación histórica preservada desde la antigua carpeta `public/docs`.
+  - Se mantiene versionada, pero ya no forma parte de Firebase Hosting.
+
 ## Regla de mantenimiento
 
-No mezclar documentación histórica suelta en la raíz de docs.
+No mezclar documentación histórica suelta en la raíz de docs ni volver a colocarla dentro de `public/`.
 
 La raíz de docs debe quedar simple y explicar la estructura.
 

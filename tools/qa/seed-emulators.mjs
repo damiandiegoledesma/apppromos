@@ -19,6 +19,9 @@ const scenarios = [
 
 function fv(value) {
   if (value === null) return { nullValue: null };
+  if (value && typeof value === "object" && typeof value.__timestamp === "string") {
+    return { timestampValue: value.__timestamp };
+  }
   if (typeof value === "string") return { stringValue: value };
   if (typeof value === "boolean") return { booleanValue: value };
   if (typeof value === "number") return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
@@ -446,7 +449,15 @@ async function seedScenario(scenario) {
     isTemplateBusiness: false,
     createdBy: "qa_seed",
     modules: { prices: true, competition: true, combos: true, offers: true, webPremium: true, whatsapp: true },
-    billing: { status: "active", plan: "trial", trialStartedAt: iso(), trialEndsAt: daysAgo(-90), updatedAt: iso(), updatedBy: "qa_seed" },
+    billing: {
+      status: "active",
+      plan: "trial",
+      trialStartedAt: iso(),
+      trialEndsAt: daysAgo(-14),
+      writeAccessUntil: { __timestamp: daysAgo(-14) },
+      updatedAt: iso(),
+      updatedBy: "qa_seed"
+    },
     metrics,
     commercialAssistant: {},
     createdAt: iso(),

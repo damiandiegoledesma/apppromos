@@ -13,6 +13,9 @@ import {
   updateBusinessBillingStatus,
   updateBusinessPaymentDueDate,
   markBusinessPaymentReceived,
+  activateBusinessPaidPlan,
+  restartBusinessTrial,
+  updateBusinessCommercialBilling,
   listBusinessBillingMovements,
   recordBusinessBillingMovement,
   updateBusinessFollowup,
@@ -293,7 +296,10 @@ function supportMessageLibrary(row = {}) {
     ["visits_no_orders", "Tiene visitas, sin pedidos", `${greeting}\n\nTu vidriera ya está recibiendo visitas. Ahora conviene destacar una promo clara para ayudar a que esas visitas se conviertan en pedidos.`],
     ["order_started", "Un cliente inició un pedido", `${greeting}\n\n¡Buena señal! Un cliente inició un pedido desde la vidriera de ${shop}. Sigamos compartiendo y manteniendo precios y promos actualizados.`],
     ["inactive", "Usuario inactivo", `${greeting}\n\nHace ${days ?? "varios"} días que no vemos actividad en ${shop}. ¿Necesitás ayuda para retomar precios, promos o la vidriera?`],
-    ["trial_ending", "Prueba próxima a vencer", `${greeting}\n\nA ${shop} le quedan ${trialDays ?? "pocos"} días de prueba. Quiero ayudarte a aprovecharlos y dejar todo funcionando antes del vencimiento.`],
+    ["trial_midpoint", "Mitad de la prueba", `${greeting}\n\nYa pasó la primera parte de la prueba de ${shop}. Quiero ayudarte a publicar, compartir la vidriera y comprobar que los pedidos lleguen bien por WhatsApp.`],
+    ["trial_conversion", "Quedan 4 días o menos", `${greeting}\n\nA ${shop} le quedan ${trialDays ?? "pocos"} días de prueba. Si AppPromos ya te sirve, vemos el plan para que puedas seguir trabajando sin interrupciones.`],
+    ["trial_last_day", "Vence hoy o mañana", `${greeting}\n\nLa prueba de ${shop} vence ${trialDays === 0 ? "hoy" : "mañana"}. Si querés continuar, te ayudo a activar el plan sin perder lo que cargaste.`],
+    ["trial_expired", "Prueba vencida", `${greeting}\n\nLa prueba de ${shop} terminó. Todo lo que cargaste sigue guardado: podés entrar y consultar, y al activar un plan recuperás inmediatamente la posibilidad de guardar y publicar.`],
     ["no_response", "No respondió", `${greeting}\n\nTe escribo nuevamente para saber si pudiste avanzar con ${shop}. Cuando tengas un momento, respondeme y vemos juntos el próximo paso.`],
     ["resolved", "Cierre de ayuda", `${greeting}\n\nPerfecto, dejamos resuelto este paso de ${shop}. Si aparece otra duda, escribime y lo vemos.`]
   ];
@@ -309,7 +315,13 @@ function recommendedSupportMessageKey(row = {}) {
   if (row.followup?.status === "no_response") return "no_response";
   if (hasOrder) return "order_started";
   if (hasVisit) return "visits_no_orders";
-  if ((daysUntil(dueValue(row)) ?? 99) <= 7) return "trial_ending";
+  if (isTrial(row)) {
+    const daysToTrialEnd = daysUntil(dueValue(row));
+    if (daysToTrialEnd !== null && daysToTrialEnd < 0) return "trial_expired";
+    if (daysToTrialEnd !== null && daysToTrialEnd <= 1) return "trial_last_day";
+    if (daysToTrialEnd !== null && daysToTrialEnd <= 4) return "trial_conversion";
+    if (daysToTrialEnd !== null && daysToTrialEnd <= 7) return "trial_midpoint";
+  }
   if ((daysSince(commercialMetricValue(row, "lastCommercialActionAt") || lastActivityValue(row)) ?? 0) >= 7) return "inactive";
   if (prices === 0) return "no_prices";
   if (prices < 5) return "few_prices";
@@ -460,7 +472,7 @@ function isTest(row = {}) {
 }
 
 function isTrial(row = {}) {
-  return planKey(row) === "trial" || accessKey(row) === "trial";
+  return planKey(row) === "trial";
 }
 
 function paymentLabel(status = "active") {
@@ -533,6 +545,14 @@ function billingPaymentPresentation(row = {}) {
     return { label: "Prueba vencida", tone: "danger" };
   }
 
+  if (plan !== "trial" && days !== null && days < 0 && Math.abs(days) <= 4 && ["active", "paid", "pending"].includes(key)) {
+    return { label: "En gracia", tone: "warn" };
+  }
+
+  if (plan !== "trial" && days !== null && days <= -6 && ["active", "paid", "pending"].includes(key)) {
+    return { label: "Pausa automática", tone: "danger" };
+  }
+
   if (days !== null && days < 0 && key === "pending") {
     return { label: "Vencido", tone: "danger" };
   }
@@ -564,9 +584,12 @@ function billingDuePresentation(row = {}) {
   }
 
   if (days < 0) {
-    const detail = ["active", "paid"].includes(key)
-      ? `Fecha pasada hace ${Math.abs(days)} día(s) · revisar estado`
-      : `${Math.abs(days)} día(s) vencido`;
+    const elapsed = Math.abs(days);
+    const detail = planKey(row) !== "trial" && elapsed <= 4
+      ? `Día ${elapsed} de 5 de gracia · todavía puede guardar`
+      : planKey(row) !== "trial" && elapsed >= 6
+        ? `${elapsed} días vencido · guardados pausados`
+        : `${elapsed} día(s) vencido`;
     return { date: dateOnly(due), detail };
   }
 
@@ -1021,7 +1044,8 @@ function renderClientsTable(rows = [], source = "clients") {
 function billingBucket(row = {}) {
   const status = paymentKey(row);
   const days = daysUntil(dueValue(row));
-  if (["overdue", "suspended"].includes(status) || (days !== null && days < 0)) return "overdue";
+  if (["overdue", "suspended"].includes(status) || (days !== null && days <= -5)) return "overdue";
+  if (planKey(row) !== "trial" && days !== null && days < 0) return "pending";
   if (days !== null && days >= 0 && days <= 7) return "soon";
   if (["active", "paid", "manual"].includes(status)) return "ok";
   return "pending";
@@ -1086,7 +1110,7 @@ function renderBilling(businesses = [], state = {}) {
               <button type="button" data-load-mp-link="${safeBusinessId(row)}">Último link</button>
               <button type="button" data-copy-mp-link="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Copiar link</button>
               <button type="button" class="success-action" data-send-mp-whatsapp="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Enviar cobro</button>
-              <button type="button" class="muted-action" data-mark-payment="${safeBusinessId(row)}">Pago manual</button>
+              <button type="button" class="muted-action" data-mark-payment="${safeBusinessId(row)}" ${isTrial(row) ? 'disabled title="Elegí un plan pago desde el detalle"' : ""}>Pago manual</button>
               <button type="button" data-view-business="${safeBusinessId(row)}">Ver</button>
             </div>
           </section>
@@ -1211,21 +1235,15 @@ function acquisitionData(row = {}) {
 
 function campaignDisplayName(value = "") {
   const clean = String(value || "").trim();
-  if (!clean) return "Sin campa\u00f1a";
-
-  return clean
-    .replace(/_/g, " ")
-    .replace(/\bsep26\b/gi, "Sep26")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  if (!clean) return "Sin campaña";
+  return clean.replace(/_/g, " ").replace(/\bsep26\b/gi, "Sep26").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function adDisplayName(value = "") {
   const clean = String(value || "").trim();
   if (!clean) return "Sin anuncio";
-
   const match = clean.match(/^video[_-]?(\d+)$/i);
   if (match) return `Video ${match[1]}`;
-
   return clean.replace(/_/g, " ");
 }
 
@@ -1239,109 +1257,40 @@ function sourceDisplayName(value = "") {
 function acquisitionOriginLabel(row = {}) {
   const acquisition = acquisitionData(row);
   const hasAttribution = Object.values(acquisition).some(Boolean);
-
-  if (!hasAttribution) return "Sin atribuci\u00f3n";
-
+  if (!hasAttribution) return "Sin atribución";
   const source = sourceDisplayName(acquisition.source);
-
-  return acquisition.content
-    ? `${source} \u00b7 ${adDisplayName(acquisition.content)}`
-    : source;
+  return acquisition.content ? `${source} · ${adDisplayName(acquisition.content)}` : source;
 }
 
 function renderCampaigns(businesses = []) {
   const realBusinesses = businesses.filter((row) => !isTest(row));
-  const attributed = realBusinesses.filter((row) => {
-    const acquisition = acquisitionData(row);
-    return Object.values(acquisition).some(Boolean);
-  });
-
+  const attributed = realBusinesses.filter((row) => Object.values(acquisitionData(row)).some(Boolean));
   const unattributedCount = realBusinesses.length - attributed.length;
   const groups = new Map();
 
   attributed.forEach((row) => {
     const acquisition = acquisitionData(row);
-    const key = [
-      acquisition.campaign || "sin_campaign",
-      acquisition.content || "sin_content",
-      acquisition.source || "sin_source"
-    ].join("|");
-
-    if (!groups.has(key)) {
-      groups.set(key, {
-        campaign: acquisition.campaign,
-        content: acquisition.content,
-        source: acquisition.source,
-        businesses: []
-      });
-    }
-
+    const key = [acquisition.campaign || "sin_campaign", acquisition.content || "sin_content", acquisition.source || "sin_source"].join("|");
+    if (!groups.has(key)) groups.set(key, { campaign: acquisition.campaign, content: acquisition.content, source: acquisition.source, businesses: [] });
     groups.get(key).businesses.push(row);
   });
 
-  const rows = Array.from(groups.values())
-    .sort((a, b) => b.businesses.length - a.businesses.length);
-
+  const rows = Array.from(groups.values()).sort((a, b) => b.businesses.length - a.businesses.length);
   return `
-    <div class="admin-section-head">
-      <div>
-        <h3>Campa&ntilde;as</h3>
-        <p>Qu&eacute; anuncios est&aacute;n creando carnicer&iacute;as reales.</p>
-      </div>
-    </div>
-
+    <div class="admin-section-head"><div><h3>Campañas</h3><p>Qué anuncios están creando carnicerías reales.</p></div></div>
     <div class="admin-home-grid">
-      <section class="admin-panel-card">
-        <h3>${attributed.length}</h3>
-        <p>Altas con origen identificado</p>
-      </section>
-
-      <section class="admin-panel-card">
-        <h3>${unattributedCount}</h3>
-        <p>Altas sin atribuci&oacute;n</p>
-      </section>
-
-      <section class="admin-panel-card">
-        <h3>${realBusinesses.length}</h3>
-        <p>Carnicer&iacute;as reales totales</p>
-      </section>
+      <section class="admin-panel-card"><h3>${attributed.length}</h3><p>Altas con origen identificado</p></section>
+      <section class="admin-panel-card"><h3>${unattributedCount}</h3><p>Altas sin atribución</p></section>
+      <section class="admin-panel-card"><h3>${realBusinesses.length}</h3><p>Carnicerías reales totales</p></section>
     </div>
-
     ${rows.length ? `
-      <div class="admin-table-wrap">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Campa&ntilde;a</th>
-              <th>Anuncio</th>
-              <th>Origen</th>
-              <th>Altas</th>
-              <th>Carnicer&iacute;as</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((group) => `
-              <tr>
-                <td><strong>${escapeHtml(campaignDisplayName(group.campaign))}</strong></td>
-                <td>${escapeHtml(adDisplayName(group.content))}</td>
-                <td>${escapeHtml(sourceDisplayName(group.source))}</td>
-                <td><strong>${group.businesses.length}</strong></td>
-                <td>
-                  ${group.businesses
-                    .map((row) => escapeHtml(businessName(row)))
-                    .join("<br>")}
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    ` : `
-      <div class="admin-empty">
-        Todav&iacute;a no hay altas provenientes de campa&ntilde;as.
-        Las nuevas carnicer&iacute;as con UTM aparecer&aacute;n autom&aacute;ticamente ac&aacute;.
-      </div>
-    `}
+      <div class="admin-table-wrap"><table class="admin-table">
+        <thead><tr><th>Campaña</th><th>Anuncio</th><th>Origen</th><th>Altas</th><th>Carnicerías</th></tr></thead>
+        <tbody>${rows.map((group) => `
+          <tr><td><strong>${escapeHtml(campaignDisplayName(group.campaign))}</strong></td><td>${escapeHtml(adDisplayName(group.content))}</td><td>${escapeHtml(sourceDisplayName(group.source))}</td><td><strong>${group.businesses.length}</strong></td><td>${group.businesses.map((row) => escapeHtml(businessName(row))).join("<br>")}</td></tr>
+        `).join("")}</tbody>
+      </table></div>
+    ` : `<div class="admin-empty">Todavía no hay altas provenientes de campañas. Las nuevas carnicerías con UTM aparecerán automáticamente acá.</div>`}
   `;
 }
 
@@ -1353,7 +1302,7 @@ function renderMore(businesses = []) {
         <h3>Consultas administrativas</h3>
         <p>Información que no necesitás para el trabajo diario.</p>
         <div class="admin-more-links">
-          <button type="button" data-admin-view="campaigns"><strong>Campa&ntilde;as</strong><span>Altas por anuncio y origen</span></button>
+          <button type="button" data-admin-view="campaigns"><strong>Campañas</strong><span>Altas por anuncio y origen</span></button>
           <button type="button" data-admin-view="tracking"><strong>Tracking</strong><span>Embudo y métricas comerciales</span></button>
           <button type="button" data-admin-view="users"><strong>Usuarios</strong><span>Accesos y cuentas registradas</span></button>
         </div>
@@ -1640,9 +1589,9 @@ function renderDetail(row = {}) {
   return `
     <div class="admin-detail-page admin-operational-detail">
       <section class="admin-panel-card">
-        <h3>Adquisici&oacute;n</h3>
+        <h3>Adquisición</h3>
         <p><strong>Origen:</strong> ${escapeHtml(acquisitionOriginLabel(row))}</p>
-        <p><strong>Campa&ntilde;a:</strong> ${escapeHtml(acquisition.campaign ? campaignDisplayName(acquisition.campaign) : "Sin atribuci\u00f3n")}</p>
+        <p><strong>Campaña:</strong> ${escapeHtml(acquisition.campaign ? campaignDisplayName(acquisition.campaign) : "Sin atribución")}</p>
       </section>
       <div class="admin-detail-top">
         <button type="button" data-close-detail>← Centro de Control</button>
@@ -1779,6 +1728,8 @@ function renderDetail(row = {}) {
           </div>
           <div class="admin-row-actions left">
             <button type="button" data-save-commercial="${safeBusinessId(row)}">Guardar plan/pago</button>
+            <button type="button" class="success-action" data-activate-paid-plan="${safeBusinessId(row)}">Activar plan pago</button>
+            ${isTrial(row) ? `<button type="button" class="muted-action" data-restart-trial="${safeBusinessId(row)}">Reiniciar 14 días</button>` : ""}
           </div>
         </section>
 
@@ -1810,6 +1761,9 @@ function renderDetail(row = {}) {
         <details class="admin-detail-disclosure admin-ledger-panel-wide">
           <summary><strong>Cobranzas</strong><span>${escapeHtml(paymentChip(row).replace(/<[^>]*>/g, ""))} · ${escapeHtml(billingDuePresentation(row).detail)}</span></summary>
           <div class="admin-disclosure-body">
+          ${(!b.writeAccessUntil && !(String(b.status || "").toLowerCase() === "manual" && String(b.plan || "trial").toLowerCase() !== "trial"))
+            ? `<div class="admin-empty" style="border-color:#f0b8b2;background:#fff7f6;color:#8f241c;margin-bottom:10px;">⚠ Falta preparar esta cuenta para las reglas RC2. Usá <strong>Reparar base</strong>, reiniciá la prueba o activá un plan antes del despliegue.</div>`
+            : ""}
           ${renderAccountLedger(row, BILLING_MOVEMENTS_BY_BUSINESS.get(safeBusinessId(row)) || [])}
           ${(() => {
             const mpLink = mpLinkForBusiness(row);
@@ -1820,7 +1774,7 @@ function renderDetail(row = {}) {
                 <button type="button" data-load-mp-link="${safeBusinessId(row)}">Último link</button>
                 <button type="button" data-copy-mp-link="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Copiar link</button>
                 <button type="button" data-send-mp-whatsapp="${safeBusinessId(row)}" ${hasMpLink ? "" : "disabled"}>Enviar cobro</button>
-                <button type="button" data-mark-payment="${safeBusinessId(row)}">Pago manual</button>
+                <button type="button" data-mark-payment="${safeBusinessId(row)}" ${isTrial(row) ? 'disabled title="Usá Activar plan pago"' : ""}>Pago manual</button>
               </div>
               <small>Último pago: ${escapeHtml(dateTime(b.lastPaymentAt || row.lastPaymentAt))} · MP: ${hasMpLink ? `link listo ${escapeHtml(formatMoney(mpAmount(mpLink)))}` : "sin link generado en esta sesión"}</small>
             `;
@@ -2495,6 +2449,42 @@ export async function renderAdminUsers(container, options = {}) {
       return;
     }
 
+    const restartTrialButton = target.closest("[data-restart-trial]");
+    if (restartTrialButton) {
+      const businessId = restartTrialButton.dataset.restartTrial;
+      const row = rowById(businesses, businessId);
+      if (!row) return window.alert("No se encontró la carnicería.");
+      if (!window.confirm(`¿Reiniciar hoy una nueva prueba de 14 días para "${businessName(row)}"?\n\nNo se modificará ninguna otra carnicería.`)) return;
+      await withButton(restartTrialButton, "Reiniciando...", async () => {
+        await restartBusinessTrial(businessId);
+        await refreshKeepingDetail();
+      });
+      return;
+    }
+
+    const activatePaidPlanButton = target.closest("[data-activate-paid-plan]");
+    if (activatePaidPlanButton) {
+      const businessId = activatePaidPlanButton.dataset.activatePaidPlan;
+      const row = rowById(businesses, businessId);
+      if (!row) return window.alert("No se encontró la carnicería.");
+      const plan = container.querySelector("[data-detail-plan]")?.value || "basic";
+      const due = container.querySelector("[data-detail-due]")?.value || null;
+      if (plan === "trial") return window.alert("Elegí ARRANQUE, SALVADOR o DUEÑO antes de activar.");
+      if (!window.confirm(`Activar ${planLabel(plan)} para "${businessName(row)}" y marcar el pago recibido?`)) return;
+      await withButton(activatePaidPlanButton, "Activando...", async () => {
+        await activateBusinessPaidPlan(businessId, { plan, nextPaymentDueAt: isTrial(row) ? null : due, paymentReceived: true });
+        await recordBillingMovementSafe(businessId, {
+          type: "manual_payment",
+          description: `Activación de plan ${planLabel(plan)}`,
+          debit: 0,
+          credit: Number(accountEstimatedMonthlyAmount({ ...row, billing: { ...(row.billing || {}), plan } }) || 0) || 0,
+          source: "panel_admin_plan_activation"
+        });
+        await refreshKeepingDetail();
+      });
+      return;
+    }
+
     const saveCommercial = target.closest("[data-save-commercial]");
     if (saveCommercial) {
       const businessId = saveCommercial.dataset.saveCommercial;
@@ -2502,9 +2492,11 @@ export async function renderAdminUsers(container, options = {}) {
         const plan = container.querySelector("[data-detail-plan]")?.value || "trial";
         const payment = container.querySelector("[data-detail-payment]")?.value || "active";
         const due = container.querySelector("[data-detail-due]")?.value || null;
-        await updateBusinessBillingPlan(businessId, plan);
-        await updateBusinessBillingStatus(businessId, payment);
-        await updateBusinessPaymentDueDate(businessId, due);
+        await updateBusinessCommercialBilling(businessId, {
+          plan,
+          status: payment,
+          nextPaymentDueAt: due
+        });
         await refreshKeepingDetail();
       });
       return;

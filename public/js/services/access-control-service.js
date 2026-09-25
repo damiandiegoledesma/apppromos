@@ -31,9 +31,9 @@ export function normalizeModules(modules = {}) {
   };
 }
 
-export const BILLING_STATUSES = ["active", "overdue", "suspended"];
+export const BILLING_STATUSES = ["active", "paid", "pending", "overdue", "suspended", "manual", "bonus", "bonificado"];
 export const BILLING_PLANS = ["trial", "basic", "pro", "dueno"];
-export const TRIAL_DAYS = 90;
+export const TRIAL_DAYS = 14;
 export const TRIAL_WARNING_DAYS = 5;
 
 export function createTrialEndsAt(days = TRIAL_DAYS) {
@@ -60,6 +60,9 @@ export function normalizeBilling(billing = {}) {
     trialEndsAt: billing?.trialEndsAt || null,
     graceEndsAt: billing?.graceEndsAt || null,
     currentPeriodEnd: billing?.currentPeriodEnd || null,
+    nextPaymentDueAt: billing?.nextPaymentDueAt || null,
+    lastPaymentAt: billing?.lastPaymentAt || null,
+    writeAccessUntil: billing?.writeAccessUntil || null,
     updatedAt: billing?.updatedAt || null,
     updatedBy: billing?.updatedBy || null
   };
@@ -82,6 +85,29 @@ export function getTrialDaysLeft(business = {}) {
 
   const diffMs = endDate.getTime() - Date.now();
   return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+export function getTrialStage(business = {}) {
+  const billing = normalizeBilling(business?.billing || business || {});
+  if (billing.plan !== "trial") return "not_trial";
+  if (isTrialExpired(billing)) return "expired";
+  const days = getTrialDaysLeft({ billing });
+  if (days === null) return "active";
+  if (days <= 1) return "last_day";
+  if (days <= 4) return "conversion";
+  if (days <= 7) return "midpoint";
+  return "active";
+}
+
+export function getPaymentDaysPastDue(business = {}) {
+  const billing = normalizeBilling(business?.billing || business || {});
+  if (billing.plan === "trial" || !billing.nextPaymentDueAt) return null;
+  const due = parseBillingDate(billing.nextPaymentDueAt);
+  if (!due || Number.isNaN(due.getTime())) return null;
+  const today = new Date();
+  const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const dueUtc = Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), due.getUTCDate());
+  return Math.floor((todayUtc - dueUtc) / (1000 * 60 * 60 * 24));
 }
 
 export function normalizeBusinessControl(business = {}) {
@@ -127,11 +153,14 @@ export function getAccessState(business = {}) {
   const billingStatus = String(control.billing?.status || "active").toLowerCase();
 
   const businessBlocked = status === "disabled" || status === "suspended" || status === "inactive";
-  const paymentSuspended = billingStatus === "suspended";
+  const billingExemptFromDue = ["manual", "bonus", "bonificado"].includes(billingStatus);
+  const paymentDaysPastDue = billingExemptFromDue ? null : getPaymentDaysPastDue(control);
+  const paymentSuspended = billingStatus === "suspended" || (paymentDaysPastDue !== null && paymentDaysPastDue >= 6);
   const trialExpired = isTrialExpired(control.billing || {});
   const restricted = businessBlocked || paymentSuspended;
-  const paymentOverdue = billingStatus === "overdue" || trialExpired;
-  const trial = !trialExpired && (status === "trial" || control.billing?.plan === "trial");
+  const paymentOverdue = billingStatus === "overdue" || (paymentDaysPastDue !== null && paymentDaysPastDue >= 5) || trialExpired;
+  const paymentGrace = control.billing?.plan !== "trial" && paymentDaysPastDue !== null && paymentDaysPastDue >= 0 && paymentDaysPastDue < 5;
+  const trial = !trialExpired && control.billing?.plan === "trial";
   const trialDaysLeft = getTrialDaysLeft(control);
   const trialEndingSoon = trial && trialDaysLeft !== null && trialDaysLeft <= TRIAL_WARNING_DAYS;
 
@@ -172,6 +201,24 @@ export function getAccessState(business = {}) {
         ? "Hola AppPromos, terminó mi prueba y quiero activar un plan."
         : "Hola AppPromos, quiero regularizar mi pago y reactivar los guardados."
       )
+    };
+  }
+
+  if (paymentGrace) {
+    const remaining = Math.max(0, 5 - paymentDaysPastDue);
+    return {
+      level: "grace",
+      commercialKey: "payment_grace",
+      canEnterApp: true,
+      canUseModules: true,
+      canEdit: true,
+      canUseCommerceActions: true,
+      limitedModules: [],
+      showWarning: true,
+      title: "Pago pendiente",
+      message: `Tu vencimiento ya pasó. Tenés ${remaining} día${remaining === 1 ? "" : "s"} de gracia para regularizar sin interrumpir el trabajo.`,
+      ctaLabel: "Resolver por WhatsApp",
+      ctaUrl: buildAppPromosWhatsAppUrl("Hola AppPromos, quiero regularizar mi pago y mantener activa mi cuenta.")
     };
   }
 
@@ -261,6 +308,14 @@ export function getBusinessCommercialStatus(business = {}) {
       write: "No guarda",
       suggestedAction: "Cobranza amable"
     },
+    payment_grace: {
+      label: "En gracia",
+      tone: "warn",
+      description: "Pago pendiente dentro del período de gracia. Puede seguir trabajando.",
+      access: "Entra",
+      write: "Guarda",
+      suggestedAction: "Recordar pago"
+    },
     payment_suspended: {
       label: "Suspendida por pago",
       tone: "danger",
@@ -307,16 +362,17 @@ export function renderAccessWarning(business = {}) {
 
   // V12.4.7: el estado de prueba / cuenta al día vive en el header.
   // La alerta dentro de pantalla aparece solo cuando hay algo que resolver.
-  if (access.level !== "warning" && access.level !== "blocked") return "";
+  if (access.level !== "warning" && access.level !== "blocked" && access.level !== "grace") return "";
 
   const isBlocked = access.level === "blocked";
+  const isGrace = access.level === "grace";
   const color = isBlocked ? "#991b1b" : "#9a3412";
   const bg = isBlocked ? "#fef2f2" : "#fff7ed";
   const border = isBlocked ? "#fecaca" : "#fdba74";
-  const icon = isBlocked ? "⛔" : "🔴";
+  const icon = isBlocked ? "⛔" : isGrace ? "🟠" : "🔴";
   const text = isBlocked
     ? "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp."
-    : "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp y seguís vendiendo.";
+    : isGrace ? access.message : "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp y seguís vendiendo.";
 
   return `
     <div data-access-warning="true" data-access-level="${escapeHtml(access.level)}" style="margin:0 0 12px;padding:10px 12px;border:1px solid ${border};border-radius:16px;background:${bg};color:${color};box-shadow:0 8px 18px rgba(0,0,0,.04);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">

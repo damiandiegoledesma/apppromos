@@ -1,0 +1,54 @@
+--- /mnt/data/rc3ref/public/js/services/web-premium-service.js	2026-09-21 07:44:40.000000000 +0000
++++ /mnt/data/rc4work/public/js/services/web-premium-service.js	2026-09-21 08:11:41.627564763 +0000
+@@ -447,19 +447,16 @@
+   });
+ 
+   if (shouldDeletePreviousSlug) {
+-    // Alias permanente: el slug anterior sigue resolviendo al mismo negocio.
+-    // Se refresca con el snapshot actual para que no quede una vidriera vieja.
+-    batch.set(doc(db, "publicWebSlugs", previousSlug), buildPublicWebPayload({
++    // RC4: el alias es un puntero, nunca una copia de la vidriera. Así un link
++    // histórico siempre termina leyendo el snapshot canónico vigente.
++    batch.set(doc(db, "publicWebSlugs", previousSlug), {
+       businessId,
+-      slug: nextWeb.slug,
+-      meta,
+-      state: nextState,
+-      web: nextWeb,
+-      phoneKey,
+-      plan: "web_premium",
++      slug: previousSlug,
++      aliasOf: nextWeb.slug,
++      active: true,
+       createdFrom: "slug_alias",
+       updatedAt
+-    }));
++    });
+     if (shouldDeletePreviousPhoneKey) {
+       batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
+     }
+@@ -618,18 +615,15 @@
+     }));
+   }
+   if (canDeletePreviousSlug) {
+-    // Alias permanente del slug anterior hacia el snapshot vigente.
+-    batch.set(doc(db, "publicWebSlugs", previousSlug), buildPublicWebPayload({
++    // RC4: alias por referencia. No duplica precios, promos ni carrito.
++    batch.set(doc(db, "publicWebSlugs", previousSlug), {
+       businessId,
+-      slug: nextSlug,
+-      meta: nextMeta,
+-      state: nextState,
+-      web: nextWeb,
+-      phoneKey: nextPhoneKey,
+-      plan: "web_premium",
++      slug: previousSlug,
++      aliasOf: nextSlug,
++      active: true,
+       createdFrom: "slug_alias",
+       updatedAt
+-    }));
++    });
+   }
+ 
+   if (phoneChanged || !previousPhoneKey || shouldChangeSlug) {

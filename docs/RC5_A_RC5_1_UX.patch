@@ -1,0 +1,116 @@
+Only in rc51/docs: RC5_A_RC5_1_UX.patch
+diff -ru '--exclude=APPPROMOS_V12_29_RC5_1_UX_LANDING_ONBOARDING.md' rc5orig/public/crear-carniceria.html rc51/public/crear-carniceria.html
+--- rc5orig/public/crear-carniceria.html	2026-09-21 06:42:28.000000000 +0000
++++ rc51/public/crear-carniceria.html	2026-09-21 09:26:26.819555629 +0000
+@@ -39,7 +39,7 @@
+     .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+     .brand img{width:42px;height:42px;object-fit:contain}
+     .brand strong{font-size:18px}
+-    .login-link{font-size:13px;font-weight:900;color:var(--red);text-decoration:none}
++    .login-link{font-size:13px;font-weight:900;color:var(--red);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;padding:0 8px}
+     .progress{
+       display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 14px;
+     }
+@@ -133,8 +133,8 @@
+     @media(max-width:760px){
+       .shell{width:min(100% - 14px,620px);padding-top:10px}
+       .scene{grid-template-columns:1fr;padding:14px;gap:12px;min-height:0}
+-      .carniza-wrap{min-height:220px;max-height:280px}
+-      .carniza-wrap img{max-height:300px;width:auto}
++      .carniza-wrap{min-height:150px;max-height:180px}
++      .carniza-wrap img{max-height:180px;width:auto}
+       .copy{padding:4px 2px 8px}
+       h1{font-size:38px}
+       .lead{font-size:16px}
+diff -ru '--exclude=APPPROMOS_V12_29_RC5_1_UX_LANDING_ONBOARDING.md' rc5orig/public/index.html rc51/public/index.html
+--- rc5orig/public/index.html	2026-09-21 08:43:03.000000000 +0000
++++ rc51/public/index.html	2026-09-21 09:26:45.153350884 +0000
+@@ -98,7 +98,7 @@
+     .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
+     .microcopy { color: #eff6ff; font-size: 13px; font-weight: 900; margin-top: -16px; opacity: .92; }
+     .hero-login-line { margin: -14px 0 18px; color: #dbeafe; font-size: 14px; font-weight: 850; }
+-    .hero-login-line a { color: #fff; font-weight: 1000; text-decoration: underline; text-underline-offset: 3px; }
++    .hero-login-line a { color: #fff; font-weight: 1000; text-decoration: underline; text-underline-offset: 3px; min-height:44px; display:inline-flex; align-items:center; }
+     .trust { display: flex; flex-wrap: wrap; gap: 10px; color: #eff6ff; font-size: 14px; font-weight: 900; }
+     .pill { background: rgba(255,255,255,.10); border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; }
+     .hero-card { position:relative; min-height:520px; background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(4,119,242,.08)); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); overflow:hidden; }
+@@ -335,7 +335,7 @@
+       .nav-actions .nav-link-how { display: none !important; }
+       .nav-actions .nav-link-login,
+       .nav-actions .nav-link-demo { display: inline-flex !important; }
+-      .nav-actions .btn { min-height: 38px; padding: 0 10px; font-size: 12.5px; }
++      .nav-actions .btn { min-height: 44px; padding: 0 10px; font-size: 12.5px; }
+       .hero { padding-top: 30px; }
+       .hero-login-line { text-align: center; margin: -8px 0 16px; }
+ 
+@@ -669,7 +669,7 @@
+       .nav-actions .nav-link-login{
+         display:inline-flex!important;
+         width:auto!important;
+-        min-height:34px;
++        min-height:44px;
+         padding:0 10px;
+         border-radius:999px;
+         font-size:11.5px;
+@@ -1011,7 +1011,7 @@
+       background:#fff!important;
+       border-top:1px solid rgba(4,119,242,.10)!important;
+     }
+-    .footer-socials a{
++    .footer-socials a{min-width:44px!important;min-height:44px!important;
+       color:var(--brand-blue)!important;
+       background:#f8fbff!important;
+       border-color:rgba(4,119,242,.14)!important;
+@@ -1422,7 +1422,6 @@
+           <div class="hero-ctas">
+             <a class="btn btn-green btn-big" href="#signup">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
+             <a class="btn btn-light btn-big" href="https://apppromos.web.app/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
+-            <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
+           </div>
+           <p class="hero-login-line">¿Ya tenés cuenta? <a href="#login">Iniciar sesión</a></p>
+           <div class="microcopy">14 días sin cargo · Sin tarjeta · Empezás cargando tus precios</div>
+@@ -1701,6 +1700,12 @@
+     </div>
+   </section>
+ 
++  <section class="install-after-value" aria-label="Instalar AppPromos">
++    <div class="wrap center-actions">
++      <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
++    </div>
++  </section>
++
+   <footer>
+     <div class="wrap">
+       <div>© AppPromos — La app para carnicerías argentinas</div>
+@@ -1878,7 +1883,7 @@
+ 
+ 
+   <div class="mobile-bottom-cta" aria-label="Crear mi carnicería">
+-    <a class="mobile-bottom-cta-link" href="#signup">🚀 CREAR MI CARNICERÍA · PROBALA SIN CARGO</a>
++    <a class="mobile-bottom-cta-link" href="#signup">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
+   </div>
+ 
+ 
+diff -ru '--exclude=APPPROMOS_V12_29_RC5_1_UX_LANDING_ONBOARDING.md' rc5orig/public/js/modules/activation-onboarding-module.js rc51/public/js/modules/activation-onboarding-module.js
+--- rc5orig/public/js/modules/activation-onboarding-module.js	2026-09-21 06:42:28.000000000 +0000
++++ rc51/public/js/modules/activation-onboarding-module.js	2026-09-21 09:26:26.822397263 +0000
+@@ -28,8 +28,8 @@
+   rubros: 1,
+   prices: 2,
+   identity: 3,
+-  publish: 3,
+-  done: 3
++  publish: 4,
++  done: 4
+ };
+ 
+ const ASSET = {
+@@ -102,7 +102,7 @@
+ function setProgress(step) {
+   const index = STEP_INDEX[step] ?? 0;
+   document.querySelectorAll("[data-progress]").forEach((el, i) => {
+-    el.classList.toggle("is-on", i <= index);
++    el.classList.toggle("is-on", i < index);
+   });
+ }
+ 

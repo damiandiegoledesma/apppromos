@@ -196,6 +196,16 @@ function getCarnizaCopy() {
     };
   }
 
+  if (access.level === "grace") {
+    return {
+      badge: "🟠 Pago pendiente",
+      tone: "ending",
+      message: access.message || "Tenés unos días para regularizar sin interrumpir el trabajo.",
+      hint: "La Nelly te avisa antes de que se pausen los guardados.",
+      actions: ["supportPayment", "home"]
+    };
+  }
+
   const activation = getActivationState();
 
   if (!activation.hasWeb || activation.pricedCount === 0) {

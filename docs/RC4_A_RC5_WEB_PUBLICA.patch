@@ -1,0 +1,69 @@
+--- /mnt/data/rc4orig/public/web.html	2026-09-21 08:11:41.000000000 +0000
++++ /mnt/data/rc5work/public/web.html	2026-09-21 08:43:03.800223540 +0000
+@@ -1862,33 +1862,51 @@
+         const indexed=await getDoc(doc(db,"publicWebSlugs",slug));
+         if(indexed.exists() && indexed.data()?.businessId){
+           let publicIndex = indexed.data() || {};
+-          let canonicalSlug = normalizeSlug(publicIndex.aliasOf || "");
++          let resolvedSlug = slug;
++          const visited = new Set([slug]);
++          const MAX_ALIAS_HOPS = 4;
+ 
+-          // Compatibilidad con aliases creados por RC3: eran snapshots cuya
+-          // propiedad slug ya apuntaba al canónico. RC4 los resuelve en vivo.
+-          if(!canonicalSlug && publicIndex.createdFrom === "slug_alias"){
+-            const rc3Canonical = normalizeSlug(publicIndex.slug || "");
+-            if(rc3Canonical && rc3Canonical !== slug) canonicalSlug = rc3Canonical;
+-          }
++          // RC5: resolver cadenas históricas A -> B -> C sin usar snapshots.
++          // Cada salto debe conservar el mismo businessId; ciclos y cadenas
++          // excesivas fallan de forma explícita en vez de mostrar una vidriera vacía.
++          for(let hop=0; hop<MAX_ALIAS_HOPS; hop++){
++            let nextSlug = normalizeSlug(publicIndex.aliasOf || "");
++
++            // Compatibilidad RC3: alias-snapshot cuyo campo slug apuntaba al canónico.
++            if(!nextSlug && publicIndex.createdFrom === "slug_alias"){
++              const rc3Canonical = normalizeSlug(publicIndex.slug || "");
++              if(rc3Canonical && rc3Canonical !== resolvedSlug) nextSlug = rc3Canonical;
++            }
+ 
+-          if(canonicalSlug && canonicalSlug !== slug){
+-            const canonical = await getDoc(doc(db,"publicWebSlugs",canonicalSlug));
+-            if(!canonical.exists() || !canonical.data()?.businessId){
++            if(!nextSlug || nextSlug === resolvedSlug) break;
++            if(visited.has(nextSlug)){
++              throw new Error("Detectamos un ciclo en los enlaces históricos de esta carnicería.");
++            }
++            visited.add(nextSlug);
++
++            const target = await getDoc(doc(db,"publicWebSlugs",nextSlug));
++            if(!target.exists() || !target.data()?.businessId){
+               throw new Error(`El enlace histórico "${slug}" apunta a una vidriera que ya no está disponible.`);
+             }
+-            const canonicalData = canonical.data() || {};
+-            if(String(canonicalData.businessId||"") !== String(publicIndex.businessId||"")){
++            const targetData = target.data() || {};
++            if(String(targetData.businessId||"") !== String(indexed.data()?.businessId||"")){
+               throw new Error("El alias público no coincide con la carnicería canónica.");
+             }
+-            publicIndex = canonicalData;
++            publicIndex = targetData;
++            resolvedSlug = nextSlug;
++          }
++
++          const stillAlias = normalizeSlug(publicIndex.aliasOf || "");
++          if(stillAlias && stillAlias !== resolvedSlug){
++            throw new Error("El enlace histórico supera el límite seguro de resolución.");
+           }
+ 
+           return {
+             type:"public",
+-            slug: canonicalSlug || slug,
++            slug: resolvedSlug,
+             requestedSlug: slug,
+             businessId: publicIndex.businessId,
+-            data:{ ...publicIndex, slug: canonicalSlug || normalizeSlug(publicIndex.slug||slug) }
++            data:{ ...publicIndex, slug: resolvedSlug }
+           };
+         }
+ 

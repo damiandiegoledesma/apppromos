@@ -143,6 +143,43 @@ function normalizeAdminDateValue(value = null) {
   return date.toISOString();
 }
 
+function defaultNextMonthlyDueDate(from = new Date()) {
+  const date = new Date(from);
+  if (Number.isNaN(date.getTime())) return null;
+  const originalDay = date.getUTCDate();
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  date.setUTCDate(Math.min(originalDay, lastDay));
+  date.setUTCHours(12, 0, 0, 0);
+  return date.toISOString();
+}
+
+function firestoreDate(value = null) {
+  const date = value instanceof Date ? new Date(value.getTime()) : new Date(value || "");
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function paidWriteAccessUntil(nextPaymentDueAt = null) {
+  const due = firestoreDate(nextPaymentDueAt);
+  if (!due) return null;
+  return new Date(Date.UTC(
+    due.getUTCFullYear(),
+    due.getUTCMonth(),
+    due.getUTCDate() + 5,
+    0, 0, 0, 0
+  ));
+}
+
+function billingWriteAccessUntil({ plan = "trial", status = "active", trialEndsAt = null, nextPaymentDueAt = null } = {}) {
+  const cleanPlan = normalizeAdminPlan(plan);
+  const cleanStatus = normalizeAdminPaymentStatus(status);
+  if (cleanPlan !== "trial" && cleanStatus === "manual") return null;
+  return cleanPlan === "trial"
+    ? firestoreDate(trialEndsAt)
+    : paidWriteAccessUntil(nextPaymentDueAt);
+}
+
 const BUSINESS_COMMERCIAL_EVENTS = {
   app_open: {
     counter: "appOpenCount",
@@ -550,10 +587,20 @@ export async function ensureBusinessAdminDefaults(businessId, currentRoot = null
 
   const root = currentRoot || await readBusinessRoot(businessId) || { businessId };
   const normalized = buildBusinessDefaults(root);
+  const billing = { ...(normalized.billing || {}) };
+  if (!billing.writeAccessUntil) {
+    const derivedAccess = billingWriteAccessUntil({
+      plan: billing.plan,
+      status: billing.status,
+      trialEndsAt: billing.trialEndsAt,
+      nextPaymentDueAt: billing.nextPaymentDueAt
+    });
+    if (derivedAccess) billing.writeAccessUntil = derivedAccess;
+  }
   const patch = {
     status: normalized.status,
     modules: normalized.modules,
-    billing: normalized.billing,
+    billing,
     isTestBusiness: normalized.isTestBusiness,
     updatedAt: new Date().toISOString()
   };
@@ -937,6 +984,12 @@ export async function updateBusinessPaymentDueDate(businessId, nextPaymentDueAt 
     status: before?.billing?.status || "active",
     nextPaymentDueAt: cleanDue,
     currentPeriodEnd: cleanDue || before?.billing?.currentPeriodEnd || null,
+    writeAccessUntil: billingWriteAccessUntil({
+      plan: before?.billing?.plan || "trial",
+      status: before?.billing?.status || "active",
+      trialEndsAt: before?.billing?.trialEndsAt || null,
+      nextPaymentDueAt: cleanDue
+    }),
     updatedAt: now
   };
   await setDoc(doc(db, "businesses", businessId), {
@@ -951,8 +1004,20 @@ export async function markBusinessPaymentReceived(businessId, options = {}) {
   await requireAdmin();
   if (!businessId) throw new Error("businessId requerido");
   const before = await readBusinessRoot(businessId);
+  if (normalizeAdminPlan(before?.billing?.plan || "trial") === "trial") {
+    throw new Error("Elegí y activá un plan pago antes de registrar el pago");
+  }
   const now = new Date().toISOString();
-  const cleanDue = normalizeAdminDateValue(options.nextPaymentDueAt || before?.billing?.nextPaymentDueAt || before?.nextPaymentDueAt || null);
+  const existingDue = normalizeAdminDateValue(before?.billing?.nextPaymentDueAt || before?.nextPaymentDueAt || null);
+  const existingDueDate = existingDue ? new Date(existingDue) : null;
+  const defaultDue = !existingDueDate || Number.isNaN(existingDueDate.getTime()) || existingDueDate.getTime() <= Date.now()
+    ? defaultNextMonthlyDueDate(new Date())
+    : existingDue;
+  const requestedDue = normalizeAdminDateValue(options.nextPaymentDueAt || null);
+  const requestedDueDate = requestedDue ? new Date(requestedDue) : null;
+  const cleanDue = requestedDueDate && !Number.isNaN(requestedDueDate.getTime()) && requestedDueDate.getTime() > Date.now()
+    ? requestedDue
+    : defaultDue;
   const billing = {
     ...(before?.billing || {}),
     plan: before?.billing?.plan || "trial",
@@ -960,6 +1025,7 @@ export async function markBusinessPaymentReceived(businessId, options = {}) {
     lastPaymentAt: now,
     nextPaymentDueAt: cleanDue,
     currentPeriodEnd: cleanDue || before?.billing?.currentPeriodEnd || null,
+    writeAccessUntil: paidWriteAccessUntil(cleanDue),
     updatedAt: now
   };
   await setDoc(doc(db, "businesses", businessId), {
@@ -969,6 +1035,145 @@ export async function markBusinessPaymentReceived(businessId, options = {}) {
     updatedAt: now
   }, { merge: true });
   await logAdminAction({ action: "business_payment_received", targetBusinessId: businessId, before: { billing: before?.billing || null }, after: { billing } });
+}
+
+export async function activateBusinessPaidPlan(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+  const cleanPlan = normalizeAdminPlan(options.plan || "basic");
+  if (cleanPlan === "trial" || !ADMIN_ALLOWED_BILLING_PLANS.includes(cleanPlan)) {
+    throw new Error("Elegí un plan pago válido");
+  }
+
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  const requestedDue = normalizeAdminDateValue(options.nextPaymentDueAt || null);
+  const requestedDueDate = requestedDue ? new Date(requestedDue) : null;
+  const cleanDue = requestedDueDate && !Number.isNaN(requestedDueDate.getTime()) && requestedDueDate.getTime() > Date.now()
+    ? requestedDue
+    : defaultNextMonthlyDueDate(new Date());
+  const paymentReceived = options.paymentReceived !== false;
+  const billing = {
+    ...(before?.billing || {}),
+    plan: cleanPlan,
+    status: paymentReceived ? "active" : "pending",
+    trialConvertedAt: now,
+    currentPeriodStart: now,
+    currentPeriodEnd: cleanDue,
+    nextPaymentDueAt: cleanDue,
+    writeAccessUntil: paidWriteAccessUntil(cleanDue),
+    ...(paymentReceived ? { lastPaymentAt: now } : {}),
+    updatedAt: now,
+    updatedBy: "admin:activate_paid_plan"
+  };
+
+  await setDoc(doc(db, "businesses", businessId), {
+    status: "active",
+    billing,
+    nextPaymentDueAt: cleanDue,
+    ...(paymentReceived ? { lastPaymentAt: now } : {}),
+    updatedAt: now
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_paid_plan_activated",
+    targetBusinessId: businessId,
+    before: { status: before?.status || null, billing: before?.billing || null },
+    after: { status: "active", billing }
+  });
+
+  return { businessId, billing, status: "active" };
+}
+
+export async function restartBusinessTrial(businessId) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  const trialEndsAt = createTrialEndsAt();
+  const billing = {
+    ...(before?.billing || {}),
+    plan: "trial",
+    status: "active",
+    trialStartedAt: now,
+    trialEndsAt,
+    writeAccessUntil: firestoreDate(trialEndsAt),
+    graceEndsAt: null,
+    updatedAt: now,
+    updatedBy: "admin:restart_14_day_trial"
+  };
+  await setDoc(doc(db, "businesses", businessId), {
+    status: "trial",
+    billing,
+    updatedAt: now
+  }, { merge: true });
+  await logAdminAction({
+    action: "business_trial_restarted",
+    targetBusinessId: businessId,
+    before: { status: before?.status || null, billing: before?.billing || null },
+    after: { status: "trial", billing }
+  });
+  return { businessId, trialEndsAt };
+}
+
+export async function updateBusinessCommercialBilling(businessId, options = {}) {
+  await requireAdmin();
+  if (!businessId) throw new Error("businessId requerido");
+
+  const before = await readBusinessRoot(businessId);
+  const now = new Date().toISOString();
+  let plan = normalizeAdminPlan(options.plan || before?.billing?.plan || "trial");
+  const status = normalizeAdminPaymentStatus(options.status || before?.billing?.status || "active");
+  if (!ADMIN_ALLOWED_BILLING_PLANS.includes(plan)) throw new Error("Plan inválido");
+  if (!ADMIN_ALLOWED_PAYMENT_STATUSES.includes(status)) throw new Error("Estado de pago inválido");
+
+  if (status === "manual" && plan === "trial") plan = "basic";
+
+  let due = normalizeAdminDateValue(options.nextPaymentDueAt || null);
+  if (plan !== "trial" && status !== "manual" && !due) {
+    due = defaultNextMonthlyDueDate(new Date());
+  }
+
+  const trialEndsAt = plan === "trial"
+    ? normalizeAdminDateValue(before?.billing?.trialEndsAt || null)
+    : null;
+  if (plan === "trial" && !trialEndsAt) {
+    throw new Error("La prueba no tiene fecha de finalización. Reiniciala por 14 días antes de guardarla.");
+  }
+
+  const billing = {
+    ...(before?.billing || {}),
+    plan,
+    status,
+    trialEndsAt,
+    nextPaymentDueAt: plan === "trial" || status === "manual" ? null : due,
+    currentPeriodEnd: plan === "trial" || status === "manual" ? null : due,
+    writeAccessUntil: billingWriteAccessUntil({
+      plan,
+      status,
+      trialEndsAt,
+      nextPaymentDueAt: due
+    }),
+    updatedAt: now,
+    updatedBy: "admin:commercial_billing"
+  };
+
+  await setDoc(doc(db, "businesses", businessId), {
+    status: plan === "trial" ? "trial" : "active",
+    plan,
+    billing,
+    nextPaymentDueAt: billing.nextPaymentDueAt,
+    updatedAt: now
+  }, { merge: true });
+
+  await logAdminAction({
+    action: "business_commercial_billing_updated",
+    targetBusinessId: businessId,
+    before: { status: before?.status || null, billing: before?.billing || null },
+    after: { status: plan === "trial" ? "trial" : "active", billing }
+  });
+
+  return { businessId, billing };
 }
 
 export async function updateBusinessInternalNote(businessId, internalNote = "") {

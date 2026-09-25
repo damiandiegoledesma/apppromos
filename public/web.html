@@ -1569,6 +1569,26 @@
     html[data-storefront-theme="offer"] .card{border-radius:10px;box-shadow:0 8px 0 rgba(126,104,0,.08)}
     html[data-storefront-theme="offer"] .rubro h3{background:#ffe600;border-color:#e5ce00;color:#171717}
     html[data-storefront-theme="offer"] .product-thumb-wrap{background:#fff9d6;border-color:#ebdf9f}
+
+    /* V12.29 — fichas comerciales legibles y fallback de imagen visible. */
+    .product{margin-top:8px;padding:10px;border:1px solid #efe1d8;border-radius:16px;background:#fff}
+    .product-main{display:grid;gap:3px;min-width:0}
+    .product-name{font-weight:900!important;color:#2b2724}
+    .product-meta{font-size:.72rem!important;line-height:1.2!important;color:#7c655c!important;font-weight:800!important}
+    .product-price{display:grid;gap:1px;text-align:right;white-space:nowrap;color:#7c2d12}
+    .product-price small{font-size:.67rem;color:#7c655c;font-weight:850;text-transform:uppercase}
+    .product-thumb-fallback{width:100%;height:100%;display:grid;place-items:center;font-size:1.55rem;background:#fff7ed}
+    @media(max-width:640px){
+      .product{grid-template-columns:54px minmax(0,1fr) auto 38px;min-height:66px;padding:7px}
+      .product-price strong{font-size:.92rem}
+      .product-meta{font-size:.66rem!important}
+    }
+    @media(max-width:370px){
+      .product{grid-template-columns:48px minmax(0,1fr) 36px}
+      .product-thumb-wrap{width:48px;height:48px}
+      .product-price{grid-column:2;text-align:left}
+      .cart-add-mini{grid-column:3;grid-row:1 / span 2}
+    }
     /* V12.27.1 FIX2 - Business front photo keeps original colors. */
     .hero.hero--business-photo,
     html[data-storefront-theme="minimal_light"] .hero.hero--business-photo,
@@ -1601,7 +1621,19 @@
     }
     function getTotal(c={}){return Number(c.total||c.finalTotal||c?.snapshot?.totals?.total_redondeado||c?.snapshot?.totals?.total||0)}
     function icon(rubro="",name=""){const t=(rubro+" "+name).toLowerCase(); if(t.includes("pollo")) return "🐔"; if(t.includes("cerdo")) return "🐖"; if(t.includes("novillo")||t.includes("vaca")) return "🐄"; return "🥩"}
-    function normalizePhone(v=""){let p=String(v||"").replace(/\D/g,""); if(!p) return ""; if(p.startsWith("54")) return p; if(p.startsWith("0")) p=p.slice(1); return "54"+p}
+    function normalizePhone(v=""){
+      let p=String(v||"").replace(/\D/g,"").replace(/^00+/,"");
+      if(!p) return "";
+      if(p.startsWith("54")) p=p.slice(2);
+      if(p.startsWith("9")&&p.length===11) p=p.slice(1);
+      p=p.replace(/^0+/,"");
+      if(p.startsWith("11")){
+        let rest=p.slice(2); if(rest.startsWith("15")) rest=rest.slice(2); p="11"+rest;
+      }else if(p.length>=10){
+        let area=p.slice(0,4),rest=p.slice(4); if(rest.startsWith("15")) rest=rest.slice(2); p=area+rest;
+      }
+      return p.length===10?"549"+p:"54"+p;
+    }
     function waLink(meta={},text=""){const phone=normalizePhone(meta.telefono||meta.phone||meta.whatsapp||meta.phoneKey||""); return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`}
     function normalizeSlug(value=""){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)}
     function publicBusinessName(value=""){const clean=String(value||"").trim().replace(/\s+/g," "); const without=clean.replace(/^(carnicer[ií]a\s*)+/i,"").trim(); const base=without||clean||"Carnicería"; return (/^carnicer[ií]a\b/i.test(base)?base:`Carnicería ${base}`).trim().replace(/\s+/g," ");}
@@ -1736,7 +1768,7 @@
       const dailyProduct=promoCandidates[0]||null;
       const dailyOffers=dailyProduct?[{
         id:"preview-daily-1",
-        name:`Oferta del día · ${dailyProduct.nombre}`,
+        name:`Promo del día · ${dailyProduct.nombre}`,
         status:"active",
         expiresAt:new Date(Date.now()+24*60*60*1000).toISOString(),
         total:discountedPrice(dailyProduct.precio),
@@ -1829,12 +1861,52 @@
       if(slug){
         const indexed=await getDoc(doc(db,"publicWebSlugs",slug));
         if(indexed.exists() && indexed.data()?.businessId){
-          const publicIndex = indexed.data() || {};
+          let publicIndex = indexed.data() || {};
+          let resolvedSlug = slug;
+          const visited = new Set([slug]);
+          const MAX_ALIAS_HOPS = 4;
+
+          // RC5: resolver cadenas históricas A -> B -> C sin usar snapshots.
+          // Cada salto debe conservar el mismo businessId; ciclos y cadenas
+          // excesivas fallan de forma explícita en vez de mostrar una vidriera vacía.
+          for(let hop=0; hop<MAX_ALIAS_HOPS; hop++){
+            let nextSlug = normalizeSlug(publicIndex.aliasOf || "");
+
+            // Compatibilidad RC3: alias-snapshot cuyo campo slug apuntaba al canónico.
+            if(!nextSlug && publicIndex.createdFrom === "slug_alias"){
+              const rc3Canonical = normalizeSlug(publicIndex.slug || "");
+              if(rc3Canonical && rc3Canonical !== resolvedSlug) nextSlug = rc3Canonical;
+            }
+
+            if(!nextSlug || nextSlug === resolvedSlug) break;
+            if(visited.has(nextSlug)){
+              throw new Error("Detectamos un ciclo en los enlaces históricos de esta carnicería.");
+            }
+            visited.add(nextSlug);
+
+            const target = await getDoc(doc(db,"publicWebSlugs",nextSlug));
+            if(!target.exists() || !target.data()?.businessId){
+              throw new Error(`El enlace histórico "${slug}" apunta a una vidriera que ya no está disponible.`);
+            }
+            const targetData = target.data() || {};
+            if(String(targetData.businessId||"") !== String(indexed.data()?.businessId||"")){
+              throw new Error("El alias público no coincide con la carnicería canónica.");
+            }
+            publicIndex = targetData;
+            resolvedSlug = nextSlug;
+          }
+
+          const stillAlias = normalizeSlug(publicIndex.aliasOf || "");
+          if(stillAlias && stillAlias !== resolvedSlug){
+            throw new Error("El enlace histórico supera el límite seguro de resolución.");
+          }
+
           return {
             type:"public",
-            slug,
+            slug: resolvedSlug,
+            requestedSlug: slug,
             businessId: publicIndex.businessId,
-            data:{ slug, ...publicIndex }
+            data:{ ...publicIndex, slug: resolvedSlug }
           };
         }
 
@@ -2298,7 +2370,7 @@
         const count=cartItems.length;
         const total=count?money(cartTotal()):"";
         const navClass=(view)=>activeStoreView===view?" is-active":"";
-        return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#" class="${navClass("home").trim()}" data-store-view-target="home" aria-label="Ir al inicio" title="Inicio"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Inicio</span></a><a href="#" class="${navClass("products").trim()}" data-store-view-target="products" data-nav-products aria-label="Ver productos" title="Productos"><span class="nav-icon" aria-hidden="true">🥩</span><span class="nav-label">Productos</span></a><a href="#" class="${navClass("promos").trim()}" data-store-view-target="promos" aria-label="Ir a promociones" title="Promos"><span class="nav-icon" aria-hidden="true">🏷️</span><span class="nav-label">Promos</span></a><a href="#" class="${navClass("daily").trim()}" data-store-view-target="daily" aria-label="Ir a Oferta del día" title="Oferta del día"><span class="nav-icon" aria-hidden="true">🔥</span><span class="nav-label nav-label--daily">Oferta del día</span></a><a class="nav-cart${count?" has-cart":""}${navClass("cart")}" href="#" data-store-view-target="cart" aria-label="Ir al carrito${count?`, ${count} ítem${count===1?"":"s"}, total ${total}`:""}" title="Carrito"><span class="nav-icon" aria-hidden="true">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span>${count?`<span class="mobile-nav-cart-total">${total}</span>`:""}</a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de la carnicería" title="WhatsApp"><span class="nav-icon" aria-hidden="true">${whatsappIconSvg()}</span><span class="nav-label">WhatsApp</span></a></nav>`;
+        return `<nav class="mobile-store-nav" data-mobile-nav aria-label="Navegación de la carnicería"><a href="#" class="${navClass("home").trim()}" data-store-view-target="home" aria-label="Ir al inicio" title="Inicio"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Inicio</span></a><a href="#" class="${navClass("products").trim()}" data-store-view-target="products" data-nav-products aria-label="Ver productos" title="Productos"><span class="nav-icon" aria-hidden="true">🥩</span><span class="nav-label">Productos</span></a><a href="#" class="${navClass("promos").trim()}" data-store-view-target="promos" aria-label="Ir a promociones" title="Promos"><span class="nav-icon" aria-hidden="true">🏷️</span><span class="nav-label">Promos</span></a><a href="#" class="${navClass("daily").trim()}" data-store-view-target="daily" aria-label="Ir a Promo del día" title="Promo del día"><span class="nav-icon" aria-hidden="true">🔥</span><span class="nav-label nav-label--daily">Hoy</span></a><a class="nav-cart${count?" has-cart":""}${navClass("cart")}" href="#" data-store-view-target="cart" aria-label="Ir al carrito${count?`, ${count} ítem${count===1?"":"s"}, total ${total}`:""}" title="Carrito"><span class="nav-icon" aria-hidden="true">🛒</span>${count?`<span class="mobile-cart-badge">${count}</span>`:""}<span class="nav-label">Carrito</span>${count?`<span class="mobile-nav-cart-total">${total}</span>`:""}</a><a class="nav-wa" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp de la carnicería" title="WhatsApp"><span class="nav-icon" aria-hidden="true">${whatsappIconSvg()}</span><span class="nav-label">WhatsApp</span></a></nav>`;
       }
 
       let checkoutVisibilityFrame=0;
@@ -2465,8 +2537,8 @@
       }).join("")}</div>${combos.length>4?`<div class="offers-more-wrap"><button type="button" class="offers-more-btn" data-offers-toggle>Ver todas (${combos.length})</button></div>`:""}`:(dailyOffers.length?"":`<div class="empty">Todavía no hay ofertas publicadas. Pedí la promo del día por WhatsApp.</div>`);
       const offersHtml=dailyOffersHtml+regularOffersHtml;
       const showcaseHtml=randomShowcase.length
-        ? `<section class="section showcase-section" aria-label="Destacados de la carnicería"><div class="section-head"><div><h2>Destacados</h2><small>Productos, promos y ofertas de hoy</small></div><div class="showcase-head-actions"><button type="button" class="showcase-control" data-showcase-prev aria-label="Anterior">‹</button><button type="button" class="showcase-control" data-showcase-next aria-label="Siguiente">›</button></div></div><div class="showcase-track" data-showcase-track>${randomShowcase.map(item=>`<a class="showcase-card${item.kind==="daily"?" is-daily-feature":""}" href="#${esc(item.anchor)}" data-showcase-kind="${esc(item.kind)}" data-showcase-view="${esc(item.view)}" data-showcase-target="${esc(item.anchor)}"${item.rubro?` data-showcase-rubro="${esc(item.rubro)}"`:""}><img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy"><span class="showcase-card-copy">${item.badge?`<span class="showcase-card-badge">${item.kind==="daily"?"🔥 ":""}${esc(item.kind==="daily"?"OFERTA DE HOY":item.badge)}</span>`:""}<strong>${esc(item.name)}</strong>${item.meta?`<span class="showcase-card-meta">${esc(item.meta)}</span>`:""}${item.price>0?`<span class="showcase-card-price">${money(item.price)}${esc(item.priceSuffix||"")}</span>`:""}${item.kind==="daily"?`<span class="showcase-card-urgency">Solo por hoy</span>`:""}</span></a>`).join("")}</div></section>`
-        : "";
+        ? `<section class="section showcase-section" aria-label="Destacados de la carnicería"><div class="section-head"><div><h2>Destacados</h2><small>Productos, promos y Promo del día</small></div><div class="showcase-head-actions"><button type="button" class="showcase-control" data-showcase-prev aria-label="Anterior">‹</button><button type="button" class="showcase-control" data-showcase-next aria-label="Siguiente">›</button></div></div><div class="showcase-track" data-showcase-track>${randomShowcase.map(item=>`<a class="showcase-card${item.kind==="daily"?" is-daily-feature":""}" href="#${esc(item.anchor)}" data-showcase-kind="${esc(item.kind)}" data-showcase-view="${esc(item.view)}" data-showcase-target="${esc(item.anchor)}"${item.rubro?` data-showcase-rubro="${esc(item.rubro)}"`:""}><img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy"><span class="showcase-card-copy">${item.badge?`<span class="showcase-card-badge">${item.kind==="daily"?"🔥 ":""}${esc(item.kind==="daily"?"PROMO DEL DÍA":item.badge)}</span>`:""}<strong>${esc(item.name)}</strong>${item.meta?`<span class="showcase-card-meta">${esc(item.meta)}</span>`:""}${item.price>0?`<span class="showcase-card-price">${money(item.price)}${esc(item.priceSuffix||"")}</span>`:""}${item.kind==="daily"?`<span class="showcase-card-urgency">Hasta agotar stock</span>`:""}</span></a>`).join("")}</div></section>`
+        : `<section class="section"><div class="starter-note"><strong>${products.length?"Mirá todos los productos":"Esta carnicería está preparando su vidriera"}</strong>${products.length?"Buscá un corte, elegí un rubro y agregalo al pedido.":"Muy pronto vas a encontrar acá sus precios y promociones."}<div class="starter-actions">${products.length?`<button type="button" class="btn btn-primary" data-store-view-target="products">Ver productos</button>`:`<a class="btn btn-primary" href="${mainWa}" target="_blank" rel="noopener">Consultar por WhatsApp</a>`}</div></div></section>`;
 
       function applyOfferView(){
         const cards=[...app.querySelectorAll("[data-offer-category]")];
@@ -2498,7 +2570,7 @@
 
       const pricesHtml=(data.showPriceList&&products.length)?`${productRubroFilterHtml}<div class="price-list">${rubroNames.map(r=>{
         const items=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).sort((a,b)=>String(a.nombre||"").localeCompare(String(b.nombre||""),"es"));
-        return `<div class="card rubro" data-rubro-card="${esc(r)}"><h3>${icon(r,"")} ${esc(publicRubroName(r))}</h3>${items.map((p,index)=>{const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit:"kg",price:Number(p.precio ?? p.price ?? 0),quantity:1}; const thumbnailPath=getProductThumbnailPath(p); const anchor=productAnchorId(p,products.indexOf(p)); return `<div class="product" id="${esc(anchor)}" data-product-name="${esc(normalizeSlug(p.nombre||"Producto"))}"><span class="product-thumb-wrap">${thumbnailPath?`<img class="product-thumb" src="${thumbnailPath}" alt="" loading="lazy" onerror="this.parentElement.style.visibility='hidden'" />`:""}</span><span>${esc(p.nombre||"Producto")}</span><strong>${money(p.precio ?? p.price)}/kg</strong><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
+        return `<div class="card rubro" data-rubro-card="${esc(r)}"><h3>${icon(r,"")} ${esc(publicRubroName(r))}</h3>${items.map((p,index)=>{const unit=String(p.unidad||p.unit||"kg").trim()||"kg";const item={type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit,price:Number(p.precio ?? p.price ?? 0),quantity:1}; const thumbnailPath=getProductThumbnailPath(p); const anchor=productAnchorId(p,products.indexOf(p)); const fallback=`<span class="product-thumb-fallback" aria-hidden="true">${icon(p.rubro||r,p.nombre||"")}</span>`; return `<div class="product" id="${esc(anchor)}" data-product-name="${esc(normalizeSlug(p.nombre||"Producto"))}"><span class="product-thumb-wrap">${thumbnailPath?`<img class="product-thumb" src="${thumbnailPath}" alt="${esc(p.nombre||"Producto")}" loading="lazy" onerror="this.style.display='none'" />`:fallback}</span><span class="product-main"><span class="product-name">${esc(p.nombre||"Producto")}</span><span class="product-meta">${esc(publicRubroName(p.rubro||r))} · por ${esc(unit)}</span></span><span class="product-price"><strong>${money(p.precio ?? p.price)}</strong><small>por ${esc(unit)}</small></span><button type="button" class="cart-add-mini" data-cart-add="${encodeCartItem(item)}" aria-label="Agregar ${esc(p.nombre||"Producto")} al pedido" title="Agregar al pedido">Agregar</button></div>`;}).join("")}</div>`;
       }).join("")}</div><div class="product-filter-message" data-product-filter-message hidden></div>`:"";
 
       const headerName = esc(String(shortName).toUpperCase());
@@ -2524,9 +2596,9 @@
       const heroStyle=frontPhotoUrl ? ` style="--business-front:url('${esc(frontPhotoUrl)}')"` : "";
       const heroClass=frontPhotoUrl ? "hero hero--business-photo" : "hero";
       const identityLocation=[city,province].filter(Boolean).join(" · ");
-      const dailySection=`<section class="section store-view${activeStoreView==="daily"?" is-active":""}" id="ofertas-dia" data-store-view="daily"><div class="section-head"><h2>🔥 Ofertas de hoy</h2><small>Hasta agotar stock</small></div>${dailyOffersHtml||`<div class="empty">Hoy todavía no hay ofertas publicadas.</div>`}</section>`;
+      const dailySection=`<section class="section store-view${activeStoreView==="daily"?" is-active":""}" id="ofertas-dia" data-store-view="daily"><div class="section-head"><h2>🔥 Promo del día</h2><small>Hasta agotar stock</small></div>${dailyOffersHtml||`<div class="empty">Hoy todavía no hay una Promo del día publicada.</div>`}</section>`;
       const promosSection=`<section class="section store-view${activeStoreView==="promos"?" is-active":""}" id="promos" data-store-view="promos"><div class="section-head"><h2>🏷️ Promos</h2><small>Combos y promociones de la carnicería</small></div>${regularOffersHtml}</section>`;
-      const homeSection=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home"><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><button type="button" class="btn btn-primary" data-store-view-target="products">🥩 Productos</button><button type="button" class="btn btn-light" data-store-view-target="promos">🏷️ Promos</button><button type="button" class="btn btn-light" data-store-view-target="daily">🔥 Ofertas de hoy</button></div></section>${showcaseHtml}</div>`;
+      const homeSection=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home"><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><button type="button" class="btn btn-primary" data-store-view-target="products">🥩 Productos</button><button type="button" class="btn btn-light" data-store-view-target="promos">🏷️ Promos</button><button type="button" class="btn btn-light" data-store-view-target="daily">🔥 Promo del día</button></div></section>${showcaseHtml}</div>`;
       app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div>${homeSection}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span class="apppromos-signature-copy"><small>Esta carnicería online funciona con</small><strong>AppPromos</strong><span>Conocé AppPromos →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
       renderActivationPreviewBar();
       scheduleCheckoutFloatingState();

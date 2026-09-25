@@ -1,0 +1,28 @@
+--- /mnt/data/rc4orig/public/js/services/auth-service.js	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/rc5work/public/js/services/auth-service.js	2026-09-21 08:43:03.799287388 +0000
+@@ -298,20 +298,14 @@
+     loadAdminProfile(firebaseUser.uid)
+   ]);
+ 
+-  // V11: el rol administrativo real vive en admins/{uid}.
+-  // Se mantiene compatibilidad con users.role = superadmin/admin para no romper versiones previas.
+-  if (adminProfile || normalizeRole(userDoc || {}) === "superadmin") {
++  // RC5: admins/{uid} es la única autoridad administrativa, igual que Firestore Rules.
++  // No aceptar users.role como fallback evita un Centro de Control aparente sin permisos reales.
++  if (adminProfile) {
+     sessionCache = {
+       firebaseUser,
+       userDoc,
+-      adminProfile: adminProfile || {
+-        uid: firebaseUser.uid,
+-        email: firebaseUser.email,
+-        role: "superadmin",
+-        active: true,
+-        source: "legacy-users-role"
+-      },
+-      adminRole: adminProfile?.role || "superadmin",
++      adminProfile,
++      adminRole: adminProfile.role || "superadmin",
+       appMode: "superadmin",
+       businessId: null
+     };

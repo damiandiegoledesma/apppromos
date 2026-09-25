@@ -184,6 +184,9 @@
     if (level === "warning" || commercialKey === "payment_overdue" || commercialKey === "trial_expired") {
       return { icon: "🔴", label: commercialKey === "trial_expired" ? "Prueba vencida" : "Pago pendiente", className: "status-chip--warn" };
     }
+    if (level === "grace" || commercialKey === "payment_grace") {
+      return { icon: "🟠", label: "Pago en gracia", className: "status-chip--warn" };
+    }
     if (level === "trial" || String(commercialKey || "").startsWith("trial")) {
       return { icon: "🟡", label: "Prueba activa", className: "status-chip--trial" };
     }

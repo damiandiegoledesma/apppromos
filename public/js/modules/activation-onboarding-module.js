@@ -62,8 +62,8 @@ const STEP_INDEX = {
   rubros: 1,
   prices: 2,
   identity: 3,
-  publish: 3,
-  done: 3
+  publish: 4,
+  done: 4
 };
 
 const ASSET = {
@@ -136,7 +136,7 @@ function currentDraft() {
 function setProgress(step) {
   const index = STEP_INDEX[step] ?? 0;
   document.querySelectorAll("[data-progress]").forEach((el, i) => {
-    el.classList.toggle("is-on", i <= index);
+    el.classList.toggle("is-on", i < index);
   });
 }
 
@@ -564,7 +564,7 @@ function renderPublish() {
         <input id="publishPasswordRepeat" type="password" autocomplete="new-password" minlength="6" placeholder="Repetí la contraseña">
       </div>
       <div class="notice" data-notice></div>
-      <p class="hint"><strong>90 días gratis · sin tarjeta.</strong> Tus precios ya están listos y no vas a tener que cargarlos otra vez.</p>
+      <p class="hint"><strong>14 días gratis · sin tarjeta.</strong> Tus precios ya están listos y no vas a tener que cargarlos otra vez.</p>
     `,
     actions: `
       <button class="btn btn-light" type="button" data-action="back-preview">← Ver otra vez</button>
@@ -698,7 +698,7 @@ function renderPublishedSuccess(result = {}) {
   setProgress("done");
 
   const publicUrl = String(result.publicUrl || "").trim();
-  const shareText = `🥩 ¡Ya podés ver nuestra carnicería online!\\n\\nMirá nuestros precios y promociones acá 👇\\n${publicUrl}`;
+  const shareText = `🥩 ¡Ya podés ver nuestra carnicería online!\n\nMirá nuestros precios y promociones acá 👇\n${publicUrl}`;
   const shareHref = publicUrl
     ? `https://wa.me/?text=${encodeURIComponent(shareText)}`
     : "";

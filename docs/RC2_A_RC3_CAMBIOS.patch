@@ -1,0 +1,225 @@
+diff -ruN /tmp/rc2orig/public/como-vender.html /mnt/data/apppromos_rc3/public/como-vender.html
+--- /tmp/rc2orig/public/como-vender.html	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/como-vender.html	2026-09-21 07:44:51.777817939 +0000
+@@ -17,7 +17,7 @@
+         <span>AppPromos</span>
+       </a>
+       <nav class="cv-nav-links" aria-label="Acciones principales">
+-        <a class="cv-btn" href="/carniceria-a-la-estaca-3462-543210">Ver A La Estaca</a>
++        <a class="cv-btn" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">Ver A La Estaca</a>
+         <a class="cv-btn cv-btn-primary" href="/#signup">Empezar gratis</a>
+       </nav>
+     </div>
+@@ -32,7 +32,7 @@
+           <p>Cada venta necesita una herramienta distinta. Respondé una consulta, prepará una promo para repetir o creá una Promo del día.</p>
+           <div class="cv-hero-actions">
+             <a class="cv-btn cv-btn-primary" href="#elegir">Ver cuál necesito</a>
+-            <a class="cv-btn" href="/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
++            <a class="cv-btn" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
+           </div>
+         </div>
+         <div class="cv-carniza">
+@@ -195,7 +195,7 @@
+           <span class="cv-eyebrow">Así llega al cliente</span>
+           <h2>Web, carrito y WhatsApp trabajan juntos</h2>
+           <p>Las promos publicadas aparecen en la carnicería online. El cliente elige, arma el carrito y manda el pedido ordenado al WhatsApp del negocio.</p>
+-          <a class="cv-btn" href="/carniceria-a-la-estaca-3462-543210">Ver una carnicería online</a>
++          <a class="cv-btn" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">Ver una carnicería online</a>
+         </div>
+         <div class="cv-real-shots" aria-label="Capturas reales de A La Estaca">
+           <figure class="cv-real-shot">
+@@ -216,7 +216,7 @@
+         <h2>No necesitás aprender marketing. Solo decirme qué querés vender.</h2>
+         <p>Carniza te ayuda a calcularlo, prepararlo y hacerlo llegar al cliente.</p>
+         <div class="cv-final-actions">
+-          <a class="cv-btn cv-btn-green" href="/carniceria-a-la-estaca-3462-543210">Ver A La Estaca</a>
++          <a class="cv-btn cv-btn-green" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">Ver A La Estaca</a>
+           <a class="cv-btn cv-btn-primary" href="/#signup">Empezar gratis</a>
+           <a class="cv-btn" href="/#login">Ya tengo cuenta</a>
+         </div>
+diff -ruN /tmp/rc2orig/public/index.html /mnt/data/apppromos_rc3/public/index.html
+--- /tmp/rc2orig/public/index.html	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/index.html	2026-09-21 07:44:51.777637953 +0000
+@@ -1421,7 +1421,7 @@
+           <p class="lead">Tus clientes ven precios y ofertas, arman su pedido y te lo mandan por WhatsApp.</p>
+           <div class="hero-ctas">
+             <a class="btn btn-green btn-big" href="#signup">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
+-            <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
++            <a class="btn btn-light btn-big" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
+             <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
+           </div>
+           <p class="hero-login-line">¿Ya tenés cuenta? <a href="#login">Iniciar sesión</a></p>
+@@ -1617,7 +1617,7 @@
+             <img src="/assets/product/landing/a-la-estaca-mobile-real-v1221.webp" alt="A La Estaca online y un pedido real armado en su carrito" loading="lazy" width="1000" height="900" />
+           </div>
+         </div>
+-        <div class="center-actions"><a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER A LA ESTACA FUNCIONANDO</a></div>
++        <div class="center-actions"><a class="btn btn-light btn-big" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">👁 VER A LA ESTACA FUNCIONANDO</a></div>
+       </div>
+     </section>
+ 
+@@ -1634,7 +1634,7 @@
+         </ul>
+         <div class="hero-ctas" style="justify-content:center;margin-top:24px;">
+           <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
+-          <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
++          <a class="btn btn-light btn-big" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
+         </div>
+       </div>
+     </section>
+@@ -1645,7 +1645,7 @@
+         <p>Tu vidriera abierta 24/7, los 365 días. Probala sin cargo.</p>
+         <div class="hero-ctas" style="justify-content:center;">
+           <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
+-          <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
++          <a class="btn btn-light btn-big" href="https://carnis.app/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
+         </div>
+       </div>
+     </section>
+diff -ruN /tmp/rc2orig/public/js/app-main.js /mnt/data/apppromos_rc3/public/js/app-main.js
+--- /tmp/rc2orig/public/js/app-main.js	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/js/app-main.js	2026-09-21 07:44:27.048088773 +0000
+@@ -1742,7 +1742,7 @@
+ function getActivationPublicUrl() {
+   const web = currentPayload?.state?.web || {};
+   const slug = web?.slug || "";
+-  return web?.publicUrl || (currentBusinessId ? getPublicWebUrl(currentBusinessId, slug) : "");
++  return (currentBusinessId && slug) ? getPublicWebUrl(currentBusinessId, slug) : "";
+ }
+ 
+ function getStorefrontThemePreviewUrl(themeId = "standard", previewView = "products") {
+@@ -2543,7 +2543,7 @@
+   const city = meta?.ciudad || meta?.city || meta?.localidad || meta?.locality || "";
+   const province = meta?.provincia || meta?.province || "";
+   const slug = web?.slug || state?.webSlug || meta?.webSlug || "";
+-  const publicUrl = web?.publicUrl || web?.url || (slug ? `${window.location.origin}/${slug}` : "");
++  const publicUrl = slug ? getPublicWebUrl(currentBusinessId || currentPayload?.businessId || "", slug) : "";
+ 
+   return {
+     name: meta?.name || meta?.nombre || "Sin nombre cargado",
+@@ -4195,10 +4195,9 @@
+     createdFrom: "print_center"
+   });
+ 
+-  const APPPROMOS_PRODUCTION_ORIGIN = "https://apppromos.web.app";
+   const cleanSlug = String(web?.slug || publicPayload?.slug || "").trim();
+   const publicWebUrl = cleanSlug
+-    ? `${APPPROMOS_PRODUCTION_ORIGIN}/${cleanSlug}`
++    ? getPublicWebUrl(currentPayload?.businessId || currentBusinessId || "", cleanSlug)
+     : "";
+ 
+   return {
+diff -ruN /tmp/rc2orig/public/js/modules/carniza-landing-module.js /mnt/data/apppromos_rc3/public/js/modules/carniza-landing-module.js
+--- /tmp/rc2orig/public/js/modules/carniza-landing-module.js	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/js/modules/carniza-landing-module.js	2026-09-21 07:44:51.777903605 +0000
+@@ -77,7 +77,7 @@
+ 
+   function openStorefront() {
+     closePanel();
+-    window.location.href = "/carniceria-a-la-estaca-3462-543210";
++    window.location.href = "https://carnis.app/carniceria-a-la-estaca-3462-543210";
+   }
+ 
+   function focusSignup() {
+diff -ruN /tmp/rc2orig/public/js/modules/print-center-module.js /mnt/data/apppromos_rc3/public/js/modules/print-center-module.js
+--- /tmp/rc2orig/public/js/modules/print-center-module.js	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/js/modules/print-center-module.js	2026-09-21 07:44:27.048454042 +0000
+@@ -684,7 +684,7 @@
+     // tratar cada rubro/continuación como un bloque indivisible. Si un bloque
+     // no entra completo, se divide por filas y continúa en la otra columna
+     // o página. Así aprovechamos las dos columnas sin pisar QR/footer.
+-    const hasQrFooter = /^https:\/\/apppromos\.web\.app\//i.test(String(publicWebUrl || "").trim());
++    const hasQrFooter = /^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(String(publicWebUrl || "").trim());
+     const maxWeight = hasQrFooter ? 27.5 : 31;
+     const headerWeight = 2.2;
+ 
+diff -ruN /tmp/rc2orig/public/js/services/web-premium-service.js /mnt/data/apppromos_rc3/public/js/services/web-premium-service.js
+--- /tmp/rc2orig/public/js/services/web-premium-service.js	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/apppromos_rc3/public/js/services/web-premium-service.js	2026-09-21 07:44:40.243773973 +0000
+@@ -13,6 +13,11 @@
+ import { normalizeStorefrontTheme } from "./storefront-theme-service.js";
+ import { buildBusinessIdentity } from "./normalization-service.js";
+ 
++// V12.29-RC3 — Carnis es la marca pública/canónica de las vidrieras.
++// AppPromos Hosting conserva las rutas históricas porque ambos dominios sirven
++// el mismo proyecto Firebase y resuelven el mismo publicWebSlugs/{slug}.
++export const PUBLIC_STOREFRONT_ORIGIN = "https://carnis.app";
++
+ export function normalizeSlug(value = "") {
+   return String(value || "")
+     .normalize("NFD")
+@@ -372,11 +377,14 @@
+     throw new Error("Teléfono / WhatsApp válido requerido para activar o guardar Web Premium");
+   }
+ 
+-  const generatedSlug = buildBusinessSlug(meta || {}, businessId);
++  // Un guardado normal de Mi Web nunca debe regenerar un slug productivo ya
++  // existente. El slug sólo cambia en el flujo explícito de cambio de identidad,
++  // donde el anterior queda preservado como alias permanente.
++  const stableSlug = previousSlug || buildBusinessSlug(meta || {}, businessId);
+   const nextWeb = {
+     ...config,
+     ...configPatch,
+-    slug: generatedSlug,
++    slug: stableSlug,
+     updatedAt: new Date().toISOString()
+   };
+ 
+@@ -439,7 +447,19 @@
+   });
+ 
+   if (shouldDeletePreviousSlug) {
+-    batch.delete(doc(db, "publicWebSlugs", previousSlug));
++    // Alias permanente: el slug anterior sigue resolviendo al mismo negocio.
++    // Se refresca con el snapshot actual para que no quede una vidriera vieja.
++    batch.set(doc(db, "publicWebSlugs", previousSlug), buildPublicWebPayload({
++      businessId,
++      slug: nextWeb.slug,
++      meta,
++      state: nextState,
++      web: nextWeb,
++      phoneKey,
++      plan: "web_premium",
++      createdFrom: "slug_alias",
++      updatedAt
++    }));
+     if (shouldDeletePreviousPhoneKey) {
+       batch.delete(doc(db, "publicPhoneKeys", previousPhoneKey));
+     }
+@@ -597,7 +617,20 @@
+       updatedAt
+     }));
+   }
+-  if (canDeletePreviousSlug) batch.delete(doc(db, "publicWebSlugs", previousSlug));
++  if (canDeletePreviousSlug) {
++    // Alias permanente del slug anterior hacia el snapshot vigente.
++    batch.set(doc(db, "publicWebSlugs", previousSlug), buildPublicWebPayload({
++      businessId,
++      slug: nextSlug,
++      meta: nextMeta,
++      state: nextState,
++      web: nextWeb,
++      phoneKey: nextPhoneKey,
++      plan: "web_premium",
++      createdFrom: "slug_alias",
++      updatedAt
++    }));
++  }
+ 
+   if (phoneChanged || !previousPhoneKey || shouldChangeSlug) {
+     batch.set(doc(db, "publicPhoneKeys", nextPhoneKey), {
+@@ -621,10 +654,12 @@
+ export function getPublicWebUrl(businessId, slug = "") {
+   const cleanSlug = normalizeSlug(slug);
+   if (cleanSlug) {
+-    return `${window.location.origin}/${cleanSlug}`;
++    return `${PUBLIC_STOREFRONT_ORIGIN}/${cleanSlug}`;
+   }
+ 
+-  const url = new URL(`${window.location.origin}/web.html`);
++  // Compatibilidad técnica para negocios legacy sin slug. No es una URL
++  // comercial: las nuevas altas siempre deben tener slug antes de publicar.
++  const url = new URL(`${PUBLIC_STOREFRONT_ORIGIN}/web.html`);
+   url.searchParams.set("biz", businessId);
+   return url.toString();
+ }

@@ -260,8 +260,29 @@ export function renderDashboard(container, businessId, meta, state, options = {}
           <div class="dash-share-head"><strong>Compartir mi web</strong><span>Elegí cómo querés acercar tu vidriera a tus clientes.</span></div>
           <div class="dash-secondary-actions">
             <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>💬 Compartir link por WhatsApp</button>
-            <button type="button" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Compartir con QR</button>
+            <button type="button" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Ver mi QR</button>
           </div>
+
+          ${publicWebUrl ? `
+            <div data-dashboard-qr-panel hidden style="margin-top:16px;text-align:center;">
+              <div style="display:inline-block;background:#fff;padding:14px;border:1px solid #e5e7eb;border-radius:18px;">
+                <img
+                  data-dashboard-qr-image
+                  src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&data=${encodeURIComponent(publicWebUrl)}"
+                  alt="QR de mi carnicería"
+                  width="240"
+                  height="240"
+                  style="display:block;width:min(240px,70vw);height:auto;"
+                />
+              </div>
+              <div style="margin-top:10px;font-size:13px;font-weight:800;color:#6b7280;">
+                Escaneá para abrir tu carnicería online
+              </div>
+              <div style="margin-top:5px;font-size:12px;color:#64748b;word-break:break-all;">
+                ${escapeHtml(publicWebUrl)}
+              </div>
+            </div>
+          ` : ""}
         </div>
       </div>
 
@@ -285,7 +306,9 @@ export function renderDashboard(container, businessId, meta, state, options = {}
 
   container.querySelector("[data-dashboard-open-qr]")?.addEventListener("click", () => {
     if (!publicWebUrl) return;
-    if (typeof options?.onOpenQr === "function") options.onOpenQr();
+    const qrPanel = container.querySelector("[data-dashboard-qr-panel]");
+    if (!qrPanel) return;
+    qrPanel.hidden = !qrPanel.hidden;
   });
 
   container.querySelector("[data-brand-reminder-open]")?.addEventListener("click", () => {

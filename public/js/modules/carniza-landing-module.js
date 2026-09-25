@@ -77,7 +77,7 @@
 
   function openStorefront() {
     closePanel();
-    window.location.href = "/carniceria-a-la-estaca-3462-543210";
+    window.location.href = "https://apppromos.web.app/carniceria-a-la-estaca-3462-543210";
   }
 
   function focusSignup() {

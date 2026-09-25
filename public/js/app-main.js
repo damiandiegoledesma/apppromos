@@ -1742,7 +1742,7 @@ function markCommercialQaDismissed(state = {}) {
 function getActivationPublicUrl() {
   const web = currentPayload?.state?.web || {};
   const slug = web?.slug || "";
-  return web?.publicUrl || (currentBusinessId ? getPublicWebUrl(currentBusinessId, slug) : "");
+  return (currentBusinessId && slug) ? getPublicWebUrl(currentBusinessId, slug) : "";
 }
 
 function getStorefrontThemePreviewUrl(themeId = "standard", previewView = "products") {
@@ -2031,7 +2031,7 @@ function renderStorefrontThemePrompt(state = {}) {
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-layout{display:grid;grid-template-columns:minmax(120px,.34fr) minmax(0,.88fr) minmax(280px,.78fr);gap:18px;align-items:center}
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame{position:relative;min-height:430px;overflow:hidden;border:8px solid #2c211d;border-radius:24px;background:#fff;box-shadow:0 14px 28px rgba(74,24,17,.18)}
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-frame iframe{display:block;width:100%;height:430px;border:0;background:#fff;pointer-events:none}
-      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1;padding:5px 9px;border-radius:999px;background:rgba(74,24,17,.9);color:#fff;font-size:11px;font-weight:900;white-space:nowrap}
+      [data-carniza-commercial-motor="storefront-theme"] .theme-preview-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:1;padding:5px 9px;border-radius:999px;background:rgba(74,24,17,.9);color:#fff;font-size:13px;font-weight:900;white-space:nowrap}
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
       [data-carniza-commercial-motor="storefront-theme"] .theme-preview-tab{min-height:32px;border:1px solid #eaded7;border-radius:999px;background:#fff;padding:0 10px;color:#7c2d12;font-weight:900;cursor:pointer}
@@ -2042,7 +2042,7 @@ function renderStorefrontThemePrompt(state = {}) {
     <div class="theme-preview-layout">
       <img src="${state.asset}" alt="Carniza" style="width:min(100%,190px);max-height:205px;object-fit:contain;justify-self:center;">
       <div>
-        <span style="display:inline-flex;padding:5px 9px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Diseño de tu vidriera</span>
+        <span style="display:inline-flex;padding:5px 9px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:13px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Diseño de tu vidriera</span>
         <h2 style="margin:9px 0 6px;color:#4a1811;font-size:clamp(24px,4vw,34px);line-height:1.03;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
         <p style="margin:0;color:#6b4b3e;font-weight:800;line-height:1.42;">Probá cada alternativa en una vista previa de tu propia vidriera. Nada cambia hasta que confirmes.</p>
         <div data-storefront-theme-choices style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:9px;margin-top:15px;"></div>
@@ -2375,27 +2375,56 @@ function renderStrongCommercialPrompt(state = {}) {
   const progress = Math.min(100, Math.round((Number(state.pricedCount || 0) / CARNIZA_RECOMMENDED_PRICES) * 100));
 
   card.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;align-items:center;">
-      <div style="min-height:260px;border-radius:20px;background:#fff1ed;display:grid;place-items:center;overflow:hidden;">
-        <img src="${state.asset}" alt="Carniza" style="display:block;width:100%;height:100%;max-height:390px;object-fit:contain;">
+    <style>
+      [data-carniza-commercial-motor="strong"] .commercial-activation-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;align-items:center}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-visual{min-height:260px;border-radius:20px;background:#fff1ed;display:grid;place-items:center;overflow:hidden}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-visual img{display:block;width:100%;height:100%;max-height:390px;object-fit:contain}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-content{display:grid;gap:14px}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-badge{width:max-content;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:1000;text-transform:uppercase}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-title{margin:0;color:#451a03;font-size:clamp(27px,5vw,40px);line-height:1.02;letter-spacing:-.04em}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-message{margin:0;color:#6b3f32;font-size:14px;font-weight:850;line-height:1.4}
+      @media(max-width:760px){
+        [data-carniza-commercial-motor="strong"]{padding:12px !important;border-radius:18px !important}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-layout{grid-template-columns:1fr;gap:6px}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-visual{min-height:0;height:110px;border-radius:16px}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-visual img{max-height:110px}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-content{gap:8px}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-badge{padding:4px 8px;font-size:13px}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-title{font-size:22px;line-height:1.08;letter-spacing:-.02em}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-message{font-size:13px;line-height:1.3}
+        [data-carniza-commercial-motor="strong"] [data-commercial-main-actions]{order:1}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-secondary{order:2}
+        [data-carniza-commercial-motor="strong"] [data-commercial-share-actions]{order:3}
+        [data-carniza-commercial-motor="strong"] [data-commercial-dismiss]{order:4;min-height:36px !important}
+      }
+      @media(max-height:620px) and (max-width:760px){
+        [data-carniza-commercial-motor="strong"] .commercial-activation-visual{display:none !important}
+        [data-carniza-commercial-motor="strong"] .commercial-activation-title{font-size:20px !important}
+      }
+    </style>
+    <div class="commercial-activation-layout">
+      <div class="commercial-activation-visual">
+        <img src="${state.asset}" alt="Carniza">
       </div>
-      <div style="display:grid;gap:14px;">
-        <span style="width:max-content;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:12px;font-weight:1000;text-transform:uppercase;">Activación comercial</span>
-        <h2 style="margin:0;color:#451a03;font-size:clamp(27px,5vw,40px);line-height:1.02;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
-        <p style="margin:0;color:#6b3f32;font-weight:850;line-height:1.45;">${escapeCarnizaHtml(state.message)}</p>
-        <div style="padding:12px 14px;border-radius:16px;background:#fff7ed;color:#9a3412;font-weight:900;">${escapeCarnizaHtml(state.status)}</div>
-        <div style="display:grid;gap:7px;">
-          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:1000;color:#7c2d12;">
-            <span>${state.pricedCount} precios cargados</span>
-            <span>${state.pricedCount < CARNIZA_ACTIVATION_MIN_PRICES ? `mínimo ${CARNIZA_ACTIVATION_MIN_PRICES}` : `objetivo ${CARNIZA_RECOMMENDED_PRICES}`}</span>
-          </div>
-          <div style="height:11px;border-radius:999px;background:#fee2e2;overflow:hidden;">
-            <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#b91c1c,#ef4444);border-radius:999px;"></div>
+      <div class="commercial-activation-content">
+        <span class="commercial-activation-badge">Activación comercial</span>
+        <h2 class="commercial-activation-title">${escapeCarnizaHtml(state.title)}</h2>
+        <p class="commercial-activation-message">${escapeCarnizaHtml(state.message)}</p>
+        <div data-commercial-main-actions style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;"></div>
+        <div class="commercial-activation-secondary" style="display:grid;gap:8px;">
+          <div style="padding:9px 11px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;font-weight:900;">${escapeCarnizaHtml(state.status)}</div>
+          <div style="display:grid;gap:6px;">
+            <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:1000;color:#7c2d12;">
+              <span>${state.pricedCount} precios cargados</span>
+              <span>${state.pricedCount < CARNIZA_ACTIVATION_MIN_PRICES ? `mínimo ${CARNIZA_ACTIVATION_MIN_PRICES}` : `objetivo ${CARNIZA_RECOMMENDED_PRICES}`}</span>
+            </div>
+            <div style="height:9px;border-radius:999px;background:#fee2e2;overflow:hidden;">
+              <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#b91c1c,#ef4444);border-radius:999px;"></div>
+            </div>
           </div>
         </div>
-        <div data-commercial-main-actions style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;"></div>
         <div data-commercial-share-actions></div>
-        <button type="button" data-commercial-dismiss style="min-height:42px;border:0;background:transparent;color:#7c2d12;font-weight:900;cursor:pointer;">Ahora no</button>
+        <button type="button" data-commercial-dismiss style="min-height:42px;border:0;background:transparent;color:#7c2d12;font-size:13px;font-weight:900;cursor:pointer;">Ahora no</button>
       </div>
     </div>
   `;
@@ -2432,12 +2461,24 @@ function renderCompactCommercialPrompt(state = {}) {
   card.style.cssText = "margin:0 0 14px;padding:14px 16px;border:1px solid #fed7aa;border-radius:18px;background:linear-gradient(180deg,#fffaf0,#fff);box-shadow:0 8px 22px rgba(124,45,18,.08);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;";
 
   card.innerHTML = `
-    <img src="${state.asset}" alt="Carniza" style="width:74px;height:74px;object-fit:contain;border-radius:14px;background:#fff7ed;">
-    <div style="min-width:0;">
-      <strong style="display:block;color:#7c2d12;font-size:15px;line-height:1.25;">${escapeCarnizaHtml(state.title)}</strong>
-      <span style="display:block;margin-top:4px;color:#6b4b3e;font-size:13px;font-weight:800;line-height:1.35;">${escapeCarnizaHtml(state.message)}</span>
+    <style>
+      @media(max-width:760px){
+        [data-carniza-commercial-motor="compact"]{grid-template-columns:56px minmax(0,1fr) !important;gap:10px !important;padding:12px !important;align-items:start !important}
+        [data-carniza-commercial-motor="compact"] .commercial-compact-visual{width:56px !important;height:56px !important}
+        [data-carniza-commercial-motor="compact"] .commercial-compact-copy{min-width:0}
+        [data-carniza-commercial-motor="compact"] .commercial-compact-title{font-size:15px !important;line-height:1.25 !important}
+        [data-carniza-commercial-motor="compact"] .commercial-compact-message{font-size:13px !important;line-height:1.35 !important}
+        [data-carniza-commercial-motor="compact"] .commercial-compact-actions{grid-column:1 / -1;min-width:0 !important;width:100%;gap:6px !important}
+        [data-carniza-commercial-motor="compact"] [data-commercial-compact-primary]{width:100%;min-height:46px !important}
+        [data-carniza-commercial-motor="compact"] [data-commercial-compact-dismiss]{min-height:40px !important;font-size:13px !important}
+      }
+    </style>
+    <img class="commercial-compact-visual" src="${state.asset}" alt="Carniza" style="width:74px;height:74px;object-fit:contain;border-radius:14px;background:#fff7ed;">
+    <div class="commercial-compact-copy" style="min-width:0;">
+      <strong class="commercial-compact-title" style="display:block;color:#7c2d12;font-size:15px;line-height:1.25;">${escapeCarnizaHtml(state.title)}</strong>
+      <span class="commercial-compact-message" style="display:block;margin-top:4px;color:#6b4b3e;font-size:13px;font-weight:800;line-height:1.35;">${escapeCarnizaHtml(state.message)}</span>
     </div>
-    <div style="display:grid;gap:7px;min-width:150px;">
+    <div class="commercial-compact-actions" style="display:grid;gap:7px;min-width:150px;">
       <button type="button" data-commercial-compact-primary style="min-height:42px;border:0;border-radius:12px;background:#c2410c;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
       <button type="button" data-commercial-compact-dismiss style="min-height:34px;border:0;background:transparent;color:#9a3412;font-size:12px;font-weight:900;cursor:pointer;">Ahora no</button>
     </div>
@@ -2543,7 +2584,7 @@ function getBusinessAccountFields() {
   const city = meta?.ciudad || meta?.city || meta?.localidad || meta?.locality || "";
   const province = meta?.provincia || meta?.province || "";
   const slug = web?.slug || state?.webSlug || meta?.webSlug || "";
-  const publicUrl = web?.publicUrl || web?.url || (slug ? `${window.location.origin}/${slug}` : "");
+  const publicUrl = slug ? getPublicWebUrl(currentBusinessId || currentPayload?.businessId || "", slug) : "";
 
   return {
     name: meta?.name || meta?.nombre || "Sin nombre cargado",
@@ -4195,10 +4236,9 @@ function buildPrintCenterPayload(meta = {}, state = {}, products = []) {
     createdFrom: "print_center"
   });
 
-  const APPPROMOS_PRODUCTION_ORIGIN = "https://apppromos.web.app";
   const cleanSlug = String(web?.slug || publicPayload?.slug || "").trim();
   const publicWebUrl = cleanSlug
-    ? `${APPPROMOS_PRODUCTION_ORIGIN}/${cleanSlug}`
+    ? getPublicWebUrl(currentPayload?.businessId || currentBusinessId || "", cleanSlug)
     : "";
 
   return {

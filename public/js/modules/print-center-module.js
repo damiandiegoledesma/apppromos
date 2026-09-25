@@ -684,7 +684,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     // tratar cada rubro/continuación como un bloque indivisible. Si un bloque
     // no entra completo, se divide por filas y continúa en la otra columna
     // o página. Así aprovechamos las dos columnas sin pisar QR/footer.
-    const hasQrFooter = /^https:\/\/apppromos\.web\.app\//i.test(String(publicWebUrl || "").trim());
+    const hasQrFooter = /^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(String(publicWebUrl || "").trim());
     const maxWeight = hasQrFooter ? 27.5 : 31;
     const headerWeight = 2.2;
 
@@ -809,7 +809,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
   const createPriceListQrFooter = () => {
     const safeUrl = String(publicWebUrl || "").trim();
-    if (!/^https:\/\/apppromos\.web\.app\//i.test(safeUrl)) return null;
+    if (!/^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(safeUrl)) return null;
     const qrFooter = document.createElement("div");
     qrFooter.className = "price-list-qr-footer";
     const qr = document.createElement("img");
@@ -988,7 +988,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     const qrRow = document.createElement("div");
     qrRow.className = "offer-poster-qr-row";
     const safePublicWebUrl = String(publicWebUrl || "").trim();
-    const isCanonicalProductionUrl = /^https:\/\/apppromos\.web\.app\//i.test(safePublicWebUrl);
+    const isCanonicalProductionUrl = /^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(safePublicWebUrl);
     if (safePublicWebUrl && isCanonicalProductionUrl) {
       const qr = document.createElement("img");
       qr.className = "offer-poster-qr";
@@ -1121,7 +1121,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
       // rasteriza la imagen remota de qrserver, evitando canvas contaminado.
       if (img.classList.contains("offer-poster-qr")) {
         const safeUrl = String(publicWebUrl || "").trim();
-        if (!/^https:\/\/apppromos\.web\.app\//i.test(safeUrl)) {
+        if (!/^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(safeUrl)) {
           throw new Error("No encontramos una URL pública válida para generar el QR.");
         }
         img.src = await createLocalQrDataUrl(safeUrl, 320);
@@ -1437,7 +1437,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
     // QR local + CTA. Se dibuja antes del bloque inferior fijo.
     const safePublicWebUrl = String(publicWebUrl || "").trim();
-    const isCanonicalProductionUrl = /^https:\/\/apppromos\.web\.app\//i.test(safePublicWebUrl);
+    const isCanonicalProductionUrl = /^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(safePublicWebUrl);
     if (safePublicWebUrl && isCanonicalProductionUrl) {
       try {
         const qrDataUrl = await createLocalQrDataUrl(safePublicWebUrl, 320);
@@ -1878,7 +1878,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
   const setQrShopStatus = (message = "") => { if (qrShopStatus) qrShopStatus.textContent = String(message || ""); };
 
   const buildQrShop = async () => {
-    if (!/^https:\/\/apppromos\.web\.app\//i.test(canonicalShopUrl)) {
+    if (!/^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(canonicalShopUrl)) {
       setQrShopStatus("Todavía no encontramos la dirección pública de tu carnicería.");
       return false;
     }
@@ -1898,7 +1898,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
   };
 
   const qrShopToPngBlob = async () => {
-    if (!/^https:\/\/apppromos\.web\.app\//i.test(canonicalShopUrl)) throw new Error("No encontramos la dirección pública de tu carnicería.");
+    if (!/^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(canonicalShopUrl)) throw new Error("No encontramos la dirección pública de tu carnicería.");
     const qrDataUrl = await createLocalQrDataUrl(canonicalShopUrl, 520);
     const qrImage = await loadCanvasImage(qrDataUrl);
     const width = 794, height = 1123, scale = 2;
@@ -2089,7 +2089,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     const expected=flyerSlotCount();
     if(offers.length!==expected){setFlyerError("Elegí todas las promociones necesarias para este formato.");flyerPreview?.classList.remove("is-ready");return false;}
     const safeUrl=String(publicWebUrl || "").trim();
-    if(!/^https:\/\/apppromos\.web\.app\//i.test(safeUrl)){setFlyerError("Todavía no encontramos la dirección pública de tu carnicería.");return false;}
+    if(!/^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(safeUrl)){setFlyerError("Todavía no encontramos la dirección pública de tu carnicería.");return false;}
     try{
       const qrDataUrl=await createLocalQrDataUrl(safeUrl,220);
       flyerA4?.replaceChildren();

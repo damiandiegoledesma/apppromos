@@ -48,7 +48,7 @@
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
     .brand img{width:42px;height:42px;object-fit:contain}
     .brand strong{font-size:18px}
-    .login-link{font-size:13px;font-weight:900;color:var(--red);text-decoration:none}
+    .login-link{font-size:13px;font-weight:900;color:var(--red);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;padding:0 8px}
     .progress{
       display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0 14px;
     }
@@ -142,8 +142,8 @@
     @media(max-width:760px){
       .shell{width:min(100% - 14px,620px);padding-top:10px}
       .scene{grid-template-columns:1fr;padding:14px;gap:12px;min-height:0}
-      .carniza-wrap{min-height:220px;max-height:280px}
-      .carniza-wrap img{max-height:300px;width:auto}
+      .carniza-wrap{min-height:150px;max-height:180px}
+      .carniza-wrap img{max-height:180px;width:auto}
       .copy{padding:4px 2px 8px}
       h1{font-size:38px}
       .lead{font-size:16px}

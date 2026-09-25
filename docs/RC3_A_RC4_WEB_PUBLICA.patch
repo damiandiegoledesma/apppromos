@@ -1,0 +1,40 @@
+--- /mnt/data/rc3ref/public/web.html	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/rc4work/public/web.html	2026-09-21 08:11:41.628355301 +0000
+@@ -1861,12 +1861,34 @@
+       if(slug){
+         const indexed=await getDoc(doc(db,"publicWebSlugs",slug));
+         if(indexed.exists() && indexed.data()?.businessId){
+-          const publicIndex = indexed.data() || {};
++          let publicIndex = indexed.data() || {};
++          let canonicalSlug = normalizeSlug(publicIndex.aliasOf || "");
++
++          // Compatibilidad con aliases creados por RC3: eran snapshots cuya
++          // propiedad slug ya apuntaba al canónico. RC4 los resuelve en vivo.
++          if(!canonicalSlug && publicIndex.createdFrom === "slug_alias"){
++            const rc3Canonical = normalizeSlug(publicIndex.slug || "");
++            if(rc3Canonical && rc3Canonical !== slug) canonicalSlug = rc3Canonical;
++          }
++
++          if(canonicalSlug && canonicalSlug !== slug){
++            const canonical = await getDoc(doc(db,"publicWebSlugs",canonicalSlug));
++            if(!canonical.exists() || !canonical.data()?.businessId){
++              throw new Error(`El enlace histórico "${slug}" apunta a una vidriera que ya no está disponible.`);
++            }
++            const canonicalData = canonical.data() || {};
++            if(String(canonicalData.businessId||"") !== String(publicIndex.businessId||"")){
++              throw new Error("El alias público no coincide con la carnicería canónica.");
++            }
++            publicIndex = canonicalData;
++          }
++
+           return {
+             type:"public",
+-            slug,
++            slug: canonicalSlug || slug,
++            requestedSlug: slug,
+             businessId: publicIndex.businessId,
+-            data:{ slug, ...publicIndex }
++            data:{ ...publicIndex, slug: canonicalSlug || normalizeSlug(publicIndex.slug||slug) }
+           };
+         }
+ 

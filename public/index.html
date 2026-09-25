@@ -98,7 +98,7 @@
     .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
     .microcopy { color: #eff6ff; font-size: 13px; font-weight: 900; margin-top: -16px; opacity: .92; }
     .hero-login-line { margin: -14px 0 18px; color: #dbeafe; font-size: 14px; font-weight: 850; }
-    .hero-login-line a { color: #fff; font-weight: 1000; text-decoration: underline; text-underline-offset: 3px; }
+    .hero-login-line a { color: #fff; font-weight: 1000; text-decoration: underline; text-underline-offset: 3px; min-height:44px; display:inline-flex; align-items:center; }
     .trust { display: flex; flex-wrap: wrap; gap: 10px; color: #eff6ff; font-size: 14px; font-weight: 900; }
     .pill { background: rgba(255,255,255,.10); border: 1px solid var(--line); border-radius: 999px; padding: 9px 12px; }
     .hero-card { position:relative; min-height:520px; background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(4,119,242,.08)); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); overflow:hidden; }
@@ -335,7 +335,7 @@
       .nav-actions .nav-link-how { display: none !important; }
       .nav-actions .nav-link-login,
       .nav-actions .nav-link-demo { display: inline-flex !important; }
-      .nav-actions .btn { min-height: 38px; padding: 0 10px; font-size: 12.5px; }
+      .nav-actions .btn { min-height: 44px; padding: 0 10px; font-size: 12.5px; }
       .hero { padding-top: 30px; }
       .hero-login-line { text-align: center; margin: -8px 0 16px; }
 
@@ -669,7 +669,7 @@
       .nav-actions .nav-link-login{
         display:inline-flex!important;
         width:auto!important;
-        min-height:34px;
+        min-height:44px;
         padding:0 10px;
         border-radius:999px;
         font-size:11.5px;
@@ -1011,7 +1011,7 @@
       background:#fff!important;
       border-top:1px solid rgba(4,119,242,.10)!important;
     }
-    .footer-socials a{
+    .footer-socials a{min-width:44px!important;min-height:44px!important;
       color:var(--brand-blue)!important;
       background:#f8fbff!important;
       border-color:rgba(4,119,242,.14)!important;
@@ -1407,7 +1407,7 @@
       <nav class="nav-actions" aria-label="Acciones principales">
         <a class="btn btn-light nav-link-how" href="/como-vender.html">Cómo vender</a>
         <a class="btn btn-light nav-link-login" href="#login">Iniciar sesión</a>
-        <a class="btn btn-primary nav-link-demo" href="#signup">Crear mi carnicería</a>
+        <a class="btn btn-primary nav-link-demo" href="/crear-carniceria.html">Crear mi carnicería</a>
       </nav>
     </div>
   </header>
@@ -1420,12 +1420,11 @@
           <h1>Poné tu carnicería online. <span class="accent">Tu vidriera abierta 24/7, los 365 días.</span></h1>
           <p class="lead">Tus clientes ven precios y ofertas, arman su pedido y te lo mandan por WhatsApp.</p>
           <div class="hero-ctas">
-            <a class="btn btn-green btn-big" href="#signup">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
-            <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
-            <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
+            <a class="btn btn-green btn-big" href="/crear-carniceria.html">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
+            <a class="btn btn-light btn-big" href="https://apppromos.web.app/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
           </div>
           <p class="hero-login-line">¿Ya tenés cuenta? <a href="#login">Iniciar sesión</a></p>
-          <div class="microcopy">90 días sin cargo · Sin tarjeta · Empezás en minutos</div>
+          <div class="microcopy" style="font-size:17px;line-height:1.4;margin-top:-10px;"><strong>14 DÍAS GRATIS · DESPUÉS $15.000 POR MES</strong><br><span style="font-size:14px;">Sin tarjeta para empezar</span></div>
           <div class="trust">
             <span class="pill">🌐 Vidriera online 24/7</span>
             <span class="pill">🛒 Carrito de pedidos</span>
@@ -1452,7 +1451,7 @@
           <h2 id="landing-video-title">Mirá cómo AppPromos pone tu carnicería online.</h2>
           <p>Cargás tus precios. Tus clientes ven, eligen y te mandan el pedido.</p>
           <div class="landing-video-actions">
-            <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
+            <a class="btn btn-green btn-big" href="/crear-carniceria.html">🚀 PROBALA SIN CARGO</a>
             <a class="btn btn-light btn-big" href="/como-vender.html">Ver tres maneras de vender</a>
           </div>
         </div>
@@ -1484,18 +1483,18 @@
 
         <div class="workflow-grid">
           <article class="workflow-card">
-            <div class="workflow-topline"><span class="workflow-num">1</span><span class="workflow-label">Te registrás</span></div>
+            <div class="workflow-topline"><span class="workflow-num">1</span><span class="workflow-label">Elegís productos</span></div>
             <div class="workflow-visual workflow-register">
               <img class="workflow-carniza" src="/assets/characters/carniza/carniza-base.webp" alt="" aria-hidden="true" />
               <div class="mini-phone">
-                <div class="mini-phone-head">Crear mi carnicería</div>
-                <div class="mini-field">Carnicería López</div>
-                <div class="mini-field">3462 50-5050</div>
-                <div class="mini-action">Crear cuenta</div>
+                <div class="mini-phone-head">¿Qué vendés?</div>
+                <div class="mini-field">🐄 Vacuno</div>
+                <div class="mini-field">🐖 Cerdo · 🐔 Pollo</div>
+                <div class="mini-action">Elegir productos</div>
               </div>
             </div>
-            <h3>Creás tu carnicería</h3>
-            <p>Te registrás y dejás listo el negocio para empezar a vender online.</p>
+            <h3>Elegís lo que vendés</h3>
+            <p>Armás tu catálogo inicial sin registrarte primero.</p>
           </article>
 
           <article class="workflow-card">
@@ -1514,7 +1513,7 @@
           </article>
 
           <article class="workflow-card">
-            <div class="workflow-topline"><span class="workflow-num">3</span><span class="workflow-label">Publicamos tu web</span></div>
+            <div class="workflow-topline"><span class="workflow-num">3</span><span class="workflow-label">Completás y publicás</span></div>
             <div class="workflow-visual workflow-publish">
               <img class="workflow-carniza workflow-carniza-small" src="/assets/characters/carniza/carniza-base.webp" alt="" aria-hidden="true" />
               <div class="publish-card">
@@ -1524,12 +1523,12 @@
                 <span>y publicada</span>
               </div>
             </div>
-            <h3>AppPromos hace el resto</h3>
-            <p>Los cambios pasan automáticamente a tu vidriera online.</p>
+            <h3>Creás tu carnicería online</h3>
+            <p>Completás los datos mínimos una sola vez y tus precios ya quedan publicados.</p>
           </article>
 
           <article class="workflow-card">
-            <div class="workflow-topline"><span class="workflow-num">4</span><span class="workflow-label">Tu cliente la ve</span></div>
+            <div class="workflow-topline"><span class="workflow-num">4</span><span class="workflow-label">Compartís tu vidriera</span></div>
             <div class="workflow-visual">
               <div class="customer-phone">
                 <div class="customer-store">A LA ESTACA</div>
@@ -1538,8 +1537,8 @@
                 <div class="customer-offer"><span>Milanesas</span><strong>$ 6.990</strong><b>+</b></div>
               </div>
             </div>
-            <h3>Ve precios y ofertas</h3>
-            <p>Entra desde el celular y encuentra tu carnicería siempre actualizada.</p>
+            <h3>Mandás el link por WhatsApp</h3>
+            <p>Tus clientes entran desde el celular y ven tus precios y promociones.</p>
           </article>
 
           <article class="workflow-card">
@@ -1555,7 +1554,7 @@
               </div>
             </div>
             <h3>Elige y arma su pedido</h3>
-            <p>Agrega productos al carrito y revisa todo antes de enviarlo.</p>
+            <p>Ve los productos, agrega lo que necesita y revisa todo antes de enviarlo.</p>
           </article>
 
           <article class="workflow-card">
@@ -1617,15 +1616,15 @@
             <img src="/assets/product/landing/a-la-estaca-mobile-real-v1221.webp" alt="A La Estaca online y un pedido real armado en su carrito" loading="lazy" width="1000" height="900" />
           </div>
         </div>
-        <div class="center-actions"><a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER A LA ESTACA FUNCIONANDO</a></div>
+        <div class="center-actions"><a class="btn btn-light btn-big" href="https://apppromos.web.app/carniceria-a-la-estaca-3462-543210">👁 VER A LA ESTACA FUNCIONANDO</a></div>
       </div>
     </section>
 
     <section id="probar-sin-cargo">
       <div class="wrap trial-simple">
         <div class="eyebrow">Empezá sin complicaciones</div>
-        <h2>Probá tu carnicería online durante 90 días sin cargo.</h2>
-        <p>Creala, cargá tus precios y usala con clientes reales. No necesitás tarjeta para empezar.</p>
+        <h2>Probá tu carnicería online durante 14 días sin cargo.</h2>
+        <p>Creala, cargá tus precios y usala con clientes reales. Después, <strong>$15.000 por mes</strong>. Sin tarjeta para empezar.</p>
         <ul class="checklist">
           <li>✅ Vidriera online 24/7</li>
           <li>✅ Precios y ofertas</li>
@@ -1633,8 +1632,8 @@
           <li>✅ Pedidos a tu WhatsApp</li>
         </ul>
         <div class="hero-ctas" style="justify-content:center;margin-top:24px;">
-          <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
-          <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
+          <a class="btn btn-green btn-big" href="/crear-carniceria.html">🚀 PROBALA SIN CARGO</a>
+          <a class="btn btn-light btn-big" href="https://apppromos.web.app/carniceria-a-la-estaca-3462-543210">Ver A La Estaca online</a>
         </div>
       </div>
     </section>
@@ -1644,8 +1643,8 @@
         <h2>Poné tu carnicería online hoy.</h2>
         <p>Tu vidriera abierta 24/7, los 365 días. Probala sin cargo.</p>
         <div class="hero-ctas" style="justify-content:center;">
-          <a class="btn btn-green btn-big" href="#signup">🚀 PROBALA SIN CARGO</a>
-          <a class="btn btn-light btn-big" href="/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
+          <a class="btn btn-green btn-big" href="/crear-carniceria.html">🚀 PROBALA SIN CARGO</a>
+          <a class="btn btn-light btn-big" href="https://apppromos.web.app/carniceria-a-la-estaca-3462-543210">👁 VER UNA CARNICERÍA ONLINE</a>
         </div>
       </div>
     </section>
@@ -1677,7 +1676,7 @@
       <div id="tabRegistro" class="tab">
         <p class="auth-help">
           <strong>Creá tu carnicería online</strong>
-          Solo lo necesario para empezar. Tenés 90 días sin cargo y no necesitás tarjeta.
+          Solo lo necesario para empezar. Tenés 14 días sin cargo y no necesitás tarjeta.
         </p>
 
         <input id="businessName" name="businessName" placeholder="Ej: Carnicería El Corte" autocomplete="organization" />
@@ -1698,6 +1697,12 @@
         <button id="registroBtn" class="submit" type="button">Crear mi carnicería online</button>
         <div id="registroStatus" class="status"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="install-after-value" aria-label="Instalar AppPromos">
+    <div class="wrap center-actions">
+      <button type="button" class="btn btn-light btn-big pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
     </div>
   </section>
 
@@ -1878,7 +1883,7 @@
 
 
   <div class="mobile-bottom-cta" aria-label="Crear mi carnicería">
-    <a class="mobile-bottom-cta-link" href="#signup">🚀 CREAR MI CARNICERÍA · PROBALA SIN CARGO</a>
+    <a class="mobile-bottom-cta-link" href="/crear-carniceria.html">🚀 PONÉ TU CARNICERÍA ONLINE HOY · PROBALA SIN CARGO</a>
   </div>
 
 
@@ -1916,9 +1921,6 @@
 
 </body>
 </html>
-
-
-
 
 
 

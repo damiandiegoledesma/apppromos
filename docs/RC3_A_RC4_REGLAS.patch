@@ -1,0 +1,21 @@
+--- /mnt/data/rc3ref/firestore.rules	2026-09-21 06:42:28.000000000 +0000
++++ /mnt/data/rc4work/firestore.rules	2026-09-21 08:11:41.627338910 +0000
+@@ -38,10 +38,18 @@
+       let businessEnabled = !(business.status in ['disabled', 'suspended', 'inactive']);
+       let bonified = billing.plan != 'trial'
+         && billing.status in ['manual', 'bonus', 'bonificado'];
++      // RC4: compatibilidad transitoria para negocios creados antes de que
++      // writeAccessUntil fuera obligatorio. El dueño no puede modificar billing
++      // desde estas reglas, por lo que este fallback sólo confía en estado legado
++      // ya existente en el documento raíz. Debe retirarse después de migrar todos
++      // los negocios con ensureBusinessAdminDefaults.
++      let legacyActive = !('writeAccessUntil' in billing)
++        && billing.status == 'active';
+       return businessEnabled
+         && billing is map
+         && (
+           bonified
++          || legacyActive
+           || (
+             billing.writeAccessUntil is timestamp
+             && request.time < billing.writeAccessUntil
