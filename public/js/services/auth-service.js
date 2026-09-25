@@ -503,6 +503,14 @@ export async function registerClientAndBusiness(data) {
 
   const identity = buildBusinessIdentity(data);
 
+  const campaignAttribution = {
+    utm_source: String(data?.campaignAttribution?.utm_source || "").trim().slice(0, 160),
+    utm_medium: String(data?.campaignAttribution?.utm_medium || "").trim().slice(0, 160),
+    utm_campaign: String(data?.campaignAttribution?.utm_campaign || "").trim().slice(0, 160),
+    utm_content: String(data?.campaignAttribution?.utm_content || "").trim().slice(0, 160)
+  };
+  const hasCampaignAttribution = Object.values(campaignAttribution).some(Boolean);
+
   if (!businessName || !email || !password || !identity.rawPhone || !identity.locality) {
     throw new Error("Faltan datos obligatorios");
   }
@@ -627,6 +635,7 @@ export async function registerClientAndBusiness(data) {
       isTestBusiness: false,
       isTemplateBusiness: false,
       createdBy: "self_register",
+      ...(hasCampaignAttribution ? { acquisition: campaignAttribution } : {}),
       modules,
       billing,
       metrics: {

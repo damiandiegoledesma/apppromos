@@ -657,7 +657,8 @@ function renderPublish() {
         province: current.identity.province,
         provinceId: current.identity.provinceId,
         activationPrices: current.prices,
-        activationRubros: current.selectedRubros || []
+        activationRubros: current.selectedRubros || [],
+        campaignAttribution
       });
 
       trackTrialRegistered({

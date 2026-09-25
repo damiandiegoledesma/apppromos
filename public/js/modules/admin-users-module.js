@@ -1196,6 +1196,155 @@ function renderUsers(users = [], businesses = []) {
   `;
 }
 
+function acquisitionData(row = {}) {
+  const value = row.acquisition && typeof row.acquisition === "object"
+    ? row.acquisition
+    : {};
+
+  return {
+    source: String(value.utm_source || "").trim(),
+    medium: String(value.utm_medium || "").trim(),
+    campaign: String(value.utm_campaign || "").trim(),
+    content: String(value.utm_content || "").trim()
+  };
+}
+
+function campaignDisplayName(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return "Sin campa\u00f1a";
+
+  return clean
+    .replace(/_/g, " ")
+    .replace(/\bsep26\b/gi, "Sep26")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function adDisplayName(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return "Sin anuncio";
+
+  const match = clean.match(/^video[_-]?(\d+)$/i);
+  if (match) return `Video ${match[1]}`;
+
+  return clean.replace(/_/g, " ");
+}
+
+function sourceDisplayName(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return "Origen desconocido";
+  if (clean.toLowerCase() === "meta") return "Meta";
+  return clean;
+}
+
+function acquisitionOriginLabel(row = {}) {
+  const acquisition = acquisitionData(row);
+  const hasAttribution = Object.values(acquisition).some(Boolean);
+
+  if (!hasAttribution) return "Sin atribuci\u00f3n";
+
+  const source = sourceDisplayName(acquisition.source);
+
+  return acquisition.content
+    ? `${source} \u00b7 ${adDisplayName(acquisition.content)}`
+    : source;
+}
+
+function renderCampaigns(businesses = []) {
+  const realBusinesses = businesses.filter((row) => !isTest(row));
+  const attributed = realBusinesses.filter((row) => {
+    const acquisition = acquisitionData(row);
+    return Object.values(acquisition).some(Boolean);
+  });
+
+  const unattributedCount = realBusinesses.length - attributed.length;
+  const groups = new Map();
+
+  attributed.forEach((row) => {
+    const acquisition = acquisitionData(row);
+    const key = [
+      acquisition.campaign || "sin_campaign",
+      acquisition.content || "sin_content",
+      acquisition.source || "sin_source"
+    ].join("|");
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        campaign: acquisition.campaign,
+        content: acquisition.content,
+        source: acquisition.source,
+        businesses: []
+      });
+    }
+
+    groups.get(key).businesses.push(row);
+  });
+
+  const rows = Array.from(groups.values())
+    .sort((a, b) => b.businesses.length - a.businesses.length);
+
+  return `
+    <div class="admin-section-head">
+      <div>
+        <h3>Campa&ntilde;as</h3>
+        <p>Qu&eacute; anuncios est&aacute;n creando carnicer&iacute;as reales.</p>
+      </div>
+    </div>
+
+    <div class="admin-home-grid">
+      <section class="admin-panel-card">
+        <h3>${attributed.length}</h3>
+        <p>Altas con origen identificado</p>
+      </section>
+
+      <section class="admin-panel-card">
+        <h3>${unattributedCount}</h3>
+        <p>Altas sin atribuci&oacute;n</p>
+      </section>
+
+      <section class="admin-panel-card">
+        <h3>${realBusinesses.length}</h3>
+        <p>Carnicer&iacute;as reales totales</p>
+      </section>
+    </div>
+
+    ${rows.length ? `
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Campa&ntilde;a</th>
+              <th>Anuncio</th>
+              <th>Origen</th>
+              <th>Altas</th>
+              <th>Carnicer&iacute;as</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((group) => `
+              <tr>
+                <td><strong>${escapeHtml(campaignDisplayName(group.campaign))}</strong></td>
+                <td>${escapeHtml(adDisplayName(group.content))}</td>
+                <td>${escapeHtml(sourceDisplayName(group.source))}</td>
+                <td><strong>${group.businesses.length}</strong></td>
+                <td>
+                  ${group.businesses
+                    .map((row) => escapeHtml(businessName(row)))
+                    .join("<br>")}
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="admin-empty">
+        Todav&iacute;a no hay altas provenientes de campa&ntilde;as.
+        Las nuevas carnicer&iacute;as con UTM aparecer&aacute;n autom&aacute;ticamente ac&aacute;.
+      </div>
+    `}
+  `;
+}
+
 function renderMore(businesses = []) {
   const realCount = businesses.filter((b) => !isTest(b)).length;
   return `
@@ -1204,6 +1353,7 @@ function renderMore(businesses = []) {
         <h3>Consultas administrativas</h3>
         <p>Información que no necesitás para el trabajo diario.</p>
         <div class="admin-more-links">
+          <button type="button" data-admin-view="campaigns"><strong>Campa&ntilde;as</strong><span>Altas por anuncio y origen</span></button>
           <button type="button" data-admin-view="tracking"><strong>Tracking</strong><span>Embudo y métricas comerciales</span></button>
           <button type="button" data-admin-view="users"><strong>Usuarios</strong><span>Accesos y cuentas registradas</span></button>
         </div>
@@ -1485,9 +1635,15 @@ function renderDetail(row = {}) {
 
   const yesNoChip = (value) => value ? chip("Sí", "ok") : chip("No", "neutral");
   const nextStep = recommendedNextStep(row);
+  const acquisition = acquisitionData(row);
 
   return `
     <div class="admin-detail-page admin-operational-detail">
+      <section class="admin-panel-card">
+        <h3>Adquisici&oacute;n</h3>
+        <p><strong>Origen:</strong> ${escapeHtml(acquisitionOriginLabel(row))}</p>
+        <p><strong>Campa&ntilde;a:</strong> ${escapeHtml(acquisition.campaign ? campaignDisplayName(acquisition.campaign) : "Sin atribuci\u00f3n")}</p>
+      </section>
       <div class="admin-detail-top">
         <button type="button" data-close-detail>← Centro de Control</button>
         <div>
@@ -2004,6 +2160,7 @@ export async function renderAdminUsers(container, options = {}) {
     if (state.view === "clients") content.innerHTML = renderClients(businesses, state);
     if (state.view === "billing") content.innerHTML = renderBilling(businesses, state);
     if (state.view === "tracking") content.innerHTML = renderTracking(businesses, state);
+    if (state.view === "campaigns") content.innerHTML = renderCampaigns(businesses);
     if (state.view === "users") content.innerHTML = renderUsers(users, businesses);
     if (state.view === "more") content.innerHTML = renderMore(businesses);
   }
