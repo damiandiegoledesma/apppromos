@@ -23,6 +23,40 @@ import {
 const root = document.getElementById("activationRoot");
 const params = new URLSearchParams(location.search);
 
+const ATTRIBUTION_SESSION_KEY = "apppromos_activation_attribution";
+
+function resolveCampaignAttribution() {
+  const fromUrl = {
+    utm_source: params.get("utm_source") || "",
+    utm_medium: params.get("utm_medium") || "",
+    utm_campaign: params.get("utm_campaign") || "",
+    utm_content: params.get("utm_content") || ""
+  };
+
+  const hasUrlAttribution = Object.values(fromUrl).some(Boolean);
+
+  try {
+    if (hasUrlAttribution) {
+      sessionStorage.setItem(ATTRIBUTION_SESSION_KEY, JSON.stringify(fromUrl));
+      return fromUrl;
+    }
+
+    const stored = JSON.parse(sessionStorage.getItem(ATTRIBUTION_SESSION_KEY) || "null");
+    if (stored && typeof stored === "object") {
+      return {
+        utm_source: String(stored.utm_source || ""),
+        utm_medium: String(stored.utm_medium || ""),
+        utm_campaign: String(stored.utm_campaign || ""),
+        utm_content: String(stored.utm_content || "")
+      };
+    }
+  } catch (_) {}
+
+  return fromUrl;
+}
+
+const campaignAttribution = resolveCampaignAttribution();
+
 const STEP_INDEX = {
   welcome: 0,
   rubros: 1,
@@ -606,7 +640,10 @@ function renderPublish() {
     }
 
     try {
-      trackRegistrationStarted({ source: "activation_onboarding" });
+      trackRegistrationStarted({
+        source: "activation_onboarding",
+        ...campaignAttribution
+      });
 
       const result = await registerClientAndBusiness({
         businessName: current.identity.businessName,
@@ -625,7 +662,8 @@ function renderPublish() {
 
       trackTrialRegistered({
         source: "activation_onboarding",
-        business_id: result?.businessId || null
+        business_id: result?.businessId || null,
+        ...campaignAttribution
       });
 
       await setActiveBusinessId(result.businessId);
