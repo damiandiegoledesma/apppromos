@@ -737,7 +737,7 @@ export function renderPrices(container, products = [], businessId = null, option
           return;
         }
 
-        const ok = confirm("¿Volver a usar este producto?\n\nVa a estar disponible en AppPromos. Si tiene precio válido, también puede aparecer en tu web.");
+        const ok = confirm("¿Volver a usar este producto?\n\nVa a estar disponible en Carnis. Si tiene precio válido, también puede aparecer en tu web.");
         if (!ok) return;
 
         try {
@@ -1364,7 +1364,7 @@ export function renderPrices(container, products = [], businessId = null, option
         </div>
 
         <div class="prices-usage-help">
-          Marcado = lo uso en AppPromos. <strong>No uso</strong> = no aparece en ofertas ni en mi web. Podés volver a activarlo cuando quieras.
+          Marcado = lo uso en Carnis. <strong>No uso</strong> = no aparece en ofertas ni en mi web. Podés volver a activarlo cuando quieras.
         </div>
 
         <div id="rubroButtons" class="prices-rubro-scroll" aria-label="Rubros"></div>

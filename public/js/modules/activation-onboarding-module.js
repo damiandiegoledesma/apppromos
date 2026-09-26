@@ -508,7 +508,7 @@ function friendlyRegistrationError(error) {
   const text = String(error?.code || error?.message || error || "").toLowerCase();
 
   if (text.includes("phone-already-used") || text.includes("phone_already_used") || text.includes("whatsapp ya")) {
-    return "Ese WhatsApp ya está asociado a una carnicería en AppPromos.";
+    return "Ese WhatsApp ya está asociado a una carnicería en Carnis.";
   }
   if (text.includes("email-already-in-use")) {
     return "Ese email ya está registrado. Probá ingresar con tu cuenta.";
@@ -718,7 +718,7 @@ function renderPublishedSuccess(result = {}) {
     actions: `
       ${publicUrl ? `<a class="btn btn-primary" href="${esc(publicUrl)}" target="_blank" rel="noopener">🌐 Ver mi carnicería</a>` : ""}
       ${shareHref ? `<a class="btn btn-green" href="${esc(shareHref)}" target="_blank" rel="noopener">📲 Compartir por WhatsApp</a>` : ""}
-      <a class="btn btn-light" href="/app.html?onboarding=1">Entrar a AppPromos</a>
+      <a class="btn btn-light" href="/app.html?onboarding=1">Entrar a Carnis</a>
     `
   });
 }

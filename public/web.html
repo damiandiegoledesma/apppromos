@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Carnicería online | AppPromos</title>
-  <link id="businessFavicon" rel="icon" href="/assets/logo/apppromos-favicon-transparent.png" />
+  <title>Carnicería online | Carnis.app</title>
+  <link id="businessFavicon" rel="icon" href="/assets/brand/carnis/app-icons/carnis-icon-48.png" />
 
   <!-- V12.26-G1 - Analytics de intencion de pedido publico -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-EBJM7TQRSN"></script>
@@ -1690,10 +1690,10 @@
 
     function applyBusinessTabIdentity(name="Carnicería",logoUrl=""){
       const cleanName=String(name||"Carnicería").trim()||"Carnicería";
-      document.title=`${cleanName} | AppPromos`;
+      document.title=`${cleanName} | Carnis.app`;
       const favicon=document.getElementById("businessFavicon");
       if(!favicon)return;
-      const fallback="/assets/logo/apppromos-favicon-transparent.png";
+      const fallback="/assets/brand/carnis/app-icons/carnis-icon-48.png";
       const candidate=String(logoUrl||"").trim();
       if(!candidate){favicon.href=fallback;return;}
       const probe=new Image();
@@ -2599,7 +2599,7 @@
       const dailySection=`<section class="section store-view${activeStoreView==="daily"?" is-active":""}" id="ofertas-dia" data-store-view="daily"><div class="section-head"><h2>🔥 Promo del día</h2><small>Hasta agotar stock</small></div>${dailyOffersHtml||`<div class="empty">Hoy todavía no hay una Promo del día publicada.</div>`}</section>`;
       const promosSection=`<section class="section store-view${activeStoreView==="promos"?" is-active":""}" id="promos" data-store-view="promos"><div class="section-head"><h2>🏷️ Promos</h2><small>Combos y promociones de la carnicería</small></div>${regularOffersHtml}</section>`;
       const homeSection=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home"><section class="${heroClass}"${heroStyle}><div class="hero-business"><div class="hero-business-logo">${logoHtml}</div><div><h1>${headerName}</h1>${identityLocation?`<p class="hero-location">📍 ${esc(identityLocation)}</p>`:""}</div></div><div class="hero-meta">${locationHtml}${phoneHtml}</div><div class="hero-actions"><button type="button" class="btn btn-primary" data-store-view-target="products">🥩 Productos</button><button type="button" class="btn btn-light" data-store-view-target="promos">🏷️ Promos</button><button type="button" class="btn btn-light" data-store-view-target="daily">🔥 Promo del día</button></div></section>${showcaseHtml}</div>`;
-      app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div>${homeSection}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer AppPromos"><img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" loading="lazy"><span class="apppromos-signature-copy"><small>Esta carnicería online funciona con</small><strong>AppPromos</strong><span>Conocé AppPromos →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
+      app.innerHTML=`<div class="mobile-store-top"><div class="mobile-store-identity">${logoHtml}<div class="mobile-store-top-copy"><strong>${esc(name)}</strong><small>📍 ${esc(mobileLocationLine)}</small></div></div><a class="mobile-wa-icon" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}<span>WhatsApp</span></a></div>${homeSection}${dailySection}${promosSection}${pricesSection}${renderCartHtml()}${renderFloatingCartHtml()}<a class="apppromos-signature" href="/" target="_blank" rel="noopener" aria-label="Conocer Carnis.app"><img src="/assets/brand/carnis/svg/carnis-icono-color.svg" alt="" loading="lazy"><span class="apppromos-signature-copy"><small>Funciona con</small><strong>Carnis.app</strong><span>Conocé Carnis.app →</span></span></a><div class="carniza-web"><img src="/assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy"><div><strong>${esc(carnizaTitle)}</strong><small>${esc(carnizaSub)}</small><a href="${carnizaHref}"${carnizaAttrs}>${esc(carnizaCta)}</a></div></div>${renderMobileNavHtml()}`;
       renderActivationPreviewBar();
       scheduleCheckoutFloatingState();
       applyOfferView();
