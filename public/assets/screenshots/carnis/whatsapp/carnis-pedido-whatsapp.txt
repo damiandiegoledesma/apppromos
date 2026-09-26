@@ -1,0 +1,14 @@
+Hola, quiero hacer este pedido en *Carnicería de Carniza*:
+
+*PEDIDO*
+- 1 kg Asado del Medio - Ternera/Vaca - $ 23.500
+- 1 kg Cuadril - Ternera/Vaca - $ 20.500
+- 1 kg Falda - Ternera/Vaca - $ 19.000
+
+*TOTAL ESTIMADO: $ 63.000*
+
+*Cliente:* Juan
+*Telefono:* 3462 555555
+
+*Entrega:* Retiro en el local
+*Pago:* Efectivo
