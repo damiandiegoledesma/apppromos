@@ -1,0 +1,9 @@
+{
+  "brand": "Carnis.app",
+  "version": "V2.2",
+  "status": "Aprobado",
+  "source": "Redibujo vectorial de la lámina aprobada V2.1",
+  "colors": {"carnis": "#E52223", "apppromos": "#0A2E5B"},
+  "logo_font": "Kanit (SIL Open Font License), convertida a trazos",
+  "ui_font": "Poppins"
+}
