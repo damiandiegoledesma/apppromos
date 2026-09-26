@@ -21,7 +21,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 export const FUNNEL_SCHEMA_VERSION = 1;
-export const FUNNEL_BUILD = "V12.29-RC5.6+T1";
+export const FUNNEL_BUILD = "V12.29-RC5.6+T1+L2";
 export const FUNNEL_COLLECTION = "funnelEvents";
 
 export const FUNNEL_EVENTS = Object.freeze([

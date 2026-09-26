@@ -441,3 +441,5 @@ Implementado exactamente según las secciones 1–15, con estas diferencias (tod
 **Qué se tocó y qué no:**
 - Archivos modificados: los previstos en la sección 14, más `funnel-report-service.js` y dos pruebas: `tools/qa/test-funnel-rules.mjs` y `tools/qa/test-funnel-report.mjs`.
 - No se tocaron `tracking-service.js` (GA4), `app-main.js`, `index.html`, `crear-carniceria.html` ni `app.html`.
+
+**Actualización (Landing 2 V0.6):** la instrumentación de la landing quedó conectada en `public/index.html` (`attachLandingFunnel`, `data-funnel-cta`) y `FUNNEL_BUILD` pasó a `V12.29-RC5.6+T1+L2`. Ver `docs/LANDING_2_V06.md`.
