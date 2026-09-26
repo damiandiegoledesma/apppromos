@@ -136,6 +136,19 @@ service cloud.firestore {
         );
     }
 
+    // Tracking Comercial V1 (docs/TRACKING_COMERCIAL_V1.md)
+    function validFunnelTouch(t) {
+      return t is map
+        && t.keys().hasOnly(['source', 'medium', 'campaign', 'content', 'term', 'path', 'at'])
+        && (!('source' in t) || (t.source is string && t.source.size() <= 100))
+        && (!('medium' in t) || (t.medium is string && t.medium.size() <= 100))
+        && (!('campaign' in t) || (t.campaign is string && t.campaign.size() <= 100))
+        && (!('content' in t) || (t.content is string && t.content.size() <= 100))
+        && (!('term' in t) || (t.term is string && t.term.size() <= 100))
+        && (!('path' in t) || (t.path is string && t.path.size() <= 120))
+        && (!('at' in t) || (t.at is string && t.at.size() <= 30));
+    }
+
     match /admins/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || isSuperadmin());
       allow create, update, delete: if isSuperadmin();
@@ -309,6 +322,63 @@ service cloud.firestore {
         && (isAdmin() || (ownsBusiness(businessId) && ownerCommercialWriteAllowed(businessId)));
       allow update, delete: if collectionId != 'commercialEvents' && collectionId != 'publicSignals' && collectionId != 'followupEvents' && collectionId != 'followupState'
         && (isAdmin() || (ownsBusiness(businessId) && ownerCommercialWriteAllowed(businessId)));
+    }
+
+    // Tracking Comercial V1: embudo anónimo previo al alta. Append-only, lectura solo admin.
+    match /funnelEvents/{eventId} {
+      allow read: if isAdmin() || isSuperadmin();
+      allow update, delete: if false;
+      allow create: if eventId.matches('^[A-Za-z0-9]{20,40}$')
+        && request.resource.data.keys().hasAll([
+          'schema_version', 'event_id', 'event_name', 'visitor_id', 'session_id',
+          'occurred_at', 'client_at', 'page', 'path', 'build', 'is_internal', 'storage_ok',
+          'first_touch', 'current_touch', 'last_touch'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'schema_version', 'event_id', 'event_name', 'visitor_id', 'session_id',
+          'occurred_at', 'client_at', 'page', 'path', 'build', 'is_internal', 'storage_ok',
+          'first_touch', 'current_touch', 'last_touch',
+          'cta_position', 'count', 'business_id'
+        ])
+        && request.resource.data.schema_version == 1
+        && request.resource.data.event_id == eventId
+        && request.resource.data.event_name in [
+          'landing_view', 'cta_create_clicked', 'onboarding_started', 'rubros_completed',
+          'prices_started', 'prices_completed', 'name_completed', 'storefront_previewed',
+          'signup_started', 'account_created', 'business_created', 'share_whatsapp_clicked'
+        ]
+        && request.resource.data.visitor_id is string
+        && request.resource.data.visitor_id.matches('^[A-Za-z0-9]{16,40}$')
+        && request.resource.data.session_id is string
+        && request.resource.data.session_id.matches('^[A-Za-z0-9]{16,40}$')
+        && request.resource.data.occurred_at == request.time
+        && request.resource.data.client_at is string
+        && request.resource.data.client_at.size() <= 30
+        && request.resource.data.page in ['landing', 'onboarding', 'preview']
+        && request.resource.data.path is string
+        && request.resource.data.path.size() <= 120
+        && request.resource.data.build is string
+        && request.resource.data.build.size() <= 24
+        && request.resource.data.is_internal is bool
+        && request.resource.data.storage_ok is bool
+        && validFunnelTouch(request.resource.data.first_touch)
+        && validFunnelTouch(request.resource.data.current_touch)
+        && validFunnelTouch(request.resource.data.last_touch)
+        && (!('cta_position' in request.resource.data)
+          || (request.resource.data.event_name == 'cta_create_clicked'
+            && request.resource.data.cta_position in
+              ['nav', 'hero', 'how_it_works', 'pricing', 'final', 'sticky', 'other']))
+        && (!('count' in request.resource.data)
+          || (request.resource.data.event_name in ['rubros_completed', 'prices_completed', 'business_created']
+            && request.resource.data.count is int
+            && request.resource.data.count >= 0
+            && request.resource.data.count <= 500))
+        && (('business_id' in request.resource.data)
+          == (request.resource.data.event_name in ['business_created', 'share_whatsapp_clicked']))
+        && (!('business_id' in request.resource.data)
+          || (request.resource.data.business_id is string
+            && request.resource.data.business_id.size() <= 60
+            && ownsBusiness(request.resource.data.business_id)));
     }
 
     match /publicWebSlugs/{slug} {

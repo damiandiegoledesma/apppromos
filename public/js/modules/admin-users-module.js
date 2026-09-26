@@ -27,8 +27,14 @@ import {
   restoreBusiness,
   setUserDisabled,
   ensureBusinessAdminDefaults,
-  listBusinessCommercialEvents
+  listBusinessCommercialEvents,
+  listFunnelEvents
 } from "../services/admin-service.js";
+import {
+  NO_ATTRIBUTION,
+  computeFunnel,
+  resolveFunnelRange
+} from "../services/funnel-report-service.js";
 
 const ADMIN_PLANS = Array.from(new Set([...(BILLING_PLANS || []), "dueno"]));
 const PAYMENT_STATUSES = ["active", "pending", "overdue", "suspended", "manual"];
@@ -1126,11 +1132,110 @@ function trackingBucket(row = {}) {
   return "prod";
 }
 
+// ---------- Tracking Comercial V1: bloque Embudo ----------
+
+function funnelPercent(value) {
+  if (value === null || value === undefined) return "—";
+  return `${Math.round(value * 1000) / 10}%`;
+}
+
+function funnelCampaignLabel(value) {
+  return value === NO_ATTRIBUTION ? "Sin atribución" : value;
+}
+
+function renderFunnelBlock(funnel = {}) {
+  const periodTabs = [["today", "Hoy"], ["7d", "7 días"], ["30d", "30 días"], ["custom", "Fechas"]]
+    .map(([key, label]) => `<button type="button" data-funnel-period="${key}" class="${funnel.period === key ? "active" : ""}">${label}</button>`)
+    .join("");
+
+  const head = `
+    <div class="admin-section-head">
+      <div>
+        <h3>Embudo comercial</h3>
+        <p>Visitantes únicos por paso, desde la landing hasta compartir la carnicería.</p>
+        <small>Cuenta eventos dentro del período, no cohortes: un recorrido que cruza el límite del período queda partido. Con entradas directas al onboarding, un paso puede superar al anterior.</small>
+      </div>
+      <div class="admin-filter-tabs">${periodTabs}</div>
+    </div>
+    ${funnel.period === "custom" ? `
+      <div class="admin-filter-tabs" style="margin-bottom:10px;">
+        <label>Desde <input type="date" data-funnel-from value="${escapeHtml(funnel.fromDate || "")}"></label>
+        <label>Hasta <input type="date" data-funnel-to value="${escapeHtml(funnel.toDate || "")}"></label>
+        <button type="button" data-funnel-load>Aplicar</button>
+      </div>
+    ` : ""}
+  `;
+
+  if (!funnel.loaded) {
+    return `${head}
+      <section class="admin-panel-card" style="margin-bottom:16px;">
+        ${funnel.loading ? "<p>Cargando embudo...</p>" : `<button type="button" data-funnel-load>Ver embudo</button>`}
+        ${funnel.error ? `<p style="color:#b42318;">${escapeHtml(funnel.error)}</p>` : ""}
+      </section>`;
+  }
+
+  const report = computeFunnel(funnel.events || [], {
+    includeInternal: funnel.includeInternal,
+    attribution: funnel.attribution,
+    campaign: funnel.campaign,
+    content: funnel.content
+  });
+
+  const campaignOptions = report.campaigns
+    .map((entry) => `<option value="${escapeHtml(entry.campaign)}" ${funnel.campaign === entry.campaign ? "selected" : ""}>${escapeHtml(funnelCampaignLabel(entry.campaign))} (${entry.visitors})</option>`)
+    .join("");
+  const contents = funnel.campaign
+    ? (report.campaigns.find((entry) => entry.campaign === funnel.campaign)?.contents || [])
+    : Array.from(new Set(report.campaigns.flatMap((entry) => entry.contents))).sort();
+  const contentOptions = contents
+    .map((value) => `<option value="${escapeHtml(value)}" ${funnel.content === value ? "selected" : ""}>${escapeHtml(funnelCampaignLabel(value))}</option>`)
+    .join("");
+
+  const drop = report.biggestDrop;
+  return `${head}
+    <div class="admin-filter-tabs" style="margin-bottom:10px;align-items:center;">
+      <label>Campaña <select data-funnel-campaign><option value="">Todas</option>${campaignOptions}</select></label>
+      <label>Anuncio <select data-funnel-content><option value="">Todos</option>${contentOptions}</select></label>
+      <label>Atribución <select data-funnel-attribution>
+        <option value="last" ${funnel.attribution !== "first" ? "selected" : ""}>Última campaña</option>
+        <option value="first" ${funnel.attribution === "first" ? "selected" : ""}>Primera visita</option>
+      </select></label>
+      <label><input type="checkbox" data-funnel-internal ${funnel.includeInternal ? "checked" : ""}> Incluir internos</label>
+      <button type="button" data-funnel-load>Actualizar</button>
+    </div>
+    ${funnel.truncated ? `<div class="admin-empty" style="color:#b42318;margin-bottom:10px;">Período truncado: se leyeron los primeros eventos permitidos. Achicá el rango.</div>` : ""}
+    <div class="admin-home-grid" style="margin-bottom:12px;">
+      <section class="admin-panel-card"><h3>${funnelPercent(report.totalFromOnboarding)}</h3><p>Conversión total desde el onboarding</p><small>Desde la landing: ${funnelPercent(report.totalFromLanding)}</small></section>
+      <section class="admin-panel-card"><h3>${drop ? funnelPercent(drop.conversion) : "—"}</h3><p>Mayor caída</p><small>${drop ? `${escapeHtml(drop.from.label)} → ${escapeHtml(drop.to.label)} (se pierden ${drop.lost})` : "Sin datos suficientes (mínimo 5 visitantes en el paso)"}</small></section>
+      <section class="admin-panel-card"><h3>${report.directOnboardingEntries}</h3><p>Entradas directas al onboarding</p><small>Empezaron sin pasar por la landing.</small></section>
+    </div>
+    <div class="admin-table-wrap" style="margin-bottom:8px;">
+      <table class="admin-table">
+        <thead><tr><th>Paso</th><th>Únicos</th><th>% vs anterior</th><th>% vs inicio</th></tr></thead>
+        <tbody>
+          ${report.steps.map((step) => `
+            <tr${drop && drop.to.key === step.key ? ' style="background:#fff1ed;"' : ""}>
+              <td><strong>${escapeHtml(step.label)}</strong><small>${escapeHtml(step.key)}</small></td>
+              <td><strong>${step.visitors}</strong></td>
+              <td>${funnelPercent(step.fromPrevious)}</td>
+              <td>${funnelPercent(step.fromStart)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+    <small style="display:block;margin-bottom:18px;">
+      ${report.visitors} visitante(s) · ${(funnel.events || []).length} evento(s) leídos · ${report.internalExcluded} interno(s) excluido(s)${report.storageFailedEvents ? ` · ${report.storageFailedEvents} evento(s) sin almacenamiento local` : ""}
+    </small>
+  `;
+}
+
 function renderTracking(businesses = [], state = {}) {
   const filter = state.trackingFilter || "all";
   const rows = businesses.filter((row) => filter === "all" || trackingBucket(row) === filter);
 
   return `
+    ${renderFunnelBlock(state.funnel)}
     <div class="admin-section-head">
       <div>
         <h3>Tracking</h3>
@@ -1826,8 +1931,42 @@ export async function renderAdminUsers(container, options = {}) {
     clientPaymentFilter: "all",
     billingFilter: "all",
     trackingFilter: "all",
-    selectedBusinessId: ""
+    selectedBusinessId: "",
+    funnel: {
+      period: "30d",
+      fromDate: "",
+      toDate: "",
+      loaded: false,
+      loading: false,
+      error: "",
+      events: [],
+      truncated: false,
+      campaign: "",
+      content: "",
+      attribution: "last",
+      includeInternal: false
+    }
   };
+
+  async function loadFunnel() {
+    const funnel = state.funnel;
+    const range = resolveFunnelRange(funnel.period, { fromDate: funnel.fromDate, toDate: funnel.toDate });
+    funnel.loading = true;
+    funnel.error = "";
+    render();
+    try {
+      const result = await listFunnelEvents(range);
+      funnel.events = result.events;
+      funnel.truncated = result.truncated;
+      funnel.loaded = true;
+    } catch (error) {
+      console.error("Error cargando embudo", error);
+      funnel.error = `No se pudo cargar el embudo: ${error?.message || "error desconocido"}`;
+    } finally {
+      funnel.loading = false;
+      render();
+    }
+  }
 
   let businesses = [];
   let users = [];
@@ -2311,6 +2450,27 @@ export async function renderAdminUsers(container, options = {}) {
       return;
     }
 
+    const funnelLoad = target.closest("[data-funnel-load]");
+    if (funnelLoad) {
+      if (state.funnel.period === "custom") {
+        state.funnel.fromDate = container.querySelector("[data-funnel-from]")?.value || "";
+        state.funnel.toDate = container.querySelector("[data-funnel-to]")?.value || "";
+      }
+      await loadFunnel();
+      return;
+    }
+
+    const funnelPeriod = target.closest("[data-funnel-period]");
+    if (funnelPeriod) {
+      state.funnel.period = funnelPeriod.dataset.funnelPeriod || "30d";
+      if (state.funnel.period === "custom") {
+        render();
+        return;
+      }
+      await loadFunnel();
+      return;
+    }
+
     const trackingFilter = target.closest("[data-tracking-filter]");
     if (trackingFilter) {
       state.trackingFilter = trackingFilter.dataset.trackingFilter || "all";
@@ -2657,6 +2817,37 @@ export async function renderAdminUsers(container, options = {}) {
       const message = supportMessageLibrary(row || {}).find((item) => item.key === supportSelect.value);
       const textarea = container.querySelector("[data-support-message-text]");
       if (textarea && message) textarea.value = message.text;
+      return;
+    }
+
+    const funnelCampaign = event.target.closest("[data-funnel-campaign]");
+    if (funnelCampaign) {
+      state.funnel.campaign = funnelCampaign.value || "";
+      state.funnel.content = "";
+      render();
+      return;
+    }
+
+    const funnelContent = event.target.closest("[data-funnel-content]");
+    if (funnelContent) {
+      state.funnel.content = funnelContent.value || "";
+      render();
+      return;
+    }
+
+    const funnelAttribution = event.target.closest("[data-funnel-attribution]");
+    if (funnelAttribution) {
+      state.funnel.attribution = funnelAttribution.value === "first" ? "first" : "last";
+      state.funnel.campaign = "";
+      state.funnel.content = "";
+      render();
+      return;
+    }
+
+    const funnelInternal = event.target.closest("[data-funnel-internal]");
+    if (funnelInternal) {
+      state.funnel.includeInternal = Boolean(funnelInternal.checked);
+      render();
       return;
     }
 

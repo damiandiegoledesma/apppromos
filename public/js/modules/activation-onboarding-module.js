@@ -19,43 +19,24 @@ import {
   trackRegistrationStarted,
   trackTrialRegistered
 } from "../services/tracking-service.js";
+import {
+  initFunnelTracking,
+  trackFunnelEvent,
+  getAttributableUtm,
+  getFunnelLinkPayload
+} from "../services/funnel-tracking-service.js";
 
 const root = document.getElementById("activationRoot");
 const params = new URLSearchParams(location.search);
 
-const ATTRIBUTION_SESSION_KEY = "apppromos_activation_attribution";
+// Tracking Comercial V1: la atribución sale del last_touch persistente del embudo
+// (reemplaza a sessionStorage "apppromos_activation_attribution", que se perdía al
+// cerrar la pestaña). Misma forma de 4 UTM para acquisition y GA4.
+initFunnelTracking({ page: "onboarding" });
 
 function resolveCampaignAttribution() {
-  const fromUrl = {
-    utm_source: params.get("utm_source") || "",
-    utm_medium: params.get("utm_medium") || "",
-    utm_campaign: params.get("utm_campaign") || "",
-    utm_content: params.get("utm_content") || ""
-  };
-
-  const hasUrlAttribution = Object.values(fromUrl).some(Boolean);
-
-  try {
-    if (hasUrlAttribution) {
-      sessionStorage.setItem(ATTRIBUTION_SESSION_KEY, JSON.stringify(fromUrl));
-      return fromUrl;
-    }
-
-    const stored = JSON.parse(sessionStorage.getItem(ATTRIBUTION_SESSION_KEY) || "null");
-    if (stored && typeof stored === "object") {
-      return {
-        utm_source: String(stored.utm_source || ""),
-        utm_medium: String(stored.utm_medium || ""),
-        utm_campaign: String(stored.utm_campaign || ""),
-        utm_content: String(stored.utm_content || "")
-      };
-    }
-  } catch (_) {}
-
-  return fromUrl;
+  return getAttributableUtm();
 }
-
-const campaignAttribution = resolveCampaignAttribution();
 
 const STEP_INDEX = {
   welcome: 0,
@@ -182,6 +163,7 @@ function renderWelcome({ showResume = false } = {}) {
   });
 
   root.querySelector('[data-action="start"]')?.addEventListener("click", () => {
+    void trackFunnelEvent("onboarding_started");
     saveActivationDraft(createEmptyActivationDraft());
     setActivationDraftStep("rubros");
     renderRubros();
@@ -189,6 +171,7 @@ function renderWelcome({ showResume = false } = {}) {
 
   root.querySelector('[data-action="resume"]')?.addEventListener("click", resumeDraft);
   root.querySelector('[data-action="restart"]')?.addEventListener("click", () => {
+    void trackFunnelEvent("onboarding_started");
     clearActivationDraft();
     saveActivationDraft(createEmptyActivationDraft());
     setActivationDraftStep("rubros");
@@ -244,6 +227,7 @@ function renderRubros() {
       root.querySelector("[data-notice]")?.classList.add("is-on");
       return;
     }
+    void trackFunnelEvent("rubros_completed", { count: nextDraft.selectedRubros.length });
     setActivationDraftStep("prices");
     renderPrices();
   });
@@ -372,6 +356,7 @@ function renderPrices() {
   root.querySelectorAll("[data-price-key]").forEach((input) => {
     const save = () => {
       setActivationDraftPrice(input.dataset.priceKey, input.value);
+      if (Number(input.value) > 0) void trackFunnelEvent("prices_started");
       const newCount = activationDraftPricedCount();
       const countEl = root.querySelector("[data-price-count]");
       if (countEl) countEl.textContent = `${newCount} producto${newCount === 1 ? "" : "s"} con precio`;
@@ -389,6 +374,7 @@ function renderPrices() {
       root.querySelector("[data-notice]")?.classList.add("is-on");
       return;
     }
+    void trackFunnelEvent("prices_completed", { count: activationDraftPricedCount() });
     setActivationDraftStep("identity");
     renderIdentity();
   });
@@ -485,7 +471,7 @@ function renderIdentity() {
     renderPrices();
   });
 
-  root.querySelector('[data-action="preview"]')?.addEventListener("click", () => {
+  root.querySelector('[data-action="preview"]')?.addEventListener("click", async () => {
     saveIdentity();
     const next = currentDraft();
     const localityIsValid = Boolean(
@@ -499,6 +485,7 @@ function renderIdentity() {
       return;
     }
     setActivationDraftStep("preview");
+    await trackFunnelEvent("name_completed", {}, { waitMs: 800 });
     location.href = "/web.html?preview=activation";
   });
 }
@@ -640,6 +627,8 @@ function renderPublish() {
     }
 
     try {
+      const campaignAttribution = resolveCampaignAttribution();
+      void trackFunnelEvent("signup_started");
       trackRegistrationStarted({
         source: "activation_onboarding",
         ...campaignAttribution
@@ -658,7 +647,14 @@ function renderPublish() {
         provinceId: current.identity.provinceId,
         activationPrices: current.prices,
         activationRubros: current.selectedRubros || [],
-        campaignAttribution
+        campaignAttribution,
+        funnelLink: getFunnelLinkPayload(),
+        onAccountCreated: () => { void trackFunnelEvent("account_created"); }
+      });
+
+      void trackFunnelEvent("business_created", {
+        business_id: result?.businessId,
+        count: result?.pricedCount || activationDraftPricedCount(current)
       });
 
       trackTrialRegistered({
@@ -717,9 +713,13 @@ function renderPublishedSuccess(result = {}) {
     `,
     actions: `
       ${publicUrl ? `<a class="btn btn-primary" href="${esc(publicUrl)}" target="_blank" rel="noopener">🌐 Ver mi carnicería</a>` : ""}
-      ${shareHref ? `<a class="btn btn-green" href="${esc(shareHref)}" target="_blank" rel="noopener">📲 Compartir por WhatsApp</a>` : ""}
+      ${shareHref ? `<a class="btn btn-green" href="${esc(shareHref)}" target="_blank" rel="noopener" data-funnel-share>📲 Compartir por WhatsApp</a>` : ""}
       <a class="btn btn-light" href="/app.html?onboarding=1">Entrar a Carnis</a>
     `
+  });
+
+  root.querySelector("[data-funnel-share]")?.addEventListener("click", () => {
+    void trackFunnelEvent("share_whatsapp_clicked", { business_id: result.businessId });
   });
 }
 

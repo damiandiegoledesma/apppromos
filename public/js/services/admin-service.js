@@ -18,7 +18,12 @@ import {
   serverTimestamp,
   onSnapshot,
   increment,
-  runTransaction
+  runTransaction,
+  query,
+  where,
+  orderBy,
+  limit,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { getCurrentAuthUser, resolveSession } from "./auth-service.js";
@@ -363,6 +368,38 @@ export async function trackBusinessCommercialEvent(
     });
     return false;
   }
+}
+
+// Tracking Comercial V1: eventos del embudo en un rango [from, to) (ms UTC).
+export const FUNNEL_EVENTS_QUERY_LIMIT = 5000;
+
+export async function listFunnelEvents({ from, to } = {}) {
+  await requireAdmin();
+  const fromMs = Number(from);
+  const toMs = Number(to);
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs) || toMs <= fromMs) {
+    throw new Error("Rango de fechas inválido");
+  }
+  const snap = await trackedGetDocs(
+    query(
+      collection(db, "funnelEvents"),
+      where("occurred_at", ">=", Timestamp.fromMillis(fromMs)),
+      where("occurred_at", "<", Timestamp.fromMillis(toMs)),
+      orderBy("occurred_at", "asc"),
+      limit(FUNNEL_EVENTS_QUERY_LIMIT)
+    ),
+    "funnelEvents"
+  );
+  const events = [];
+  snap.forEach((eventSnap) => {
+    const data = eventSnap.data() || {};
+    events.push({
+      ...data,
+      id: eventSnap.id,
+      occurred_ms: typeof data.occurred_at?.toMillis === "function" ? data.occurred_at.toMillis() : null
+    });
+  });
+  return { events, truncated: events.length >= FUNNEL_EVENTS_QUERY_LIMIT };
 }
 
 export async function listBusinessCommercialEvents(businessId, options = {}) {

@@ -1609,6 +1609,7 @@
       loadActivationDraft,
       setActivationDraftStep
     } from "./js/services/activation-draft-service.js";
+    import { initFunnelTracking, trackFunnelEvent } from "./js/services/funnel-tracking-service.js";
     import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const params = new URLSearchParams(location.search);
@@ -1850,6 +1851,9 @@
         if(!draft){
           return {type:"activation_preview_missing"};
         }
+        // Tracking Comercial V1: solo la vista previa del onboarding; la vidriera pública no se toca.
+        initFunnelTracking({page:"preview"});
+        void trackFunnelEvent("storefront_previewed");
         return {
           type:"activation_preview",
           data:buildActivationPreviewPayload(draft)

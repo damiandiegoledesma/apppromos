@@ -487,6 +487,33 @@ async function rollbackIncompleteRegistration(cred, businessId, reason) {
   }
 }
 
+// Tracking Comercial V1: vínculo visitor_id -> negocio, escrito una sola vez al crear el negocio.
+function sanitizeFunnelTouch(touch) {
+  const t = touch && typeof touch === "object" ? touch : {};
+  const field = (value, max = 100) => String(value ?? "").trim().slice(0, max);
+  return {
+    source: field(t.source),
+    medium: field(t.medium),
+    campaign: field(t.campaign),
+    content: field(t.content),
+    term: field(t.term),
+    path: field(t.path, 120),
+    at: field(t.at, 30)
+  };
+}
+
+function sanitizeFunnelLink(link) {
+  if (!link || typeof link !== "object") return null;
+  const visitorId = String(link.visitor_id || "");
+  if (!/^[A-Za-z0-9]{16,40}$/.test(visitorId)) return null;
+  return {
+    visitor_id: visitorId,
+    first_touch: sanitizeFunnelTouch(link.first_touch),
+    last_touch: sanitizeFunnelTouch(link.last_touch),
+    schema_version: 1
+  };
+}
+
 export async function registerClientAndBusiness(data) {
   const {
     businessName,
@@ -504,6 +531,7 @@ export async function registerClientAndBusiness(data) {
     utm_content: String(data?.campaignAttribution?.utm_content || "").trim().slice(0, 160)
   };
   const hasCampaignAttribution = Object.values(campaignAttribution).some(Boolean);
+  const funnelLink = sanitizeFunnelLink(data?.funnelLink);
 
   if (!businessName || !email || !password || !identity.rawPhone || !identity.locality) {
     throw new Error("Faltan datos obligatorios");
@@ -532,6 +560,8 @@ export async function registerClientAndBusiness(data) {
 
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const uid = cred.user.uid;
+  // Tracking Comercial V1: aviso opcional de cuenta creada (no bloquea el alta).
+  try { data?.onAccountCreated?.(); } catch (_) {}
   const businessId = `biz_${Date.now()}`;
   const publicBusinessName = buildPublicBusinessName(businessName);
   const slug = buildBusinessSlug({ name: publicBusinessName, telefono: identity.phone }, businessId);
@@ -631,6 +661,7 @@ export async function registerClientAndBusiness(data) {
       isTemplateBusiness: false,
       createdBy: "self_register",
       ...(hasCampaignAttribution ? { acquisition: campaignAttribution } : {}),
+      ...(funnelLink ? { funnel: funnelLink } : {}),
       modules,
       billing,
       metrics: {
