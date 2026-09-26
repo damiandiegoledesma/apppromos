@@ -33,48 +33,30 @@ function buildAuthHTML() {
   return `
     <main class="public-auth-page">
       <section class="public-auth-card">
-        <a class="public-auth-logo" href="./index.html" aria-label="Volver a AppPromos">
-          <img src="/assets/logo/apppromos-square-transparent.png" alt="AppPromos" />
-          <span>App<b>Promos</b></span>
+        <a class="public-auth-logo" href="/" aria-label="Volver a Carnis.app">
+          <img src="/assets/brand/carnis/svg/carnis-compacto-color.svg" alt="Carnis.app" />
         </a>
 
         <div class="public-auth-title">
-          <h1>Entrá a vender más rápido</h1>
-          <p>Creá tu carnicería online. Tenés 14 días sin cargo y no necesitás tarjeta.</p>
+          <h1>Ingresá a Carnis</h1>
+          <p>Entrá a tu carnicería para actualizar precios, crear promos y vender.</p>
         </div>
 
-        <div class="public-auth-tabs">
-          <button id="tabLoginBtn" type="button">Iniciar sesión</button>
-          <button id="tabRegistroBtn" type="button">Empezar gratis</button>
-        </div>
-
-        <div id="tabLogin" class="public-auth-tab">
-          <label>Email</label>
+        <div id="tabLogin" class="public-auth-tab active">
+          <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" placeholder="tu@email.com" autocomplete="email" />
-          <label>Contraseña</label>
+
+          <label for="loginPassword">Contraseña</label>
           <input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password" />
-          <button id="loginBtn" class="public-auth-submit" type="button">Ingresar</button>
+
+          <button id="loginBtn" class="public-auth-submit" type="button">Ingresar a mi carnicería</button>
           <div id="loginStatus" class="public-auth-status"></div>
         </div>
 
-        <div id="tabRegistro" class="public-auth-tab">
-          <label>Nombre de la carnicería</label>
-          <input id="businessName" placeholder="Ej: Carnicería El Buen Corte" />
-          <label>Email</label>
-          <input id="email" type="email" placeholder="tu@email.com" autocomplete="email" />
-          <label>Contraseña</label>
-          <input id="password" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-          <label>Teléfono / WhatsApp</label>
-          <input id="telefono" placeholder="Ej: 3462 555555" />
-          <label>Localidad</label>
-          <input id="ciudad" placeholder="Localidad" data-localidad-ar autocomplete="off" />
-          <label>Provincia</label>
-          <input id="provincia" placeholder="Provincia" data-provincia-ar readonly />
-          <input id="provinceId" type="hidden" data-provincia-id-ar />
-          <button id="registroBtn" class="public-auth-submit" type="button">Crear mi carnicería gratis</button>
-          <div id="registroStatus" class="public-auth-status"></div>
+        <div class="public-auth-new">
+          <span>¿Todavía no tenés cuenta?</span>
+          <a href="/crear-carniceria.html">Crear mi carnicería gratis →</a>
         </div>
-
       </section>
     </main>
   `;
@@ -85,33 +67,168 @@ function ensureStyles() {
   const style = document.createElement("style");
   style.id = "publicAuthStyles";
   style.textContent = `
-    body.public-auth-open { margin:0; background:#080b12; }
+    body.public-auth-open {
+      margin:0;
+      background:#FFF7F5;
+    }
+
     body.public-auth-open .app,
     body.public-auth-open .footer-frame,
     body.public-auth-open .footer,
     body.public-auth-open .app-mobile-bottom-nav,
-    body.public-auth-open .app-mobile-bottom-menu { display:none !important; }
-    .public-auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(circle at top, rgba(4,119,242,.28), rgba(2,8,23,1) 48%); font-family:Arial, sans-serif; color:#fff; }
-    .public-auth-card { width:min(100%, 520px); background:rgba(255,255,255,.96); color:#111827; border-radius:28px; padding:26px; box-shadow:0 30px 90px rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.35); }
-    .public-auth-logo { display:flex; align-items:center; gap:12px; color:#111827; text-decoration:none; font-size:24px; font-weight:1000; margin-bottom:18px; }
-    .public-auth-logo img { width:54px; height:54px; object-fit:contain; border-radius:14px; background:#fff; }
-    .public-auth-title h1 { margin:0 0 8px; font-size:30px; line-height:1; letter-spacing:-.04em; }
-    .public-auth-title p { margin:0 0 18px; color:#4b5563; font-weight:700; line-height:1.35; }
-    .public-auth-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; background:#eef2f7; border-radius:16px; padding:6px; margin-bottom:16px; }
-    .public-auth-tabs button { border:0; min-height:46px; border-radius:13px; background:transparent; color:#4b5563; font-weight:1000; cursor:pointer; }
-    .public-auth-tabs button.active { background:#0477f2; color:white; box-shadow:0 8px 20px rgba(4,119,242,.28); }
-    .public-auth-tab { display:none; }
-    .public-auth-tab.active { display:grid; gap:9px; }
-    .public-auth-tab label { font-size:13px; font-weight:1000; color:#374151; margin-top:2px; }
-    .public-auth-tab input { min-height:46px; border:1px solid #d1d5db; border-radius:14px; padding:0 13px; font-size:16px; outline:none; background:#fff; }
-    .public-auth-tab input:focus { border-color:#0477f2; box-shadow:0 0 0 4px rgba(4,119,242,.12); }
-    .public-auth-submit { min-height:52px; border:0; border-radius:16px; background:#16a34a; color:white; font-size:17px; font-weight:1000; cursor:pointer; margin-top:8px; box-shadow:0 12px 25px rgba(22,163,74,.22); }
-    .public-auth-status { min-height:20px; color:#b91c1c; font-weight:800; font-size:14px; }
-    @media (max-width:560px){ .public-auth-page{padding:14px;} .public-auth-card{padding:20px;border-radius:22px;} .public-auth-title h1{font-size:25px;} }
+    body.public-auth-open .app-mobile-bottom-menu {
+      display:none !important;
+    }
+
+    .public-auth-page {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background:
+        radial-gradient(circle at top, rgba(229,34,35,.10), transparent 42%),
+        linear-gradient(180deg,#FFF7F5 0%,#FFFFFF 100%);
+      font-family:Poppins,Arial,sans-serif;
+      color:#182238;
+    }
+
+    .public-auth-card {
+      width:min(100%,460px);
+      background:#FFFFFF;
+      border-radius:24px;
+      padding:32px;
+      box-shadow:0 24px 70px rgba(24,34,56,.12);
+      border:1px solid #EADBD8;
+    }
+
+    .public-auth-logo {
+      display:flex;
+      align-items:center;
+      text-decoration:none;
+      margin-bottom:28px;
+    }
+
+    .public-auth-logo img {
+      width:auto;
+      height:42px;
+      display:block;
+    }
+
+    .public-auth-title h1 {
+      margin:0 0 9px;
+      font-size:32px;
+      line-height:1.08;
+      letter-spacing:-.03em;
+      color:#182238;
+    }
+
+    .public-auth-title p {
+      margin:0 0 26px;
+      color:#4B5563;
+      font-weight:500;
+      line-height:1.5;
+      font-size:15px;
+    }
+
+    .public-auth-tab {
+      display:grid;
+      gap:9px;
+    }
+
+    .public-auth-tab label {
+      font-size:13px;
+      font-weight:700;
+      color:#374151;
+      margin-top:3px;
+    }
+
+    .public-auth-tab input {
+      min-height:50px;
+      border:1px solid #D7D9DE;
+      border-radius:13px;
+      padding:0 14px;
+      font-size:16px;
+      outline:none;
+      background:#FFFFFF;
+      color:#182238;
+    }
+
+    .public-auth-tab input:focus {
+      border-color:#E52223;
+      box-shadow:0 0 0 4px rgba(229,34,35,.10);
+    }
+
+    .public-auth-submit {
+      min-height:54px;
+      border:0;
+      border-radius:14px;
+      background:#E52223;
+      color:#FFFFFF;
+      font-size:17px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:10px;
+      box-shadow:0 10px 24px rgba(229,34,35,.22);
+    }
+
+    .public-auth-submit:hover {
+      background:#D11C1D;
+    }
+
+    .public-auth-status {
+      min-height:20px;
+      color:#B3161A;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .public-auth-new {
+      margin-top:20px;
+      padding-top:20px;
+      border-top:1px solid #EADBD8;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:5px;
+      text-align:center;
+      font-size:14px;
+      color:#6B7280;
+    }
+
+    .public-auth-new a {
+      color:#B3161A;
+      font-weight:800;
+      text-decoration:none;
+    }
+
+    .public-auth-new a:hover {
+      text-decoration:underline;
+    }
+
+    @media (max-width:560px) {
+      .public-auth-page {
+        padding:16px;
+        align-items:flex-start;
+        padding-top:40px;
+      }
+
+      .public-auth-card {
+        padding:26px 22px;
+        border-radius:20px;
+      }
+
+      .public-auth-logo img {
+        height:38px;
+      }
+
+      .public-auth-title h1 {
+        font-size:28px;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
-
 function bindEvents() {
   document.getElementById("tabLoginBtn")?.addEventListener("click", () => showTab("login"));
   document.getElementById("tabRegistroBtn")?.addEventListener("click", () => showTab("register"));
