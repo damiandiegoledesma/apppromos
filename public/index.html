@@ -163,6 +163,80 @@
     .sticky-cta-inner{display:flex;align-items:center;gap:12px;width:100%;max-width:448px}
     .sticky-cta-inner img{width:44px;height:44px;flex-shrink:0}
     .sticky-cta .btn{flex-grow:1;height:52px;font-size:18px;gap:8px}
+
+    /* LANDING V0.6.1 - DESKTOP ADAPTATIVO
+       Mobile conserva V0.6. En desktop aprovechamos mejor el viewport
+       sin depender del zoom del navegador. */
+    @media (min-width: 900px) {
+      .page {
+        width: min(100%, 760px);
+        max-width: 760px;
+      }
+
+      .hero,
+      .steps,
+      .seller,
+      .trial,
+      .pricing,
+      .final {
+        padding-left: 44px;
+        padding-right: 44px;
+      }
+
+      .hero {
+        padding-top: 58px;
+        padding-bottom: 48px;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      .hero-lead {
+        font-size: 19px;
+      }
+
+      .section-title,
+      .steps h2,
+      .seller h2,
+      .trial h2,
+      .pricing h2 {
+        font-size: 38px;
+      }
+
+      .btn {
+        font-size: 18px;
+      }
+
+      .sticky-cta-inner {
+        max-width: 620px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .page {
+        width: min(100%, 860px);
+        max-width: 860px;
+      }
+
+      .hero,
+      .steps,
+      .seller,
+      .trial,
+      .pricing,
+      .final {
+        padding-left: 56px;
+        padding-right: 56px;
+      }
+
+      .hero h1 {
+        font-size: 52px;
+      }
+
+      .sticky-cta-inner {
+        max-width: 700px;
+      }
+    }
     @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}.sticky-cta{transition:none}}
   </style>
 </head>
