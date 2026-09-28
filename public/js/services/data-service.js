@@ -231,7 +231,7 @@ function isDemoRuntime(businessId = null) {
 }
 
 
-const DEMO_SAFE_PRICE_MESSAGE = "Estás probando AppPromos. Estos cambios quedan solo en esta demo.";
+const DEMO_SAFE_PRICE_MESSAGE = "Estás probando Carnis. Estos cambios quedan solo en esta demo.";
 
 export function isDemoMode(businessId = null) {
   return isDemoRuntime(businessId);

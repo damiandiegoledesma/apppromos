@@ -15,7 +15,7 @@ export const VERTICAL_CONFIGS = {
     categories: ["Novillo", "Cerdo", "Pollo", "Achuras", "Elaborados"],
     demo: {
       businessName: "Carnicería de Carniza",
-      description: "Demo principal de AppPromos para carnicerías."
+      description: "Demo principal de Carnis para carnicerías."
     },
     urgentMode: {
       label: "Promo del día",

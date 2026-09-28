@@ -65,7 +65,7 @@ export function renderPrices(container, products = [], businessId = null, option
     new URLSearchParams(window.location.search || "").get("mode") === "demo";
   const canPersistPrices = canWrite || isDemoPriceSession;
   const writeBlockMessage = isDemoPriceSession
-    ? "Estás probando AppPromos. Estos cambios quedan solo en esta demo."
+    ? "Estás probando Carnis. Estos cambios quedan solo en esta demo."
     : (options.writeBlockMessage || "Tu cuenta está en modo consulta. Para volver a guardar cambios, regularizá tu plan.");
 
   let searchTerm = "";
@@ -301,7 +301,7 @@ export function renderPrices(container, products = [], businessId = null, option
     } else if (!canPersistPrices) {
       setStatus("error", "🔒 Para guardar, ponete al día por estado de cuenta");
     } else if (isDemoPriceSession) {
-      setStatus("idle", "Estás probando AppPromos. Estos cambios quedan solo en esta demo.");
+      setStatus("idle", "Estás probando Carnis. Estos cambios quedan solo en esta demo.");
     } else {
       setStatus("idle", "Sin cambios");
     }
@@ -1353,7 +1353,7 @@ export function renderPrices(container, products = [], businessId = null, option
         </div>
       </div>
 
-      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#lock"></use></svg>Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
+      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando Carnis. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#lock"></use></svg>Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
 <div class="prices-toolbar prices-toolbar-lite">
         <div class="prices-toolbar-row prices-search-row">

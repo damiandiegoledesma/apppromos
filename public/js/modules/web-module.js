@@ -148,7 +148,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
 
         <div class="wp-card">
           <h3 style="margin:0 0 6px;color:#7c2d12;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Ofertas publicadas</h3>
-          <p class="wp-muted" style="margin:0 0 12px;">Marcá o desmarcá una oferta. AppPromos actualiza la vidriera automáticamente.</p>
+          <p class="wp-muted" style="margin:0 0 12px;">Marcá o desmarcá una oferta. Carnis actualiza la vidriera automáticamente.</p>
           ${savedCombos.length ? `<div class="wp-offers">
             ${savedCombos.map(combo => `
               <div class="wp-offer">

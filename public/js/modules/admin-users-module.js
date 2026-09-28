@@ -56,9 +56,9 @@ const FOLLOWUP_STATUS_OPTIONS = Object.freeze([
 ]);
 
 const COMMERCIAL_EVENT_LABELS = Object.freeze({
-  business_registered: "Se registró en AppPromos",
+  business_registered: "Se registró en Carnis",
   first_login: "Ingresó por primera vez",
-  app_open: "Abrió AppPromos",
+  app_open: "Abrió Carnis",
   price_save: "Guardó precios",
   price_milestone_reached: "Alcanzó un hito de precios",
   web_open: "Abrió su vidriera",
@@ -134,7 +134,7 @@ function mpAmount(link = null) {
 
 function mpDescription(link = null) {
   const safeLink = link && typeof link === "object" ? link : {};
-  return firstText(safeLink.calculation?.description, safeLink.description, "abono AppPromos");
+  return firstText(safeLink.calculation?.description, safeLink.description, "abono Carnis");
 }
 
 function userBusinessId(user = {}) {
@@ -157,15 +157,15 @@ function buildMpPaymentWhatsappText(row = {}, link = {}) {
   const amount = mpAmount(link);
   const period = firstText(link.calculation?.period_key, link.period_key, "este período");
   return [
-    "Hola, soy Damian de AppPromos.",
+    "Hola, soy Damian de Carnis.",
     "",
-    `Te paso el link de Mercado Pago para regularizar AppPromos de ${businessName(row)}.`,
+    `Te paso el link de Mercado Pago para regularizar Carnis de ${businessName(row)}.`,
     `Período: ${period}`,
     amount ? `Importe: ${formatMoney(amount)}` : "Importe: ver link de pago",
     "",
     url,
     "",
-    "Cuando se acredita, AppPromos lo registra y seguimos trabajando normal.",
+    "Cuando se acredita, Carnis lo registra y seguimos trabajando normal.",
     "",
     "Cualquier cosa me avisás."
   ].join("\n");
@@ -242,24 +242,24 @@ function buildWhatsappText(row = {}, reason = "base") {
   const name = businessName(row);
   if (reason === "cobranza") {
     return [
-      "Hola, soy Damian de AppPromos.",
+      "Hola, soy Damian de Carnis.",
       "",
-      `Te escribo por ${name}. Tenemos que revisar el abono para que sigas usando AppPromos sin cortes.`,
+      `Te escribo por ${name}. Tenemos que revisar el abono para que sigas usando Carnis sin cortes.`,
       "Lo vemos por WhatsApp y lo resolvemos."
     ].join("\n");
   }
   if (reason === "seguimiento") {
     return [
-      "Hola, soy Damian de AppPromos.",
+      "Hola, soy Damian de Carnis.",
       "",
       `Te escribo por ${name}. Quería ver si ya pudiste armar ofertas y mandar promos por WhatsApp.`,
       "Si querés, te ayudo a salir vendiendo rápido."
     ].join("\n");
   }
   return [
-    "Hola, soy Damian de AppPromos.",
+    "Hola, soy Damian de Carnis.",
     "",
-    `Te escribo por ${name} en AppPromos.`
+    `Te escribo por ${name} en Carnis.`
   ].join("\n");
 }
 
@@ -327,13 +327,13 @@ function publicStorefrontUrl(row = {}) {
 function supportMessageLibrary(row = {}) {
   const shop = businessName(row);
   const owner = businessOwner(row) === "Sin responsable" ? "" : businessOwner(row);
-  const greeting = owner ? `Hola ${owner}, soy Damian de AppPromos.` : "¡Hola! Soy Damian de AppPromos.";
+  const greeting = owner ? `Hola ${owner}, soy Damian de Carnis.` : "¡Hola! Soy Damian de Carnis.";
   const prices = Number(row.operationalState?.pricedProductCount || metricNumber(row, "maxPricedProductCount") || 0);
   const days = daysSince(commercialMetricValue(row, "lastCommercialActionAt") || lastActivityValue(row));
   const trialDays = daysUntil(dueValue(row));
   const url = publicStorefrontUrl(row);
   const messages = [
-    ["welcome", "Bienvenida y solicitud de datos", ["¡Hola! 👋 Soy Damian, de AppPromos.", "", "Quiero acompañarte para que puedas poner tu carnicería online de manera simple.", "", "Para comenzar, ¿me pasás estos tres datos?", "", "• Tu nombre", "• El nombre de tu carnicería", "• Tu número de WhatsApp", "", "Con eso dejamos registrado tu contacto y podemos ayudarte con los próximos pasos. 🥩"].join("\n")],
+    ["welcome", "Bienvenida y solicitud de datos", ["¡Hola! 👋 Soy Damian, de Carnis.", "", "Quiero acompañarte para que puedas poner tu carnicería online de manera simple.", "", "Para comenzar, ¿me pasás estos tres datos?", "", "• Tu nombre", "• El nombre de tu carnicería", "• Tu número de WhatsApp", "", "Con eso dejamos registrado tu contacto y podemos ayudarte con los próximos pasos. 🥩"].join("\n")],
     ["no_prices", "Todavía no cargó precios", `${greeting}\n\nVi que ${shop} todavía no cargó sus primeros precios. Si querés, te acompaño para dejar la vidriera lista en pocos minutos.`],
     ["few_prices", "Cargó entre 1 y 4 precios", `${greeting}\n\nYa empezaste a cargar precios en ${shop}. Tenés ${prices}; sumemos algunos más y dejamos una vidriera que ya puedas compartir.`],
     ["five_prices", "Llegó a 5 precios y se detuvo", `${greeting}\n\nYa cargaste ${prices} precios en ${shop}. Estás cerca de tener una vidriera completa. ¿Querés que te ayude con el próximo paso?`],
@@ -347,7 +347,7 @@ function supportMessageLibrary(row = {}) {
     ["order_started", "Un cliente inició un pedido", `${greeting}\n\n¡Buena señal! Un cliente inició un pedido desde la vidriera de ${shop}. Sigamos compartiendo y manteniendo precios y promos actualizados.`],
     ["inactive", "Usuario inactivo", `${greeting}\n\nHace ${days ?? "varios"} días que no vemos actividad en ${shop}. ¿Necesitás ayuda para retomar precios, promos o la vidriera?`],
     ["trial_midpoint", "Mitad de la prueba", `${greeting}\n\nYa pasó la primera parte de la prueba de ${shop}. Quiero ayudarte a publicar, compartir la vidriera y comprobar que los pedidos lleguen bien por WhatsApp.`],
-    ["trial_conversion", "Quedan 4 días o menos", `${greeting}\n\nA ${shop} le quedan ${trialDays ?? "pocos"} días de prueba. Si AppPromos ya te sirve, vemos el plan para que puedas seguir trabajando sin interrupciones.`],
+    ["trial_conversion", "Quedan 4 días o menos", `${greeting}\n\nA ${shop} le quedan ${trialDays ?? "pocos"} días de prueba. Si Carnis ya te sirve, vemos el plan para que puedas seguir trabajando sin interrupciones.`],
     ["trial_last_day", "Vence hoy o mañana", `${greeting}\n\nLa prueba de ${shop} vence ${trialDays === 0 ? "hoy" : "mañana"}. Si querés continuar, te ayudo a activar el plan sin perder lo que cargaste.`],
     ["trial_expired", "Prueba vencida", `${greeting}\n\nLa prueba de ${shop} terminó. Todo lo que cargaste sigue guardado: podés entrar y consultar, y al activar un plan recuperás inmediatamente la posibilidad de guardar y publicar.`],
     ["no_response", "No respondió", `${greeting}\n\nTe escribo nuevamente para saber si pudiste avanzar con ${shop}. Cuando tengas un momento, respondeme y vemos juntos el próximo paso.`],
@@ -723,7 +723,7 @@ function commercialStatus(row = {}) {
     if (knownActivityDays !== null && knownActivityDays < 7) {
       return { key: "activating", label: "Activándose", tone: "warn", reason: "Todavía no cargó precios", priority: 2 };
     }
-    return { key: "attention", label: "Requiere atención", tone: "danger", reason: "Todavía no empezó a usar AppPromos", priority: 0 };
+    return { key: "attention", label: "Requiere atención", tone: "danger", reason: "Todavía no empezó a usar Carnis", priority: 0 };
   }
 
   if (commercialDays !== null && commercialDays >= 14) {
@@ -817,7 +817,7 @@ function recommendedNextStep(row = {}) {
     tone: "ok",
     eyebrow: "Próximo paso recomendado",
     title: "Seguir acompañando",
-    text: "Ya está usando AppPromos comercialmente. Conviene seguir observando su actividad y ayudar cuando aparezca una traba."
+    text: "Ya está usando Carnis comercialmente. Conviene seguir observando su actividad y ayudar cuando aparezca una traba."
   };
 }
 
@@ -1151,7 +1151,7 @@ function renderBilling(businesses = [], state = {}) {
                 <b>Mercado Pago</b>
                 ${hasMpLink
                   ? `${chip("Link listo", "ok")}<small>${escapeHtml(formatMoney(amount))} · ${escapeHtml(period)}</small>`
-                  : `${chip("Sin link", "warn")}<small>Generalo desde AppPromos.</small>`}
+                  : `${chip("Sin link", "warn")}<small>Generalo desde Carnis.</small>`}
               </div>
             </div>
 
@@ -1340,7 +1340,7 @@ function renderUsers(users = [], businesses = []) {
   const byBusiness = new Map(businesses.map((b) => [String(b.businessId || ""), b]));
   return `
     <div class="admin-section-head">
-      <div><h3>Usuarios</h3><p>Quién entra a AppPromos. Las contraseñas no se muestran nunca.</p></div>
+      <div><h3>Usuarios</h3><p>Quién entra a Carnis. Las contraseñas no se muestran nunca.</p></div>
     </div>
     <div class="admin-table-wrap">
       <table class="admin-table">
@@ -2259,7 +2259,7 @@ export async function renderAdminUsers(container, options = {}) {
     <div class="admin-shell">
       <div class="admin-top">
         <div>
-          <h2>Centro de Control AppPromos</h2>
+          <h2>Centro de Control Carnis</h2>
           <p>Qué carnicerías funcionan, cuáles se están activando y cuáles necesitan tu atención.</p>
         </div>
         <div class="admin-top-actions">
@@ -2440,7 +2440,7 @@ export async function renderAdminUsers(container, options = {}) {
       calculation: {
         amount: data.last_link.amount,
         period_key: data.last_link.period_key,
-        description: data.last_link.metadata_json || data.last_link.external_reference || "AppPromos"
+        description: data.last_link.metadata_json || data.last_link.external_reference || "Carnis"
       },
       raw: data.last_link
     };
@@ -2809,7 +2809,7 @@ export async function renderAdminUsers(container, options = {}) {
 
     const disableUser = target.closest("[data-disable-user]");
     if (disableUser) {
-      if (!window.confirm("Desactivar este usuario en AppPromos?")) return;
+      if (!window.confirm("Desactivar este usuario en Carnis?")) return;
       await withButton(disableUser, "Guardando...", async () => { await setUserDisabled(disableUser.dataset.disableUser, true); await loadData(); });
       return;
     }

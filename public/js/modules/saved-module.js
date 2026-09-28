@@ -165,7 +165,7 @@ export function renderSaved(container, state, options = {}) {
   const savedArchiveList = container.querySelector("#savedArchiveList");
 
   if (!savedCombos.length) {
-    savedListEl.innerHTML = `<div class="saved-empty">Todavía no hay combos u ofertas guardadas. Corré el seeder y volvé a entrar a la demo.</div>`;
+    savedListEl.innerHTML = `<div class="saved-empty">Todavía no guardaste promos. Armá tu primera promo desde Vender → Crear promo o combo y va a quedar acá para repetirla cuando quieras.</div>`;
     return;
   }
 

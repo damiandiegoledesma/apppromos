@@ -9,8 +9,8 @@
       label: "Ver A La Estaca",
       badge: "Carniza · carnicería online real",
       title: "Mirá una carnicería online",
-      subtitle: "Así se vende con AppPromos",
-      message: "Te muestro cómo A La Estaca usa AppPromos para mostrar precios, ofertas y recibir pedidos.",
+      subtitle: "Así se vende con Carnis",
+      message: "Te muestro cómo A La Estaca usa Carnis para mostrar precios, ofertas y recibir pedidos.",
       hint: "Entrá a su vidriera, mirá los productos y probá cómo funciona el carrito.",
       primary: { action: "storefront", text: "Ver A La Estaca" },
       secondary: { action: "signup", text: "Crear mi carnicería" },
@@ -44,7 +44,7 @@
       title: "Poné tu carnicería online",
       subtitle: "Probala sin cargo",
       message: "Creá tu carnicería, cargá algunos precios y empezá a compartir tu vidriera.",
-      hint: "No necesitás elegir un plan para entender si AppPromos te sirve.",
+      hint: "No necesitás elegir un plan para entender si Carnis te sirve.",
       primary: { action: "signup", text: "Crear mi carnicería" },
       secondary: { action: "storefront", text: "Ver A La Estaca" },
       footer: "Primero usala. Después definimos juntos el siguiente paso."
@@ -54,7 +54,7 @@
       badge: "Carniza · registro",
       title: "Tu carnicería online empieza acá",
       subtitle: "Registro corto",
-      message: "Creá tu cuenta y empezá cargando algunos precios. AppPromos prepara tu vidriera.",
+      message: "Creá tu cuenta y empezá cargando algunos precios. Carnis prepara tu vidriera.",
       hint: "Después vas a poder completar o cambiar los datos de tu negocio.",
       primary: { action: "focusSignup", text: "Completar registro" },
       secondary: { action: "storefront", text: "Ver A La Estaca" },
@@ -198,7 +198,7 @@
   function render() {
     root = document.createElement("aside");
     root.className = "carniza-landing-root";
-    root.setAttribute("aria-label", "Carniza, vendedor de AppPromos");
+    root.setAttribute("aria-label", "Carniza, vendedor de Carnis");
 
     root.innerHTML = `
       <button type="button" class="carniza-landing-fab" aria-label="Abrir Carniza">
@@ -213,7 +213,7 @@
             <img class="carniza-landing-avatar" src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" />
             <div>
               <h3 class="carniza-landing-title">Soy Carniza</h3>
-              <p class="carniza-landing-subtitle">Vendedor de AppPromos</p>
+              <p class="carniza-landing-subtitle">Vendedor de Carnis</p>
             </div>
           </div>
           <button type="button" class="carniza-landing-close" data-carniza-landing-close="true" aria-label="Cerrar Carniza">×</button>

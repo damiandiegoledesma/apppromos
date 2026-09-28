@@ -297,18 +297,18 @@ function showDemoConversionPrompt(kind = "whatsapp") {
     ? "Para seguir vendiendo, creá tu carnicería gratis, cargá tus precios y salí andando. Tenés 30 días sin costo."
     : kind === "promo"
       ? "Para guardar más promos, creá tu carnicería gratis y seguí trabajando con tus propios precios."
-      : "Para seguir mandando ofertas por WhatsApp, creá tu carnicería gratis y usá AppPromos con tus propios precios.";
+      : "Para seguir mandando ofertas por WhatsApp, creá tu carnicería gratis y usá Carnis con tus propios precios.";
 
   const overlay = document.createElement("div");
   overlay.id = "demoConversionPrompt";
   overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(15,23,42,.52);display:flex;align-items:center;justify-content:center;padding:18px;";
   overlay.innerHTML = `
     <div role="dialog" aria-modal="true" aria-labelledby="demoConversionTitle" style="width:min(520px,100%);background:#fff;border-radius:24px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28);border:1px solid #fed7aa;">
-      <div style="font-size:.78rem;font-weight:1000;color:#b45309;text-transform:uppercase;letter-spacing:.04em;">Demo de AppPromos</div>
+      <div style="font-size:.78rem;font-weight:1000;color:#b45309;text-transform:uppercase;letter-spacing:.04em;">Demo de Carnis</div>
       <h2 id="demoConversionTitle" style="margin:8px 0 8px;color:#7c2d12;line-height:1.1;">${title}</h2>
       <p style="margin:0;color:#374151;font-weight:800;line-height:1.45;">${message}</p>
       <div style="margin:14px 0 0;padding:12px;border-radius:16px;background:#fff7ed;color:#7c2d12;font-weight:900;line-height:1.35;">
-        Probá AppPromos en demo. Si te sirve, hacela tuya.
+        Probá Carnis en demo. Si te sirve, hacela tuya.
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
         <button type="button" id="demoGoSignupBtn" style="min-height:48px;border:0;border-radius:15px;background:#16a34a;color:white;font-weight:1000;cursor:pointer;">Crear mi carnicería gratis</button>
@@ -626,7 +626,7 @@ function renderCarnizaUrgentStockCard(container) {
     '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">2. Ajustá descuento</div>' +
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
-    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg>El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
+    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg>El descuento se aplica SOLO a los productos que marcaste. Carnis no agrega otros productos automáticamente.</div>' +
     '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#E52223;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(229,34,35,.22);">3. Armar Promo del día</button>' +
     '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
@@ -2707,7 +2707,7 @@ function renderAccountEditHtml() {
             <input type="file" name="logoFile" accept="image/jpeg,image/png,image/webp" data-brand-logo-input />
           </label>
           ${fields.logoUrl ? '<button type="button" class="app-account-remove-image" data-brand-remove-logo>Quitar logo</button>' : ''}
-          <small>JPG, PNG o WEBP. AppPromos lo optimiza antes de guardarlo.</small>
+          <small>JPG, PNG o WEBP. Carnis lo optimiza antes de guardarlo.</small>
         </div>
 
         <div class="app-account-brand-item">
@@ -2782,7 +2782,7 @@ function openAccountSheet(mode = "view") {
       .app-account-web-row strong { word-break:normal; }
       @media (max-width:640px) { .app-account-sheet { padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px)); } .app-account-panel { border-radius:22px; max-height:calc(86vh - env(safe-area-inset-bottom,0px)); } .app-account-actions { grid-template-columns:1fr; } .app-account-row { flex-direction:column; gap:4px; } .app-account-row strong { text-align:left; } }
     </style>
-    <div class="app-account-panel" role="dialog" aria-modal="true" aria-label="Mi cuenta AppPromos">
+    <div class="app-account-panel" role="dialog" aria-modal="true" aria-label="Mi cuenta Carnis">
       <div class="app-account-head">
         <strong>Más / Mi cuenta</strong>
         <button type="button" class="app-account-close" data-account-close aria-label="Cerrar">×</button>
@@ -3614,7 +3614,7 @@ function openMobileBottomMenu(kind) {
       <button type="button" data-mobile-action="print-center"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Centro de Impresiones</strong><span>Pedidos, listas, carteles y folletos.</span></button>
       <button type="button" data-mobile-action="install-app"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#download"></use></svg><span data-pwa-install-label>INSTALAR</span></strong><span>Entrá desde el icono de tu pantalla.</span></button>
       <button type="button" data-mobile-action="help"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#help"></use></svg>Ayuda</strong><span>Volver al camino.</span></button>
-      ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#settings"></use></svg>Admin</strong><span>Panel AppPromos.</span></button>' : ''}
+      ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#settings"></use></svg>Admin</strong><span>Panel Carnis.</span></button>' : ''}
       <button type="button" class="primary" data-mobile-action="logout"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#logout"></use></svg>${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
     </div>
   `;
@@ -4498,7 +4498,7 @@ boot();
 
       const bodyText = document.body ? document.body.innerText || "" : "";
       if (/@demo\.com\b/i.test(bodyText)) return true;
-      if (normalizeText(bodyText).includes("estas probando apppromos")) return true;
+      if (normalizeText(bodyText).includes("estas probando carnis")) return true;
 
       return Object.keys(localStorage || {}).some((key) => {
         const raw = String(localStorage.getItem(key) || "");

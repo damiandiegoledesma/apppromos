@@ -10,7 +10,7 @@
       .replaceAll("'", "&#039;");
   }
 
-  function defaultWhatsApp(message = "Hola AppPromos, quiero resolver el estado de mi cuenta con La Nelly.") {
+  function defaultWhatsApp(message = "Hola, quiero resolver el estado de mi cuenta de Carnis con La Nelly.") {
     return `https://wa.me/${SUPPORT_PHONE}?text=${encodeURIComponent(message)}`;
   }
 
@@ -264,7 +264,7 @@
     if (!alert) return;
 
     if (access.level === "warning" || access.level === "blocked") {
-      const ctaUrl = access.ctaUrl || defaultWhatsApp("Hola AppPromos, quiero regularizar mi cuenta.");
+      const ctaUrl = access.ctaUrl || defaultWhatsApp("Hola, quiero regularizar mi cuenta de Carnis.");
       alert.classList.remove("hidden");
       alert.innerHTML = `
         <button type="button" class="status-nelly-chip-copy" aria-label="Ver mensaje de La Nelly">

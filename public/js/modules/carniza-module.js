@@ -47,17 +47,17 @@ const ACTIONS = {
   supportPlans: {
     label: "📲 Consultar por WhatsApp",
     kind: "whatsapp",
-    run: () => openSupportWhatsApp("Hola AppPromos, quiero consultar los planes para mi carnicería.")
+    run: () => openSupportWhatsApp("Hola, quiero consultar los planes de Carnis para mi carnicería.")
   },
   supportPayment: {
     label: "📲 Regularizar por WhatsApp",
     kind: "whatsapp",
-    run: () => openSupportWhatsApp("Hola AppPromos, quiero regularizar mi pago y reactivar los guardados.")
+    run: () => openSupportWhatsApp("Hola, quiero regularizar mi pago de Carnis y reactivar los guardados.")
   },
   supportReactivate: {
     label: "📲 Reactivar por WhatsApp",
     kind: "whatsapp",
-    run: () => openSupportWhatsApp("Hola AppPromos, quiero reactivar mi cuenta de AppPromos.")
+    run: () => openSupportWhatsApp("Hola, quiero reactivar mi cuenta de Carnis.")
   }
 };
 
@@ -368,7 +368,7 @@ export function initCarniza(options = {}) {
 
   carnizaRoot = document.createElement("aside");
   carnizaRoot.className = "carniza-root carniza-root--legacy";
-  carnizaRoot.setAttribute("aria-label", "Carniza, vendedor de AppPromos");
+  carnizaRoot.setAttribute("aria-label", "Carniza, vendedor de Carnis");
   carnizaRoot.innerHTML = `
     <button type="button" class="carniza-fab" aria-label="Abrir Carniza">
       <img class="carniza-fab-icon" src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" />

@@ -19,8 +19,8 @@ export const DEFAULT_MODULES = {
 export const APPPROMOS_SUPPORT_PHONE_DISPLAY = "+54 9 3462 662053";
 export const APPPROMOS_SUPPORT_PHONE_WA = "5493462662053";
 
-export function buildAppPromosWhatsAppUrl(message = "Hola AppPromos, necesito ayuda con mi cuenta.") {
-  const text = encodeURIComponent(String(message || "Hola AppPromos, necesito ayuda con mi cuenta."));
+export function buildAppPromosWhatsAppUrl(message = "Hola, necesito ayuda con mi cuenta de Carnis.") {
+  const text = encodeURIComponent(String(message || "Hola, necesito ayuda con mi cuenta de Carnis."));
   return `https://wa.me/${APPPROMOS_SUPPORT_PHONE_WA}?text=${text}`;
 }
 
@@ -180,7 +180,7 @@ export function getAccessState(business = {}) {
         ? "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp y seguís vendiendo tranquilo."
         : "La Nelly te cuida y nos cuida. Revisamos el acceso por WhatsApp y lo dejamos claro.",
       ctaLabel: "Resolver por WhatsApp",
-      ctaUrl: buildAppPromosWhatsAppUrl("Hola AppPromos, quiero reactivar mi cuenta de AppPromos.")
+      ctaUrl: buildAppPromosWhatsAppUrl("Hola, quiero reactivar mi cuenta de Carnis.")
     };
   }
 
@@ -198,8 +198,8 @@ export function getAccessState(business = {}) {
       message: "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp y seguís vendiendo tranquilo.",
       ctaLabel: trialExpired ? "Activar por WhatsApp" : "Resolver por WhatsApp",
       ctaUrl: buildAppPromosWhatsAppUrl(trialExpired
-        ? "Hola AppPromos, terminó mi prueba y quiero activar un plan."
-        : "Hola AppPromos, quiero regularizar mi pago y reactivar los guardados."
+        ? "Hola, terminó mi prueba de Carnis y quiero activar un plan."
+        : "Hola, quiero regularizar mi pago de Carnis y reactivar los guardados."
       )
     };
   }
@@ -218,7 +218,7 @@ export function getAccessState(business = {}) {
       title: "Pago pendiente",
       message: `Tu vencimiento ya pasó. Tenés ${remaining} día${remaining === 1 ? "" : "s"} de gracia para regularizar sin interrumpir el trabajo.`,
       ctaLabel: "Resolver por WhatsApp",
-      ctaUrl: buildAppPromosWhatsAppUrl("Hola AppPromos, quiero regularizar mi pago y mantener activa mi cuenta.")
+      ctaUrl: buildAppPromosWhatsAppUrl("Hola, quiero regularizar mi pago y mantener activa mi cuenta de Carnis.")
     };
   }
 
@@ -236,12 +236,12 @@ export function getAccessState(business = {}) {
       showWarning: true,
       title,
       message: trialDaysLeft === null
-        ? "Estás probando AppPromos con acceso completo. Cuando quieras dejarlo activo para tu carnicería, escribinos y te ayudamos."
+        ? "Estás probando Carnis con acceso completo. Cuando quieras dejarlo activo para tu carnicería, escribinos y te ayudamos."
         : trialEndingSoon
           ? `Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"} de prueba${trialDate ? `, hasta el ${trialDate}` : ""}. Activá tu plan para seguir sin interrupciones.`
-          : `Estás probando AppPromos con acceso completo. Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"} de prueba${trialDate ? `, hasta el ${trialDate}` : ""}.`,
+          : `Estás probando Carnis con acceso completo. Te quedan ${trialDaysLeft} día${trialDaysLeft === 1 ? "" : "s"} de prueba${trialDate ? `, hasta el ${trialDate}` : ""}.`,
       ctaLabel: trialEndingSoon ? "Consultar plan por WhatsApp" : "Consultar planes",
-      ctaUrl: buildAppPromosWhatsAppUrl("Hola AppPromos, quiero consultar los planes para mi carnicería.")
+      ctaUrl: buildAppPromosWhatsAppUrl("Hola, quiero consultar los planes de Carnis para mi carnicería.")
     };
   }
 
@@ -408,7 +408,7 @@ export function renderModuleLocked(moduleKey, business = {}) {
         </button>
         ${access.ctaUrl ? `
           <a href="${escapeHtml(access.ctaUrl)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:999px;background:#25D366;color:#10351f;text-decoration:none;font-weight:1000;">
-            💬 ${escapeHtml(access.ctaLabel || "Contactar AppPromos")}
+            💬 ${escapeHtml(access.ctaLabel || "Contactar a Carnis")}
           </a>
         ` : `
           <div style="padding:12px;border-radius:12px;background:#fff8f4;color:#6b4b3e;font-size:14px;">

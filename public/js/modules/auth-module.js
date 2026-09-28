@@ -181,7 +181,7 @@ if (registroBtn) {
 
       setStatus(
         registroStatus,
-        "Cuenta creada. Para volver a entrar a AppPromos, usá tu email y la contraseña que acabás de crear."
+        "Cuenta creada. Para volver a entrar a Carnis, usá tu email y la contraseña que acabás de crear."
       );
 
       setTimeout(() => {

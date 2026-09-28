@@ -84,7 +84,7 @@ function parseAppPromosOrder(text = "") {
   const source = String(text || "").replace(/\r/g, "").trim();
   if (!source) throw new Error("Pegá primero el pedido recibido por WhatsApp.");
   if (!/\*?PEDIDO\*?/i.test(source) || !/TOTAL ESTIMADO/i.test(source)) {
-    throw new Error("No reconocimos un pedido de AppPromos. Copiá el mensaje completo recibido por WhatsApp.");
+    throw new Error("No reconocimos un pedido de Carnis. Copiá el mensaje completo recibido por WhatsApp.");
   }
 
   const lines = source.split("\n");
@@ -164,7 +164,7 @@ function setText(root, selector, value = "") {
 }
 
 function renderTicket(root, order) {
-  setText(root, "[data-print-business]", order.businessName || "PEDIDO APPPROMOS");
+  setText(root, "[data-print-business]", order.businessName || "PEDIDO CARNIS");
   setText(root, "[data-print-date]", new Intl.DateTimeFormat("es-AR", {
     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
   }).format(new Date()));
@@ -328,7 +328,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
       <header class="print-center__head">
         <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Centro de Impresiones</h2>
-        <p>Convertí la información que ya tenés en AppPromos en piezas listas para usar en el negocio.</p>
+        <p>Convertí la información que ya tenés en Carnis en piezas listas para usar en el negocio.</p>
       </header>
 
       <nav class="print-center__tools" data-print-hub aria-label="Herramientas del Centro de Impresiones">
@@ -342,7 +342,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
       <section class="print-order-workspace" data-print-tool-view="order" id="print-order-section">
         <button type="button" class="print-center__back" data-print-back>← Volver al Centro de Impresiones</button>
         <h3>Imprimir pedido</h3>
-        <p>Copiá el mensaje completo que recibiste por WhatsApp, pegalo acá y AppPromos lo convierte en una comanda.</p>
+        <p>Copiá el mensaje completo que recibiste por WhatsApp, pegalo acá y Carnis lo convierte en una comanda.</p>
         <textarea class="print-order-input" data-print-order-input placeholder="Pegá acá el pedido recibido por WhatsApp…" spellcheck="false"></textarea>
         <div class="print-order-actions">
           <button type="button" data-print-paste>Pegar pedido</button>
@@ -376,7 +376,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
             <hr class="print-ticket-rule">
             <div class="print-ticket-checks"><div>☐ PREPARADO</div><div>☐ CONTROLADO</div><div>☐ ENTREGADO</div></div>
             <hr class="print-ticket-rule">
-            <div class="print-ticket-footer">Generado con AppPromos</div>
+            <div class="print-ticket-footer">Generado con Carnis</div>
           </div>
           <div class="print-order-actions">
             <button type="button" class="primary" data-print-now><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button>
@@ -397,7 +397,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         </div>
         <div class="price-list-models" data-price-list-models>
           <button type="button" class="price-list-model is-selected" data-price-list-model="classic"><strong>Modelo 1 · Clásico</strong><small>Alto contraste y lectura rápida.</small></button>
-          <button type="button" class="price-list-model" data-price-list-model="app"><strong>Modelo 2 · AppPromos</strong><small>Limpio, moderno e institucional.</small></button>
+          <button type="button" class="price-list-model" data-price-list-model="app"><strong>Modelo 2 · Carnis</strong><small>Limpio, moderno e institucional.</small></button>
           <button type="button" class="price-list-model" data-price-list-model="commercial"><strong>Modelo 3 · Comercial</strong><small>Más impacto para mostrador o vidriera.</small></button>
         </div>
         <div class="price-list-actions"><button type="button" class="primary" data-price-generate>Generar lista</button></div>
@@ -419,7 +419,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         </div>
         <div class="offer-poster-models" data-poster-models>
           <button type="button" class="offer-poster-model is-selected" data-poster-model="classic"><strong>Modelo 1 · Clásico</strong><small>Directo, alto contraste y precio protagonista.</small></button>
-          <button type="button" class="offer-poster-model" data-poster-model="app"><strong>Modelo 2 · AppPromos</strong><small>Limpio, moderno y equilibrado.</small></button>
+          <button type="button" class="offer-poster-model" data-poster-model="app"><strong>Modelo 2 · Carnis</strong><small>Limpio, moderno y equilibrado.</small></button>
           <button type="button" class="offer-poster-model" data-poster-model="window"><strong>Modelo 3 · Vidriera</strong><small>Más impacto visual para destacar la oferta.</small></button>
         </div>
         <div class="offer-poster-actions"><button type="button" class="primary" data-poster-generate>Generar cartel</button></div>
@@ -448,7 +448,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
             <img class="qr-shop-code" data-qr-shop-code alt="QR de la carnicería">
             <div class="qr-shop-copy">Consultá ofertas diarias, promos y precios.</div>
             <div class="qr-shop-whatsapp">Elegí tus productos y mandá tu pedido por WhatsApp.</div>
-            <div class="qr-shop-brand">Generado con AppPromos</div>
+            <div class="qr-shop-brand">Generado con Carnis</div>
           </div>
           <div class="qr-shop-actions">
             <button type="button" class="primary" data-qr-shop-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button>
@@ -462,7 +462,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
       <section class="flyer-workspace" data-print-tool-view="flyers" id="print-flyers-section">
         <button type="button" class="print-center__back" data-print-back>← Volver al Centro de Impresiones</button>
         <h3>Folletos · 8 por hoja A4</h3>
-        <p>Elegí una oferta publicada. AppPromos genera 8 folletos iguales listos para imprimir, cortar y entregar.</p>
+        <p>Elegí una oferta publicada. Carnis genera 8 folletos iguales listos para imprimir, cortar y entregar.</p>
         <div class="flyer-controls">
           <label>Formato de hoja
             <select class="flyer-format" data-flyer-format>
@@ -805,7 +805,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
     const footer = document.createElement("footer");
     footer.className = "price-list-footer";
-    footer.append(document.createTextNode("Generado con AppPromos"));
+    footer.append(document.createTextNode("Generado con Carnis"));
     const pageNumber = document.createElement("span");
     pageNumber.className = "price-list-page-number";
     pageNumber.textContent = `Página ${pageIndex + 1} de ${pageCount}`;
@@ -854,7 +854,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         columns.appendChild(column);
       });
 
-      footer.firstChild.textContent = "Precios sujetos a modificación · Generado con AppPromos";
+      footer.firstChild.textContent = "Precios sujetos a modificación · Generado con Carnis";
       sheet.append(head, columns);
       const qrFooter = createPriceListQrFooter();
       if (qrFooter) sheet.appendChild(qrFooter);
@@ -1017,7 +1017,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
     const footer = document.createElement("div");
     footer.className = "offer-poster-footer";
-    footer.textContent = "Generado con AppPromos";
+    footer.textContent = "Generado con Carnis";
 
     sheet.append(posterLogo, business, kicker, title, items, total);
     if (unit.textContent) sheet.appendChild(unit);
@@ -1488,7 +1488,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
 
     ctx.fillStyle = dark;
     ctx.font = "800 9px Arial, Helvetica, sans-serif";
-    ctx.fillText("Generado con AppPromos", width / 2, 1081);
+    ctx.fillText("Generado con Carnis", width / 2, 1081);
 
     return await new Promise((resolve, reject) => {
       canvas.toBlob(
@@ -1504,7 +1504,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     const offer = printableOffers[index];
     const raw = String(offer?.name || "oferta").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const safe = raw.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "oferta";
-    return `AppPromos-${safe}.png`;
+    return `Carnis-${safe}.png`;
   };
 
   container.querySelector("[data-poster-png]")?.addEventListener("click", async () => {
@@ -1786,7 +1786,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         body.appendChild(groupBlock);
       });
 
-      footer.firstChild.textContent = "Ofertas vigentes al momento de generar esta lista · Generado con AppPromos";
+      footer.firstChild.textContent = "Ofertas vigentes al momento de generar esta lista · Generado con Carnis";
       sheet.append(head, body, footer);
       pagesRoot?.appendChild(sheet);
     });
@@ -1945,7 +1945,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     ctx.fillStyle="#475569"; ctx.font="800 14px Arial, Helvetica, sans-serif";
     ctx.fillText("Nuestra vidriera está disponible las 24 horas.",width/2,956);
     ctx.fillStyle="#111111"; ctx.font="800 10px Arial, Helvetica, sans-serif";
-    ctx.fillText("Generado con AppPromos",width/2,1064);
+    ctx.fillText("Generado con Carnis",width/2,1064);
 
     return await new Promise((resolve,reject)=>canvas.toBlob(
       blob=>blob?resolve(blob):reject(new Error("No pudimos generar el PNG.")),
@@ -1956,7 +1956,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
   const qrShopFileName = () => {
     const raw = qrShopName.normalize("NFD").replace(/[\u0300-\u036f]/g,"");
     const safe = raw.replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase() || "mi-carniceria";
-    return `AppPromos-QR-${safe}.png`;
+    return `Carnis-QR-${safe}.png`;
   };
 
   container.querySelector("[data-qr-shop-generate]")?.addEventListener("click", buildQrShop);
@@ -2081,7 +2081,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     if(identity.childNodes.length)card.appendChild(identity);
 
     const stock=document.createElement("div");stock.className="flyer-card__stock";stock.textContent="HASTA AGOTAR STOCK";
-    const brand=document.createElement("div");brand.className="flyer-card__brand";brand.textContent="Generado con AppPromos";card.append(stock,brand);
+    const brand=document.createElement("div");brand.className="flyer-card__brand";brand.textContent="Generado con Carnis";card.append(stock,brand);
     return card;
   };
 
