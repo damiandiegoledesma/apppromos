@@ -93,14 +93,6 @@ function esc(value = "") {
 }
 
 
-function normalizeSearchText(value = "") {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
 function moneyInputValue(value) {
   const n = Number(value || 0);
   return Number.isFinite(n) && n > 0 ? String(n) : "";
@@ -233,14 +225,52 @@ function renderRubros() {
   });
 }
 
-function groupedSelectedProducts(draft) {
+// QA-1: carga rápida de precios en el onboarding.
+// Solo productos representativos por rubro (claves del catálogo inicial).
+// Rubros sin lista definida: primeros 3 productos del catálogo de ese rubro.
+const QUICK_PRICE_PRODUCTS = {
+  Novillo: [
+    ["novillo_asado_costilla", "Asado Costilla"],
+    ["novillo_falda", "Falda"],
+    ["novillo_nalga", "Nalga"],
+    ["novillo_costeletas", "Costeletas"],
+    ["novillo_puchero", "Puchero"]
+  ],
+  Cerdo: [
+    ["cerdo_pulpas", "Pulpas"],
+    ["cerdo_costeletas", "Costeletas"],
+    ["cerdo_pechito", "Pechito"],
+    ["cerdo_matambre", "Matambre"],
+    ["cerdo_marucha", "Marucha"]
+  ],
+  Pollo: [
+    ["pollo_alitas", "Alitas"],
+    ["pollo_pata_y_muslo", "Patamuslo"],
+    ["pollo_pechuga_con_hueso", "Pechuga"]
+  ]
+};
+const QUICK_PRICE_FALLBACK_PER_RUBRO = 3;
+
+function quickPriceGroups(draft) {
   const selected = new Set(draft.selectedRubros || []);
-  const products = catalog.filter((p) => selected.has(String(p.rubro || "").trim()));
-  return products.reduce((acc, p) => {
-    const rubro = String(p.rubro || "Otros").trim() || "Otros";
-    (acc[rubro] ||= []).push(p);
-    return acc;
-  }, {});
+  const byKey = new Map(catalog.map((p) => [productKey(p), p]));
+  return availableRubros
+    .filter((rubro) => selected.has(rubro))
+    .map((rubro) => {
+      const defined = QUICK_PRICE_PRODUCTS[rubro];
+      const rows = defined
+        ? defined.filter(([key]) => byKey.has(key)).map(([key, label]) => ({ key, label }))
+        : catalog
+          .filter((p) => String(p.rubro || "").trim() === rubro)
+          .slice(0, QUICK_PRICE_FALLBACK_PER_RUBRO)
+          .map((p) => ({ key: productKey(p), label: p.nombre || p.name || "Producto" }));
+      return { rubro, rows };
+    })
+    .filter((group) => group.rows.length);
+}
+
+function cleanPriceDigits(value = "") {
+  return String(value ?? "").replace(/\D+/g, "");
 }
 
 function renderPrices() {
@@ -253,125 +283,87 @@ function renderPrices() {
   setActivationDraftStep("prices");
   setProgress("prices");
 
-  const grouped = groupedSelectedProducts(draft);
+  const groups = quickPriceGroups(draft);
   const count = activationDraftPricedCount(draft);
+  const showRubroHeads = groups.length > 1;
 
-  const groupsHtml = Object.entries(grouped).map(([rubro, products]) => `
-    <section class="price-group" data-price-group>
-      <h3>${RUBRO_EMOJI[rubro] || "🥩"} ${esc(RUBRO_LABELS[rubro] || rubro)}</h3>
-      ${products.map((p) => {
-        const key = productKey(p);
-        return `
-          <label
-            class="price-row"
-            data-price-row
-            data-price-search="${esc(`${p.nombre || p.name || "Producto"} ${RUBRO_LABELS[rubro] || rubro}`)}"
+  const rowsHtml = groups.map(({ rubro, rows }) => `
+    ${showRubroHeads ? `<tr class="qp-rubro"><th colspan="2" scope="rowgroup">${RUBRO_EMOJI[rubro] || "🥩"} ${esc(RUBRO_LABELS[rubro] || rubro)}</th></tr>` : ""}
+    ${rows.map(({ key, label }) => `
+      <tr>
+        <th scope="row"><label for="qp-${esc(key)}">${esc(label)}</label></th>
+        <td>
+          <input
+            id="qp-${esc(key)}"
+            class="qp-input"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            enterkeyhint="next"
+            autocomplete="off"
+            placeholder="$"
+            aria-label="Precio de ${esc(label)}"
+            data-price-key="${esc(key)}"
+            value="${esc(moneyInputValue(draft.prices?.[key]))}"
           >
-            <span>
-              <strong>${esc(p.nombre || p.name || "Producto")}</strong>
-              <small>${esc(p.unidad === "unidad" ? "por unidad" : "por kg")}</small>
-            </span>
-            <input
-              class="price-input"
-              type="number"
-              inputmode="decimal"
-              min="0"
-              step="100"
-              placeholder="Ej. 18.900"
-              aria-label="Precio de ${esc(p.nombre || p.name || "Producto")}"
-              data-price-key="${esc(key)}"
-              value="${esc(moneyInputValue(draft.prices?.[key]))}"
-            >
-          </label>`;
-      }).join("")}
-    </section>
+        </td>
+      </tr>`).join("")}
   `).join("");
 
   scene({
     image: count >= 5 ? ASSET.progress : ASSET.prices,
     eyebrow: "Paso 2 de 4",
-    title: count >= 5 ? "¡Bien! Ya se empieza a ver." : "Cargá tus precios.",
-    lead: count >= 5
-      ? "Ya tenemos suficiente para armar una vidriera. Podés seguir cargando o avanzar."
-      : "Poné los precios que tengas a mano. Lo que dejes vacío no se publica.",
+    title: "Poné algunos precios",
+    lead: "Cargá los precios que tengas a mano. Después podés completar toda tu lista desde Carnis.",
     body: `
-      <div class="field" style="margin-top:0;">
-        <label for="priceSearch">Buscar corte o producto</label>
-        <input
-          id="priceSearch"
-          type="search"
-          inputmode="search"
-          autocomplete="off"
-          placeholder="Ej. Costilla, Vacío, Milanesa..."
-          aria-label="Buscar corte o producto"
-        >
-      </div>
-      <div class="price-toolbar">
-        <span class="counter" data-price-count>${count} producto${count === 1 ? "" : "s"} con precio</span>
-        <span class="hint">Guardado automático</span>
-      </div>
-      <div class="price-list">${groupsHtml}</div>
-      <div class="notice" data-search-empty>No encontramos productos con ese nombre.</div>
+      <table class="quick-prices">
+        <thead><tr><th scope="col">Producto</th><th scope="col">Precio</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <p class="hint qp-meta"><span data-price-count>${count} con precio</span> · Guardado automático · Lo vacío no se publica.</p>
       <div class="notice" data-notice>Cargá al menos un precio para continuar.</div>
     `,
     actions: `
       <button class="btn btn-light" type="button" data-action="back">← Rubros</button>
-      <button class="btn ${count >= 5 ? "btn-green" : "btn-primary"}" type="button" data-action="next">
-        ${count >= 5 ? "Seguir →" : "Continuar"}
-      </button>
+      <button class="btn btn-primary" type="button" data-action="next">Continuar</button>
     `
   });
 
-  const searchInput = root.querySelector("#priceSearch");
-  const searchEmpty = root.querySelector("[data-search-empty]");
+  root.querySelector(".actions")?.classList.add("qp-actions");
 
-  const applyPriceSearch = () => {
-    const query = normalizeSearchText(searchInput?.value || "");
-    let visibleRows = 0;
+  const inputs = [...root.querySelectorAll("[data-price-key]")];
+  const nextBtn = root.querySelector('[data-action="next"]');
 
-    root.querySelectorAll("[data-price-group]").forEach((group) => {
-      let visibleInGroup = 0;
-
-      group.querySelectorAll("[data-price-row]").forEach((row) => {
-        const haystack = normalizeSearchText(row.dataset.priceSearch || row.textContent || "");
-        const visible = !query || haystack.includes(query);
-        row.style.display = visible ? "" : "none";
-        if (visible) {
-          visibleRows += 1;
-          visibleInGroup += 1;
-        }
-      });
-
-      group.style.display = visibleInGroup === 0 ? "none" : "";
-    });
-
-    if (searchEmpty) {
-      searchEmpty.classList.toggle("is-on", Boolean(query) && visibleRows === 0);
-    }
-  };
-
-  searchInput?.addEventListener("input", applyPriceSearch);
-  searchInput?.addEventListener("search", applyPriceSearch);
-
-  root.querySelectorAll("[data-price-key]").forEach((input) => {
+  inputs.forEach((input, index) => {
     const save = () => {
-      setActivationDraftPrice(input.dataset.priceKey, input.value);
-      if (Number(input.value) > 0) void trackFunnelEvent("prices_started");
-      const newCount = activationDraftPricedCount();
+      const digits = cleanPriceDigits(input.value);
+      if (input.value !== digits) input.value = digits;
+      setActivationDraftPrice(input.dataset.priceKey, digits);
+      if (Number(digits) > 0) void trackFunnelEvent("prices_started");
       const countEl = root.querySelector("[data-price-count]");
-      if (countEl) countEl.textContent = `${newCount} producto${newCount === 1 ? "" : "s"} con precio`;
+      if (countEl) countEl.textContent = `${activationDraftPricedCount()} con precio`;
+      root.querySelector("[data-notice]")?.classList.remove("is-on");
     };
     input.addEventListener("change", save);
     input.addEventListener("blur", save);
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      save();
+      const next = inputs[index + 1];
+      if (next) next.focus();
+      else nextBtn?.focus();
+    });
   });
 
   root.querySelector('[data-action="back"]')?.addEventListener("click", renderRubros);
-  root.querySelector('[data-action="next"]')?.addEventListener("click", () => {
-    root.querySelectorAll("[data-price-key]").forEach((input) => {
-      setActivationDraftPrice(input.dataset.priceKey, input.value);
+  nextBtn?.addEventListener("click", () => {
+    inputs.forEach((input) => {
+      setActivationDraftPrice(input.dataset.priceKey, cleanPriceDigits(input.value));
     });
     if (activationDraftPricedCount() < 1) {
       root.querySelector("[data-notice]")?.classList.add("is-on");
+      inputs[0]?.focus();
       return;
     }
     void trackFunnelEvent("prices_completed", { count: activationDraftPricedCount() });

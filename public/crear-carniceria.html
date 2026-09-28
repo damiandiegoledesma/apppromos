@@ -132,6 +132,18 @@
       background:#fff1f2;color:#ef233c;font-weight:850;font-size:13px;
     }
     .notice.is-on{display:block}
+    /* QA-1: carga rápida de precios (planilla Producto | Precio, sin scroll interno) */
+    .quick-prices{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    .quick-prices thead th{padding:8px 12px;background:#fff6f1;font-size:12px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left}
+    .quick-prices thead th:last-child{text-align:right}
+    .quick-prices tbody th,.quick-prices tbody td{padding:5px 12px;border-top:1px solid #f1e5df}
+    .quick-prices tbody th{font-weight:900;text-align:left}
+    .quick-prices tbody th label{display:block;cursor:pointer}
+    .quick-prices tbody td{width:132px}
+    .quick-prices .qp-rubro th{padding:6px 12px;background:#fffaf7;font-size:13px;font-weight:1000;color:var(--red)}
+    .qp-input{width:100%;min-height:40px;border:1px solid #d8c4bb;border-radius:10px;padding:0 10px;text-align:right;font-size:16px;font-weight:1000;color:var(--ink);background:#fff}
+    .qp-input:focus{outline:3px solid rgba(153,27,27,.12);border-color:var(--red)}
+    .qp-meta{margin:8px 2px 0}
     .mobile-carniza{display:none}
     .footer-note{text-align:center;color:var(--muted);font-size:12px;font-weight:750;margin-top:14px}
     @media(max-width:760px){
@@ -147,6 +159,11 @@
       .price-toolbar{top:0}
       .price-row{grid-template-columns:minmax(0,1fr) 124px;padding:9px 10px}
       .actions .btn{flex:1 1 100%}
+      .panel:has(.qp-actions){overflow:clip}
+      .qp-actions{position:sticky;bottom:0;z-index:4;margin:12px -14px -14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);border-top:1px solid var(--line);flex-wrap:nowrap}
+      .qp-actions .btn{flex:1 1 auto}
+      .qp-actions [data-action="back"]{flex:0 0 auto}
+      .quick-prices tbody td{width:118px}
       .topbar{padding:0 4px}
     }
   </style>
