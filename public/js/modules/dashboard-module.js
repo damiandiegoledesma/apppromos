@@ -125,90 +125,6 @@ export function renderDashboard(container, businessId, meta, state, options = {}
     : "Sin registro";
 
   container.innerHTML = `
-    <style>
-      .dash-shell { display:flex; flex-direction:column; gap:18px; width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box; }
-      .dash-shell *, .dash-shell *::before, .dash-shell *::after { box-sizing:border-box; min-width:0; }
-      .dash-main-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:24px; padding:26px; background:#fff; }
-      .dash-brand-reminder { width:100%; border:1px solid #ece7df; border-radius:16px; padding:14px 16px; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-      .dash-brand-reminder-copy { display:grid; gap:4px; color:#374151; }
-      .dash-brand-reminder-copy strong { font-size:15px; line-height:1.15; color:#0A2E5B; }
-      .dash-brand-reminder-copy span { color:#6b7280; font-size:13px; font-weight:600; line-height:1.4; }
-      .dash-brand-reminder-copy small { color:#6b7280; font-size:12px; font-weight:700; }
-      .dash-brand-reminder-btn { min-height:42px; flex:0 0 auto; padding:0 15px; border:1px solid #ece7df; border-radius:12px; background:#fff; color:#0A2E5B; font-weight:700; cursor:pointer; }
-      .dash-kicker { font-size:11px; font-weight:700; color:#E52223; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
-      .dash-main-title { margin:0 0 6px; font-size:28px; line-height:1.05; color:#0A2E5B; font-weight:700; }
-      .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:14px; }
-      .dash-actions { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
-      .dash-action-btn { width:100%; max-width:100%; border:1px solid #EFE7E4; border-radius:16px; padding:16px; background:#fff; text-align:left; cursor:pointer; min-height:80px; display:flex; flex-direction:column; gap:12px; }
-      .dash-action-btn strong { display:block; font-size:14px; color:#1F2937; margin:0; line-height:1.25; font-weight:600; }
-      .dash-action-icon { width:22px; height:22px; flex:0 0 22px; display:grid; place-items:center; font-size:20px; }
-      .dash-action-btn span { display:none; }
-      .dash-action-btn .dash-action-icon { display:grid; }
-      .dash-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
-      .dash-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:16px; padding:16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
-      .dash-card h3 { margin:0; font-size:14px; color:#6b7280; }
-      .dash-value { font-size:30px; font-weight:900; color:#111827; line-height:1.1; }
-      .dash-note { margin-top:6px; color:#6b7280; font-size:13px; }
-      .dash-two { display:grid; grid-template-columns:1.15fr .85fr; gap:14px; }
-      .dash-list { display:flex; flex-direction:column; gap:10px; }
-      .dash-list-item { display:flex; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid #f3f4f6; }
-      .dash-list-item:last-child { border-bottom:none; padding-bottom:0; }
-      .dash-list-item strong { color:#111827; text-align:right; overflow-wrap:anywhere; }
-      .dash-muted { color:#6b7280; }
-      .dash-step-btn { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid #f3e4db; border-radius:15px; background:#fffaf7; padding:14px; cursor:pointer; text-align:left; }
-      .dash-step-btn strong { color:#B3161A; }
-      .dash-step-btn span { color:#6b7280; font-size:13px; }
-      .dash-whatsapp-sales { margin-top:14px; }
-      .dash-whatsapp-sales button { width:100%; min-height:58px; border:1px solid #EFE7E4; border-radius:16px; background:#fff; color:#1F2937; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:10px; align-items:center; text-align:left; padding:10px 14px; cursor:pointer; }
-      .dash-whatsapp-sales button>span { grid-row:1 / 3; font-size:24px; }
-      .dash-whatsapp-sales strong { font-size:14px; line-height:1.1; color:#1F2937; }
-      .dash-whatsapp-sales small { color:#6b7280; font-size:11px; font-weight:700; }
-      .dash-share-block { margin-top:16px; }
-      .dash-secondary-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:0; }
-      .dash-secondary-actions button { flex:1; min-width:150px; min-height:46px; border-radius:14px; border:1px solid #ddd; background:#fff; font-weight:800; cursor:pointer; }
-      .dash-business-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-      .dash-mini-btn, .dash-save-btn { min-height:42px; border-radius:13px; border:1px solid #ddd; background:#fff; padding:0 14px; font-weight:900; cursor:pointer; }
-      .dash-save-btn { background:#E52223; border-color:#E52223; color:#fff; }
-      .dash-business-form { display:grid; gap:12px; }
-      .dash-business-form label { display:grid; gap:6px; color:#4b5563; font-size:13px; font-weight:800; }
-      .dash-business-form input { width:100%; min-height:46px; border:1px solid #e5e7eb; border-radius:13px; padding:0 12px; font-size:15px; box-sizing:border-box; }
-      .dash-business-form input:focus { outline:2px solid rgba(229,34,35,.15); border-color:#E52223; }
-      .dash-form-hint { color:#6b7280; font-size:13px; }
-      .dash-link-preview { background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:12px; display:grid; gap:5px; }
-      .dash-link-preview span { color:#9a3412; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-      .dash-link-preview strong { color:#7c2d12; overflow-wrap:anywhere; }
-      .dash-link-preview small { color:#9a3412; }
-      .dash-form-error { min-height:18px; color:#ef233c; font-weight:800; font-size:13px; }
-      .dash-form-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
-      @media (max-width: 900px) { .dash-grid, .dash-two { grid-template-columns:1fr; } }
-      @media (max-width: 640px) {
-        .dash-shell { gap:12px; }
-        .dash-brand-reminder { align-items:stretch; flex-direction:column; padding:15px; }
-        .dash-brand-reminder-btn { width:100%; }
-        .dash-main-card { padding:12px; border-radius:20px; }
-        .dash-main-title { font-size:22px; line-height:1.08; margin-bottom:12px; }
-        .dash-main-subtitle, .dash-kicker { display:none; }
-        .dash-value { font-size:24px; }
-        .dash-actions { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px; }
-        .dash-action-btn { min-width:0; min-height:88px; padding:10px; border-radius:17px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:7px; text-align:center; }
-        .dash-action-icon { display:grid !important; width:36px; height:36px; flex:0 0 36px; place-items:center; border-radius:11px; font-size:19px; line-height:1; }
-        .dash-action-btn strong { display:block; width:100%; font-size:14px; margin:0; line-height:1.12; text-align:center; }
-        .dash-action-btn span { display:none; }
-
-        .dash-secondary-actions button { min-width:0; min-height:42px; font-size:11px; line-height:1.15; padding:0 6px; }
-        .dash-card { padding:14px; border-radius:16px; }
-        .dash-two { gap:12px; }
-        .dash-step-btn { padding:12px; }
-        .dash-secondary-actions { display:grid; grid-template-columns:1fr; gap:8px; }
-        .dash-secondary-actions button { width:100%; min-width:0; }
-        .dash-business-head { align-items:flex-start; flex-direction:column; }
-        .dash-list-item { flex-direction:column; gap:4px; }
-        .dash-list-item strong { text-align:left; }
-        .dash-form-actions { flex-direction:column-reverse; }
-        .dash-mini-btn, .dash-save-btn { width:100%; }
-      }
-          @media (max-width: 640px) { .dash-secondary-actions { grid-template-columns:1fr; } }
-</style>
 
     <div class="dash-shell">
       ${showBrandReminder ? `
@@ -249,21 +165,21 @@ export function renderDashboard(container, businessId, meta, state, options = {}
           })}
 
           ${publicWebUrl ? `
-            <div data-dashboard-qr-panel hidden style="margin-top:16px;text-align:center;">
-              <div style="display:inline-block;background:#fff;padding:14px;border:1px solid #e5e7eb;border-radius:18px;">
+            <div class="dash-qr-panel" data-dashboard-qr-panel hidden>
+              <div class="dash-qr-frame">
                 <img
                   data-dashboard-qr-image
                   src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&data=${encodeURIComponent(publicWebUrl)}"
                   alt="QR de mi carnicería"
                   width="240"
                   height="240"
-                  style="display:block;width:min(240px,70vw);height:auto;"
+                  class="dash-qr-img"
                 />
               </div>
-              <div style="margin-top:10px;font-size:13px;font-weight:800;color:#6b7280;">
+              <div class="dash-qr-caption">
                 Escaneá para abrir tu carnicería online
               </div>
-              <div style="margin-top:5px;font-size:12px;color:#64748b;word-break:break-all;">
+              <div class="dash-qr-url">
                 ${escapeHtml(publicWebUrl)}
               </div>
             </div>

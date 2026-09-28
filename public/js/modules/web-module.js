@@ -90,8 +90,8 @@ export async function renderWebPremium(container, businessId, options = {}) {
 
         <div class="wp-card wp-head">
           <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Mi carnicería online</h2>
-          <p class="wp-muted" style="margin:0;">Tu vidriera se mantiene actualizada con tus precios reales. No hace falta configurar ni guardar la web por separado.</p>
-          <div class="wp-ready" style="margin-top:14px;">
+          <p class="wp-muted wp-muted--m0">Tu vidriera se mantiene actualizada con tus precios reales. No hace falta configurar ni guardar la web por separado.</p>
+          <div class="wp-ready wp-ready--mt14">
             <strong>${config.enabled !== false ? "✅ Vidriera activa" : "⏸️ Vidriera pausada"}</strong>
             <span>${pricedProducts.length} producto${pricedProducts.length === 1 ? "" : "s"} con precio publicado</span>
           </div>
@@ -109,8 +109,8 @@ export async function renderWebPremium(container, businessId, options = {}) {
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 6px;color:#7c2d12;"><svg class="ci ci-md ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#edit"></use></svg>Diseño de tu vidriera</h3>
-          <p class="wp-muted" style="margin:0 0 12px;">Elegí el estilo que mejor representa a tu negocio. Tus productos, promos, carrito y enlace no cambian.</p>
+          <h3 class="wp-h3-mb6"><svg class="ci ci-md ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#edit"></use></svg>Diseño de tu vidriera</h3>
+          <p class="wp-muted wp-muted--mb12">Elegí el estilo que mejor representa a tu negocio. Tus productos, promos, carrito y enlace no cambian.</p>
           <div class="wp-theme-grid">
             ${STOREFRONT_THEMES.map((theme) => `<button type="button" class="wp-theme-choice ${theme.id === storefrontTheme ? "is-active" : ""}" data-wp-theme="${theme.id}" aria-pressed="${theme.id === storefrontTheme}"><span class="wp-theme-swatch">${renderThemeSchematicHtml(theme.id)}</span><strong>${escapeHtml(theme.label)}</strong><small>${escapeHtml(theme.caption)} · ${escapeHtml(theme.description)}</small></button>`).join("")}
           </div>
@@ -118,19 +118,19 @@ export async function renderWebPremium(container, businessId, options = {}) {
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 12px;color:#7c2d12;">Datos de tu carnicería online</h3>
+          <h3 class="wp-h3-mb12">Datos de tu carnicería online</h3>
           <div class="wp-data">
             <div class="wp-data-item"><span>Nombre</span><strong>${escapeHtml(fields.name)}</strong></div>
             <div class="wp-data-item"><span>WhatsApp</span><strong>${escapeHtml(fields.phone || "Sin cargar")}</strong></div>
             <div class="wp-data-item"><span>Dirección</span><strong>${escapeHtml(fields.address || "Podés completarla después")}</strong></div>
             <div class="wp-data-item"><span>Localidad</span><strong>${escapeHtml(fields.city || "Sin cargar")}</strong></div>
-            <div class="wp-data-item" style="grid-column:1/-1;"><span>Link público</span><strong>${escapeHtml(fields.publicUrl || "Se genera automáticamente")}</strong></div>
+            <div class="wp-data-item wp-data-item--full"><span>Link público</span><strong>${escapeHtml(fields.publicUrl || "Se genera automáticamente")}</strong></div>
           </div>
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 6px;color:#7c2d12;">Nombre público del rubro</h3>
-          <p class="wp-muted" style="margin:0 0 12px;">¿Cómo querés mostrar el rubro Novillo en tu web?</p>
+          <h3 class="wp-h3-mb6">Nombre público del rubro</h3>
+          <p class="wp-muted wp-muted--mb12">¿Cómo querés mostrar el rubro Novillo en tu web?</p>
           <div class="wp-rubro-form">
             <label class="wp-rubro-field">Nombre para mostrar
               <select id="wpNovilloName">
@@ -146,8 +146,8 @@ export async function renderWebPremium(container, businessId, options = {}) {
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 6px;color:#7c2d12;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Ofertas publicadas</h3>
-          <p class="wp-muted" style="margin:0 0 12px;">Marcá o desmarcá una oferta. Carnis actualiza la vidriera automáticamente.</p>
+          <h3 class="wp-h3-mb6"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Ofertas publicadas</h3>
+          <p class="wp-muted wp-muted--mb12">Marcá o desmarcá una oferta. Carnis actualiza la vidriera automáticamente.</p>
           ${savedCombos.length ? `<div class="wp-offers">
             ${savedCombos.map(combo => `
               <div class="wp-offer">
@@ -204,12 +204,12 @@ export async function renderWebPremium(container, businessId, options = {}) {
       modal.innerHTML = `
         <div class="wp-theme-modal-card" role="dialog" aria-modal="true" aria-label="Vista previa del diseño de tu vidriera">
           <div class="wp-theme-modal-head">
-            <div><h3>Así se verá tu propia vidriera</h3><p class="wp-muted" style="margin:5px 0 0;">Compará los estilos. No cambia nada hasta que elijas “Aplicar este estilo”.</p></div>
+            <div><h3>Así se verá tu propia vidriera</h3><p class="wp-muted wp-muted--mt5">Compará los estilos. No cambia nada hasta que elijas “Aplicar este estilo”.</p></div>
             <button type="button" class="wp-theme-modal-close" data-wp-preview-cancel aria-label="Cerrar vista previa">×</button>
           </div>
-          <div class="wp-theme-grid" data-wp-preview-choices style="margin-top:14px;grid-template-columns:repeat(4,minmax(0,1fr));"></div>
-          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;" data-wp-preview-tabs><button type="button" class="wp-btn" style="min-height:34px;padding:0 11px;" data-wp-preview-view="products">Ver productos</button><button type="button" class="wp-btn" style="min-height:34px;padding:0 11px;" data-wp-preview-view="promos">Ver promos</button><button type="button" class="wp-btn" style="min-height:34px;padding:0 11px;" data-wp-preview-view="home">Ver inicio</button></div>
-          <p class="wp-status" data-wp-preview-status style="margin-bottom:0;"></p>
+          <div class="wp-theme-grid wp-theme-grid--preview" data-wp-preview-choices></div>
+          <div class="wp-preview-tabs" data-wp-preview-tabs><button type="button" class="wp-btn wp-btn--tab" data-wp-preview-view="products">Ver productos</button><button type="button" class="wp-btn wp-btn--tab" data-wp-preview-view="promos">Ver promos</button><button type="button" class="wp-btn wp-btn--tab" data-wp-preview-view="home">Ver inicio</button></div>
+          <p class="wp-status wp-status--mb0" data-wp-preview-status></p>
           <div class="wp-theme-preview"><span class="wp-theme-preview-badge">Vista previa · no se guarda todavía</span><iframe data-wp-preview-frame title="Vista previa de tu vidriera" sandbox="allow-scripts allow-same-origin"></iframe></div>
           <div class="wp-theme-modal-actions"><button type="button" class="wp-btn" data-wp-preview-cancel>Cancelar</button><button type="button" class="wp-btn primary" data-wp-preview-apply>Aplicar este estilo</button></div>
         </div>`;
