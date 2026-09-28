@@ -1,4 +1,5 @@
 import { buildCustomerWhatsappMessage, buildWhatsappShareUrl } from "../services/whatsapp-message-service.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 function formatCurrency(value) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -90,7 +91,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
         .wa-shell { display:flex; flex-direction:column; gap:16px; }
         .wa-card { border:1px solid #ece7df; border-radius:20px; background:#fff; padding:18px; box-shadow:0 4px 14px rgba(17,24,39,.04); }
         .wa-header { background:linear-gradient(180deg,#fff,#fff7f4); }
-        .wa-header h2 { margin:0 0 6px; color:#8b1f1f; font-size:28px; line-height:1.1; }
+        .wa-header h2 { margin:0 0 6px; color:#B3161A; font-size:28px; line-height:1.1; }
         .wa-header p { margin:0; color:#6b7280; }
         .wa-row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:end; }
         .wa-select, .wa-input, .wa-textarea { width:100%; min-height:52px; border-radius:15px; border:1px solid #d7d7d7; padding:0 14px; font-size:17px; box-sizing:border-box; background:#fff; }
@@ -106,16 +107,19 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
         .wa-note { color:#6b7280; font-size:13px; }
         .wa-empty { color:#6b7280; line-height:1.45; }
         .wa-mini-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-        .wa-mini { border:1px solid #f0d7d1; border-radius:16px; padding:12px; background:#fffaf7; color:#8b1f1f; font-weight:900; text-align:center; }
+        .wa-mini { border:1px solid #f0d7d1; border-radius:16px; padding:12px; background:#fffaf7; color:#B3161A; font-weight:900; text-align:center; }
         @media (max-width: 760px) {
           .wa-row, .wa-mini-grid { grid-template-columns:1fr; }
           .wa-actions { flex-direction:column; }
           .wa-btn { width:100%; }
           .wa-header h2 { font-size:24px; }
         }
+        ${CARNIZA_SPOTLIGHT_STYLES}
       </style>
 
       <div class="wa-shell">
+        ${renderCarnizaSpotlight("whatsappPanel", { compact: true })}
+
         <div class="wa-card wa-header">
           <h2>📤 Enviar WhatsApp</h2>
           <p>Elegí una oferta guardada, personalizá el cliente y mandá un mensaje vendedor en segundos.</p>

@@ -178,7 +178,7 @@
 .carniza-badge.trial { color:#9a3412; background:#ffedd5; border-color:#fed7aa; }
 .carniza-badge.ending { color:#92400e; background:#fef3c7; border-color:#fcd34d; }
 .carniza-badge.warning { color:#c2410c; background:#ffedd5; border-color:#fb923c; }
-.carniza-badge.blocked { color:#991b1b; background:#fee2e2; border-color:#fca5a5; }
+.carniza-badge.blocked { color:var(--danger); background:#fee2e2; border-color:#fca5a5; }
 
 .carniza-message {
   margin: 0 0 12px;
@@ -274,93 +274,6 @@ body.module-focus-admin .carniza-root {
 }
 
 
-/* ============================================================
-   V12.3.4 — Carniza visual alineada a landing AppPromos
-   ============================================================ */
-:root {
-  --carniza-primary: #0477f2;
-  --carniza-primary-dark: #005bd8;
-  --carniza-green: #16a34a;
-  --carniza-text: #0f172a;
-  --carniza-muted: #475569;
-  --carniza-line: rgba(4,119,242,.16);
-  --carniza-soft: #eaf3ff;
-  --carniza-white: #ffffff;
-}
-
-.carniza-fab {
-  background: linear-gradient(135deg, #0477f2, #005bd8);
-  box-shadow: 0 18px 38px rgba(4,119,242,.30);
-}
-
-.carniza-fab:hover,
-.carniza-fab:focus-visible {
-  box-shadow: 0 22px 46px rgba(4,119,242,.38);
-}
-
-.carniza-fab-pulse {
-  background: #22c55e;
-  border-color: #ffffff;
-}
-
-.carniza-panel {
-  border: 1px solid rgba(4,119,242,.16);
-  border-radius: 26px;
-  box-shadow: 0 26px 70px rgba(2,8,23,.20);
-}
-
-.carniza-card-head {
-  background: linear-gradient(135deg, #eaf3ff, #ffffff);
-  border-bottom: 1px solid rgba(4,119,242,.12);
-}
-
-.carniza-avatar {
-  background: #fff;
-  border-color: rgba(4,119,242,.18);
-  box-shadow: 0 10px 24px rgba(4,119,242,.12);
-}
-
-.carniza-title {
-  color: #061a35;
-  letter-spacing: -0.02em;
-}
-
-.carniza-subtitle {
-  color: #0477f2;
-}
-
-.carniza-close {
-  color: #061a35;
-  background: #f8fbff;
-  border: 1px solid rgba(4,119,242,.10);
-}
-
-.carniza-action {
-  border-color: rgba(4,119,242,.16);
-  background: #eaf3ff;
-  color: #061a35;
-}
-
-.carniza-action:hover,
-.carniza-action:focus-visible {
-  border-color: rgba(4,119,242,.34);
-}
-
-.carniza-action.primary {
-  background: linear-gradient(135deg, #0477f2, #005bd8);
-  box-shadow: 0 12px 24px rgba(4,119,242,.18);
-}
-
-.carniza-action.whatsapp {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  box-shadow: 0 12px 24px rgba(22,163,74,.18);
-}
-
-.carniza-footer {
-  background: #f8fbff;
-  border-top: 1px solid rgba(4,119,242,.12);
-  color: #64748b;
-}
 
 /* V12.0.NNN.5 - unificación visual Carniza */
 .carniza-root.carniza-root--legacy,

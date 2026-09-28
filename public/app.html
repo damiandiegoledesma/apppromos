@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carnis.app · App</title>
-  <meta name="theme-color" content="#071d3a" />
+  <meta name="theme-color" content="#0A2E5B" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="AppPromos" />
+  <meta name="apple-mobile-web-app-title" content="Carnis.app" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/assets/pwa/apppromos-180.png" />
+  <link rel="apple-touch-icon" href="/assets/brand/carnis/app-icons/apple-touch-icon-180.png" />
   <link rel="icon" type="image/svg+xml" href="/assets/brand/carnis/app-icons/favicon.svg" />
   <link rel="icon" href="/assets/brand/carnis/app-icons/favicon.ico" sizes="any" />
 
@@ -45,7 +45,7 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      box-shadow: 0 4px 12px rgba(196, 30, 58, 0.15);
+      box-shadow: 0 4px 12px rgba(229, 34, 35, 0.15);
       transition: transform 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
     }
 
@@ -67,7 +67,7 @@
 
     .demo-mode-banner {
       margin: 0 0 var(--space-md);
-      border: 1px solid rgba(196, 30, 58, 0.25);
+      border: 1px solid rgba(229, 34, 35, 0.25);
       background: #fff7ed;
       color: #4b1d12;
       border-radius: 16px;
@@ -231,7 +231,7 @@
     .nav button:hover {
       border-color: var(--app-brand);
       color: var(--app-brand);
-      background: rgba(196, 30, 58, 0.05);
+      background: rgba(229, 34, 35, 0.05);
     }
 
     .nav button.active {
@@ -315,7 +315,7 @@
       background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 100%);
       padding: 3px 0;
       margin-top: 60px;
-      box-shadow: 0 -4px 12px rgba(196, 30, 58, 0.15);
+      box-shadow: 0 -4px 12px rgba(229, 34, 35, 0.15);
     }
 
     .footer {
@@ -584,179 +584,6 @@
     }
 
 
-    /* ==================== V12.3.4 BRANDING APPPROMOS ==================== */
-    :root {
-      --app-bg: #f4f8ff;
-      --app-card: #ffffff;
-      --app-text: #0f172a;
-      --app-muted: #475569;
-      --app-line: rgba(4, 119, 242, 0.16);
-      --app-brand: #0477f2;
-      --app-brand-dark: #061a35;
-      --app-brand-soft: #eaf3ff;
-      --app-success: #16a34a;
-      --app-radius: 18px;
-    }
-
-    body {
-      background:
-        radial-gradient(circle at top left, rgba(4,119,242,.13), transparent 36%),
-        linear-gradient(180deg, #f8fbff 0%, #eef6ff 42%, #f4f8ff 100%);
-    }
-
-    body::before,
-    body::after {
-      background: linear-gradient(90deg, #061a35 0%, #0477f2 52%, #061a35 100%);
-      box-shadow: 0 8px 22px rgba(4, 119, 242, 0.22);
-    }
-
-    .topbar-frame,
-    .footer-frame {
-      background: linear-gradient(90deg, #061a35 0%, #0477f2 52%, #061a35 100%);
-      box-shadow: 0 4px 14px rgba(4, 119, 242, 0.16);
-    }
-
-    .topbar {
-      background: rgba(248, 251, 255, 0.92);
-      border-bottom: 1px solid rgba(4,119,242,.14);
-      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
-    }
-
-    .brand {
-      background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(234,243,255,.96));
-      border: 1px solid rgba(4,119,242,.16);
-      border-radius: 24px;
-      box-shadow: 0 18px 55px rgba(2, 8, 23, 0.08);
-    }
-
-    .brand:hover {
-      border-color: rgba(4,119,242,.34);
-      box-shadow: 0 22px 64px rgba(4, 119, 242, 0.12);
-    }
-
-    .brand-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .app-brand-logo-box {
-      width: 66px;
-      height: 66px;
-      border-radius: 18px;
-      background: #fff;
-      display: grid;
-      place-items: center;
-      padding: 3px;
-      flex: 0 0 auto;
-      box-shadow: 0 12px 30px rgba(2, 8, 23, 0.12);
-      border: 1px solid rgba(4,119,242,.10);
-    }
-
-    .app-brand-logo-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
-
-    .brand-copy {
-      min-width: 0;
-    }
-
-    .brand h1 {
-      color: var(--app-brand-dark);
-      letter-spacing: -0.04em;
-      font-size: 1.55rem;
-      font-weight: 1000;
-    }
-
-    .brand h1 span {
-      color: var(--app-brand);
-    }
-
-    .brand p {
-      color: var(--app-muted);
-      font-weight: 800;
-    }
-
-    .home-note {
-      color: #334155;
-      font-weight: 900;
-    }
-
-    .home-note::after {
-      content: "Listo para vender";
-      color: #075985;
-      background: #e0f2fe;
-      border-color: rgba(4,119,242,.18);
-    }
-
-    .nav button {
-      border-color: rgba(4,119,242,.14);
-      background: rgba(255,255,255,.92);
-      color: #0f172a;
-      border-radius: 999px;
-      font-weight: 900;
-      box-shadow: 0 8px 24px rgba(15,23,42,.05);
-    }
-
-    .nav button:hover {
-      border-color: rgba(4,119,242,.32);
-      color: var(--app-brand);
-      background: var(--app-brand-soft);
-    }
-
-    .nav button.active {
-      background: linear-gradient(135deg, #0477f2, #005bd8);
-      border-color: transparent;
-      color: #fff;
-      box-shadow: 0 14px 28px rgba(4,119,242,.22);
-    }
-
-    .panel {
-      border-color: rgba(4,119,242,.13);
-      border-radius: 24px;
-      box-shadow: 0 22px 60px rgba(15,23,42,.07);
-    }
-
-    .demo-mode-banner {
-      border-color: rgba(4,119,242,.18);
-      background: #eaf3ff;
-      color: #0f172a;
-    }
-
-    .demo-mode-banner strong { color: var(--app-brand); }
-    .demo-mode-banner a { background: linear-gradient(135deg, #0477f2, #005bd8); }
-
-    .footer {
-      background: #020817;
-    }
-
-    .footer strong,
-    .footer a {
-      color: #60a5fa;
-    }
-
-    @media (max-width: 768px) {
-      .brand-left {
-        width: 100%;
-        align-items: center;
-      }
-
-      .app-brand-logo-box {
-        width: 58px;
-        height: 58px;
-        border-radius: 16px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .brand h1 { font-size: 1.28rem; }
-      .brand p { font-size: 0.78rem; }
-      .app-brand-logo-box { width: 52px; height: 52px; }
-    }
-
   </style>
 <link rel="stylesheet" href="/styles/status-compact.css">
   <!-- APPPROMOS TRACKING DEMO GA4 C1 -->
@@ -824,7 +651,7 @@
             <button data-panel="webPanel">🌐 Mi carnicería online</button>
             <button type="button" data-open-how-to-sell>🧭 Cómo vender</button>
             <button data-panel="printPanel">🖨️ Centro de Impresiones</button>
-            <button type="button" class="pwa-install-action" data-install-apppromos><img src="/assets/pwa/apppromos-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
+            <button type="button" class="pwa-install-action" data-install-apppromos><img src="/assets/brand/carnis/app-icons/carnis-icon-192.png" alt="" /> <span data-pwa-install-label>INSTALAR</span></button>
             <button data-panel="usersPanel">🛡️ Admin</button>
           </div>
         </div>
@@ -847,7 +674,7 @@
   <footer class="footer">
     <div style="max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg);">
       <p style="margin: 0; font-size: 0.85rem; color: #999;">
-        © 2026 AppPromos. Herramienta para carnicerías en Argentina.
+        © 2026 Carnis.app — una solución de AppPromos. Herramienta para carnicerías en Argentina.
       </p>
     </div>
   </footer>

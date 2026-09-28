@@ -3,6 +3,7 @@ import {
   formatCurrency,
   normalizeSavedCombosFromState
 } from "../services/business-service.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 
 function escapeHtml(value = "") {
   return String(value ?? "")
@@ -87,9 +88,9 @@ export function renderSaved(container, state, options = {}) {
     <style>
       .saved-shell { display:flex; flex-direction:column; gap:14px; }
       .saved-head { border:1px solid #ece7df; border-radius:18px; padding:18px; background:#fff; }
-      .saved-head h2 { margin:0 0 6px; color:#8b1f1f; }
+      .saved-head h2 { margin:0 0 6px; color:#B3161A; }
       .saved-head p { margin:0; color:#6b7280; }
-      .saved-filters { display:grid; grid-template-columns:minmax(180px,1fr) minmax(150px,220px) minmax(130px,180px); gap:10px; padding:12px; border:1px solid #dbeafe; border-radius:16px; background:#f8fbff; }
+      .saved-filters { display:grid; grid-template-columns:minmax(180px,1fr) minmax(150px,220px) minmax(130px,180px); gap:10px; padding:12px; border:1px solid #F6C6C6; border-radius:16px; background:#FFFCFB; }
       .saved-filter-field { display:grid; gap:5px; color:#475569; font-size:11px; font-weight:950; text-transform:uppercase; letter-spacing:.03em; }
       .saved-filter-field input,.saved-filter-field select { width:100%; min-height:42px; border:1px solid #cbd5e1; border-radius:12px; background:#fff; color:#111827; padding:0 11px; font:inherit; font-size:14px; font-weight:800; text-transform:none; letter-spacing:0; }
       .saved-filter-result { grid-column:1 / -1; color:#475569; font-size:12px; font-weight:850; }
@@ -101,32 +102,35 @@ export function renderSaved(container, state, options = {}) {
       .saved-archive-box[open] summary::before { content:"▾"; }
       .saved-archive-list { display:flex; flex-direction:column; gap:8px; padding:0 8px 8px; }
       .saved-card.is-archived { border-color:#cbd5e1; background:#fff; }
-      .saved-card { border:1px solid #dbeafe; border-radius:14px; padding:10px 12px; background:#fff; display:grid; grid-template-columns:minmax(220px,1fr) minmax(120px,auto) auto; gap:8px 12px; align-items:center; }
+      .saved-card { border:1px solid #F6C6C6; border-radius:14px; padding:10px 12px; background:#fff; display:grid; grid-template-columns:minmax(220px,1fr) minmax(120px,auto) auto; gap:8px 12px; align-items:center; }
       .saved-card[hidden] { display:none !important; }
       .saved-card.demo-preloaded { border-color:#f0c36d; background:#fffaf0; }
       .saved-top { display:block; min-width:0; }
       .saved-title { font-size:16px; font-weight:1000; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .saved-sub { color:#64748b; margin-top:2px; font-size:12px; font-weight:800; }
       .saved-badge { display:inline-flex; margin-top:4px; padding:3px 7px; border-radius:999px; background:#fde68a; color:#78350f; font-size:11px; font-weight:900; }
-      .saved-price { color:#8b1f1f; font-size:18px; font-weight:1000; white-space:nowrap; text-align:right; }
+      .saved-price { color:#B3161A; font-size:18px; font-weight:1000; white-space:nowrap; text-align:right; }
       .saved-items { grid-column:1 / -1; color:#374151; font-size:12px; line-height:1.28; font-weight:850; background:#f8fafc; border:1px solid #e5e7eb; border-radius:11px; padding:7px 9px; }
       .saved-items strong { color:#111827; }
       .saved-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
       .saved-publication { border:1px solid #fdba74; border-radius:999px; padding:9px 13px; background:#fff7ed; color:#9a3412; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-publication.is-published { border-color:#86efac; background:#f0fdf4; color:#166534; }
-      .saved-duplicate { border:1px solid #bfdbfe; border-radius:999px; padding:9px 13px; background:#eff6ff; color:#1d4ed8; font-weight:950; cursor:pointer; white-space:nowrap; }
+      .saved-duplicate { border:1px solid #F6C6C6; border-radius:999px; padding:9px 13px; background:#FFF1F0; color:#B3161A; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-edit { border:1px solid #c4b5fd; border-radius:999px; padding:9px 13px; background:#f5f3ff; color:#6d28d9; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-archive { border:1px solid #cbd5e1; border-radius:999px; padding:9px 13px; background:#f8fafc; color:#475569; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-restore { border:1px solid #86efac; border-radius:999px; padding:9px 13px; background:#f0fdf4; color:#166534; font-weight:950; cursor:pointer; white-space:nowrap; }
-      .saved-delete { border:1px solid #fecaca; border-radius:999px; padding:9px 13px; background:#fef2f2; color:#b91c1c; font-weight:950; cursor:pointer; white-space:nowrap; }
+      .saved-delete { border:1px solid #fecaca; border-radius:999px; padding:9px 13px; background:#fef2f2; color:#ef233c; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-publication:disabled, .saved-duplicate:disabled, .saved-edit:disabled, .saved-archive:disabled, .saved-restore:disabled, .saved-delete:disabled, .saved-whatsapp:disabled { opacity:.65; cursor:wait; }
       .saved-whatsapp { border:0; border-radius:999px; padding:9px 13px; background:#16a34a; color:#fff; font-weight:950; cursor:pointer; white-space:nowrap; }
       .saved-status { grid-column:1 / -1; min-height:0; color:#166534; font-size:12px; font-weight:900; text-align:right; }
       .saved-empty { border:1px dashed #d1d5db; border-radius:18px; padding:22px; background:#fff; color:#6b7280; text-align:center; }
       @media (max-width: 760px) { .saved-filters { grid-template-columns:1fr 1fr; } .saved-filter-search { grid-column:1 / -1; } .saved-card { grid-template-columns:1fr auto; align-items:start; } .saved-items { grid-column:1 / -1; } .saved-price { text-align:right; font-size:18px; } .saved-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; } .saved-publication,.saved-duplicate,.saved-edit,.saved-archive,.saved-restore,.saved-delete,.saved-whatsapp { width:100%; } .saved-status{text-align:left;} }
+      ${CARNIZA_SPOTLIGHT_STYLES}
     </style>
 
     <div class="saved-shell">
+      ${renderCarnizaSpotlight("savedPanel", { compact: true })}
+
       <div class="saved-head">
         <h2>🥩 Promos para repetir</h2>
         <p>Elegí una promo guardada o combo demo y mandalo por WhatsApp.</p>

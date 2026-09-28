@@ -1,6 +1,7 @@
 import { buildCustomerWhatsappMessage, openCustomerWhatsappMessage } from "../services/whatsapp-message-service.js";
 import { saveCombo, updateSavedCombo } from "../services/data-service.js";
 import { getProductThumbnailPath } from "../services/product-image-service.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 
 function formatMoney(value) {
   return new Intl.NumberFormat("es-AR").format(Number(value || 0));
@@ -412,9 +413,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderTopActions(title, subtitle, backLabel = "← Cambiar modo") {
     return `
-      <header style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #dbeafe; border-radius:18px; padding:14px;">
+      <header style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #FADBD8; border-radius:18px; padding:14px;">
         <div>
-          <div style="font-size:.72rem; font-weight:1000; color:#2563eb; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
+          <div style="font-size:.72rem; font-weight:1000; color:#E52223; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
           <h2 style="margin:5px 0 4px;">${escapeHtml(title)}</h2>
           ${subtitle ? `<p class="muted" style="margin:0;">${escapeHtml(subtitle)}</p>` : ""}
         </div>
@@ -433,14 +434,14 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderRubroSelector(scope, activeRubro) {
     const rubros = getUniqueRubros();
-    const accent = scope === "discount" ? "#f97316" : "#2563eb";
-    const border = scope === "discount" ? "#fed7aa" : "#bfdbfe";
-    const soft = scope === "discount" ? "#fff7ed" : "#eff6ff";
+    const accent = scope === "discount" ? "#f97316" : "#E52223";
+    const border = scope === "discount" ? "#fed7aa" : "#F6C6C6";
+    const soft = scope === "discount" ? "#fff7ed" : "#FFF1F0";
 
     return `
       <div style="display:grid; gap:6px; min-width:0;">
         <label for="${scope}RubroSelect" style="font-size:.72rem; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:${accent};">Rubro opcional</label>
-        <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:#172554; padding:0 12px; font-weight:1000;">
+        <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:#0A2E5B; padding:0 12px; font-weight:1000;">
           <option value="">Todos los productos</option>
           ${rubros.map((rubro) => `
             <option value="${escapeHtml(rubro)}" ${rubro === activeRubro ? "selected" : ""}>${escapeHtml(rubro)}</option>
@@ -498,11 +499,11 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
             const actionText = active ? "Elegido" : "Sumar";
             const thumbnailPath = getProductThumbnailPath(product);
             return `
-              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#dbeafe"}; background:${active ? "#ecfdf5" : "#fff"}; color:#172554; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
+              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#FADBD8"}; background:${active ? "#ecfdf5" : "#fff"}; color:#0A2E5B; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
                 <div style="display:grid; grid-template-columns:${thumbnailPath ? "76px " : ""}minmax(0,1fr) auto; gap:9px; align-items:center;">
                   ${thumbnailPath ? `<img src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" style="width:76px; height:76px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5;" />` : ""}
                   <strong style="font-size:.86rem; line-height:1.14;">${escapeHtml(product.nombre || "Producto")}</strong>
-                  <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#2563eb"};">${active ? "✓" : "+"} ${actionText}</span>
+                  <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#E52223"};">${active ? "✓" : "+"} ${actionText}</span>
                 </div>
                 <div style="margin-top:7px; font-size:.78rem; font-weight:900; color:#64748b;">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
               </button>
@@ -510,7 +511,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           }).join("")}
         </div>
         ${hiddenCount && !isQuickSuggestions ? `
-          <button type="button" data-${scope}-show-more="true" style="min-height:44px; border:1px solid #bfdbfe; border-radius:14px; background:#eff6ff; color:#1d4ed8; font-weight:1000; cursor:pointer;">
+          <button type="button" data-${scope}-show-more="true" style="min-height:44px; border:1px solid #F6C6C6; border-radius:14px; background:#FFF1F0; color:#B3161A; font-weight:1000; cursor:pointer;">
             Ver más resultados (${hiddenCount} más)
           </button>
         ` : ""}
@@ -569,20 +570,20 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           justify-content:space-between;
           gap:12px;
           padding:9px 10px 9px 15px;
-          border:1px solid rgba(37,99,235,.28);
+          border:1px solid rgba(229,34,35,.28);
           border-radius:18px;
           background:rgba(239,246,255,.97);
-          color:#1e3a8a;
+          color:#8E1014;
           box-shadow:0 16px 38px rgba(15,23,42,.20);
           backdrop-filter:blur(12px);
           box-sizing:border-box;
         }
         .quick-fixed-summary-copy { min-width:0; display:grid; gap:2px; }
-        .quick-fixed-summary-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#2563eb; }
+        .quick-fixed-summary-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#E52223; }
         .quick-fixed-summary-products { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.15; font-weight:900; color:#334155; }
-        .quick-fixed-summary-products strong { color:#2563eb; }
+        .quick-fixed-summary-products strong { color:#E52223; }
         .quick-fixed-summary-products-mobile { display:none; }
-        .quick-fixed-summary-main { font-size:14px; line-height:1.18; font-weight:1000; color:#1e3a8a; }
+        .quick-fixed-summary-main { font-size:14px; line-height:1.18; font-weight:1000; color:#8E1014; }
         .quick-fixed-summary-detail { font-size:12px; line-height:1.15; font-weight:850; color:#475569; }
         .quick-fixed-summary button {
           flex:0 0 auto;
@@ -591,7 +592,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           border:0;
           border-radius:13px;
           padding:0 14px;
-          background:#2563eb;
+          background:#E52223;
           color:#fff;
           font-size:13px;
           font-weight:1000;
@@ -717,7 +718,10 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderChooser() {
     container.innerHTML = `
+      <style>${CARNIZA_SPOTLIGHT_STYLES}</style>
       <section style="display:grid; gap:14px;">
+        ${renderCarnizaSpotlight("builderPanel", { compact: true })}
+
         <header style="background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:18px;">
           <div style="font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em;">Tres maneras de vender</div>
           <h2 style="margin:6px 0 4px;">¿Qué necesitás hacer ahora?</h2>
@@ -725,10 +729,10 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         </header>
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;">
-          <button id="quickModeBtn" type="button" style="text-align:left; background:#eff6ff; border:2px solid #bfdbfe; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
+          <button id="quickModeBtn" type="button" style="text-align:left; background:#FFF1F0; border:2px solid #F6C6C6; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
             <div style="font-size:2rem;">⚡</div>
             <h3 style="margin:8px 0 4px;">Responder una consulta</h3>
-            <p style="margin:0; color:#1e3a8a; font-weight:800;">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
+            <p style="margin:0; color:#8E1014; font-weight:800;">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
           </button>
           <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
             <div style="font-size:2rem;">🏷️</div>
@@ -828,7 +832,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         ${renderQuickFloatingSummary()}
 
         <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); display:grid; gap:12px;">
-          <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #bfdbfe; border-radius:14px; padding:0 12px; font-weight:900;" />
+          <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #F6C6C6; border-radius:14px; padding:0 12px; font-weight:900;" />
           ${renderRubroSelector("quick", state.quick.rubroFilter)}
           ${renderProductGrid("quick", filteredProducts, state.quick.items)}
         </div>
@@ -1028,14 +1032,14 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         <div style="display:grid; gap:10px;">
           ${renderQuantityList(state.quick.items, "quickReview")}
         </div>
-        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:18px; padding:14px; display:grid; gap:10px;">
+        <div style="background:#FFF1F0; border:1px solid #F6C6C6; border-radius:18px; padding:14px; display:grid; gap:10px;">
           <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
-            <strong style="font-size:1.2rem; color:#1e3a8a;">Total final: $ ${formatMoney(payload.total)}</strong>
+            <strong style="font-size:1.2rem; color:#8E1014;">Total final: $ ${formatMoney(payload.total)}</strong>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Responder por WhatsApp</button>
             </div>
           </div>
-          <div style="background:#fff; border:1px solid #dbeafe; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
+          <div style="background:#fff; border:1px solid #FADBD8; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
         </div>
       </section>
     `;

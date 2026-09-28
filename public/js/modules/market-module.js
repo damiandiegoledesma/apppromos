@@ -1,4 +1,5 @@
 import { getMarketCache } from "../services/business-store.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 
 const STATUS_THRESHOLD_PERCENT = 10;
 
@@ -58,7 +59,7 @@ function getStatusMeta(status) {
       label: "Caro",
       badge: "🔴 Caro",
       actionLabel: "Bajar precio",
-      color: "#b42318",
+      color: "#ef233c",
       softBg: "#fdecea",
       border: "#fac5bd"
     };
@@ -256,7 +257,7 @@ function renderActions(rows = []) {
 function buildFilterButton(label, value, activeValue, count) {
   const isActive = activeValue === value;
   return `
-    <button type="button" data-filter="${value}" style="min-height:38px;padding:0 12px;border-radius:999px;border:1px solid ${isActive ? "#b63b2b" : "#e7e1d8"};background:${isActive ? "#b63b2b" : "#fff"};color:${isActive ? "#fff" : "#1f1f1f"};font-weight:800;cursor:pointer;white-space:nowrap;">
+    <button type="button" data-filter="${value}" style="min-height:38px;padding:0 12px;border-radius:999px;border:1px solid ${isActive ? "#E52223" : "#e7e1d8"};background:${isActive ? "#E52223" : "#fff"};color:${isActive ? "#fff" : "#1f1f1f"};font-weight:800;cursor:pointer;white-space:nowrap;">
       ${label} <span style="opacity:.75;">${count}</span>
     </button>
   `;
@@ -302,11 +303,14 @@ export async function renderMarket(container, options = {}) {
   let activeFilter = "all";
 
   container.innerHTML = `
-    <section style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    <style>${CARNIZA_SPOTLIGHT_STYLES}</style>
+    ${renderCarnizaSpotlight("marketPanel", { compact: true })}
+
+    <section style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;margin-bottom:14px;">
       <button type="button" data-panel="dashboardPanel" style="min-height:40px;padding:0 13px;border-radius:12px;border:1px solid #e7e1d8;background:#fff;font-weight:900;cursor:pointer;">← Volver al inicio</button>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button id="marketRefreshBtn" type="button" style="min-height:40px;padding:0 13px;border-radius:12px;border:1px solid #e7e1d8;background:#fff;font-weight:900;cursor:pointer;">🔄 Actualizar comparación</button>
-        ${onRebuildMarket ? `<button id="marketRebuildBtn" type="button" style="min-height:40px;padding:0 13px;border-radius:12px;border:1px solid #b63b2b;background:#b63b2b;color:#fff;font-weight:900;cursor:pointer;">🧱 Actualizar base</button>` : ""}
+        ${onRebuildMarket ? `<button id="marketRebuildBtn" type="button" style="min-height:40px;padding:0 13px;border-radius:12px;border:1px solid #E52223;background:#E52223;color:#fff;font-weight:900;cursor:pointer;">🧱 Actualizar base</button>` : ""}
       </div>
     </section>
 
@@ -324,7 +328,7 @@ export async function renderMarket(container, options = {}) {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;">
         ${renderStatCard("Productos comparados", summary.total)}
-        ${renderStatCard("🔴 Caros", summary.caro, "#b42318")}
+        ${renderStatCard("🔴 Caros", summary.caro, "#ef233c")}
         ${renderStatCard("🟢 Baratos", summary.barato, "#027a48")}
         ${renderStatCard("🟡 Competitivos", summary.competitivo, "#936500")}
       </div>
@@ -342,7 +346,7 @@ export async function renderMarket(container, options = {}) {
 
     <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px;">
       <div style="padding:16px;border:1px solid #eadfce;border-radius:18px;background:#fff;">
-        <div style="font-weight:950;color:#b42318;margin-bottom:10px;font-size:16px;">1️⃣ Dónde estás caro</div>
+        <div style="font-weight:950;color:#ef233c;margin-bottom:10px;font-size:16px;">1️⃣ Dónde estás caro</div>
         ${renderProductList(summary.caroRows.sort((a,b)=>b.diffPercent-a.diffPercent), "No aparecen precios caros relevantes.", 5)}
       </div>
       <div style="padding:16px;border:1px solid #eadfce;border-radius:18px;background:#fff;">

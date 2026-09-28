@@ -1,13 +1,13 @@
 /* ============================================================
-   APPPROMOS V12.3.6 — Design System Marca AppPromos
-   Azul/Navy + verde acción. Reemplaza estética marrón/asador.
+   CARNIS.APP V12.29 — Design System Marca Carnis
+   Rojo/Navy + verde acción. Fuente única de tokens visuales.
    Solo UI/UX: no toca Firebase, sesión ni lógica comercial.
    ============================================================ */
 
 :root {
-  --primary: #0477f2;
-  --primary-dark: #061a35;
-  --primary-light: #60a5fa;
+  --primary: #E52223;
+  --primary-dark: #0A2E5B;
+  --primary-light: #F4A6A6;
   --accent: #22c55e;
   --accent-dark: #16a34a;
   --danger: #ef233c;
@@ -16,10 +16,10 @@
   --text-dark: #0f172a;
   --text-light: #64748b;
   --text-soft: #94a3b8;
-  --bg-light: #f4f8ff;
+  --bg-light: #FFFCFB;
   --bg-white: #ffffff;
-  --bg-soft: #eff6ff;
-  --border: rgba(4, 119, 242, 0.16);
+  --bg-soft: #FFF1F0;
+  --border: rgba(229, 34, 35, 0.16);
 
   --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -53,8 +53,8 @@ body {
   padding-top: 10px;
   padding-bottom: 10px;
   background:
-    radial-gradient(circle at top left, rgba(4,119,242,.14), transparent 34%),
-    linear-gradient(180deg, #f8fbff 0%, #eef5ff 44%, #ffffff 100%);
+    radial-gradient(circle at top left, rgba(229,34,35,.14), transparent 34%),
+    linear-gradient(180deg, #FFFCFB 0%, #FFF1F0 44%, #ffffff 100%);
 }
 
 body::before,
@@ -65,11 +65,11 @@ body::after {
   right: 0;
   z-index: 40;
   height: 10px;
-  background: linear-gradient(90deg, #061a35 0%, #0477f2 52%, #061a35 100%);
+  background: linear-gradient(90deg, #0A2E5B 0%, #E52223 52%, #0A2E5B 100%);
   pointer-events: none;
 }
-body::before { top: 0; box-shadow: 0 8px 22px rgba(4,119,242,.22); }
-body::after { bottom: 0; box-shadow: 0 -8px 22px rgba(4,119,242,.20); }
+body::before { top: 0; box-shadow: 0 8px 22px rgba(229,34,35,.22); }
+body::after { bottom: 0; box-shadow: 0 -8px 22px rgba(229,34,35,.20); }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
@@ -106,9 +106,9 @@ input[type="button"]:active,
 input[type="submit"]:active { transform: translateY(0); }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), #005bd8);
+  background: linear-gradient(135deg, var(--primary), #B3161A);
   color: white;
-  box-shadow: 0 14px 30px rgba(4,119,242,.22);
+  box-shadow: 0 14px 30px rgba(229,34,35,.22);
 }
 .btn-secondary {
   background: #fff;
@@ -126,7 +126,7 @@ input[type="submit"]:active { transform: translateY(0); }
   color: var(--text-dark);
   border: 1px solid var(--border);
 }
-.btn-ghost:hover { border-color: rgba(4,119,242,.38); color: var(--primary); background: var(--bg-soft); }
+.btn-ghost:hover { border-color: rgba(229,34,35,.38); color: var(--primary); background: var(--bg-soft); }
 
 input[type="text"],
 input[type="email"],
@@ -148,8 +148,8 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: rgba(4,119,242,.55);
-  box-shadow: 0 0 0 4px rgba(4,119,242,.12);
+  border-color: rgba(229,34,35,.55);
+  box-shadow: 0 0 0 4px rgba(229,34,35,.12);
 }
 
 .card {
@@ -160,7 +160,7 @@ select:focus {
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
-.card:hover { border-color: rgba(4,119,242,.34); box-shadow: var(--shadow-md); }
+.card:hover { border-color: rgba(229,34,35,.34); box-shadow: var(--shadow-md); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-lg); border-bottom: 1px solid var(--border); }
 .card-title { font-size: 1.25rem; font-weight: 950; color: var(--primary-dark); }
 

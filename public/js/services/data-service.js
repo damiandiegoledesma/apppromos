@@ -279,9 +279,9 @@ function installDemoSafeUiGuard() {
         } else {
           el.textContent = DEMO_SAFE_PRICE_MESSAGE;
           el.setAttribute("data-demo-safe-message", "true");
-          el.style.borderColor = "#93c5fd";
-          el.style.background = "#eff6ff";
-          el.style.color = "#1d4ed8";
+          el.style.borderColor = "#F6C6C6";
+          el.style.background = "#FFF1F0";
+          el.style.color = "#B3161A";
         }
       });
 

@@ -6,6 +6,7 @@ import {
 import { activateStarterWebFromProducts } from "../services/web-premium-service.js";
 import { trackFirstPriceSaved } from "../services/tracking-service.js";
 import { getProductThumbnailPath } from "../services/product-image-service.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 
 function parsePriceInputValue(value) {
   const cleaned = String(value ?? "")
@@ -765,7 +766,7 @@ export function renderPrices(container, products = [], businessId = null, option
     <style>
       .prices-shell { display:flex; flex-direction:column; gap:16px; }
       .prices-header { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-      .prices-title h2 { margin:0 0 6px; font-size:30px; color:#8b1f1f; line-height:1.1; }
+      .prices-title h2 { margin:0 0 6px; font-size:30px; color:#B3161A; line-height:1.1; }
       .prices-title p { margin:0; color:#6b7280; font-size:15px; }
       .prices-web-tip { display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border:1px solid #fed7aa; border-radius:18px; background:linear-gradient(135deg,#fff7ed,#ffffff); color:#7c2d12; box-shadow:0 8px 20px rgba(194,65,12,.08); }
       .prices-web-tip-icon { width:38px; height:38px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:#ffedd5; color:#c2410c; font-weight:1000; flex:0 0 auto; }
@@ -781,26 +782,26 @@ export function renderPrices(container, products = [], businessId = null, option
         font-weight:900; font-size:14px; background:#f3f4f6; color:#374151;
       }
       .prices-status[data-mode="pending"] { background:#fff3d6; color:#8a5200; }
-      .prices-status[data-mode="saving"] { background:#e0f2fe; color:#075985; }
+      .prices-status[data-mode="saving"] { background:#EAF0F6; color:#0A2E5B; }
       .prices-status[data-mode="saved"] { background:#dcfce7; color:#166534; }
-      .prices-status[data-mode="error"] { background:#fee2e2; color:#991b1b; }
+      .prices-status[data-mode="error"] { background:#fee2e2; color:#ef233c; }
       .prices-summary { color:#6b7280; font-size:14px; }
       .prices-search, .prices-select { min-height:48px; border:1px solid #d1d5db; border-radius:10px; padding:0 12px; background:#fff; }
       .prices-search { min-width:240px; flex:1; }
       .prices-btn, .price-chip, .mini-action {
         min-height:46px; border:1px solid #d1d5db; border-radius:10px; background:#fff; cursor:pointer; font-weight:700;
       }
-      .prices-btn.primary { background:#b63b2b; color:#fff; border-color:#b63b2b; }
+      .prices-btn.primary { background:#E52223; color:#fff; border-color:#E52223; }
       .prices-btn.secondary { background:#fff; color:#333; }
       .price-chip { border-radius:999px; padding:0 14px; }
-      .price-chip.active { background:#b63b2b; color:#fff; border-color:#b63b2b; }
+      .price-chip.active { background:#E52223; color:#fff; border-color:#E52223; }
       .prices-list { display:grid; grid-template-columns:1fr; gap:5px; }
       @media (min-width: 1100px) {
         .prices-list { grid-template-columns:1fr 1fr; }
       }
       .price-row {
         display:grid; grid-template-columns:minmax(0,1fr) minmax(100px,124px) 104px; gap:7px; align-items:center;
-        padding:6px 8px; background:#fff; border:1px solid #dbeafe; border-radius:13px;
+        padding:6px 8px; background:#fff; border:1px solid #F6C6C6; border-radius:13px;
         transition:all .2s ease; min-height:42px;
       }
       .price-row.dirty { border-color:#f59e0b; background:#fffbeb; }
@@ -810,17 +811,17 @@ export function renderPrices(container, products = [], businessId = null, option
       .price-actions-wrap { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
       .price-input-wrap { display:block; color:#64748b; font-size:0; font-weight:900; }
       .price-input-wrap span { display:none; }
-      .price-input { width:100%; min-height:34px; border-radius:11px; border:1px solid #bfdbfe; padding:0 9px; font-size:15px; font-weight:1000; color:#0f172a; box-sizing:border-box; }
+      .price-input { width:100%; min-height:34px; border-radius:11px; border:1px solid #F6C6C6; padding:0 9px; font-size:15px; font-weight:1000; color:#0f172a; box-sizing:border-box; }
       .price-actions { display:flex; gap:5px; align-items:center; justify-content:flex-end; }
       .mini-action { min-width:30px; min-height:34px; font-size:14px; border-radius:10px; }
-      .mini-action.danger { color:#991b1b; }
+      .mini-action.danger { color:#ef233c; }
       .prices-empty { padding:18px; color:#6b7280; border:1px dashed #d1d5db; border-radius:14px; }
       .prices-toast {
         position:fixed; left:18px; right:18px; bottom:92px; z-index:2147483000; width:min(560px,calc(100vw - 36px));
         margin:0 auto; box-sizing:border-box; background:#111827; color:#fff; padding:12px 16px; text-align:center;
         border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:all .2s ease;
       }
-      .prices-toast[data-tone="error"] { background:#991b1b; }
+      .prices-toast[data-tone="error"] { background:#ef233c; }
       .prices-toast[data-tone="warn"] { background:#92400e; }
       .prices-toast[data-tone="ok"] { background:#166534; }
       .prices-desktop-floating-summary { display:none; }
@@ -963,9 +964,9 @@ export function renderPrices(container, products = [], businessId = null, option
       .prices-btn { min-height:38px; padding:0 11px; border-radius:12px; font-size:12px; font-weight:1000; }
       .prices-btn.primary { min-width:92px; }
       .prices-advanced { border:1px solid #e5e7eb; border-radius:13px; background:#fff; overflow:hidden; }
-      .prices-advanced summary { min-height:36px; display:flex; align-items:center; padding:0 12px; cursor:pointer; color:#7f1d1d; font-size:12px; font-weight:1000; list-style:none; }
+      .prices-advanced summary { min-height:36px; display:flex; align-items:center; padding:0 12px; cursor:pointer; color:#B3161A; font-size:12px; font-weight:1000; list-style:none; }
       .prices-advanced summary::-webkit-details-marker { display:none; }
-      .prices-advanced summary::after { content:"+"; margin-left:auto; font-size:16px; line-height:1; color:#b91c1c; }
+      .prices-advanced summary::after { content:"+"; margin-left:auto; font-size:16px; line-height:1; color:#E52223; }
       .prices-advanced[open] summary::after { content:"−"; }
       .prices-quick-adjust { padding:0 9px 9px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
       .prices-list { gap:7px; }
@@ -990,7 +991,7 @@ export function renderPrices(container, products = [], businessId = null, option
       /* V12.13-C6-FIX2A - Precios limpio: sin chips duplicados ni ordenamientos */
       #rubroButtons.prices-rubro-scroll { display:none !important; }
       .prices-hidden-control { display:none !important; }
-      .prices-advanced summary { color:#7f1d1d; font-weight:1000; }
+      .prices-advanced summary { color:#B3161A; font-weight:1000; }
       .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
       .prices-quick-adjust .prices-btn { min-height:40px; font-size:13px; }
       .prices-toolbar-lite { gap:7px; }
@@ -1008,10 +1009,10 @@ export function renderPrices(container, products = [], businessId = null, option
 .price-no-use-btn {
   min-height: 38px;
   padding: 0 10px;
-  border: 1px solid rgba(185, 28, 28, .22);
+  border: 1px solid rgba(229,34,35, .22);
   border-radius: 14px;
   background: #fff7f7;
-  color: #991b1b;
+  color: #B3161A;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
@@ -1234,7 +1235,7 @@ export function renderPrices(container, products = [], businessId = null, option
 .price-use-only-check,
 .price-no-use-check {
   background:#fff7f7 !important;
-  border:1px solid rgba(185, 28, 28, .22) !important;
+  border:1px solid rgba(229,34,35, .22) !important;
 }
 .price-use-only-check:hover,
 .price-no-use-check:hover {
@@ -1264,8 +1265,8 @@ export function renderPrices(container, products = [], businessId = null, option
         white-space:nowrap;
       }
       .price-use-filter.active {
-        background:#7f1d1d;
-        border-color:#7f1d1d;
+        background:#B3161A;
+        border-color:#B3161A;
         color:#fff;
       }
       .prices-usage-help {
@@ -1285,7 +1286,7 @@ export function renderPrices(container, products = [], businessId = null, option
       }
       .price-row-inactive .price-name::after {
         content:" · No usado";
-        color:#991b1b;
+        color:#ef233c;
         font-size:11px;
         font-weight:1000;
       }
@@ -1339,9 +1340,12 @@ export function renderPrices(container, products = [], businessId = null, option
           max-width:76px !important;
         }
       }
+      ${CARNIZA_SPOTLIGHT_STYLES}
 </style>
 
     <div class="prices-shell">
+      ${renderCarnizaSpotlight("pricesPanel", { compact: true })}
+
       <div class="prices-header">
         <div class="prices-title">
           <h2>⚡ Cambiar precios</h2>
@@ -1349,7 +1353,7 @@ export function renderPrices(container, products = [], businessId = null, option
         </div>
       </div>
 
-      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #93c5fd;border-radius:16px;background:#eff6ff;color:#1d4ed8;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
+      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
 <div class="prices-toolbar prices-toolbar-lite">
         <div class="prices-toolbar-row prices-search-row">

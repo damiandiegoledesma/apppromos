@@ -5,6 +5,7 @@ import {
 
 import { buildBusinessSlug, getPublicWebUrl } from "../services/web-premium-service.js";
 import { trackBusinessCommercialEvent } from "../services/admin-service.js";
+import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
 
 function escapeHtml(value = "") {
   return String(value ?? "")
@@ -127,33 +128,22 @@ export function renderDashboard(container, businessId, meta, state, options = {}
     <style>
       .dash-shell { display:flex; flex-direction:column; gap:18px; width:100%; max-width:100%; overflow-x:hidden; box-sizing:border-box; }
       .dash-shell *, .dash-shell *::before, .dash-shell *::after { box-sizing:border-box; min-width:0; }
-      .dash-main-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:24px; padding:26px; background:linear-gradient(180deg,#fff,#fff7f4); box-shadow:0 10px 26px rgba(139,31,31,.08); }
-      .dash-brand-reminder { width:100%; border:1px solid #bfdbfe; border-radius:22px; padding:17px 18px; background:linear-gradient(135deg,#eff6ff,#fff 65%); box-shadow:0 10px 24px rgba(4,119,242,.08); display:flex; align-items:center; justify-content:space-between; gap:16px; }
-      .dash-brand-reminder-copy { display:grid; gap:5px; color:#1e3a8a; }
-      .dash-brand-reminder-copy strong { font-size:18px; line-height:1.15; }
-      .dash-brand-reminder-copy span { color:#475569; font-size:14px; font-weight:750; line-height:1.4; }
-      .dash-brand-reminder-copy small { color:#1d4ed8; font-size:12px; font-weight:900; }
-      .dash-brand-reminder-btn { min-height:46px; flex:0 0 auto; padding:0 17px; border:0; border-radius:14px; background:#0477f2; color:#fff; font-weight:1000; cursor:pointer; box-shadow:0 8px 18px rgba(4,119,242,.18); }
-      .dash-kicker { font-size:12px; font-weight:950; color:#9f1d20; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
-      .dash-main-title { margin:0 0 8px; font-size:38px; line-height:1.05; color:#8b1f1f; }
-      .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:15px; }
-      .dash-actions { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
-      .dash-action-btn { width:100%; max-width:100%; border:1px solid #eadfd6; border-radius:22px; padding:18px; background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.04); text-align:left; cursor:pointer; transition:all .2s ease; min-height:88px; display:flex; align-items:center; gap:12px; }
-      .dash-action-btn:hover { transform:translateY(-1px); border-color:#c23b28; box-shadow:0 8px 18px rgba(139,31,31,.08); }
-      .dash-action-btn strong { display:block; font-size:18px; color:#8b1f1f; margin:0; line-height:1.15; }
-      .dash-action-icon { width:42px; height:42px; flex:0 0 42px; border-radius:14px; display:grid; place-items:center; font-size:22px; background:#f8fbff; border:1px solid rgba(4,119,242,.12); }
+      .dash-main-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:24px; padding:26px; background:#fff; }
+      .dash-brand-reminder { width:100%; border:1px solid #ece7df; border-radius:16px; padding:14px 16px; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+      .dash-brand-reminder-copy { display:grid; gap:4px; color:#374151; }
+      .dash-brand-reminder-copy strong { font-size:15px; line-height:1.15; color:#0A2E5B; }
+      .dash-brand-reminder-copy span { color:#6b7280; font-size:13px; font-weight:600; line-height:1.4; }
+      .dash-brand-reminder-copy small { color:#6b7280; font-size:12px; font-weight:700; }
+      .dash-brand-reminder-btn { min-height:42px; flex:0 0 auto; padding:0 15px; border:1px solid #ece7df; border-radius:12px; background:#fff; color:#0A2E5B; font-weight:700; cursor:pointer; }
+      .dash-kicker { font-size:11px; font-weight:700; color:#E52223; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+      .dash-main-title { margin:0 0 6px; font-size:28px; line-height:1.05; color:#0A2E5B; font-weight:700; }
+      .dash-main-subtitle { margin:0 0 18px; color:#6b7280; font-size:14px; }
+      .dash-actions { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+      .dash-action-btn { width:100%; max-width:100%; border:1px solid #EFE7E4; border-radius:16px; padding:16px; background:#fff; text-align:left; cursor:pointer; min-height:80px; display:flex; flex-direction:column; gap:12px; }
+      .dash-action-btn strong { display:block; font-size:14px; color:#1F2937; margin:0; line-height:1.25; font-weight:600; }
+      .dash-action-icon { width:22px; height:22px; flex:0 0 22px; display:grid; place-items:center; font-size:20px; }
       .dash-action-btn span { display:none; }
       .dash-action-btn .dash-action-icon { display:grid; }
-      .dash-carniza-card { border:1px solid #fed7aa; border-radius:24px; padding:18px; background:linear-gradient(135deg,#fff7ed,#ffffff 58%,#eff6ff); box-shadow:0 12px 28px rgba(234,88,12,.10); display:grid; grid-template-columns:1fr auto; gap:14px; align-items:center; }
-      .dash-carniza-kicker { font-size:12px; font-weight:1000; color:#c2410c; text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
-      .dash-carniza-title { margin:0; font-size:27px; line-height:1.05; color:#7c2d12; font-weight:1000; }
-      .dash-carniza-copy { margin:6px 0 0; color:#6b4b3e; font-size:14px; font-weight:800; line-height:1.35; }
-      .dash-carniza-head { display:flex; align-items:center; gap:12px; }
-      .dash-carniza-avatar { width:58px; height:58px; border-radius:999px; object-fit:cover; border:2px solid #fed7aa; background:#fff7ed; box-shadow:0 8px 18px rgba(124,45,18,.10); flex:0 0 auto; }
-      .dash-carniza-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-      .dash-carniza-btn { min-height:46px; border-radius:999px; padding:0 16px; border:1px solid #fed7aa; background:#fff; color:#7c2d12; font-weight:1000; cursor:pointer; box-shadow:0 5px 14px rgba(124,45,18,.07); }
-      .dash-carniza-btn.primary { background:#c2410c; color:#fff; border-color:#c2410c; }
-      .dash-carniza-btn.fire { background:#c41e3a; color:#fff; border-color:#c41e3a; box-shadow:0 8px 18px rgba(196,30,58,.18); }
       .dash-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
       .dash-card { width:100%; max-width:100%; border:1px solid #ece7df; border-radius:16px; padding:16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
       .dash-card h3 { margin:0; font-size:14px; color:#6b7280; }
@@ -166,34 +156,32 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-list-item strong { color:#111827; text-align:right; overflow-wrap:anywhere; }
       .dash-muted { color:#6b7280; }
       .dash-step-btn { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid #f3e4db; border-radius:15px; background:#fffaf7; padding:14px; cursor:pointer; text-align:left; }
-      .dash-step-btn strong { color:#8b1f1f; }
+      .dash-step-btn strong { color:#B3161A; }
       .dash-step-btn span { color:#6b7280; font-size:13px; }
       .dash-whatsapp-sales { margin-top:14px; }
-      .dash-whatsapp-sales button { width:100%; min-height:58px; border:1px solid #d1fae5; border-radius:16px; background:linear-gradient(135deg,#f0fdf4,#ffffff); color:#166534; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:10px; align-items:center; text-align:left; padding:10px 14px; cursor:pointer; }
+      .dash-whatsapp-sales button { width:100%; min-height:58px; border:1px solid #EFE7E4; border-radius:16px; background:#fff; color:#1F2937; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:10px; align-items:center; text-align:left; padding:10px 14px; cursor:pointer; }
       .dash-whatsapp-sales button>span { grid-row:1 / 3; font-size:24px; }
-      .dash-whatsapp-sales strong { font-size:14px; line-height:1.1; }
-      .dash-whatsapp-sales small { color:#4b5563; font-size:11px; font-weight:700; }
-      .dash-share-block { margin-top:16px; padding-top:14px; border-top:1px solid #f0e6e1; }
-      .dash-share-head { display:grid; gap:3px; margin-bottom:10px; }
-      .dash-share-head strong { color:#7f1d1d; font-size:15px; }
-      .dash-share-head span { color:#6b7280; font-size:12px; font-weight:700; }
+      .dash-whatsapp-sales strong { font-size:14px; line-height:1.1; color:#1F2937; }
+      .dash-whatsapp-sales small { color:#6b7280; font-size:11px; font-weight:700; }
+      .dash-share-block { margin-top:16px; }
       .dash-secondary-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:0; }
       .dash-secondary-actions button { flex:1; min-width:150px; min-height:46px; border-radius:14px; border:1px solid #ddd; background:#fff; font-weight:800; cursor:pointer; }
+      ${CARNIZA_SPOTLIGHT_STYLES}
       .dash-business-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
       .dash-mini-btn, .dash-save-btn { min-height:42px; border-radius:13px; border:1px solid #ddd; background:#fff; padding:0 14px; font-weight:900; cursor:pointer; }
-      .dash-save-btn { background:#c23b28; border-color:#c23b28; color:#fff; }
+      .dash-save-btn { background:#E52223; border-color:#E52223; color:#fff; }
       .dash-business-form { display:grid; gap:12px; }
       .dash-business-form label { display:grid; gap:6px; color:#4b5563; font-size:13px; font-weight:800; }
       .dash-business-form input { width:100%; min-height:46px; border:1px solid #e5e7eb; border-radius:13px; padding:0 12px; font-size:15px; box-sizing:border-box; }
-      .dash-business-form input:focus { outline:2px solid rgba(194,59,40,.15); border-color:#c23b28; }
+      .dash-business-form input:focus { outline:2px solid rgba(229,34,35,.15); border-color:#E52223; }
       .dash-form-hint { color:#6b7280; font-size:13px; }
       .dash-link-preview { background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:12px; display:grid; gap:5px; }
       .dash-link-preview span { color:#9a3412; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
       .dash-link-preview strong { color:#7c2d12; overflow-wrap:anywhere; }
       .dash-link-preview small { color:#9a3412; }
-      .dash-form-error { min-height:18px; color:#b42318; font-weight:800; font-size:13px; }
+      .dash-form-error { min-height:18px; color:#ef233c; font-weight:800; font-size:13px; }
       .dash-form-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
-      @media (max-width: 900px) { .dash-grid, .dash-two { grid-template-columns:1fr; } .dash-carniza-card { grid-template-columns:1fr; } .dash-carniza-actions { justify-content:stretch; } .dash-carniza-btn { flex:1; min-width:150px; } }
+      @media (max-width: 900px) { .dash-grid, .dash-two { grid-template-columns:1fr; } }
       @media (max-width: 640px) {
         .dash-shell { gap:12px; }
         .dash-brand-reminder { align-items:stretch; flex-direction:column; padding:15px; }
@@ -214,9 +202,6 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         .dash-step-btn { padding:12px; }
         .dash-secondary-actions { display:grid; grid-template-columns:1fr; gap:8px; }
         .dash-secondary-actions button { width:100%; min-width:0; }
-        .dash-carniza-title { font-size:24px; }
-        .dash-carniza-actions { flex-direction:column; }
-        .dash-carniza-btn { width:100%; }
         .dash-business-head { align-items:flex-start; flex-direction:column; }
         .dash-list-item { flex-direction:column; gap:4px; }
         .dash-list-item strong { text-align:left; }
@@ -257,11 +242,12 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         </div>
 
         <div class="dash-share-block">
-          <div class="dash-share-head"><strong>Compartir mi web</strong><span>Elegí cómo querés acercar tu vidriera a tus clientes.</span></div>
-          <div class="dash-secondary-actions">
-            <button type="button" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>💬 Compartir link por WhatsApp</button>
-            <button type="button" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Ver mi QR</button>
-          </div>
+          ${renderCarnizaSpotlight("dashboardPanel", {
+            actionsHtml: `
+              <button type="button" class="cz-spotlight-cta" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>💬 Compartir por WhatsApp</button>
+              <button type="button" class="cz-spotlight-link" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Ver mi QR</button>
+            `
+          })}
 
           ${publicWebUrl ? `
             <div data-dashboard-qr-panel hidden style="margin-top:16px;text-align:center;">

@@ -26,7 +26,7 @@ import {
 } from "./services/tracking-service.js";
 
 import { updateBusinessBasicData, getPublicWebUrl, saveWebConfig, syncPublicWebSnapshot, buildPublicWebPayload } from "./services/web-premium-service.js";
-import { STOREFRONT_THEMES, getStorefrontTheme, normalizeStorefrontTheme } from "./services/storefront-theme-service.js";
+import { STOREFRONT_THEMES, getStorefrontTheme, normalizeStorefrontTheme, renderThemeSchematicHtml } from "./services/storefront-theme-service.js";
 import { finishDailyPromo, getArgentinaDayKey, getDailyPromosForManagement, publishDailyPromo } from "./services/daily-promos-service.js";
 import {
   uploadBusinessLogo,
@@ -627,8 +627,8 @@ function renderCarnizaUrgentStockCard(container) {
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
     '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
-    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#c41e3a;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(196,30,58,.22);">3. Armar Promo del día</button>' +
-    '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:900;"></div>' +
+    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#E52223;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(229,34,35,.22);">3. Armar Promo del día</button>' +
+    '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
 
   const productsEl = card.querySelector("[data-carniza-real-products]");
@@ -648,7 +648,7 @@ function renderCarnizaUrgentStockCard(container) {
     const promos = getDailyPromosForManagement({ state: currentPayload?.state || {}, isDemo })
       .filter((promo = {}) => promo.status === "active" && promo.dayKey === todayKey && Date.parse(promo.expiresAt || "") > Date.now());
     const statusHtml = message
-      ? '<div role="status" style="margin:0 0 8px;padding:8px;border-radius:10px;background:' + (isError ? '#fff1f0;color:#9f1239' : '#dcfce7;color:#166534') + ';font-size:12px;font-weight:1000;">' + escapeCarnizaHtml(message) + '</div>'
+      ? '<div role="status" style="margin:0 0 8px;padding:8px;border-radius:10px;background:' + (isError ? '#fff1f0;color:#ef233c' : '#dcfce7;color:#166534') + ';font-size:12px;font-weight:1000;">' + escapeCarnizaHtml(message) + '</div>'
       : '';
     const rowsHtml = promos.length
       ? promos.map((promo = {}) => {
@@ -656,7 +656,7 @@ function renderCarnizaUrgentStockCard(container) {
           const time = Number.isNaN(published.getTime()) ? "Hoy" : published.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
           return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #fed7aa;">' +
             '<div style="min-width:0;"><strong style="display:block;color:#7c2d12;overflow-wrap:anywhere;">' + escapeCarnizaHtml(promo.name || "Promo del día") + '</strong><span style="display:block;margin-top:3px;color:#9a3412;font-size:11px;font-weight:850;">' + escapeCarnizaHtml(formatCarnizaMoney(promo.total || 0)) + ' · Publicada ' + escapeCarnizaHtml(time) + '</span></div>' +
-            '<button type="button" data-finish-daily-promo="' + escapeCarnizaHtml(promo.id || "") + '" style="min-height:44px;padding:0 11px;border:1px solid #fecaca;border-radius:12px;background:#fff1f0;color:#b42318;font-size:12px;font-weight:1000;cursor:pointer;">Finalizar</button>' +
+            '<button type="button" data-finish-daily-promo="' + escapeCarnizaHtml(promo.id || "") + '" style="min-height:44px;padding:0 11px;border:1px solid #fecaca;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:12px;font-weight:1000;cursor:pointer;">Finalizar</button>' +
           '</div>';
         }).join("")
       : '<div style="padding-top:7px;color:#7c2d12;font-size:12px;font-weight:850;">No tenés ofertas activas publicadas hoy.</div>';
@@ -774,7 +774,7 @@ function renderCarnizaUrgentStockCard(container) {
             '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" aria-label="Restar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">−</button>' +
             '<strong style="min-width:56px;text-align:center;white-space:nowrap;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
             '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" aria-label="Sumar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">+</button>' +
-            '<button type="button" data-urgent-remove="' + escapeCarnizaHtml(item.id) + '" aria-label="Quitar ' + escapeCarnizaHtml(item.name) + '" title="Quitar producto" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #fecaca;background:#fff1f0;color:#b42318;font-size:17px;font-weight:1000;cursor:pointer;">×</button>' +
+            '<button type="button" data-urgent-remove="' + escapeCarnizaHtml(item.id) + '" aria-label="Quitar ' + escapeCarnizaHtml(item.name) + '" title="Quitar producto" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #fecaca;background:#fff1f0;color:#ef233c;font-size:17px;font-weight:1000;cursor:pointer;">×</button>' +
           '</div>' +
         '</div>'
       ).join("") + buildUrgentLiveSummaryHtml(selected);
@@ -784,7 +784,7 @@ function renderCarnizaUrgentStockCard(container) {
     const q = normalizeCarnizaProductKey(searchText);
     if (!realProducts.length) {
       productsEl.style.display = "grid";
-      productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff1f0;color:#9f1239;font-weight:900;font-size:13px;">No encontré productos con precio cargado. Primero cargá precios reales.</div>';
+      productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff1f0;color:#ef233c;font-weight:900;font-size:13px;">No encontré productos con precio cargado. Primero cargá precios reales.</div>';
       updateProductListToggle();
       renderSelectedSummary();
       return;
@@ -808,7 +808,7 @@ function renderCarnizaUrgentStockCard(container) {
     productsEl.innerHTML = visible.map((item) => {
       const active = selectedIds.has(item.id);
       const subtitle = item.rubro ? item.rubro + " · " + formatCarnizaMoney(item.price) : formatCarnizaMoney(item.price);
-      return '<button type="button" data-product-id="' + escapeCarnizaHtml(item.id) + '" style="min-height:52px;text-align:left;border-radius:14px;border:1px solid ' + (active ? "#c41e3a" : "#ead5bf") + ';background:' + (active ? "#c41e3a" : "#fff") + ';color:' + (active ? "#fff" : "#4b2a12") + ';font-weight:1000;cursor:pointer;padding:8px 10px;line-height:1.15;">' +
+      return '<button type="button" data-product-id="' + escapeCarnizaHtml(item.id) + '" style="min-height:52px;text-align:left;border-radius:14px;border:1px solid ' + (active ? "#E52223" : "#ead5bf") + ';background:' + (active ? "#E52223" : "#fff") + ';color:' + (active ? "#fff" : "#4b2a12") + ';font-weight:1000;cursor:pointer;padding:8px 10px;line-height:1.15;">' +
         '<div>' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + (active ? " ✔" : "") + '</div>' +
         '<div style="font-size:11px;font-weight:900;opacity:.82;margin-top:3px;">' + escapeCarnizaHtml(subtitle) + '</div>' +
       '</button>';
@@ -1011,21 +1011,21 @@ function renderCarnizaUrgentStockCard(container) {
     const setupNodes = Array.from(card.children).filter((node) => node !== resultEl);
     setupNodes.forEach((node) => { node.style.display = "none"; });
 
-    resultEl.innerHTML = '<div style="border:1px solid #bfdbfe;border-radius:18px;background:#eff6ff;padding:14px;box-shadow:0 10px 22px rgba(37,99,235,.08);">' +
+    resultEl.innerHTML = '<div style="border:1px solid #F6C6C6;border-radius:18px;background:#FFF1F0;padding:14px;box-shadow:0 10px 22px rgba(229,34,35,.08);">' +
       '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">' +
-        '<div><div style="font-size:18px;font-weight:1000;color:#1d4ed8;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#1e3a8a;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
+        '<div><div style="font-size:18px;font-weight:1000;color:#B3161A;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#8E1014;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
         '<div style="font-size:26px;line-height:1;">📲</div>' +
       '</div>' +
-      '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #bfdbfe;border-radius:13px;background:#fff;color:#1d4ed8;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
-      '<label style="display:block;font-size:13px;font-weight:1000;color:#1e3a8a;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
-      '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #93c5fd;border-radius:14px;padding:0 12px;background:#fff;color:#172554;font-weight:1000;font-size:15px;" />' +
-      '<div style="font-size:12px;font-weight:900;color:#1e3a8a;margin:7px 0 10px;">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
+      '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #F6C6C6;border-radius:13px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
+      '<label style="display:block;font-size:13px;font-weight:1000;color:#8E1014;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
+      '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #F6C6C6;border-radius:14px;padding:0 12px;background:#fff;color:#0A2E5B;font-weight:1000;font-size:15px;" />' +
+      '<div style="font-size:12px;font-weight:900;color:#8E1014;margin:7px 0 10px;">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
       (missing.length ? '<div style="margin:8px 0;padding:8px;border-radius:10px;background:#fff8e1;color:#7a4b00;font-size:12px;font-weight:900;">⚠️ Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
       '<pre data-urgent-message-preview style="white-space:pre-wrap;font-family:inherit;margin:10px 0;padding:12px;border-radius:12px;background:#fff;color:#1f1f1f;font-weight:900;line-height:1.38;max-height:245px;overflow:auto;"></pre>' +
-      '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#9f1239;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
+      '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
       '<div style="display:grid;grid-template-columns:1.2fr .8fr;gap:8px;">' +
         '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;">📲 Enviar oferta por WhatsApp</a>' +
-        '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#2563eb;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
+        '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#E52223;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
       '</div>' +
       '<button type="button" data-publish-daily style="width:100%;min-height:52px;margin-top:9px;border:none;border-radius:14px;background:#ea580c;color:#fff;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 9px 18px rgba(234,88,12,.20);">🔥 Publicar por hoy en mi carnicería</button>' +
       '<div data-publish-daily-status role="status" aria-live="polite" style="display:none;margin-top:8px;padding:9px;border-radius:11px;font-size:12px;font-weight:1000;line-height:1.35;"></div>' +
@@ -1114,7 +1114,7 @@ function renderCarnizaUrgentStockCard(container) {
         if (publishStatus) {
           publishStatus.style.display = "block";
           publishStatus.style.background = "#fff1f0";
-          publishStatus.style.color = "#9f1239";
+          publishStatus.style.color = "#ef233c";
           publishStatus.textContent = publishError?.message || "No se pudo publicar. Probá nuevamente.";
         }
       }
@@ -1311,12 +1311,12 @@ function ensureCarnizaFloatingLiquidator() {
         align-items: center;
         justify-content: center;
         gap: 10px;
-        background: linear-gradient(135deg, #0f4c81, #2563eb);
+        background: linear-gradient(135deg, #B3161A, #E52223);
         color: #fff;
         font-weight: 1000;
         font-size: 15px;
         letter-spacing: .01em;
-        box-shadow: 0 18px 38px rgba(15, 76, 129, .28);
+        box-shadow: 0 18px 38px rgba(229, 34, 35, .28);
         cursor: pointer;
         transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
       }
@@ -1424,7 +1424,7 @@ function ensureCarnizaFloatingLiquidator() {
         align-items: flex-start;
         gap: 12px;
         padding: 16px 16px 12px;
-        background: linear-gradient(135deg, #0f2742, #123f66);
+        background: linear-gradient(135deg, #0A2E5B, #0d3a73);
         color: #fff;
       }
       .carniza-floating-header strong { display:block; font-size:18px; font-weight:1000; line-height:1.1; }
@@ -1434,18 +1434,18 @@ function ensureCarnizaFloatingLiquidator() {
       }
       #carnizaFloatingLiquidatorBody { padding:14px; }
       .carniza-unified-card {
-        border:1px solid #dbeafe;
+        border:1px solid #F6C6C6;
         border-radius:22px;
-        background:linear-gradient(135deg,#ffffff,#eff6ff);
+        background:linear-gradient(135deg,#ffffff,#FFF1F0);
         padding:18px;
         box-shadow:0 16px 42px rgba(15,23,42,.08);
       }
-      .carniza-unified-kicker { color:#0b63ce; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; margin-bottom:8px; }
+      .carniza-unified-kicker { color:#E52223; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; margin-bottom:8px; }
       .carniza-unified-card h3 { margin:0 0 8px; color:#0f172a; font-size:26px; line-height:1.05; }
       .carniza-unified-card p { margin:0 0 14px; color:#475569; font-weight:850; line-height:1.4; }
       .carniza-unified-actions { display:grid; grid-template-columns:1fr; gap:10px; }
       .carniza-unified-action {
-        border:1px solid #dbeafe;
+        border:1px solid #F6C6C6;
         border-radius:18px;
         background:#fff;
         color:#0f172a;
@@ -1459,7 +1459,7 @@ function ensureCarnizaFloatingLiquidator() {
       }
       .carniza-unified-action strong { font-size:17px; font-weight:1000; }
       .carniza-unified-action span { color:#64748b; font-size:13px; font-weight:800; line-height:1.3; }
-      .carniza-unified-action.primary { border-color:#93c5fd; background:linear-gradient(135deg,#eff6ff,#ffffff); }
+      .carniza-unified-action.primary { border-color:#F6C6C6; background:linear-gradient(135deg,#FFF1F0,#ffffff); }
       .carniza-unified-action.urgent { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#ffffff); }
       .carniza-unified-action.nav { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#ffffff); }
       .carniza-unified-action.exit { border-color:#fecaca; background:linear-gradient(135deg,#fff1f2,#ffffff); }
@@ -2010,7 +2010,7 @@ function renderStorefrontThemeChoices(selectedTheme = "standard") {
   const currentTheme = normalizeStorefrontTheme(selectedTheme);
   return STOREFRONT_THEMES.map((theme) => {
     const selected = theme.id === currentTheme;
-    return `<button type="button" data-storefront-theme-choice="${theme.id}" aria-pressed="${selected}" style="display:grid;gap:7px;padding:10px;border:2px solid ${selected ? "#c2410c" : "#eaded7"};border-radius:16px;background:#fff;text-align:left;cursor:pointer;font:inherit;box-shadow:${selected ? "0 8px 18px rgba(124,45,18,.10)" : "none"};"><span style="height:38px;border-radius:10px;display:flex;overflow:hidden;">${theme.colors.map((color) => `<i style="flex:1;background:${color};"></i>`).join("")}</span><strong style="color:#2b2724;font-size:12px;line-height:1.15;">${escapeCarnizaHtml(theme.label)}</strong><small style="color:#8a5c51;font-size:10px;font-weight:850;">${escapeCarnizaHtml(theme.caption)}</small></button>`;
+    return `<button type="button" data-storefront-theme-choice="${theme.id}" aria-pressed="${selected}" style="display:grid;gap:7px;padding:10px;border:2px solid ${selected ? "#c2410c" : "#eaded7"};border-radius:16px;background:#fff;text-align:left;cursor:pointer;font:inherit;box-shadow:${selected ? "0 8px 18px rgba(124,45,18,.10)" : "none"};"><span style="height:54px;border-radius:10px;display:block;overflow:hidden;background:#fbf7f4;border:1px solid #f1ece7;">${renderThemeSchematicHtml(theme.id)}</span><strong style="color:#2b2724;font-size:12px;line-height:1.15;">${escapeCarnizaHtml(theme.label)}</strong><small style="color:#8a5c51;font-size:10px;font-weight:850;">${escapeCarnizaHtml(theme.caption)} · ${escapeCarnizaHtml(theme.description)}</small></button>`;
   }).join("");
 }
 
@@ -2045,7 +2045,7 @@ function renderStorefrontThemePrompt(state = {}) {
         <span style="display:inline-flex;padding:5px 9px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:13px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Diseño de tu vidriera</span>
         <h2 style="margin:9px 0 6px;color:#4a1811;font-size:clamp(24px,4vw,34px);line-height:1.03;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
         <p style="margin:0;color:#6b4b3e;font-weight:800;line-height:1.42;">Probá cada alternativa en una vista previa de tu propia vidriera. Nada cambia hasta que confirmes.</p>
-        <div data-storefront-theme-choices style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:9px;margin-top:15px;"></div>
+        <div data-storefront-theme-choices style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-top:15px;"></div>
         <div class="theme-preview-tabs" aria-label="Contenido de la vista previa">
           <button type="button" class="theme-preview-tab" data-storefront-preview-view="products" aria-pressed="true">Ver productos</button>
           <button type="button" class="theme-preview-tab" data-storefront-preview-view="promos" aria-pressed="false">Ver promos</button>
@@ -2334,7 +2334,7 @@ function renderCommercialShareActions(container, state = {}) {
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;">
       <button type="button" data-commercial-share-wa style="min-height:48px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;">💬 WhatsApp</button>
-      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🔗 Copiar enlace</button>
+      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🔗 Copiar enlace</button>
       <button type="button" data-commercial-show-qr style="min-height:48px;border:1px solid #ddd6fe;border-radius:14px;background:#f5f3ff;color:#5b21b6;font-weight:1000;cursor:pointer;">📱 Mostrar QR</button>
     </div>
   `;
@@ -2380,7 +2380,7 @@ function renderStrongCommercialPrompt(state = {}) {
       [data-carniza-commercial-motor="strong"] .commercial-activation-visual{min-height:260px;border-radius:20px;background:#fff1ed;display:grid;place-items:center;overflow:hidden}
       [data-carniza-commercial-motor="strong"] .commercial-activation-visual img{display:block;width:100%;height:100%;max-height:390px;object-fit:contain}
       [data-carniza-commercial-motor="strong"] .commercial-activation-content{display:grid;gap:14px}
-      [data-carniza-commercial-motor="strong"] .commercial-activation-badge{width:max-content;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:13px;font-weight:1000;text-transform:uppercase}
+      [data-carniza-commercial-motor="strong"] .commercial-activation-badge{width:max-content;padding:6px 10px;border-radius:999px;background:#fee2e2;color:#B3161A;font-size:13px;font-weight:1000;text-transform:uppercase}
       [data-carniza-commercial-motor="strong"] .commercial-activation-title{margin:0;color:#451a03;font-size:clamp(27px,5vw,40px);line-height:1.02;letter-spacing:-.04em}
       [data-carniza-commercial-motor="strong"] .commercial-activation-message{margin:0;color:#6b3f32;font-size:14px;font-weight:850;line-height:1.4}
       @media(max-width:760px){
@@ -2419,7 +2419,7 @@ function renderStrongCommercialPrompt(state = {}) {
               <span>${state.pricedCount < CARNIZA_ACTIVATION_MIN_PRICES ? `mínimo ${CARNIZA_ACTIVATION_MIN_PRICES}` : `objetivo ${CARNIZA_RECOMMENDED_PRICES}`}</span>
             </div>
             <div style="height:9px;border-radius:999px;background:#fee2e2;overflow:hidden;">
-              <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#b91c1c,#ef4444);border-radius:999px;"></div>
+              <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#B3161A,#E52223);border-radius:999px;"></div>
             </div>
           </div>
         </div>
@@ -2432,14 +2432,14 @@ function renderStrongCommercialPrompt(state = {}) {
   const main = card.querySelector("[data-commercial-main-actions]");
   if (state.primaryAction !== "share") {
     main.innerHTML = `
-      <button type="button" data-commercial-primary style="min-height:50px;border:0;border-radius:14px;background:#b91c1c;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🌐 Ver mi carnicería</button>
+      <button type="button" data-commercial-primary style="min-height:50px;border:0;border-radius:14px;background:#E52223;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🌐 Ver mi carnicería</button>
     `;
     main.querySelector("[data-commercial-primary]")?.addEventListener("click", () => executeCommercialAction(state, state.primaryAction));
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
   } else {
     main.innerHTML = `
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#991b1b;font-weight:1000;cursor:pointer;">🌐 Revisar mi carnicería</button>
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🌐 Revisar mi carnicería</button>
     `;
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
     renderCommercialShareActions(card.querySelector("[data-commercial-share-actions]"), state);
@@ -2746,21 +2746,21 @@ function openAccountSheet(mode = "view") {
       .app-account-head strong { font-size:15px; color:#0f172a; }
       .app-account-close { width:42px; height:42px; border-radius:14px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-size:20px; font-weight:1000; cursor:pointer; }
       .app-account-card { display:grid; gap:12px; }
-      .app-account-kicker { color:#b91c1c; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; }
-      .app-account-card h3 { margin:0; font-size:24px; line-height:1.05; color:#7f1d1d; }
+      .app-account-kicker { color:#E52223; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; }
+      .app-account-card h3 { margin:0; font-size:24px; line-height:1.05; color:#B3161A; }
       .app-account-card p { margin:0; color:#64748b; font-weight:800; line-height:1.35; }
       .app-account-list { display:grid; gap:8px; }
       .app-account-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
       .app-account-row span { color:#64748b; font-size:13px; font-weight:900; }
       .app-account-row strong { text-align:right; color:#0f172a; font-size:14px; overflow-wrap:anywhere; }
-      .app-account-row a { color:#b91c1c; text-decoration:none; overflow-wrap:anywhere; }
+      .app-account-row a { color:#E52223; text-decoration:none; overflow-wrap:anywhere; }
       .app-account-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:4px; }
       .app-account-actions button { min-height:46px; border-radius:15px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-weight:1000; cursor:pointer; }
-      .app-account-actions button.primary { background:#b91c1c; border-color:#b91c1c; color:#fff; }
+      .app-account-actions button.primary { background:#E52223; border-color:#E52223; color:#fff; }
       .app-account-footnote { color:#64748b; font-weight:800; line-height:1.35; }
       .app-account-form label { display:grid; gap:6px; color:#475569; font-size:13px; font-weight:900; }
       .app-account-form input { width:100%; min-height:46px; border:1px solid #cbd5e1; border-radius:14px; padding:0 12px; font-size:15px; font-weight:800; box-sizing:border-box; }
-      .app-account-form input:focus { outline:3px solid rgba(185,28,28,.12); border-color:#b91c1c; }
+      .app-account-form input:focus { outline:3px solid rgba(229,34,35,.12); border-color:#E52223; }
       .app-account-brand-section { display:grid; gap:14px; margin-top:4px; padding-top:14px; border-top:1px solid #e2e8f0; }
       .app-account-brand-section > div:first-child { display:grid; gap:4px; }
       .app-account-brand-section > div:first-child strong { color:#0f172a; font-size:16px; }
@@ -2771,11 +2771,11 @@ function openAccountSheet(mode = "view") {
       .app-account-brand-preview.logo { width:112px; height:112px; object-fit:contain; padding:8px; box-sizing:border-box; }
       .app-account-brand-preview.front { width:100%; aspect-ratio:16/9; }
       .app-account-brand-empty { min-height:72px; display:grid; place-items:center; padding:12px; border:1px dashed #cbd5e1; border-radius:14px; color:#64748b; background:#fff; font-size:13px; font-weight:800; text-align:center; }
-      .app-account-file-button { position:relative; display:inline-flex !important; align-items:center; justify-content:center; min-height:44px; border-radius:14px; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8 !important; cursor:pointer; font-weight:1000 !important; }
+      .app-account-file-button { position:relative; display:inline-flex !important; align-items:center; justify-content:center; min-height:44px; border-radius:14px; background:#FFF1F0; border:1px solid #F6C6C6; color:#B3161A !important; cursor:pointer; font-weight:1000 !important; }
       .app-account-file-button input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
-      .app-account-remove-image { min-height:40px; border-radius:12px; border:1px solid #fecaca; background:#fff; color:#b91c1c; font-weight:900; cursor:pointer; }
+      .app-account-remove-image { min-height:40px; border-radius:12px; border:1px solid #fecaca; background:#fff; color:#E52223; font-weight:900; cursor:pointer; }
       .app-account-brand-item small { color:#64748b; font-weight:700; line-height:1.3; }
-      .app-account-error { min-height:18px; color:#b42318; font-size:13px; font-weight:900; }
+      .app-account-error { min-height:18px; color:#ef233c; font-size:13px; font-weight:900; }
       .app-account-web-status { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:950; }
       .app-account-web-status.active { color:#166534; background:#dcfce7; border:1px solid #86efac; }
       .app-account-web-status.pending { color:#92400e; background:#fef3c7; border:1px solid #fcd34d; }
@@ -3171,14 +3171,14 @@ function injectMobileBottomNavStyles() {
 
       .app-mobile-bottom-nav button.is-active {
         background: linear-gradient(135deg, #fff7ed, #fee2e2);
-        color: #9f1239;
-        box-shadow: inset 0 0 0 1px rgba(196, 30, 58, .18);
+        color: #B3161A;
+        box-shadow: inset 0 0 0 1px rgba(229, 34, 35, .18);
       }
 
       .app-mobile-bottom-nav button.is-primary {
-        background: linear-gradient(135deg, #c41e3a, #9f1239);
+        background: linear-gradient(135deg, #E52223, #B3161A);
         color: #fff;
-        box-shadow: 0 8px 18px rgba(196, 30, 58, .20);
+        box-shadow: 0 8px 18px rgba(229, 34, 35, .20);
       }
 
       .app-mobile-bottom-menu {
@@ -3205,7 +3205,7 @@ function injectMobileBottomNavStyles() {
         gap: 12px;
         margin-bottom: 10px;
       }
-      .app-mobile-bottom-menu__title { margin: 0; color: #7f1d1d; font-size: 16px; font-weight: 1000; }
+      .app-mobile-bottom-menu__title { margin: 0; color: #B3161A; font-size: 16px; font-weight: 1000; }
       .app-mobile-bottom-menu__hint { margin: 2px 0 0; color: #64748b; font-size: 12px; font-weight: 800; }
       .app-mobile-bottom-menu__close {
         min-width: 40px;
@@ -3233,7 +3233,7 @@ function injectMobileBottomNavStyles() {
       }
       .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
       .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
-      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #9f1239; }
+      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #B3161A; }
       .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
       .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
     }
@@ -3385,7 +3385,7 @@ function injectMobileBottomNavStyles() {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: #061a35;
+        color: #0A2E5B;
         font-size: .9rem;
         line-height: 1.15;
         font-weight: 1000;
@@ -3412,7 +3412,7 @@ function injectMobileBottomNavStyles() {
       }
 
       body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy:focus-visible {
-        outline: 2px solid #0477f2;
+        outline: 2px solid #E52223;
         outline-offset: 3px;
         border-radius: 8px;
       }
@@ -3482,13 +3482,13 @@ function injectMobileBottomNavStyles() {
       }
       .app-mobile-bottom-nav button.is-active {
         background: linear-gradient(135deg, #fff7ed, #fee2e2);
-        color: #9f1239;
-        box-shadow: inset 0 0 0 1px rgba(196, 30, 58, .18);
+        color: #B3161A;
+        box-shadow: inset 0 0 0 1px rgba(229, 34, 35, .18);
       }
       .app-mobile-bottom-nav button.is-primary {
-        background: linear-gradient(135deg, #c41e3a, #9f1239);
+        background: linear-gradient(135deg, #E52223, #B3161A);
         color: #fff;
-        box-shadow: 0 10px 22px rgba(196, 30, 58, .22);
+        box-shadow: 0 10px 22px rgba(229, 34, 35, .22);
       }
 
       .app-mobile-bottom-menu {
@@ -3514,7 +3514,7 @@ function injectMobileBottomNavStyles() {
       }
       .app-mobile-bottom-menu__title {
         margin: 0;
-        color: #7f1d1d;
+        color: #B3161A;
         font-size: 15px;
         font-weight: 1000;
       }
@@ -3555,7 +3555,7 @@ function injectMobileBottomNavStyles() {
       }
       .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
       .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
-      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #9f1239; }
+      .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #B3161A; }
       .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
       .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
     }

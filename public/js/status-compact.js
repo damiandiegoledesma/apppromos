@@ -115,9 +115,9 @@
       input[type="number"][max="100"],
       input[type="number"][aria-label*="desc" i],
       input[type="number"][placeholder*="desc" i] {
-        background: linear-gradient(135deg, #eff6ff, #ffffff) !important;
-        border: 1px solid #93c5fd !important;
-        box-shadow: 0 8px 18px rgba(37, 99, 235, .10) !important;
+        background: linear-gradient(135deg, #FFF1F0, #ffffff) !important;
+        border: 1px solid #F6C6C6 !important;
+        box-shadow: 0 8px 18px rgba(229, 34, 35, .10) !important;
         color: #0f172a !important;
         font-weight: 1000 !important;
         text-align: center !important;
@@ -125,15 +125,15 @@
       input[type="number"][max="100"]:focus,
       input[type="number"][aria-label*="desc" i]:focus,
       input[type="number"][placeholder*="desc" i]:focus {
-        outline: 3px solid rgba(37, 99, 235, .18) !important;
-        border-color: #2563eb !important;
+        outline: 3px solid rgba(229, 34, 35, .18) !important;
+        border-color: #E52223 !important;
       }
       .dash-card .dash-value {
-        color: #1e3a8a !important;
+        color: #8E1014 !important;
         font-size: 26px !important;
         line-height: 1.05 !important;
-        background: #eff6ff !important;
-        border: 1px solid #dbeafe !important;
+        background: #FFF1F0 !important;
+        border: 1px solid #F6C6C6 !important;
         border-radius: 14px !important;
         padding: 6px 10px !important;
         display: inline-flex !important;

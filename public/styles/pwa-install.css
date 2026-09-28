@@ -46,12 +46,12 @@
   width: 58px;
   height: 58px;
   border-radius: 16px;
-  box-shadow: 0 8px 22px rgba(4, 119, 242, .18);
+  box-shadow: 0 8px 22px rgba(229, 34, 35, .18);
 }
 
 .pwa-install-head strong {
   display: block;
-  color: #061a35;
+  color: #0A2E5B;
   font-size: 1.2rem;
 }
 
@@ -88,7 +88,7 @@
   min-height: 46px;
   border: 0;
   border-radius: 14px;
-  background: #0477f2;
+  background: #E52223;
   color: #fff;
   font-weight: 900;
   cursor: pointer;

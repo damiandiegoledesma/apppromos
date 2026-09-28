@@ -812,7 +812,7 @@ function renderNav(activeView) {
 function renderBottomNav(activeView = "home", selectedRow = null) {
   const navStyle = "position:fixed!important;z-index:2147483646!important;left:50%!important;bottom:14px!important;transform:translateX(-50%)!important;display:grid!important;grid-template-columns:repeat(4,minmax(86px,1fr))!important;gap:5px!important;width:min(560px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;box-sizing:border-box!important;padding:7px!important;border:1px solid #d9d2c8!important;border-radius:18px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 14px 38px rgba(0,0,0,.18)!important;";
   const itemStyle = "display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;min-width:0!important;min-height:48px!important;padding:4px!important;border:0!important;border-radius:12px!important;background:transparent!important;color:#5b534b!important;font:900 11px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;text-decoration:none!important;cursor:pointer!important;box-sizing:border-box!important;";
-  const activeStyle = "background:#1f1f1f!important;color:#fff!important;";
+  const activeStyle = "background:var(--primary)!important;color:#fff!important;";
   if (selectedRow) {
     return `
       <nav class="admin-bottom-nav" style="${navStyle}" aria-label="Acciones de la carnicería">
@@ -1170,7 +1170,7 @@ function renderFunnelBlock(funnel = {}) {
     return `${head}
       <section class="admin-panel-card" style="margin-bottom:16px;">
         ${funnel.loading ? "<p>Cargando embudo...</p>" : `<button type="button" data-funnel-load>Ver embudo</button>`}
-        ${funnel.error ? `<p style="color:#b42318;">${escapeHtml(funnel.error)}</p>` : ""}
+        ${funnel.error ? `<p style="color:var(--danger);">${escapeHtml(funnel.error)}</p>` : ""}
       </section>`;
   }
 
@@ -1203,7 +1203,7 @@ function renderFunnelBlock(funnel = {}) {
       <label><input type="checkbox" data-funnel-internal ${funnel.includeInternal ? "checked" : ""}> Incluir internos</label>
       <button type="button" data-funnel-load>Actualizar</button>
     </div>
-    ${funnel.truncated ? `<div class="admin-empty" style="color:#b42318;margin-bottom:10px;">Período truncado: se leyeron los primeros eventos permitidos. Achicá el rango.</div>` : ""}
+    ${funnel.truncated ? `<div class="admin-empty" style="color:var(--danger);margin-bottom:10px;">Período truncado: se leyeron los primeros eventos permitidos. Achicá el rango.</div>` : ""}
     <div class="admin-home-grid" style="margin-bottom:12px;">
       <section class="admin-panel-card"><h3>${funnelPercent(report.totalFromOnboarding)}</h3><p>Conversión total desde el onboarding</p><small>Desde la landing: ${funnelPercent(report.totalFromLanding)}</small></section>
       <section class="admin-panel-card"><h3>${drop ? funnelPercent(drop.conversion) : "—"}</h3><p>Mayor caída</p><small>${drop ? `${escapeHtml(drop.from.label)} → ${escapeHtml(drop.to.label)} (se pierden ${drop.lost})` : "Sin datos suficientes (mínimo 5 visitantes en el paso)"}</small></section>
@@ -1980,10 +1980,10 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-top p{margin:5px 0 0;color:#6e6e6e;font-size:13px;}
       .admin-top-actions{display:flex;gap:8px;flex-wrap:wrap;}
       .admin-top-actions button,.admin-row-actions button,.admin-queue-actions button,.admin-panel-head button,.admin-nav button,.admin-filter-tabs button,.admin-detail-top button{min-height:36px;padding:0 12px;border:1px solid #ded6ca;border-radius:10px;background:#fff;color:#1f1f1f;font-weight:900;cursor:pointer;}
-      .admin-top-actions .primary{background:#b63b2b;color:#fff;border-color:#b63b2b;}
+      .admin-top-actions .primary{background:var(--primary);color:#fff;border-color:var(--primary);}
       .admin-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
       .admin-nav button{border-radius:999px;background:#ece7df;}
-      .admin-nav button.active{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-nav button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
       .admin-content{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:clip;border:1px solid #e7e1d8;border-radius:16px;background:#fff;padding:14px;min-height:360px;}
       .admin-kpis{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:10px;margin-bottom:14px;}
       .admin-control-kpis{grid-template-columns:repeat(3,minmax(130px,1fr));}
@@ -1992,7 +1992,7 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-control-search span{color:#6e6e6e;font-size:12px;font-weight:900;white-space:nowrap;}
       .admin-control-table{min-width:860px;}
       .admin-control-table button{min-height:34px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
-      .primary-action{background:#1f1f1f!important;color:#fff!important;border-color:#1f1f1f!important;}
+      .primary-action{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;}
       .admin-kpis div{border:1px solid #eee6dc;border-radius:16px;background:#fffaf5;padding:12px;}
       .admin-kpis b{display:block;font-size:28px;line-height:1;font-weight:1000;}
       .admin-kpis span{display:block;margin-top:5px;color:#6e6e6e;font-size:12px;font-weight:900;text-transform:uppercase;}
@@ -2012,7 +2012,7 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-qa-note{margin:0 0 10px;padding:9px 11px;border-radius:10px;background:#fff4df;color:#795600;font-size:12px;font-weight:800;}
       .admin-panel-card{border:1px solid #eee6dc;border-radius:16px;background:#fff;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.035);}
       .admin-panel-card.highlight{border-color:#ffd0a0;background:#fffaf3;}
-      .admin-panel-card.important{border-color:#d7e5ff;background:#f8fbff;}
+      .admin-panel-card.important{border-color:#F6C6C6;background:#FFFCFB;}
       .admin-panel-card.note{background:#fffdf7;}
       .admin-panel-card.danger-zone{border-color:#f0b4ae;background:#fff8f7;}
       .admin-panel-card h3,.admin-section-head h3{margin:0 0 6px;font-size:18px;}
@@ -2058,14 +2058,14 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 9px;border-radius:999px;font-size:11px;font-weight:1000;margin:2px 3px 2px 0;white-space:nowrap;}
       .admin-chip.ok{background:#e9f8ef;color:#16703a;}
       .admin-chip.warn{background:#fff4df;color:#8a6200;}
-      .admin-chip.danger{background:#fff1f0;color:#b42318;}
+      .admin-chip.danger{background:#fff1f0;color:var(--danger);}
       .admin-chip.neutral{background:#f2f2f2;color:#555;}
-      .admin-chip.admin{background:#eef2ff;color:#1d3b7a;}
+      .admin-chip.admin{background:#E7ECF3;color:#0A2E5B;}
       .admin-mini-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
       .admin-empty{padding:18px;border:1px dashed #ded6ca;border-radius:14px;background:#fff;color:#6e6e6e;font-weight:800;}
       .admin-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
       .admin-filter-tabs{display:flex;gap:7px;flex-wrap:wrap;}
-      .admin-filter-tabs button.active{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-filter-tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
       .admin-billing-list{display:grid;gap:10px;}
       .admin-billing-card{display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(240px,1fr) minmax(260px,1.15fr);gap:12px;align-items:center;border:1px solid #eee6dc;border-radius:16px;background:#fff;padding:12px;box-shadow:0 4px 14px rgba(0,0,0,.035);}
       .admin-billing-card.has-link{border-color:#bfe8cf;background:#fbfffc;}
@@ -2077,7 +2077,7 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-billing-info small{display:block;color:#6e6e6e;font-size:12px;line-height:1.35;margin-top:3px;}
       .admin-billing-actions{display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));gap:7px;}
       .admin-billing-actions button{min-height:36px;padding:0 10px;border:1px solid #ded6ca;border-radius:10px;background:#fff;color:#1f1f1f;font-weight:900;cursor:pointer;}
-      .admin-billing-actions .primary-action{background:#0f6fe8;color:#fff;border-color:#0f6fe8;}
+      .admin-billing-actions .primary-action{background:var(--primary);color:#fff;border-color:var(--primary);}
       .admin-billing-actions .success-action{background:#13a85b;color:#fff;border-color:#13a85b;}
       .admin-billing-actions .muted-action{background:#f8f5f0;color:#6b5d50;}
 
@@ -2101,7 +2101,7 @@ export async function renderAdminUsers(container, options = {}) {
 
       .admin-operational-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
       .admin-operational-actions button{min-height:40px;padding:0 14px;border:1px solid #ded6ca;border-radius:10px;background:#fff;font-weight:900;cursor:pointer;}
-      .admin-operational-actions .primary-action{background:#1f1f1f;color:#fff;border-color:#1f1f1f;}
+      .admin-operational-actions .primary-action{background:var(--primary);color:#fff;border-color:var(--primary);}
       .admin-next-step{display:flex;align-items:center;justify-content:space-between;gap:18px;border-left:5px solid #64748b;}
       .admin-next-step.warn{border-left-color:#d97706;background:#fffaf0;}
       .admin-next-step.danger{border-left-color:#dc2626;background:#fff7f7;}
@@ -2110,12 +2110,12 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-next-step-copy h3{margin:4px 0 6px;font-size:1.12rem;}
       .admin-next-step-copy p{margin:0;line-height:1.45;}
       .admin-next-step-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
-      .admin-public-impact{margin:12px 0;border:1px solid #dce8f8;border-radius:16px;background:#f8fbff;padding:14px;}
+      .admin-public-impact{margin:12px 0;border:1px solid #F6C6C6;border-radius:16px;background:#FFFCFB;padding:14px;}
       .admin-impact-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;}
       .admin-impact-heading h3{margin:2px 0 0;font-size:18px;}
       .admin-impact-heading small{color:#6e6e6e;font-size:11px;max-width:260px;text-align:right;}
       .admin-impact-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;}
-      .admin-impact-grid>div{min-width:0;border:1px solid #e4edf8;border-radius:13px;background:#fff;padding:11px;}
+      .admin-impact-grid>div{min-width:0;border:1px solid #F1DCDA;border-radius:13px;background:#fff;padding:11px;}
       .admin-impact-grid strong{display:block;font-size:25px;line-height:1;}
       .admin-impact-grid span{display:block;margin-top:5px;font-size:11px;font-weight:950;text-transform:uppercase;}
       .admin-impact-grid small{display:block;margin-top:3px;color:#6e6e6e;font-size:11px;}
@@ -2150,7 +2150,7 @@ export async function renderAdminUsers(container, options = {}) {
       .admin-commercial-timeline{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0;}
       .admin-commercial-timeline li{position:relative;display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;padding:0 0 16px;}
       .admin-commercial-timeline li:not(:last-child)::before{content:"";position:absolute;left:6px;top:13px;bottom:0;width:2px;background:#e7e1d8;}
-      .admin-timeline-dot{position:relative;z-index:1;width:12px;height:12px;margin-top:3px;border-radius:999px;background:#b63b2b;box-shadow:0 0 0 3px #f8e9e5;}
+      .admin-timeline-dot{position:relative;z-index:1;width:12px;height:12px;margin-top:3px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 3px #f8e9e5;}
       .admin-commercial-timeline strong{display:block;font-size:13px;}
       .admin-commercial-timeline span{display:block;margin-top:2px;color:#6e6e6e;font-size:12px;line-height:1.35;}
       .admin-ledger-panel-wide,.admin-timeline-card,.admin-technical-actions,.admin-detail-disclosure{grid-column:1/-1;}
@@ -2179,7 +2179,7 @@ export async function renderAdminUsers(container, options = {}) {
       #adminControlFloatingNav{display:block!important;visibility:visible!important;opacity:1!important;}
       #adminControlFloatingNav .admin-bottom-nav button{display:flex!important;visibility:visible!important;opacity:1!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:48px;border:0;border-radius:12px;background:transparent;color:#5b534b;font-size:11px;font-weight:900;cursor:pointer;}
       #adminControlFloatingNav .admin-bottom-nav button span{display:block!important;visibility:visible!important;opacity:1!important;font-size:17px;line-height:1;}
-      .admin-bottom-nav button.active{background:#1f1f1f;color:#fff;}
+      .admin-bottom-nav button.active{background:var(--primary);color:#fff;}
       button:disabled{opacity:.45;cursor:not-allowed;}
       @media(max-width:980px){
         .admin-ledger-panel-wide{grid-column:span 1;}
@@ -2265,7 +2265,7 @@ export async function renderAdminUsers(container, options = {}) {
       [businesses, users] = await Promise.all([listAdminBusinesses(), listAdminUsers()]);
     } catch (error) {
       console.error("Error cargando admin", error);
-      content.innerHTML = `<div class="admin-empty" style="color:#b42318;">Error cargando admin: ${escapeHtml(error?.message || "desconocido")}</div>`;
+      content.innerHTML = `<div class="admin-empty" style="color:var(--danger);">Error cargando admin: ${escapeHtml(error?.message || "desconocido")}</div>`;
       return;
     } finally {
       loading = false;

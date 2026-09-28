@@ -1,0 +1,12 @@
+{
+  "source": "4 imágenes individuales generadas por Damián (prompt de pose contextual para Fase 3), procesadas por Claude: fondo removido (rembg/u2netp) y recortadas a la altura del tobillo para coincidir con el encuadre de public/assets/characters/carniza/onboarding/.",
+  "count": 4,
+  "target_repo_path": "public/assets/characters/carniza/spotlight/",
+  "files": [
+    "carniza-spotlight-saved.webp",
+    "carniza-spotlight-market.webp",
+    "carniza-spotlight-print.webp",
+    "carniza-spotlight-whatsapp.webp"
+  ],
+  "note": "Poses contextuales para el patrón 'un bloque fuerte por pantalla' (ver public/js/services/carniza-spotlight-service.js). Cada archivo corresponde 1 a 1 con una entrada de CARNIZA_SCREENS: savedPanel, marketPanel, printPanel, whatsappPanel."
+}

@@ -59,7 +59,7 @@ function syncInstallButtons() {
   installButtons().forEach((button) => {
     button.hidden = false;
     button.dataset.pwaInstalled = installed ? "true" : "false";
-    button.setAttribute("aria-label", installed ? "AppPromos ya está instalada" : "Instalar AppPromos");
+    button.setAttribute("aria-label", installed ? "Carnis.app ya está instalada" : "Instalar Carnis.app");
   });
   document.querySelectorAll("[data-pwa-install-label]").forEach((label) => {
     label.textContent = installed ? "INSTALADA" : "INSTALAR";
@@ -84,7 +84,7 @@ function getHelpText() {
   if (/android/i.test(window.navigator.userAgent || "")) {
     return "Abrí el menú del navegador y elegí Instalar app o Agregar a pantalla principal.";
   }
-  return "Buscá el icono Instalar AppPromos en la barra de direcciones de tu navegador.";
+  return "Buscá el icono Instalar Carnis.app en la barra de direcciones de tu navegador.";
 }
 
 function ensureInstallDialog() {
@@ -97,8 +97,8 @@ function ensureInstallDialog() {
   dialog.innerHTML = `
     <div class="pwa-install-card">
       <div class="pwa-install-head">
-        <img src="/assets/pwa/apppromos-192.png" alt="" />
-        <div><strong data-pwa-install-title>Instalar AppPromos</strong><span data-pwa-install-subtitle>Entrá más rápido desde tu pantalla de inicio.</span></div>
+        <img src="/assets/brand/carnis/app-icons/carnis-icon-192.png" alt="" />
+        <div><strong data-pwa-install-title>Instalar Carnis.app</strong><span data-pwa-install-subtitle>Entrá más rápido desde tu pantalla de inicio.</span></div>
       </div>
       <p class="pwa-install-copy"></p>
       <div class="pwa-install-actions">
@@ -134,13 +134,13 @@ function openInstallDialog({ installed = false, automatic = false } = {}) {
   const confirm = dialog.querySelector(".pwa-install-confirm");
 
   if (installed) {
-    if (title) title.textContent = "AppPromos ya está instalada";
+    if (title) title.textContent = "Carnis.app ya está instalada";
     if (subtitle) subtitle.textContent = "Abrila desde el icono de tu pantalla.";
     if (copy) copy.textContent = "La instalación es independiente en cada celular o computadora.";
     if (close) close.textContent = "Entendido";
     if (confirm) confirm.hidden = true;
   } else {
-    if (title) title.textContent = "Instalar AppPromos";
+    if (title) title.textContent = "Instalar Carnis.app";
     if (subtitle) subtitle.textContent = "Entrá más rápido desde tu pantalla de inicio.";
     if (copy) copy.textContent = deferredInstallPrompt
       ? "Instalala en este dispositivo y entrá con un solo toque."
