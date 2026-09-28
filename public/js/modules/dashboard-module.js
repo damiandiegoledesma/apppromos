@@ -166,7 +166,6 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       .dash-share-block { margin-top:16px; }
       .dash-secondary-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:0; }
       .dash-secondary-actions button { flex:1; min-width:150px; min-height:46px; border-radius:14px; border:1px solid #ddd; background:#fff; font-weight:800; cursor:pointer; }
-      ${CARNIZA_SPOTLIGHT_STYLES}
       .dash-business-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
       .dash-mini-btn, .dash-save-btn { min-height:42px; border-radius:13px; border:1px solid #ddd; background:#fff; padding:0 14px; font-weight:900; cursor:pointer; }
       .dash-save-btn { background:#E52223; border-color:#E52223; color:#fff; }

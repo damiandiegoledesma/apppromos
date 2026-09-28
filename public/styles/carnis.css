@@ -2149,3 +2149,35 @@ html .print-tool-card h3 .ci { color: var(--carnis-red); }
     display: none;
   }
 }
+
+/* ============================================================
+   12. CARNIZA SPOTLIGHT (ex CARNIZA_SPOTLIGHT_STYLES, C4.2)
+   Copia literal del template de carniza-spotlight-service.js.
+   ============================================================ */
+  .cz-spotlight { width:100%; border-radius:20px; padding:26px 22px 22px; background:#E52223; display:flex; align-items:center; gap:24px; }
+  .cz-spotlight-copy { flex:1 1 auto; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .cz-spotlight-copy h2 { margin:0; font-size:24px; line-height:1.08; color:#fff; font-weight:800; }
+  .cz-spotlight-copy p { margin:0; font-size:14px; line-height:1.4; color:#fff; opacity:.92; }
+  .cz-spotlight-actions { display:flex; flex-direction:column; gap:10px; align-items:flex-start; margin-top:4px; }
+  .cz-spotlight-actions:empty { display:none; }
+  .cz-spotlight-cta { height:50px; padding:0 24px; border-radius:999px; border:0; background:#fff; color:#E52223; font-weight:700; font-size:14.5px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; white-space:nowrap; }
+  .cz-spotlight-cta:disabled { opacity:.55; cursor:not-allowed; }
+  .cz-spotlight-link { background:none; border:0; padding:0; color:#fff; text-decoration:underline; font-size:13px; font-weight:700; cursor:pointer; }
+  .cz-spotlight-link:disabled { opacity:.55; cursor:not-allowed; text-decoration:none; }
+  .cz-spotlight-avatar { width:104px; height:auto; flex-shrink:0; }
+  @media (max-width: 640px) {
+    .cz-spotlight { flex-direction:column; align-items:stretch; padding:22px 18px 18px; gap:14px; text-align:left; }
+    .cz-spotlight-avatar { width:88px; align-self:flex-end; order:-1; margin-bottom:-18px; }
+  }
+
+  /* Variante compacta: para pantallas de trabajo/listado donde la acción
+     principal no es el bloque en sí, sino lo que sigue debajo (ej. Precios). */
+  .cz-spotlight--compact { padding:16px 18px 16px; border-radius:16px; gap:14px; }
+  .cz-spotlight--compact .cz-spotlight-copy { gap:4px; }
+  .cz-spotlight--compact .cz-spotlight-copy h2 { font-size:18px; }
+  .cz-spotlight--compact .cz-spotlight-copy p { font-size:12.5px; }
+  .cz-spotlight--compact .cz-spotlight-avatar { width:64px; }
+  @media (max-width: 640px) {
+    .cz-spotlight--compact { flex-direction:row; align-items:center; padding:14px 16px; gap:12px; }
+    .cz-spotlight--compact .cz-spotlight-avatar { width:56px; order:0; margin-bottom:0; align-self:center; }
+  }

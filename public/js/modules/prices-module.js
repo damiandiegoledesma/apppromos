@@ -1340,7 +1340,6 @@ export function renderPrices(container, products = [], businessId = null, option
           max-width:76px !important;
         }
       }
-      ${CARNIZA_SPOTLIGHT_STYLES}
 </style>
 
     <div class="prices-shell">

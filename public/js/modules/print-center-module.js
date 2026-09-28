@@ -321,7 +321,6 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
       .flyer-offer-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.flyer-offer-slot{display:none}.flyer-offer-slot.is-visible{display:grid;gap:6px;font-size:12px;font-weight:900;color:#334155}.flyer-offer-slot select{min-height:44px;border:1px solid #cbd5e1;border-radius:12px;padding:0 10px;background:#fff;font-weight:800}
       .flyer-card__identity{margin-top:3px;font-size:6.5px;font-weight:800;color:#475569;line-height:1.15;max-width:100%}.flyer-card__identity span{display:block}
       @media(max-width:720px){.flyer-offer-slots{grid-template-columns:1fr}}
-      ${CARNIZA_SPOTLIGHT_STYLES}
 </style>
     <div class="print-center">
       ${renderCarnizaSpotlight("printPanel", { compact: true })}

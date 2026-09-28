@@ -114,7 +114,6 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
           .wa-btn { width:100%; }
           .wa-header h2 { font-size:24px; }
         }
-        ${CARNIZA_SPOTLIGHT_STYLES}
       </style>
 
       <div class="wa-shell">

@@ -125,7 +125,6 @@ export function renderSaved(container, state, options = {}) {
       .saved-status { grid-column:1 / -1; min-height:0; color:#166534; font-size:12px; font-weight:900; text-align:right; }
       .saved-empty { border:1px dashed #d1d5db; border-radius:18px; padding:22px; background:#fff; color:#6b7280; text-align:center; }
       @media (max-width: 760px) { .saved-filters { grid-template-columns:1fr 1fr; } .saved-filter-search { grid-column:1 / -1; } .saved-card { grid-template-columns:1fr auto; align-items:start; } .saved-items { grid-column:1 / -1; } .saved-price { text-align:right; font-size:18px; } .saved-actions { grid-column:1 / -1; display:grid; grid-template-columns:1fr 1fr; } .saved-publication,.saved-duplicate,.saved-edit,.saved-archive,.saved-restore,.saved-delete,.saved-whatsapp { width:100%; } .saved-status{text-align:left;} }
-      ${CARNIZA_SPOTLIGHT_STYLES}
     </style>
 
     <div class="saved-shell">

@@ -718,7 +718,6 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderChooser() {
     container.innerHTML = `
-      <style>${CARNIZA_SPOTLIGHT_STYLES}</style>
       <section style="display:grid; gap:14px;">
         ${renderCarnizaSpotlight("builderPanel", { compact: true })}
 
