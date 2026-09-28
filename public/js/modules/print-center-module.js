@@ -2,6 +2,7 @@
 // MVP local y stateless: pega un pedido generado por AppPromos y crea una comanda imprimible.
 
 import { CARNIZA_SPOTLIGHT_STYLES, renderCarnizaSpotlight } from "../services/carniza-spotlight-service.js";
+import { isOwnPublicStorefrontUrl } from "../config/environment.js";
 
 function cleanMarkdown(value = "") {
   return String(value || "")
@@ -689,7 +690,8 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
     // tratar cada rubro/continuación como un bloque indivisible. Si un bloque
     // no entra completo, se divide por filas y continúa en la otra columna
     // o página. Así aprovechamos las dos columnas sin pisar QR/footer.
-    const hasQrFooter = /^https:\/\/(?:carnis\.app|apppromos\.web\.app)\//i.test(String(publicWebUrl || "").trim());
+    // QA-ISO-3: en producción equivale a /^https:\/\/(carnis.app|apppromos.web.app)\//i.
+    const hasQrFooter = isOwnPublicStorefrontUrl(publicWebUrl);
     const maxWeight = hasQrFooter ? 27.5 : 31;
     const headerWeight = 2.2;
 

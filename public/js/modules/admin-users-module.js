@@ -35,6 +35,8 @@ import {
   computeFunnel,
   resolveFunnelRange
 } from "../services/funnel-report-service.js";
+import { getPublicWebUrl } from "../services/web-premium-service.js";
+import { APP_ENV } from "../config/environment.js";
 
 const ADMIN_PLANS = Array.from(new Set([...(BILLING_PLANS || []), "dueno"]));
 const PAYMENT_STATUSES = ["active", "pending", "overdue", "suspended", "manual"];
@@ -276,8 +278,50 @@ function openWhatsapp(row = {}, reason = "base") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function publicStorefrontUrl(row = {}) {
+function storedPublicStorefrontUrl(row = {}) {
   return firstText(row.publicUrl, row.web?.publicUrl, row.operationalState?.publicUrl, row.meta?.publicUrl, "");
+}
+
+// QA-ISO-3: extrae slug o businessId legacy de una URL guardada, sin importar su origen.
+// Soporta "https://<origen>/<slug>" y el formato legacy "https://<origen>/web.html?biz=<id>".
+function storefrontRefFromUrl(value = "") {
+  const clean = String(value || "").trim();
+  if (!clean) return { slug: "", legacyBusinessId: "" };
+  try {
+    const url = new URL(clean, "https://placeholder.invalid");
+    const path = url.pathname.replace(/^\/+|\/+$/g, "");
+    if (!path || path.toLowerCase() === "web.html") {
+      return { slug: "", legacyBusinessId: String(url.searchParams.get("biz") || "").trim() };
+    }
+    return { slug: decodeURIComponent(path.split("/")[0] || ""), legacyBusinessId: "" };
+  } catch (_) {
+    return { slug: "", legacyBusinessId: "" };
+  }
+}
+
+function publicStorefrontUrl(row = {}) {
+  const stored = storedPublicStorefrontUrl(row);
+
+  // Producción: comportamiento idéntico al anterior (URL guardada tal cual).
+  if (APP_ENV.isProduction) return stored;
+
+  // QA/local/desconocido: nunca devolver una URL guardada con otro origen.
+  // Se reconstruye desde el slug con el origen del entorno actual.
+  const fromUrl = storefrontRefFromUrl(stored);
+  const slug = firstText(
+    row.slug, row.publicSlug, row.webSlug, row.web?.slug,
+    row.meta?.slug, row.meta?.publicSlug, row.meta?.webSlug,
+    fromUrl.slug
+  );
+  const businessId = firstText(row.businessId, row.id, fromUrl.legacyBusinessId);
+  if (slug) return getPublicWebUrl(businessId, slug);
+  if (fromUrl.legacyBusinessId) {
+    // No usar getPublicWebUrl(id, ""): normalizeSlug("") genera "web-<timestamp>".
+    const legacy = new URL(`${APP_ENV.publicStorefrontOrigin}/web.html`);
+    legacy.searchParams.set("biz", fromUrl.legacyBusinessId);
+    return legacy.toString();
+  }
+  return "";
 }
 
 function supportMessageLibrary(row = {}) {

@@ -18,8 +18,15 @@ import {
   getStorage,
   connectStorageEmulator
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+import { APP_ENV } from "../config/environment.js";
 
-const firebaseConfig = {
+// Selección de entorno Firebase (QA-ISO-1, centralizado en QA-ISO-3).
+// Regla de seguridad: SOLO los hostnames de PRODUCTION_HOSTNAMES usan producción.
+// Cualquier otro hostname (desconocido, vacío, preview, etc.) usa Firebase QA.
+// Ante un error de detección, el resultado es QA, nunca producción.
+// Las listas viven en ../config/environment.js.
+
+const firebaseConfigProduction = Object.freeze({
   apiKey: "AIzaSyC5e2yOOdP9QnN3751RdoSHEWZUDHUUbJU",
   authDomain: "apppromos.firebaseapp.com",
   projectId: "apppromos",
@@ -27,18 +34,33 @@ const firebaseConfig = {
   messagingSenderId: "449601412282",
   appId: "1:449601412282:web:2a50257ba816c0ea32b683",
   measurementId: "G-EBJM7TQRSN"
-};
+});
+
+const firebaseConfigQa = Object.freeze({
+  apiKey: "AIzaSyCHSBYxlKRMRw6ozl1qV4VwIDJkeJS4D2E",
+  authDomain: "apppromos-qa.firebaseapp.com",
+  projectId: "apppromos-qa",
+  storageBucket: "apppromos-qa.firebasestorage.app",
+  messagingSenderId: "734967622267",
+  appId: "1:734967622267:web:ce8b1dabe77c163fdf50de"
+});
+
+const host = APP_ENV.hostname;
+const isLocalQa = APP_ENV.isLocal;
+const isProductionHost = APP_ENV.isProduction;
+const isHostedQa = APP_ENV.isQa;
+
+// localhost conserva exactamente el comportamiento anterior: config de producción
+// como identificador de proyecto, pero Auth/Firestore/Storage van a los emuladores
+// (el seed local usa PROJECT_ID "apppromos").
+const firebaseConfig = isProductionHost || isLocalQa
+  ? firebaseConfigProduction
+  : firebaseConfigQa;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-
-const host = String(globalThis.location?.hostname || "").toLowerCase();
-const isLocalQa =
-  host === "127.0.0.1" ||
-  host === "localhost" ||
-  host === "::1";
 
 if (isLocalQa) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", {
@@ -88,11 +110,20 @@ if (isLocalQa) {
   }
 
   console.info("[AppPromos] QA LOCAL: Auth, Firestore y Storage conectados a emulators.");
-} else {
+} else if (isProductionHost) {
   globalThis.__APPPROMOS_ENV__ = Object.freeze({
     mode: "production",
-    firebase: "production"
+    firebase: "production",
+    projectId: firebaseConfig.projectId
   });
+} else {
+  globalThis.__APPPROMOS_ENV__ = Object.freeze({
+    mode: "qa-hosted",
+    firebase: "qa",
+    projectId: firebaseConfig.projectId,
+    hostname: host
+  });
+  console.info(`[AppPromos] QA HOSTED (${host || "hostname vacío"}): Firebase ${firebaseConfig.projectId}.`);
 }
 
 export { app, auth, db, storage, isLocalQa, doc, writeBatch, collection };

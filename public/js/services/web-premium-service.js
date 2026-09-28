@@ -12,11 +12,14 @@ import { loadBusinessCache, saveBusinessCache } from "./cache-service.js";
 import { assertBusinessCanWrite } from "./write-guard-service.js";
 import { normalizeStorefrontTheme } from "./storefront-theme-service.js";
 import { buildBusinessIdentity } from "./normalization-service.js";
+import { APP_ENV } from "../config/environment.js";
 
 // V12.29-RC3 — Carnis es la marca pública/canónica de las vidrieras.
 // AppPromos Hosting conserva las rutas históricas porque ambos dominios sirven
 // el mismo proyecto Firebase y resuelven el mismo publicWebSlugs/{slug}.
-export const PUBLIC_STOREFRONT_ORIGIN = "https://carnis.app";
+// QA-ISO-3: el origen depende del entorno (config/environment.js).
+// Producción → https://carnis.app (sin cambios). QA/desconocido → apppromos-qa.
+export const PUBLIC_STOREFRONT_ORIGIN = APP_ENV.publicStorefrontOrigin;
 
 export function normalizeSlug(value = "") {
   return String(value || "")

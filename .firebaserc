@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "apppromos"
-  }
+    "default": "apppromos-qa"
+  },
+  "targets": {},
+  "etags": {}
 }
