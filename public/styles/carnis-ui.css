@@ -1,0 +1,265 @@
+/* ============================================================
+   CARNIS UI — capa global de lenguaje visual (QA, etapa B)
+   Referencia: pantalla de Login (public-auth-module.js).
+   Se carga AL FINAL de app.html y pisa design-system.css,
+   app-brand-refresh.css y el <style> inline de app.html.
+   Reversible: borrar este archivo y su <link> en app.html.
+   Etapa A posterior: consolidar estos valores en un único
+   archivo de tokens y eliminar las capas duplicadas.
+   Decisiones: franjas finas (4px) · banners rojos Carniza se
+   mantienen · rojo = acción · azul marino = secundario ·
+   verde sólo WhatsApp.
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* Tokens Carnis */
+  --carnis-red: #E52223;
+  --carnis-red-hover: #D11C1D;
+  --carnis-red-dark: #B3161A;
+  --carnis-navy: #0A2E5B;
+  --carnis-ink: #182238;
+  --carnis-muted: #4B5563;
+  --carnis-label: #374151;
+  --carnis-bg: #FFF7F5;
+  --carnis-surface: #FFFFFF;
+  --carnis-soft: #FFF1F0;
+  --carnis-line: #EADBD8;
+  --carnis-line-input: #D7D9DE;
+  --carnis-wa: #16a34a;
+  --carnis-font: Poppins, Arial, sans-serif;
+  --carnis-radius-card: 24px;
+  --carnis-radius-row: 16px;
+  --carnis-radius-ctl: 14px;
+  --carnis-shadow-card: 0 12px 36px rgba(24,34,56,.07);
+  --carnis-shadow-cta: 0 10px 24px rgba(229,34,35,.22);
+  --carnis-focus: 0 0 0 4px rgba(229,34,35,.10);
+
+  /* Alias: los tokens existentes apuntan a los nuevos */
+  --primary: var(--carnis-red);
+  --primary-dark: var(--carnis-navy);
+  --text-dark: var(--carnis-ink);
+  --text-light: var(--carnis-muted);
+  --bg-light: var(--carnis-bg);
+  --border: var(--carnis-line);
+  --font-display: var(--carnis-font);
+  --font-body: var(--carnis-font);
+  --brand-blue: var(--carnis-red);
+  --brand-blue-dark: var(--carnis-red-dark);
+  --brand-navy: var(--carnis-navy);
+  --brand-ink: var(--carnis-ink);
+  --brand-muted: var(--carnis-muted);
+  --brand-line: var(--carnis-line);
+  --brand-card: var(--carnis-surface);
+  --brand-shadow: var(--carnis-shadow-card);
+}
+
+/* 1. Tipografía y fondo */
+html, body,
+button, input, select, textarea {
+  font-family: var(--carnis-font) !important;
+}
+body {
+  background: linear-gradient(180deg, var(--carnis-bg) 0%, #FFFFFF 60%) !important;
+  color: var(--carnis-ink) !important;
+}
+
+/* 2. Franjas superior/inferior: 4px, sin resplandor */
+body::before,
+body::after {
+  height: 4px !important;
+  box-shadow: none !important;
+}
+body { padding-top: 4px !important; padding-bottom: 4px !important; }
+.topbar-frame,
+.footer-frame {
+  height: 4px !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 3. Títulos: azul marino, peso 800 */
+h1, h2, h3, h4,
+.dash-main-title,
+.prices-title h2,
+.guided-builder__hero h2,
+.guided-section-head h3,
+.market-title, .web-title, .saved-title, .whatsapp-title,
+.brand h1, .brand-title, .app-brand-title {
+  font-family: var(--carnis-font) !important;
+  color: var(--carnis-navy) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.03em !important;
+}
+.dash-kicker, .guided-builder__eyebrow, .price-kicker,
+.section-kicker, .eyebrow, .module-eyebrow, .qr-shop-kicker {
+  color: var(--carnis-red) !important;
+  font-weight: 700 !important;
+}
+p, .dash-main-subtitle, .brand p, .app-brand-subtitle {
+  color: var(--carnis-muted);
+}
+
+/* 4. Encabezado de la app: blanco limpio */
+.topbar {
+  background: rgba(255,255,255,.94) !important;
+  border-bottom: 1px solid var(--carnis-line) !important;
+  box-shadow: none !important;
+}
+.brand {
+  background: var(--carnis-surface) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-card) !important;
+  box-shadow: var(--carnis-shadow-card) !important;
+}
+.app-brand-logo-box {
+  box-shadow: none !important;
+  border: 1px solid var(--carnis-line) !important;
+}
+
+/* 5. Tarjetas y paneles */
+.panel, .card, .dash-card, .dash-main-card, .prices-shell,
+.guided-builder .card, .market-card, .web-card, .saved-card,
+.whatsapp-card, .admin-card, .company-card, .module-card,
+.wa-card, .wp-card, .print-tool-card, .qr-shop-card {
+  background: var(--carnis-surface) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-card) !important;
+  box-shadow: var(--carnis-shadow-card) !important;
+}
+
+/* 6. Filas y opciones */
+.dash-action-btn, .dash-step-btn, .price-row, .guided-product-card,
+.guided-adjust-row, .saved-row, .whatsapp-offer-row, .market-row,
+.web-row, .wa-row {
+  background: var(--carnis-surface) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-row) !important;
+  box-shadow: none !important;
+}
+.dash-action-btn:hover, .price-row:hover, .guided-product-card:hover,
+.saved-row:hover, .wa-row:hover, .web-row:hover {
+  border-color: rgba(229,34,35,.35) !important;
+  transform: none !important;
+}
+
+/* 7. Campos */
+input:not([type="checkbox"]):not([type="radio"]), select, textarea,
+.prices-search, .prices-select, .price-input {
+  min-height: 48px;
+  border: 1px solid var(--carnis-line-input) !important;
+  border-radius: 13px !important;
+  background: #FFFFFF !important;
+  color: var(--carnis-ink) !important;
+  font-size: 16px;
+  box-shadow: none !important;
+}
+input:focus, select:focus, textarea:focus,
+.prices-search:focus, .prices-select:focus, .price-input:focus {
+  outline: none !important;
+  border-color: var(--carnis-red) !important;
+  box-shadow: var(--carnis-focus) !important;
+}
+label { color: var(--carnis-label); }
+
+/* 8. Botón principal: rojo liso (como "Ingresar a mi carnicería") */
+.btn-primary, .prices-btn.primary, .guided-primary, .dash-save-btn,
+.admin-primary-action, .wa-btn--primary, .wp-btn.primary,
+button[data-action="save-offer"], button[data-primary="true"],
+.dash-brand-reminder-btn {
+  background: var(--carnis-red) !important;
+  color: #FFFFFF !important;
+  border: 0 !important;
+  border-radius: var(--carnis-radius-ctl) !important;
+  font-weight: 800 !important;
+  box-shadow: var(--carnis-shadow-cta) !important;
+}
+.btn-primary:hover, .prices-btn.primary:hover, .guided-primary:hover,
+.dash-save-btn:hover, .wa-btn--primary:hover {
+  background: var(--carnis-red-hover) !important;
+  transform: none !important;
+}
+
+/* 9. Botón secundario: blanco, texto azul marino */
+.btn-secondary, .btn-ghost, .prices-btn.secondary, .guided-secondary,
+.guided-builder__reset, .dash-mini-btn, .mini-action, button.secondary,
+.wa-btn--secondary {
+  background: #FFFFFF !important;
+  color: var(--carnis-navy) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-ctl) !important;
+  box-shadow: none !important;
+}
+.btn-secondary:hover, .btn-ghost:hover, .dash-mini-btn:hover,
+.wa-btn--secondary:hover {
+  border-color: rgba(229,34,35,.35) !important;
+  color: var(--carnis-red) !important;
+  background: #FFFFFF !important;
+}
+
+/* 10. Chips / filtros */
+.price-chip {
+  background: #FFFFFF !important;
+  color: var(--carnis-navy) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+.price-chip.active, .guided-step.active {
+  background: var(--carnis-red) !important;
+  color: #FFFFFF !important;
+  border-color: var(--carnis-red) !important;
+  box-shadow: none !important;
+}
+
+/* 11. Verde sólo para WhatsApp explícito.
+   Neutraliza la regla genérica a[href*="whatsapp"] de app-brand-refresh.css
+   y la reaplica únicamente a botones de envío. */
+a[href*="whatsapp"] {
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+.btn-success, .guided-whatsapp, button[data-action="send-whatsapp"],
+.whatsapp-send-btn, button.whatsapp, .dash-whatsapp-sales,
+a.btn-whatsapp, a.whatsapp-send-btn {
+  background: var(--carnis-wa) !important;
+  color: #FFFFFF !important;
+  border: 0 !important;
+  border-radius: var(--carnis-radius-ctl) !important;
+  box-shadow: 0 10px 22px rgba(22,163,74,.18) !important;
+}
+
+/* 12. Navegación inferior y menú Más */
+.app-mobile-bottom-nav {
+  background: rgba(255,255,255,.97) !important;
+  border: 1px solid var(--carnis-line) !important;
+  box-shadow: 0 -6px 24px rgba(24,34,56,.06) !important;
+}
+.app-mobile-bottom-menu {
+  background: #FFFFFF !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-card) var(--carnis-radius-card) 0 0 !important;
+}
+.app-mobile-bottom-menu__grid > * {
+  background: #FFFFFF !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-row) !important;
+  box-shadow: none !important;
+}
+
+/* 13. Pie de la app: claro, discreto */
+.footer {
+  background: transparent !important;
+  color: var(--carnis-muted) !important;
+  border-top: 1px solid var(--carnis-line) !important;
+}
+.footer, .footer * { color: var(--carnis-muted) !important; }
+
+/* 14. Texto corrido: Poppins a 800/900 queda muy pesado.
+   Baja el peso de párrafos y subtítulos (incluye estilos inline). */
+p, .dash-main-subtitle, .brand p, .app-brand-subtitle,
+.app-mobile-bottom-menu__hint, small {
+  font-weight: 500 !important;
+}
