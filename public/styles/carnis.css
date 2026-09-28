@@ -2142,3 +2142,10 @@ html [data-commercial-show-qr] .ci { color: var(--carnis-navy); }
 
 /* 10.5 Centro de Impresiones */
 html .print-tool-card h3 .ci { color: var(--carnis-red); }
+
+/* 11. ARRANQUE — la nav de escritorio nace oculta en mobile */
+@media (max-width: 760px) {
+  html .topbar .nav-shell {
+    display: none;
+  }
+}
