@@ -1973,3 +1973,100 @@ p, .dash-main-subtitle, .brand p, .app-brand-subtitle,
 .app-mobile-bottom-menu__hint, small {
   font-weight: 500 !important;
 }
+
+/* ==================================================================
+   9. PANELES SOBRE LA APP — sheets, modales y paneles (QA-03 C2)
+   Aplica a: menú Vender/Más, Mi cuenta, estado de cuenta,
+   Promo del día (Carniza), estilos de vidriera, builder (acciones).
+   Prefijo "html" + !important: estos paneles tienen estilos inyectados
+   por JS que cargan después de este archivo; así ganan sin tocar JS.
+   NO toca: naranja/marrón, verde WhatsApp, colores de las opciones
+   del menú Vender, vista previa de la vidriera, estructura ni textos.
+   ================================================================== */
+
+:root {
+  --carnis-radius-sheet: 24px;
+  --carnis-shadow-sheet: 0 18px 48px rgba(10,46,91,.16);
+  --carnis-overlay: rgba(10,46,91,.38);
+}
+
+/* 9.1 Contenedor común */
+html .app-mobile-bottom-menu,
+html .app-account-panel,
+html .status-modal-card,
+html #carnizaFloatingLiquidatorModal,
+html .wp-theme-modal-card {
+  background: var(--carnis-surface) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-sheet) !important;
+  box-shadow: var(--carnis-shadow-sheet) !important;
+}
+/* El menú inferior conserva sus esquinas inferiores rectas (sec. 8) */
+html .app-mobile-bottom-menu {
+  border-radius: var(--carnis-radius-sheet) var(--carnis-radius-sheet) 0 0 !important;
+}
+
+/* 9.2 Fondo detrás del panel */
+html .app-account-sheet,
+html .status-modal-overlay,
+html .wp-theme-modal {
+  background: var(--carnis-overlay) !important;
+}
+
+/* 9.3 Cierres */
+html .app-mobile-bottom-menu__close,
+html .app-account-close,
+html .status-modal-close,
+html #carnizaFloatingLiquidatorClose,
+html .wp-theme-modal-close {
+  background: var(--carnis-surface) !important;
+  border: 1px solid var(--carnis-line) !important;
+  color: var(--carnis-navy) !important;
+  box-shadow: none !important;
+}
+
+/* 9.4 Títulos y texto secundario */
+html .app-mobile-bottom-menu__title,
+html .carniza-floating-header strong,
+html .wp-theme-modal-card h3 {
+  color: var(--carnis-navy) !important;
+  font-weight: 800 !important;
+}
+html .carniza-floating-header span,
+html .app-mobile-bottom-menu__hint {
+  color: var(--carnis-muted) !important;
+  font-weight: 500 !important;
+}
+
+/* 9.5 Promo del día: encabezado blanco, Carniza se conserva */
+html .carniza-floating-header {
+  background: var(--carnis-surface) !important;
+  color: var(--carnis-ink) !important;
+  border-bottom: 1px solid var(--carnis-line) !important;
+}
+html .carniza-floating-avatar {
+  background: var(--carnis-soft) !important;
+  border-color: var(--carnis-line) !important;
+}
+/* CTA "Armar Promo del día" (antes verde con !important en app-main.js) */
+html #carnizaFloatingLiquidatorModal #carnizaFloatingLiquidatorBody [data-carniza-liquidate] {
+  background: var(--carnis-red) !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--carnis-shadow-cta) !important;
+}
+/* Porcentaje seleccionado (se marca con estilo inline #25a244) */
+html #carnizaFloatingLiquidatorBody [data-discount][style*="#25a244"] {
+  background: var(--carnis-red) !important;
+  border-color: var(--carnis-red) !important;
+  color: #FFFFFF !important;
+}
+
+/* 9.6 Builder (Crear promo / Responder consulta): acciones superiores */
+html [data-builder-home],
+html [data-back-mode] {
+  background: var(--carnis-surface) !important;
+  color: var(--carnis-navy) !important;
+  border: 1px solid var(--carnis-line) !important;
+  border-radius: var(--carnis-radius-ctl) !important;
+  box-shadow: none !important;
+}
