@@ -1348,12 +1348,12 @@ export function renderPrices(container, products = [], businessId = null, option
 
       <div class="prices-header">
         <div class="prices-title">
-          <h2>⚡ Cambiar precios</h2>
+          <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#price"></use></svg>Cambiar precios</h2>
           <p>Buscá, tocá el precio y guardá.</p>
         </div>
       </div>
 
-      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;">🔒 Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
+      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando AppPromos. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#lock"></use></svg>Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
 <div class="prices-toolbar prices-toolbar-lite">
         <div class="prices-toolbar-row prices-search-row">
@@ -1412,7 +1412,7 @@ export function renderPrices(container, products = [], businessId = null, option
       <div id="list" class="prices-list"></div>
       <div id="pricesToast" class="prices-toast" data-tone="ok"></div>
       <div id="pricesDesktopFloatingSummary" class="prices-desktop-floating-summary" role="status" aria-live="polite">
-        <div class="prices-desktop-floating-copy"><span aria-hidden="true">⚡</span><span id="pricesDesktopFloatingText">0 precios modificados sin guardar</span></div>
+        <div class="prices-desktop-floating-copy"><span aria-hidden="true"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#price"></use></svg></span><span id="pricesDesktopFloatingText">0 precios modificados sin guardar</span></div>
         <button id="pricesDesktopFloatingSave" class="prices-desktop-floating-save" type="button">Guardar</button>
       </div>
     </div>

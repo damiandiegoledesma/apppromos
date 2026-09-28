@@ -36,7 +36,7 @@ function renderBusinessView(meta, state, updatedAt) {
   return `
     <div class="dash-business-head">
       <h3>Datos del negocio activo</h3>
-      <button type="button" class="dash-mini-btn" data-business-edit>✏️ Editar datos</button>
+      <button type="button" class="dash-mini-btn" data-business-edit><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#edit"></use></svg>Editar datos</button>
     </div>
     <div class="dash-list">
       <div class="dash-list-item"><span class="dash-muted">Carnicería</span><strong>${escapeHtml(businessName)}</strong></div>
@@ -215,7 +215,7 @@ export function renderDashboard(container, businessId, meta, state, options = {}
       ${showBrandReminder ? `
         <section class="dash-brand-reminder" data-brand-reminder>
           <div class="dash-brand-reminder-copy">
-            <strong>📸 Personalizá tu carnicería online</strong>
+            <strong><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#edit"></use></svg>Personalizá tu carnicería online</strong>
             <span>Subí tu logo y una foto real del frente para que tus clientes reconozcan tu negocio.</span>
             <small>Te falta: ${missingBrandParts.join(" y ")}.</small>
           </div>
@@ -227,15 +227,15 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         <h2 class="dash-main-title">¿Qué querés hacer?</h2>
         <p class="dash-main-subtitle">Todo lo importante, a un toque.</p>
         <div class="dash-actions">
-          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon">🌐</span><strong>Mi carnicería</strong><span>Ver como cliente</span></button>
-          <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon">💲</span><strong>Precios</strong><span>Actualizar precios</span></button>
-          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon">🔥</span><strong>Vender o crear promo</strong><span>Consulta puntual o combo</span></button>
-          <button class="dash-action-btn" data-action-panel="webPanel"><span class="dash-action-icon">⚙️</span><strong>Gestionar mi web</strong><span>Datos e identidad de tu vidriera</span></button>
+          <button class="dash-action-btn" data-dashboard-open-web ${publicWebUrl ? "" : "disabled"}><span class="dash-action-icon"><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg></span><strong>Mi carnicería</strong><span>Ver como cliente</span></button>
+          <button class="dash-action-btn" data-action-panel="pricesPanel"><span class="dash-action-icon"><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#price"></use></svg></span><strong>Precios</strong><span>Actualizar precios</span></button>
+          <button class="dash-action-btn" data-action-panel="builderPanel"><span class="dash-action-icon"><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg></span><strong>Vender o crear promo</strong><span>Consulta puntual o combo</span></button>
+          <button class="dash-action-btn" data-action-panel="webPanel"><span class="dash-action-icon"><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#settings"></use></svg></span><strong>Gestionar mi web</strong><span>Datos e identidad de tu vidriera</span></button>
         </div>
 
         <div class="dash-whatsapp-sales">
           <button type="button" data-action-panel="whatsappPanel">
-            <span>💬</span>
+            <span><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg></span>
             <strong>Enviar promos por WhatsApp</strong>
             <small>Usá tus promociones guardadas para vender por mensaje.</small>
           </button>
@@ -244,8 +244,8 @@ export function renderDashboard(container, businessId, meta, state, options = {}
         <div class="dash-share-block">
           ${renderCarnizaSpotlight("dashboardPanel", {
             actionsHtml: `
-              <button type="button" class="cz-spotlight-cta" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}>💬 Compartir por WhatsApp</button>
-              <button type="button" class="cz-spotlight-link" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}>📱 Ver mi QR</button>
+              <button type="button" class="cz-spotlight-cta" data-dashboard-share-web ${publicWebUrl ? "" : "disabled"}><svg class="ci ci-sm ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Compartir por WhatsApp</button>
+              <button type="button" class="cz-spotlight-link" data-dashboard-open-qr ${publicWebUrl ? "" : "disabled"}><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#qr"></use></svg>Ver mi QR</button>
             `
           })}
 

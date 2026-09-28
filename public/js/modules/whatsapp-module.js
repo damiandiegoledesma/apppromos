@@ -121,7 +121,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
         ${renderCarnizaSpotlight("whatsappPanel", { compact: true })}
 
         <div class="wa-card wa-header">
-          <h2>📤 Enviar WhatsApp</h2>
+          <h2><svg class="ci ci-lg ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Enviar WhatsApp</h2>
           <p>Elegí una oferta guardada, personalizá el cliente y mandá un mensaje vendedor en segundos.</p>
         </div>
 
@@ -142,7 +142,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
               </div>
               <div class="wa-field">
                 <label>&nbsp;</label>
-                <button class="wa-btn wa-btn--secondary" data-action-panel="builderPanel">🔥 Crear otra oferta</button>
+                <button class="wa-btn wa-btn--secondary" data-action-panel="builderPanel"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Crear otra oferta</button>
               </div>
             </div>
           ` : `<div class="wa-empty">Todavía no hay promos o combos guardados. Primero creá uno desde <strong>Vender / Crear promo</strong>.</div>`}
@@ -168,7 +168,7 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
             <textarea id="waMessageText" class="wa-textarea">${escapeHtml(message || "")}</textarea>
           </div>
           <div class="wa-actions" style="margin-top:12px;">
-            <button class="wa-btn wa-btn--secondary" id="waResetBtn" ${combo ? "" : "disabled"}>↩️ Regenerar mensaje</button>
+            <button class="wa-btn wa-btn--secondary" id="waResetBtn" ${combo ? "" : "disabled"}><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#refresh"></use></svg>Regenerar mensaje</button>
           </div>
         </div>
 
@@ -178,8 +178,8 @@ export function renderWhatsApp(container, savedCombos = [], meta = {}, options =
             <div class="wa-bubble">${escapeHtml(message || "Sin mensaje para mostrar")}</div>
           </div>
           <div class="wa-actions" style="margin-top:14px;">
-            <button class="wa-btn wa-btn--primary" id="waOpenBtn" ${combo ? "" : "disabled"}>📤 Abrir WhatsApp</button>
-            <button class="wa-btn wa-btn--secondary" id="waCopyBtn" ${combo ? "" : "disabled"}>📋 Copiar texto</button>
+            <button class="wa-btn wa-btn--primary" id="waOpenBtn" ${combo ? "" : "disabled"}><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Abrir WhatsApp</button>
+            <button class="wa-btn wa-btn--secondary" id="waCopyBtn" ${combo ? "" : "disabled"}><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#copy"></use></svg>Copiar texto</button>
           </div>
           <div class="wa-note" id="waFeedback" style="margin-top:10px;"></div>
         </div>

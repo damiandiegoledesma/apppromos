@@ -2070,3 +2070,75 @@ html [data-back-mode] {
   border-radius: var(--carnis-radius-ctl) !important;
   box-shadow: none !important;
 }
+
+/* ==================================================================
+   10. ICONOS — sprite /assets/icons/carnis-icons.svg (QA-03 C3)
+   Uso: <svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#home"></use></svg>
+   Tamaños: ci-sm 16 · ci-md 20 · ci-lg 24. Color: currentColor (hereda
+   del texto) salvo reglas de contexto de esta sección o ci--red/navy/wa.
+   Rojo = acción/comercial/activo · azul marino = navegación/secundario ·
+   verde = sólo WhatsApp · Vender central = blanco sobre rojo.
+   ================================================================== */
+
+:root {
+  --carnis-icon-sm: 16px;
+  --carnis-icon-md: 20px;
+  --carnis-icon-lg: 24px;
+  --carnis-icon-stroke: 1.75;
+}
+
+/* 10.1 Base */
+.ci {
+  display: inline-block;
+  width: var(--carnis-icon-md);
+  height: var(--carnis-icon-md);
+  flex: 0 0 auto;
+  vertical-align: -0.22em;
+  margin-right: .38em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--carnis-icon-stroke);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.ci-sm { width: var(--carnis-icon-sm); height: var(--carnis-icon-sm); }
+.ci-md { width: var(--carnis-icon-md); height: var(--carnis-icon-md); }
+.ci-lg { width: var(--carnis-icon-lg); height: var(--carnis-icon-lg); }
+.ci--red  { color: var(--carnis-red) !important; }
+.ci--navy { color: var(--carnis-navy) !important; }
+.ci--wa   { color: var(--carnis-wa) !important; }
+
+/* Icono solo (sin texto al lado): sin margen */
+html .app-mobile-nav-icon .ci,
+html .dash-action-icon .ci,
+html .dash-whatsapp-sales > button > span .ci {
+  margin-right: 0;
+}
+
+/* 10.2 Barra inferior (sustituye font-size 19–20px del CSS inyectado) */
+html .app-mobile-bottom-nav .app-mobile-nav-icon {
+  line-height: 0 !important;
+  font-size: 0 !important;
+  display: inline-grid !important;
+  place-items: center;
+}
+html .app-mobile-bottom-nav button .ci { color: var(--carnis-navy); }
+html .app-mobile-bottom-nav button.is-active .ci { color: var(--carnis-red); }
+html .app-mobile-bottom-nav button.is-primary .ci { color: #FFFFFF; }
+
+/* 10.3 Menú Más */
+html .app-mobile-bottom-menu [data-mobile-action] .ci { color: var(--carnis-navy); }
+html .app-mobile-bottom-menu [data-mobile-action="whatsapp"] .ci { color: var(--carnis-wa); }
+html .app-mobile-bottom-menu [data-mobile-action="logout"] .ci { color: var(--carnis-red); }
+
+/* 10.4 Inicio */
+html .dash-action-icon {
+  line-height: 0 !important;
+  font-size: 0 !important;
+}
+html .dash-action-btn .ci { color: var(--carnis-red); }
+html [data-commercial-show-qr] .ci { color: var(--carnis-navy); }
+
+/* 10.5 Centro de Impresiones */
+html .print-tool-card h3 .ci { color: var(--carnis-red); }

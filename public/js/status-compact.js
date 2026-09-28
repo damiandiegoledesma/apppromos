@@ -231,7 +231,7 @@
           </div>
         </div>
         <p>${escapeHtml(message)}</p>
-        ${showCta ? `<a class="status-modal-cta" href="${escapeHtml(ctaUrl)}" target="_blank" rel="noopener">📲 ${escapeHtml(ctaLabel)}</a>` : ""}
+        ${showCta ? `<a class="status-modal-cta" href="${escapeHtml(ctaUrl)}" target="_blank" rel="noopener"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>${escapeHtml(ctaLabel)}</a>` : ""}
       </div>
     `;
     document.body.appendChild(overlay);
@@ -271,7 +271,7 @@
           <img class="status-nelly-chip-avatar" src="assets/characters/la-nelly/la-nelly-avatar.webp" alt="La Nelly" loading="lazy" />
           <span class="status-nelly-chip-text">La Nelly te cuida — lo resolvemos por WhatsApp.</span>
         </button>
-        <a class="status-nelly-chip-cta" href="${escapeHtml(ctaUrl)}" target="_blank" rel="noopener">📲 Resolver</a>
+        <a class="status-nelly-chip-cta" href="${escapeHtml(ctaUrl)}" target="_blank" rel="noopener"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Resolver</a>
       `;
       alert.querySelector(".status-nelly-chip-copy")?.addEventListener("click", () => renderModal(access));
     } else {

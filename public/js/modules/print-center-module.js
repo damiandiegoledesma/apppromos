@@ -327,16 +327,16 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
       ${renderCarnizaSpotlight("printPanel", { compact: true })}
 
       <header class="print-center__head">
-        <h2>🖨️ Centro de Impresiones</h2>
+        <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Centro de Impresiones</h2>
         <p>Convertí la información que ya tenés en AppPromos en piezas listas para usar en el negocio.</p>
       </header>
 
       <nav class="print-center__tools" data-print-hub aria-label="Herramientas del Centro de Impresiones">
-        <button type="button" class="print-tool-card active" data-print-view="order"><h3>🧾 Imprimir pedido</h3><p>Pegá un pedido recibido por WhatsApp y generá una comanda interna.</p></button>
-        <button type="button" class="print-tool-card active" data-print-view="lists"><h3>📋 Listas para imprimir</h3><p>Prepará listas A4 de productos por rubro u ofertas publicadas.</p></button>
-        <button type="button" class="print-tool-card active" data-print-view="poster"><h3>🏷️ Cartel de oferta</h3><p>Elegí una promo publicada y generá un cartel A4 para el local.</p></button>
-        <button type="button" class="print-tool-card active" data-print-view="qr"><h3>📱 QR de mi carnicería</h3><p>Generá el QR de tu vidriera online para imprimir o compartir.</p></button>
-        <button type="button" class="print-tool-card active" data-print-view="flyers"><h3>✂️ Folletos</h3><p>Armá una hoja A4 con ocho folletos, iguales o con varias promos.</p></button>
+        <button type="button" class="print-tool-card active" data-print-view="order"><h3><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#receipt"></use></svg>Imprimir pedido</h3><p>Pegá un pedido recibido por WhatsApp y generá una comanda interna.</p></button>
+        <button type="button" class="print-tool-card active" data-print-view="lists"><h3><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#list"></use></svg>Listas para imprimir</h3><p>Prepará listas A4 de productos por rubro u ofertas publicadas.</p></button>
+        <button type="button" class="print-tool-card active" data-print-view="poster"><h3><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#tag"></use></svg>Cartel de oferta</h3><p>Elegí una promo publicada y generá un cartel A4 para el local.</p></button>
+        <button type="button" class="print-tool-card active" data-print-view="qr"><h3><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#qr"></use></svg>QR de mi carnicería</h3><p>Generá el QR de tu vidriera online para imprimir o compartir.</p></button>
+        <button type="button" class="print-tool-card active" data-print-view="flyers"><h3><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#scissors"></use></svg>Folletos</h3><p>Armá una hoja A4 con ocho folletos, iguales o con varias promos.</p></button>
       </nav>
 
       <section class="print-order-workspace" data-print-tool-view="order" id="print-order-section">
@@ -379,7 +379,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
             <div class="print-ticket-footer">Generado con AppPromos</div>
           </div>
           <div class="print-order-actions">
-            <button type="button" class="primary" data-print-now>🖨️ Imprimir</button>
+            <button type="button" class="primary" data-print-now><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button>
           </div>
         </div>
       </section>
@@ -405,7 +405,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         <div class="price-list-preview-wrap" data-price-preview>
           <div class="price-list-preview-title"><h4>Vista previa</h4><span data-price-preview-label>A4 vertical · 2 columnas</span></div>
           <div class="price-list-pages" data-price-pages aria-label="Lista de precios lista para imprimir"></div>
-          <div class="price-list-actions"><button type="button" class="primary" data-price-print>🖨️ Imprimir</button></div>
+          <div class="price-list-actions"><button type="button" class="primary" data-price-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button></div>
         </div>
       </section>
 
@@ -428,9 +428,9 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
           <div class="offer-poster-preview-head"><h4>Vista previa</h4><span>A4 vertical · 1 cartel</span></div>
           <div data-poster-sheet-root></div>
           <div class="offer-poster-actions">
-            <button type="button" class="primary" data-poster-print>🖨️ Imprimir</button>
-            <button type="button" data-poster-png>🖼️ Guardar PNG</button>
-            <button type="button" data-poster-share>📲 Compartir imagen</button>
+            <button type="button" class="primary" data-poster-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button>
+            <button type="button" data-poster-png><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#download"></use></svg>Guardar PNG</button>
+            <button type="button" data-poster-share><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#share"></use></svg>Compartir imagen</button>
           </div>
           <div class="offer-poster-export-status" data-poster-export-status role="status"></div>
         </div>
@@ -451,9 +451,9 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
             <div class="qr-shop-brand">Generado con AppPromos</div>
           </div>
           <div class="qr-shop-actions">
-            <button type="button" class="primary" data-qr-shop-print>🖨️ Imprimir</button>
-            <button type="button" data-qr-shop-png>🖼️ Guardar PNG</button>
-            <button type="button" data-qr-shop-share>📲 Compartir imagen</button>
+            <button type="button" class="primary" data-qr-shop-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir</button>
+            <button type="button" data-qr-shop-png><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#download"></use></svg>Guardar PNG</button>
+            <button type="button" data-qr-shop-share><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#share"></use></svg>Compartir imagen</button>
           </div>
           <div class="qr-shop-status" data-qr-shop-status role="status"></div>
         </div>
@@ -485,7 +485,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         <div class="flyer-preview" data-flyer-preview>
           <div class="flyer-a4" data-flyer-a4></div>
           <div class="flyer-actions" style="margin-top:14px">
-            <button type="button" class="primary" data-flyer-print>🖨️ Imprimir 8 folletos</button>
+            <button type="button" class="primary" data-flyer-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir 8 folletos</button>
           </div>
         </div>
       </section>

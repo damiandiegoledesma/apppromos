@@ -75,7 +75,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
       container.innerHTML = `
         <style>.wp-card{border:1px solid #eadbd4;border-radius:20px;background:#fff;padding:22px}.wp-muted{color:#6b7280}</style>
         <div class="wp-card" style="background:linear-gradient(180deg,#fff,#fff7f4);">
-          <h2 style="margin:0 0 8px;color:#B3161A;">🌐 Mi carnicería online</h2>
+          <h2 style="margin:0 0 8px;color:#B3161A;"><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Mi carnicería online</h2>
           <p class="wp-muted" style="margin:0;">Esta carnicería todavía no tiene habilitada su vidriera online.</p>
         </div>`;
       return;
@@ -90,7 +90,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
         ${renderCarnizaSpotlight("webPanel", { compact: true })}
 
         <div class="wp-card wp-head">
-          <h2>🌐 Mi carnicería online</h2>
+          <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Mi carnicería online</h2>
           <p class="wp-muted" style="margin:0;">Tu vidriera se mantiene actualizada con tus precios reales. No hace falta configurar ni guardar la web por separado.</p>
           <div class="wp-ready" style="margin-top:14px;">
             <strong>${config.enabled !== false ? "✅ Vidriera activa" : "⏸️ Vidriera pausada"}</strong>
@@ -100,17 +100,17 @@ export async function renderWebPremium(container, businessId, options = {}) {
 
         <div class="wp-card">
           <div class="wp-actions">
-            <button id="wpOpen" class="wp-btn primary" ${fields.publicUrl ? "" : "disabled"}>🌐 Ver mi carnicería</button>
-            <button id="wpShare" class="wp-btn" ${fields.publicUrl ? "" : "disabled"}>📲 Compartir</button>
-            <button type="button" class="wp-btn orange" data-action-panel="pricesPanel">💲 Actualizar precios</button>
-            <button type="button" class="wp-btn" data-action-panel="savedPanel">🔥 Gestionar ofertas</button>
-            <button type="button" class="wp-btn" data-wp-business-data>⚙️ Datos de mi carnicería</button>
+            <button id="wpOpen" class="wp-btn primary" ${fields.publicUrl ? "" : "disabled"}><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Ver mi carnicería</button>
+            <button id="wpShare" class="wp-btn" ${fields.publicUrl ? "" : "disabled"}><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#share"></use></svg>Compartir</button>
+            <button type="button" class="wp-btn orange" data-action-panel="pricesPanel"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#price"></use></svg>Actualizar precios</button>
+            <button type="button" class="wp-btn" data-action-panel="savedPanel"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Gestionar ofertas</button>
+            <button type="button" class="wp-btn" data-wp-business-data><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#settings"></use></svg>Datos de mi carnicería</button>
           </div>
           <div class="wp-status" id="wpStatus"></div>
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 6px;color:#7c2d12;">🎨 Diseño de tu vidriera</h3>
+          <h3 style="margin:0 0 6px;color:#7c2d12;"><svg class="ci ci-md ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#edit"></use></svg>Diseño de tu vidriera</h3>
           <p class="wp-muted" style="margin:0 0 12px;">Elegí el estilo que mejor representa a tu negocio. Tus productos, promos, carrito y enlace no cambian.</p>
           <div class="wp-theme-grid">
             ${STOREFRONT_THEMES.map((theme) => `<button type="button" class="wp-theme-choice ${theme.id === storefrontTheme ? "is-active" : ""}" data-wp-theme="${theme.id}" aria-pressed="${theme.id === storefrontTheme}"><span class="wp-theme-swatch">${renderThemeSchematicHtml(theme.id)}</span><strong>${escapeHtml(theme.label)}</strong><small>${escapeHtml(theme.caption)} · ${escapeHtml(theme.description)}</small></button>`).join("")}
@@ -147,7 +147,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
         </div>
 
         <div class="wp-card">
-          <h3 style="margin:0 0 6px;color:#7c2d12;">🔥 Ofertas publicadas</h3>
+          <h3 style="margin:0 0 6px;color:#7c2d12;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Ofertas publicadas</h3>
           <p class="wp-muted" style="margin:0 0 12px;">Marcá o desmarcá una oferta. AppPromos actualiza la vidriera automáticamente.</p>
           ${savedCombos.length ? `<div class="wp-offers">
             ${savedCombos.map(combo => `
@@ -161,7 +161,7 @@ export async function renderWebPremium(container, businessId, options = {}) {
           </div>` : `<div class="wp-muted">Todavía no hay promos o combos guardados. Podés crearlos desde “Vender / Crear promo”.</div>`}
         </div>
 
-        <div class="wp-auto-note">💡 <strong>Automático:</strong> cuando guardás precios, los productos activos con precio mayor a $0 aparecen en tu carnicería online. Los que quedan en $0 no se publican.</div>
+        <div class="wp-auto-note"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg><strong>Automático:</strong> cuando guardás precios, los productos activos con precio mayor a $0 aparecen en tu carnicería online. Los que quedan en $0 no se publican.</div>
       </div>`;
 
     const status = container.querySelector("#wpStatus");

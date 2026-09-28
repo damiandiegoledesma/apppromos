@@ -615,7 +615,7 @@ function renderCarnizaUrgentStockCard(container) {
   card.id = "carnizaUrgentStockCard";
   card.style.cssText = "margin:0 0 14px;padding:15px;border:2px solid #ffd6b0;border-radius:18px;background:#fff8f0;box-shadow:0 10px 24px rgba(0,0,0,.06);";
   card.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
-      '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;">🔥 Armá la Promo del día con Carniza</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
+      '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Armá la Promo del día con Carniza</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
       '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid #fed7aa;background:#fff;" /></div>' +
     '<div data-daily-promos-management style="margin:0 0 12px;"></div>' +
     '<div style="font-size:13px;font-weight:1000;color:#8a2600;margin:4px 0 7px;">1. Elegí producto</div>' +
@@ -626,7 +626,7 @@ function renderCarnizaUrgentStockCard(container) {
     '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">2. Ajustá descuento</div>' +
     '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
     '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
-    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;">🔥 El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
+    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg>El descuento se aplica SOLO a los productos que marcaste. AppPromos no agrega otros productos automáticamente.</div>' +
     '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#E52223;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(229,34,35,.22);">3. Armar Promo del día</button>' +
     '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:900;"></div>' +
     '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
@@ -661,7 +661,7 @@ function renderCarnizaUrgentStockCard(container) {
         }).join("")
       : '<div style="padding-top:7px;color:#7c2d12;font-size:12px;font-weight:850;">No tenés ofertas activas publicadas hoy.</div>';
     dailyPromosManagementEl.innerHTML = '<details ' + (promos.length || message ? 'open' : '') + ' style="border:1px solid #fed7aa;border-radius:14px;background:#fff;padding:10px;">' +
-      '<summary style="min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#9a3412;font-weight:1000;cursor:pointer;">📣 Publicadas hoy <span style="font-size:12px;">' + promos.length + '</span></summary>' + statusHtml + rowsHtml + '</details>';
+      '<summary style="min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#9a3412;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicadas hoy <span style="font-size:12px;">' + promos.length + '</span></summary>' + statusHtml + rowsHtml + '</details>';
   }
 
   dailyPromosManagementEl?.addEventListener("click", async (event) => {
@@ -769,7 +769,7 @@ function renderCarnizaUrgentStockCard(container) {
     selectedEl.innerHTML = '<div style="font-size:13px;color:#8a2600;font-weight:1000;margin-bottom:7px;">2. Ajustá cantidad antes de liquidar</div>' +
       selected.map((item) =>
         '<div style="display:grid;gap:7px;padding:9px 0;border-top:1px solid #f3dcc7;">' +
-          '<div style="min-width:0;overflow-wrap:anywhere;line-height:1.25;color:#4b2a12;font-weight:1000;">🔥 ' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</div>' +
+          '<div style="min-width:0;overflow-wrap:anywhere;line-height:1.25;color:#4b2a12;font-weight:1000;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</div>' +
           '<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">' +
             '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" aria-label="Restar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">−</button>' +
             '<strong style="min-width:56px;text-align:center;white-space:nowrap;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
@@ -1013,21 +1013,21 @@ function renderCarnizaUrgentStockCard(container) {
 
     resultEl.innerHTML = '<div style="border:1px solid #F6C6C6;border-radius:18px;background:#FFF1F0;padding:14px;box-shadow:0 10px 22px rgba(229,34,35,.08);">' +
       '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">' +
-        '<div><div style="font-size:18px;font-weight:1000;color:#B3161A;line-height:1.15;">🔥 Oferta lista</div><div style="font-size:13px;color:#8E1014;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
-        '<div style="font-size:26px;line-height:1;">📲</div>' +
+        '<div><div style="font-size:18px;font-weight:1000;color:#B3161A;line-height:1.15;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Oferta lista</div><div style="font-size:13px;color:#8E1014;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
+        '<div style="font-size:26px;line-height:1;"><svg class="ci ci-lg ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg></div>' +
       '</div>' +
       '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #F6C6C6;border-radius:13px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
       '<label style="display:block;font-size:13px;font-weight:1000;color:#8E1014;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
       '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #F6C6C6;border-radius:14px;padding:0 12px;background:#fff;color:#0A2E5B;font-weight:1000;font-size:15px;" />' +
       '<div style="font-size:12px;font-weight:900;color:#8E1014;margin:7px 0 10px;">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
-      (missing.length ? '<div style="margin:8px 0;padding:8px;border-radius:10px;background:#fff8e1;color:#7a4b00;font-size:12px;font-weight:900;">⚠️ Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
+      (missing.length ? '<div style="margin:8px 0;padding:8px;border-radius:10px;background:#fff8e1;color:#7a4b00;font-size:12px;font-weight:900;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#alert"></use></svg>Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
       '<pre data-urgent-message-preview style="white-space:pre-wrap;font-family:inherit;margin:10px 0;padding:12px;border-radius:12px;background:#fff;color:#1f1f1f;font-weight:900;line-height:1.38;max-height:245px;overflow:auto;"></pre>' +
       '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
       '<div style="display:grid;grid-template-columns:1.2fr .8fr;gap:8px;">' +
-        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;">📲 Enviar oferta por WhatsApp</a>' +
+        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Enviar oferta por WhatsApp</a>' +
         '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#E52223;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
       '</div>' +
-      '<button type="button" data-publish-daily style="width:100%;min-height:52px;margin-top:9px;border:none;border-radius:14px;background:#ea580c;color:#fff;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 9px 18px rgba(234,88,12,.20);">🔥 Publicar por hoy en mi carnicería</button>' +
+      '<button type="button" data-publish-daily style="width:100%;min-height:52px;margin-top:9px;border:none;border-radius:14px;background:#ea580c;color:#fff;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 9px 18px rgba(234,88,12,.20);"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicar por hoy en mi carnicería</button>' +
       '<div data-publish-daily-status role="status" aria-live="polite" style="display:none;margin-top:8px;padding:9px;border-radius:11px;font-size:12px;font-weight:1000;line-height:1.35;"></div>' +
       '</div>';
 
@@ -1176,7 +1176,7 @@ function closeCarnizaUnifiedOverlay() {
 }
 
 function getCarnizaExitLabel() {
-  return currentSession?.isDemo ? "🚪 Salir de la demo" : "🚪 Cerrar sesión";
+  return currentSession?.isDemo ? "Salir de la demo" : "Cerrar sesión";
 }
 
 async function handleCarnizaExitApp() {
@@ -1212,23 +1212,23 @@ function renderCarnizaUnifiedMenu() {
       <p>${escapeCarnizaHtml(ctx.hint)}</p>
       <div class="carniza-unified-actions">
         <button type="button" class="carniza-unified-action primary" data-carniza-unified-action="offer">
-          <strong>🔥 Vender o crear promo</strong>
+          <strong><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Vender o crear promo</strong>
           <span>Respondé una consulta o armá un combo para vender varias veces.</span>
         </button>
         <button type="button" class="carniza-unified-action urgent" data-carniza-unified-action="urgent">
-          <strong>⚡ Promo del día</strong>
+          <strong><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Promo del día</strong>
           <span>Sacá hoy la mercadería antes de perderla o mandarla a picar.</span>
         </button>
         <button type="button" class="carniza-unified-action" data-carniza-unified-action="whatsapp">
-          <strong>📲 Ir a WhatsApp</strong>
+          <strong><svg class="ci ci-md ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Ir a WhatsApp</strong>
           <span>Mandá una promo guardada o una respuesta lista.</span>
         </button>
         <button type="button" class="carniza-unified-action nav" data-carniza-unified-action="home">
-          <strong>🏠 Volver a Inicio</strong>
+          <strong><svg class="ci ci-md ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#home"></use></svg>Volver a Inicio</strong>
           <span>Volvé al panel principal sin perderte.</span>
         </button>
         <button type="button" class="carniza-unified-action exit" data-carniza-unified-action="exit">
-          <strong>${escapeCarnizaHtml(getCarnizaExitLabel())}</strong>
+          <strong><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#logout"></use></svg>${escapeCarnizaHtml(getCarnizaExitLabel())}</strong>
           <span>${currentSession?.isDemo ? "Volvé a la landing cuando termines de probar." : "Salí de la app de forma segura."}</span>
         </button>
       </div>
@@ -2333,9 +2333,9 @@ function renderCommercialShareActions(container, state = {}) {
 
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;">
-      <button type="button" data-commercial-share-wa style="min-height:48px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;">💬 WhatsApp</button>
-      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🔗 Copiar enlace</button>
-      <button type="button" data-commercial-show-qr style="min-height:48px;border:1px solid #ddd6fe;border-radius:14px;background:#f5f3ff;color:#5b21b6;font-weight:1000;cursor:pointer;">📱 Mostrar QR</button>
+      <button type="button" data-commercial-share-wa style="min-height:48px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>WhatsApp</button>
+      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#link"></use></svg>Copiar enlace</button>
+      <button type="button" data-commercial-show-qr style="min-height:48px;border:1px solid #ddd6fe;border-radius:14px;background:#f5f3ff;color:#5b21b6;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#qr"></use></svg>Mostrar QR</button>
     </div>
   `;
 
@@ -2433,13 +2433,13 @@ function renderStrongCommercialPrompt(state = {}) {
   if (state.primaryAction !== "share") {
     main.innerHTML = `
       <button type="button" data-commercial-primary style="min-height:50px;border:0;border-radius:14px;background:#E52223;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🌐 Ver mi carnicería</button>
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Ver mi carnicería</button>
     `;
     main.querySelector("[data-commercial-primary]")?.addEventListener("click", () => executeCommercialAction(state, state.primaryAction));
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
   } else {
     main.innerHTML = `
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">🌐 Revisar mi carnicería</button>
+      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Revisar mi carnicería</button>
     `;
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
     renderCommercialShareActions(card.querySelector("[data-commercial-share-actions]"), state);
@@ -3599,23 +3599,23 @@ function openMobileBottomMenu(kind) {
 
   const sellButtons = `
     <div class="app-mobile-bottom-menu__grid">
-      <button type="button" class="green" data-mobile-action="quick-offer"><strong>⚡ Responder consulta</strong><span>Calculá y respondé por WhatsApp.</span></button>
-      <button type="button" class="orange" data-mobile-action="discount-offer"><strong>🏷️ Crear promo o combo</strong><span>Guardá una estrategia para repetir.</span></button>
-      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong>🔥 Promo del día</strong><span>Elegí qué vender hoy, publicalo por el día y finalizalo cuando quieras.</span></button>
+      <button type="button" class="green" data-mobile-action="quick-offer"><strong><svg class="ci ci-md ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#bolt"></use></svg>Responder consulta</strong><span>Calculá y respondé por WhatsApp.</span></button>
+      <button type="button" class="orange" data-mobile-action="discount-offer"><strong><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#tag"></use></svg>Crear promo o combo</strong><span>Guardá una estrategia para repetir.</span></button>
+      <button type="button" class="primary" data-mobile-action="urgent-sale"><strong><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Promo del día</strong><span>Elegí qué vender hoy, publicalo por el día y finalizalo cuando quieras.</span></button>
     </div>
   `;
 
   const moreButtons = `
     <div class="app-mobile-bottom-menu__grid two">
-      <button type="button" data-mobile-action="account"><strong>👤 Mi cuenta</strong><span>Datos y estado.</span></button>
-      <button type="button" data-mobile-action="web"><strong>🌐 Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
-      <button type="button" data-mobile-action="whatsapp"><strong>📲 WhatsApp</strong><span>Enviar una promo guardada.</span></button>
-      <button type="button" data-mobile-action="how-to-sell"><strong>🧭 Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
-      <button type="button" data-mobile-action="print-center"><strong>🖨️ Centro de Impresiones</strong><span>Pedidos, listas, carteles y folletos.</span></button>
-      <button type="button" data-mobile-action="install-app"><strong>📲 <span data-pwa-install-label>INSTALAR</span></strong><span>Entrá desde el icono de tu pantalla.</span></button>
-      <button type="button" data-mobile-action="help"><strong>🧭 Ayuda</strong><span>Volver al camino.</span></button>
-      ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong>🛠️ Admin</strong><span>Panel AppPromos.</span></button>' : ''}
-      <button type="button" class="primary" data-mobile-action="logout"><strong>🚪 ${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
+      <button type="button" data-mobile-action="account"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#user"></use></svg>Mi cuenta</strong><span>Datos y estado.</span></button>
+      <button type="button" data-mobile-action="web"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Mi carnicería online</strong><span>Ver, compartir y gestionar.</span></button>
+      <button type="button" data-mobile-action="whatsapp"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>WhatsApp</strong><span>Enviar una promo guardada.</span></button>
+      <button type="button" data-mobile-action="how-to-sell"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#guide"></use></svg>Cómo vender</strong><span>Conocé las tres maneras de vender.</span></button>
+      <button type="button" data-mobile-action="print-center"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Centro de Impresiones</strong><span>Pedidos, listas, carteles y folletos.</span></button>
+      <button type="button" data-mobile-action="install-app"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#download"></use></svg><span data-pwa-install-label>INSTALAR</span></strong><span>Entrá desde el icono de tu pantalla.</span></button>
+      <button type="button" data-mobile-action="help"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#help"></use></svg>Ayuda</strong><span>Volver al camino.</span></button>
+      ${isSuperadmin ? '<button type="button" data-mobile-action="admin"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#settings"></use></svg>Admin</strong><span>Panel AppPromos.</span></button>' : ''}
+      <button type="button" class="primary" data-mobile-action="logout"><strong><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#logout"></use></svg>${currentSession?.isDemo ? 'Salir demo' : 'Cerrar sesión'}</strong><span>Volver a la landing.</span></button>
     </div>
   `;
 
@@ -3701,11 +3701,11 @@ function ensureMobileBottomNavigation() {
     nav.className = "app-mobile-bottom-nav";
     nav.setAttribute("aria-label", "Navegación principal mobile");
     nav.innerHTML = `
-      <button type="button" data-mobile-nav="home" data-mobile-action="home"><span class="app-mobile-nav-icon">🏠</span><span>Inicio</span></button>
-      <button type="button" data-mobile-nav="prices" data-mobile-action="prices"><span class="app-mobile-nav-icon">💲</span><span>Precios</span></button>
-      <button type="button" class="is-primary" data-mobile-nav="sell" data-mobile-menu="sell"><span class="app-mobile-nav-icon">🥩</span><span>Vender</span></button>
-      <button type="button" data-mobile-nav="saved" data-mobile-action="saved"><span class="app-mobile-nav-icon">⭐</span><span>Promos</span></button>
-      <button type="button" data-mobile-nav="more" data-mobile-menu="more"><span class="app-mobile-nav-icon">☰</span><span>Más</span></button>
+      <button type="button" data-mobile-nav="home" data-mobile-action="home"><span class="app-mobile-nav-icon"><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#home"></use></svg></span><span>Inicio</span></button>
+      <button type="button" data-mobile-nav="prices" data-mobile-action="prices"><span class="app-mobile-nav-icon"><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#price"></use></svg></span><span>Precios</span></button>
+      <button type="button" class="is-primary" data-mobile-nav="sell" data-mobile-menu="sell"><span class="app-mobile-nav-icon"><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg></span><span>Vender</span></button>
+      <button type="button" data-mobile-nav="saved" data-mobile-action="saved"><span class="app-mobile-nav-icon"><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#star"></use></svg></span><span>Promos</span></button>
+      <button type="button" data-mobile-nav="more" data-mobile-menu="more"><span class="app-mobile-nav-icon"><svg class="ci ci-md" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#menu"></use></svg></span><span>Más</span></button>
     `;
     document.body.appendChild(nav);
   }

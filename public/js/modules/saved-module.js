@@ -132,7 +132,7 @@ export function renderSaved(container, state, options = {}) {
       ${renderCarnizaSpotlight("savedPanel", { compact: true })}
 
       <div class="saved-head">
-        <h2>🥩 Promos para repetir</h2>
+        <h2><svg class="ci ci-lg" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#star"></use></svg>Promos para repetir</h2>
         <p>Elegí una promo guardada o combo demo y mandalo por WhatsApp.</p>
       </div>
       <div class="saved-filters" aria-label="Filtros de promos guardadas">

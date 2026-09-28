@@ -730,17 +730,17 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;">
           <button id="quickModeBtn" type="button" style="text-align:left; background:#FFF1F0; border:2px solid #F6C6C6; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;">⚡</div>
+            <div style="font-size:2rem;"><svg class="ci ci-lg ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#bolt"></use></svg></div>
             <h3 style="margin:8px 0 4px;">Responder una consulta</h3>
             <p style="margin:0; color:#8E1014; font-weight:800;">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
           </button>
           <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;">🏷️</div>
+            <div style="font-size:2rem;"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#tag"></use></svg></div>
             <h3 style="margin:8px 0 4px;">Crear promo o combo</h3>
             <p style="margin:0; color:#7c2d12; font-weight:800;">Armá una estrategia para vender varias veces: guardala, publicala y compartila.</p>
           </button>
           <button id="urgentModeBtn" type="button" data-carniza-open-liquidator data-carniza-signal="builder_urgent_clicked" style="text-align:left; background:#fff1f2; border:2px solid #fecdd3; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;">🔥</div>
+            <div style="font-size:2rem;"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg></div>
             <h3 style="margin:8px 0 4px;">Promo del día</h3>
             <p style="margin:0; color:#9f1239; font-weight:800;">Elegí la mercadería que necesitás vender hoy. Publicala por el día y finalizala cuando quieras.</p>
           </button>
