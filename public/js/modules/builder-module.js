@@ -439,7 +439,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     const soft = scope === "discount" ? "#fff7ed" : "#FFF1F0";
 
     return `
-      <div style="display:grid; gap:6px; min-width:0;">
+      <div class="builder-rubro-field">
         <label for="${scope}RubroSelect" style="font-size:.72rem; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:${accent};">Rubro opcional</label>
         <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:#0A2E5B; padding:0 12px; font-weight:1000;">
           <option value="">Todos los productos</option>
@@ -487,12 +487,12 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         : "Catálogo listo.";
 
     return `
-      <div style="display:grid; gap:9px;">
-        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; color:#64748b; font-size:.82rem; font-weight:900;">
+      <div class="builder-products">
+        <div class="builder-products__meta">
           <span>${escapeHtml(headerTitle)}</span>
           <span>${escapeHtml(headerHelp)}</span>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:9px;">
+        <div class="builder-products__grid">
           ${visibleProducts.map((product) => {
             const key = getProductKey(product);
             const active = selectedKeys.has(String(key));
@@ -501,17 +501,17 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
             return `
               <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#FADBD8"}; background:${active ? "#ecfdf5" : "#fff"}; color:#0A2E5B; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
                 <div style="display:grid; grid-template-columns:${thumbnailPath ? "76px " : ""}minmax(0,1fr) auto; gap:9px; align-items:center;">
-                  ${thumbnailPath ? `<img src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" style="width:76px; height:76px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5;" />` : ""}
-                  <strong style="font-size:.86rem; line-height:1.14;">${escapeHtml(product.nombre || "Producto")}</strong>
+                  ${thumbnailPath ? `<img src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" class="builder-product__thumb" />` : ""}
+                  <strong class="builder-product__name">${escapeHtml(product.nombre || "Producto")}</strong>
                   <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#E52223"};">${active ? "✓" : "+"} ${actionText}</span>
                 </div>
-                <div style="margin-top:7px; font-size:.78rem; font-weight:900; color:#64748b;">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
+                <div class="builder-product__meta">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
               </button>
             `;
           }).join("")}
         </div>
         ${hiddenCount && !isQuickSuggestions ? `
-          <button type="button" data-${scope}-show-more="true" style="min-height:44px; border:1px solid #F6C6C6; border-radius:14px; background:#FFF1F0; color:#B3161A; font-weight:1000; cursor:pointer;">
+          <button type="button" data-${scope}-show-more="true" class="builder-show-more">
             Ver más resultados (${hiddenCount} más)
           </button>
         ` : ""}
@@ -522,7 +522,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function renderSelectedStrip(items, totalLabel = "Total estimado") {
     if (!items.length) {
       return `
-        <div style="position:sticky; top:0; z-index:5; background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:12px; color:#64748b; font-weight:900;">
+        <div class="builder-selected builder-selected--empty">
           Todavía no elegiste productos.
         </div>
       `;
@@ -530,12 +530,12 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     const rawTotal = items.reduce((acc, item) => acc + Number(item.precio || 0) * Number(item.cantidad || 0), 0);
     return `
-      <div style="position:sticky; top:0; z-index:5; background:#ecfdf5; border:1px solid #bbf7d0; border-radius:16px; padding:12px; box-shadow:0 10px 22px rgba(15,23,42,.08);">
-        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
-          <strong style="color:#14532d;">${items.length} producto${items.length === 1 ? "" : "s"} elegido${items.length === 1 ? "" : "s"}</strong>
-          <strong style="color:#14532d;">${escapeHtml(totalLabel)}: $ ${formatMoney(roundUpTo100(rawTotal))}</strong>
+      <div class="builder-selected builder-selected--filled">
+        <div class="builder-selected__row">
+          <strong class="builder-selected__value">${items.length} producto${items.length === 1 ? "" : "s"} elegido${items.length === 1 ? "" : "s"}</strong>
+          <strong class="builder-selected__value">${escapeHtml(totalLabel)}: $ ${formatMoney(roundUpTo100(rawTotal))}</strong>
         </div>
-        <div style="margin-top:6px; color:#166534; font-weight:800; font-size:.86rem; white-space:nowrap; overflow:auto;">
+        <div class="builder-selected__names">
           ${items.map((item) => `${escapeHtml(item.nombre)} · ${formatQty(item.cantidad)} ${escapeHtml(item.unidad || "kg")}`).join("  |  ")}
         </div>
       </div>

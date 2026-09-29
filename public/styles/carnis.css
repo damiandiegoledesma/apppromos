@@ -4308,3 +4308,25 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-actions--between { justify-content:space-between; }
 .builder-btn-whatsapp { background:#16a34a; color:#fff; border-color:#16a34a; }
 .builder-btn-promo { background:#f97316; color:#fff; border-color:#f97316; }
+
+/* ==========================================================================
+   29. CONSTRUCTOR · CATÁLOGO (C4.7c)
+   Antes: style="" fijos en builder-module.js. Valores copiados literal.
+   Quedan en JS los estilos dinámicos (seleccionado, imagen, modo, datos)
+   y los buscadores (#quickSearchInput, #discountSearchInput): con clase,
+   input:not([type=checkbox]):not([type=radio]) les gana y cambia la altura.
+   ========================================================================== */
+.builder-rubro-field { display:grid; gap:6px; min-width:0; }
+.builder-products { display:grid; gap:9px; }
+.builder-products__meta { display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; color:#64748b; font-size:.82rem; font-weight:900; }
+.builder-products__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:9px; }
+.builder-product__thumb { width:76px; height:76px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5; }
+.builder-product__name { font-size:.86rem; line-height:1.14; }
+.builder-product__meta { margin-top:7px; font-size:.78rem; font-weight:900; color:#64748b; }
+.builder-show-more { min-height:44px; border:1px solid #F6C6C6; border-radius:14px; background:#FFF1F0; color:#B3161A; font-weight:1000; cursor:pointer; }
+.builder-selected { position:sticky; top:0; z-index:5; border-radius:16px; padding:12px; }
+.builder-selected--empty { background:#fff; border:1px dashed #cbd5e1; color:#64748b; font-weight:900; }
+.builder-selected--filled { background:#ecfdf5; border:1px solid #bbf7d0; box-shadow:0 10px 22px rgba(15,23,42,.08); }
+.builder-selected__row { display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
+.builder-selected__value { color:#14532d; }
+.builder-selected__names { margin-top:6px; color:#166534; font-weight:800; font-size:.86rem; white-space:nowrap; overflow:auto; }
