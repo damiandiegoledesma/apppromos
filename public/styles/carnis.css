@@ -21,14 +21,14 @@
   --carnis-red: #E52223;  /* styles/carnis-ui.css */
   --carnis-red-hover: #D11C1D;  /* styles/carnis-ui.css */
   --carnis-red-dark: #B3161A;  /* styles/carnis-ui.css */
-  --carnis-navy: #0A2E5B;  /* styles/carnis-ui.css */
-  --carnis-ink: #182238;  /* styles/carnis-ui.css */
-  --carnis-muted: #4B5563;  /* styles/carnis-ui.css */
+  --carnis-navy: var(--ui-heading);  /* alias del contrato (C5.3); antes #0A2E5B */
+  --carnis-ink: var(--ui-text);  /* alias del contrato (C5.3); antes #182238 */
+  --carnis-muted: var(--ui-text-muted);  /* alias del contrato (C5.3); antes #4B5563 */
   --carnis-label: #374151;  /* styles/carnis-ui.css */
   --carnis-bg: #FFF7F5;  /* styles/carnis-ui.css */
-  --carnis-surface: #FFFFFF;  /* styles/carnis-ui.css */
+  --carnis-surface: var(--ui-surface);  /* alias del contrato (C5.3); antes #FFFFFF */
   --carnis-soft: #FFF1F0;  /* styles/carnis-ui.css */
-  --carnis-line: #EADBD8;  /* styles/carnis-ui.css */
+  --carnis-line: var(--ui-line-panel);  /* alias del contrato (C5.3); antes #EADBD8 */
   --carnis-line-input: #D7D9DE;  /* styles/carnis-ui.css */
   --carnis-wa: #16a34a;  /* styles/carnis-ui.css */
   --carnis-font: Poppins, Arial, sans-serif;  /* styles/carnis-ui.css */
@@ -115,7 +115,10 @@
 
 /* Contrato semántico Motor/Vertical (C5.2).
    El Motor pide conceptos; la vertical (hoy Carnis) aporta los valores.
-   Las variables legacy (--carnis-*, --brand-*, --primary…) siguen vigentes. */
+   Las variables legacy (--carnis-*, --brand-*, --primary…) siguen vigentes.
+   IMPORTANTE: los tokens --ui-* / --mode-* son el contrato semántico y NO deben
+   definirse en función de variables --carnis-* (evita dependencias circulares:
+   desde C5.3 algunas --carnis-* son alias de --ui-*). */
 :root {
   --ui-surface: #fff;
   --ui-line: #e5e7eb;
@@ -123,6 +126,9 @@
   --ui-action: #E52223;
   --ui-heading: #0A2E5B;
   --ui-eyebrow: #b45309;
+  --ui-text: #182238;
+  --ui-text-muted: #4B5563;
+  --ui-line-panel: #EADBD8;
   --mode-quick-bg: #FFF1F0;
   --mode-quick-line: #F6C6C6;
   --mode-quick-ink: #8E1014;
