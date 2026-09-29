@@ -739,48 +739,48 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
       if (includeDiscount) {
         return `
-          <article style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:11px; box-shadow:0 6px 16px rgba(15,23,42,.05); display:grid; gap:10px; min-width:0; overflow:hidden;">
-            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; min-width:0;">
-              <div style="min-width:0;">
-                <strong style="display:block; font-size:1rem; color:#431407; line-height:1.15; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
-                <span style="display:block; margin-top:3px; font-size:.77rem; color:#64748b; font-weight:900;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+          <article class="builder-line">
+            <div class="builder-line__head">
+              <div class="builder-line__title">
+                <strong class="builder-line__name">${escapeHtml(item.nombre)}</strong>
+                <span class="builder-line__unit">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
               </div>
-              <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 10px; border-radius:10px; flex:0 0 auto;">Quitar</button>
+              <button type="button" data-${scope}-del="${index}" class="builder-remove builder-remove--line">Quitar</button>
             </div>
 
-            <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; align-items:stretch;">
-              <div style="display:grid; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:8px; min-width:0;">
-                <span style="font-size:.68rem; font-weight:1000; color:#475569; text-transform:uppercase; letter-spacing:.04em;">Cantidad</span>
-                <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+            <div class="builder-line__fields">
+              <div class="builder-line-field">
+                <span class="builder-line-field__label">Cantidad</span>
+                <div class="builder-stepper">
                   <button type="button" data-${scope}-minus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">−</button>
                   <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:58px; min-height:36px; text-align:center; font-weight:1000; padding:0 4px;" />
                   <button type="button" data-${scope}-plus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">+</button>
                 </div>
               </div>
 
-              <div style="display:grid; gap:5px; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:8px; min-width:0;">
-                <span style="font-size:.68rem; font-weight:1000; color:#9a3412; text-transform:uppercase; letter-spacing:.04em;">Desc. producto</span>
-                <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+              <div class="builder-line-field builder-line-field--discount">
+                <span class="builder-line-field__label">Desc. producto</span>
+                <div class="builder-stepper">
                   <button type="button" data-${scope}-discount-minus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">−</button>
                   <input type="number" min="0" max="100" step="1" value="${calc.descuento}" data-${scope}-percent="${index}" style="width:54px; min-height:36px; text-align:center; font-weight:1000; padding:0 4px;" />
                   <button type="button" data-${scope}-discount-plus="${index}" style="min-width:34px; min-height:36px; padding:0; font-weight:1000;">+</button>
-                  <span style="font-weight:1000;color:#7c2d12;">%</span>
+                  <span class="builder-stepper__suffix">%</span>
                 </div>
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px;">
-              <div style="background:#f8fafc; border-radius:12px; padding:8px; min-width:0;">
-                <span style="display:block; font-size:.68rem; color:#64748b; font-weight:900;">Sin descuento</span>
-                <strong style="display:block; margin-top:3px; color:#334155; font-size:.88rem; white-space:nowrap;">$ ${formatMoney(calc.bruto)}</strong>
+            <div class="builder-line__figures">
+              <div class="builder-figure">
+                <span class="builder-figure__label">Sin descuento</span>
+                <strong class="builder-figure__value">$ ${formatMoney(calc.bruto)}</strong>
               </div>
-              <div style="background:#fff7ed; border-radius:12px; padding:8px; min-width:0;">
-                <span style="display:block; font-size:.68rem; color:#92400e; font-weight:900;">Descuento</span>
-                <strong data-${scope}-line-discount="${index}" style="display:block; margin-top:3px; color:#92400e; font-size:.88rem; white-space:nowrap;">-$ ${formatMoney(lineDiscount)}</strong>
+              <div class="builder-figure builder-figure--discount">
+                <span class="builder-figure__label">Descuento</span>
+                <strong data-${scope}-line-discount="${index}" class="builder-figure__value">-$ ${formatMoney(lineDiscount)}</strong>
               </div>
-              <div style="background:#ffedd5; border:1px solid #fed7aa; border-radius:12px; padding:8px; min-width:0;">
-                <span style="display:block; font-size:.68rem; color:#9a3412; font-weight:1000;">Queda</span>
-                <strong data-${scope}-line-final="${index}" style="display:block; margin-top:3px; color:#c2410c; font-size:.94rem; white-space:nowrap;">$ ${formatMoney(calc.neto)}</strong>
+              <div class="builder-figure builder-figure--final">
+                <span class="builder-figure__label">Queda</span>
+                <strong data-${scope}-line-final="${index}" class="builder-figure__value">$ ${formatMoney(calc.neto)}</strong>
               </div>
             </div>
           </article>
@@ -788,21 +788,21 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       }
 
       return `
-        <article style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:8px 10px; overflow-x:auto; box-shadow:0 4px 14px rgba(15,23,42,.04);">
+        <article class="builder-row">
           <div style="display:grid; grid-template-columns:minmax(170px,1fr) 126px 130px 74px; gap:8px; align-items:center; min-width:520px;">
-            <div style="min-width:0;">
-              <strong style="display:block; font-size:.96rem; color:#111827; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.nombre)}</strong>
-              <span style="display:block; margin-top:2px; font-size:.76rem; color:#64748b; font-weight:900; white-space:nowrap;">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
+            <div class="builder-row__title">
+              <strong class="builder-row__name">${escapeHtml(item.nombre)}</strong>
+              <span class="builder-row__unit">$ ${formatMoney(item.precio)} / ${escapeHtml(item.unidad || "kg")}</span>
             </div>
 
-            <div style="display:flex; align-items:center; justify-content:center; gap:5px; background:#f8fafc; border-radius:12px; padding:5px;">
+            <div class="builder-stepper builder-stepper--compact">
               <button type="button" data-${scope}-minus="${index}" style="min-width:30px; min-height:32px; padding:0;">−</button>
               <input type="number" min="0.5" step="0.5" value="${item.cantidad}" data-${scope}-qty="${index}" style="width:50px; min-height:32px; text-align:center; font-weight:1000; padding:0 4px;" />
               <button type="button" data-${scope}-plus="${index}" style="min-width:30px; min-height:32px; padding:0;">+</button>
             </div>
 
-            <strong style="color:#0f172a; text-align:right; white-space:nowrap;">$ ${formatMoney(subtotal)}</strong>
-            <button type="button" data-${scope}-del="${index}" style="color:#dc2626; min-height:34px; padding:0 9px; border-radius:10px;">Quitar</button>
+            <strong class="builder-row__subtotal">$ ${formatMoney(subtotal)}</strong>
+            <button type="button" data-${scope}-del="${index}" class="builder-remove builder-remove--compact">Quitar</button>
           </div>
         </article>
       `;
@@ -1049,17 +1049,17 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         <div style="display:grid; gap:10px; padding-bottom:calc(238px + var(--apppromos-mobile-nav-height, 0px));">
           ${renderQuantityList(state.discount.items, "discountAdjust", true)}
         </div>
-        <div style="background:#fff; border:1px solid #fed7aa; border-radius:16px; padding:12px; display:grid; gap:9px;">
-          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; font-weight:1000; color:#7c2d12;">
+        <div class="builder-global-discount">
+          <div class="builder-global-discount__head">
             <span>Descuento general</span>
-            <div style="display:flex; align-items:center; gap:7px; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:6px;">
+            <div class="builder-global-discount__control">
               <button id="discountGlobalMinusBtn" type="button" style="min-width:38px; min-height:38px; padding:0; font-weight:1000;">−</button>
               <input id="discountGlobalInput" type="number" min="0" max="100" step="1" value="${state.discount.globalDiscount}" style="width:62px; min-height:38px; text-align:center; font-weight:1000; padding:0 4px;" />
               <button id="discountGlobalPlusBtn" type="button" style="min-width:38px; min-height:38px; padding:0; font-weight:1000;">+</button>
-              <span style="font-weight:1000;">%</span>
+              <span class="builder-stepper__suffix">%</span>
             </div>
           </div>
-          <p class="muted" style="margin:0;">Se aplica al final. El cliente no ve estos descuentos: recibe una oferta limpia.</p>
+          <p class="muted builder-global-discount__note">Se aplica al final. El cliente no ve estos descuentos: recibe una oferta limpia.</p>
         </div>
         <div class="builder-actions builder-actions--between">
           <button id="discountBackProductsBtn" type="button">← Productos</button>
