@@ -434,14 +434,14 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderRubroSelector(scope, activeRubro) {
     const rubros = getUniqueRubros();
-    const accent = scope === "discount" ? "#f97316" : "#E52223";
-    const border = scope === "discount" ? "#fed7aa" : "#F6C6C6";
-    const soft = scope === "discount" ? "#fff7ed" : "#FFF1F0";
+    const accent = scope === "discount" ? "var(--mode-promo-action)" : "var(--ui-action)";
+    const border = scope === "discount" ? "var(--mode-promo-line)" : "var(--mode-quick-line)";
+    const soft = scope === "discount" ? "var(--mode-promo-bg)" : "var(--mode-quick-bg)";
 
     return `
       <div class="builder-rubro-field">
         <label for="${scope}RubroSelect" style="font-size:.72rem; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:${accent};">Rubro opcional</label>
-        <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:#0A2E5B; padding:0 12px; font-weight:1000;">
+        <select id="${scope}RubroSelect" data-${scope}-rubro-select="true" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid ${border}; border-radius:14px; background:${soft}; color:var(--ui-heading); padding:0 12px; font-weight:1000;">
           <option value="">Todos los productos</option>
           ${rubros.map((rubro) => `
             <option value="${escapeHtml(rubro)}" ${rubro === activeRubro ? "selected" : ""}>${escapeHtml(rubro)}</option>
@@ -499,11 +499,11 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
             const actionText = active ? "Elegido" : "Sumar";
             const thumbnailPath = getProductThumbnailPath(product);
             return `
-              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "#FADBD8"}; background:${active ? "#ecfdf5" : "#fff"}; color:#0A2E5B; padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
+              <button type="button" data-${scope}-add-key="${escapeHtml(key)}" aria-label="Sumar ${escapeHtml(product.nombre || "producto")} a la oferta" style="text-align:left; min-height:98px; border-radius:16px; border:1px solid ${active ? "#16a34a" : "var(--ui-line-accent)"}; background:${active ? "var(--ui-success-bg)" : "var(--ui-surface)"}; color:var(--ui-heading); padding:10px; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.04);">
                 <div style="display:grid; grid-template-columns:${thumbnailPath ? "76px " : ""}minmax(0,1fr) auto; gap:9px; align-items:center;">
                   ${thumbnailPath ? `<img src="${thumbnailPath}" alt="" loading="lazy" onerror="this.hidden=true" class="builder-product__thumb" />` : ""}
                   <strong class="builder-product__name">${escapeHtml(product.nombre || "Producto")}</strong>
-                  <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "#E52223"};">${active ? "✓" : "+"} ${actionText}</span>
+                  <span style="font-size:.74rem; font-weight:1000; color:${active ? "#15803d" : "var(--ui-action)"};">${active ? "✓" : "+"} ${actionText}</span>
                 </div>
                 <div class="builder-product__meta">${escapeHtml(product.rubro || "Sin rubro")} · $ ${formatMoney(product.precio)}</div>
               </button>
@@ -947,7 +947,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         ${renderTopActions(editingCombo ? "Editar promo" : "Crear promo o combo", editingCombo ? "Modificá la receta y guardá los cambios sobre esta promo." : "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
         <div class="builder-steps">
           ${steps.map((step) => `
-            <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
+            <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "var(--mode-promo-action)" : "var(--ui-line)"}; background:${state.discount.step === step.id ? "var(--mode-promo-bg)" : "var(--ui-surface)"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
           `).join("")}
         </div>
         <div id="discountStepContent"></div>
@@ -1006,7 +1006,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       : "position:sticky;top:0;z-index:5;";
 
     return `
-      <aside style="${baseStyle} background:#fff7ed; border:1px solid #fed7aa; border-radius:18px; padding:${compact ? "10px" : "14px"}; box-shadow:0 14px 34px rgba(15,23,42,.20);">
+      <aside style="${baseStyle} background:var(--mode-promo-bg); border:1px solid var(--mode-promo-line); border-radius:18px; padding:${compact ? "10px" : "14px"}; box-shadow:0 14px 34px rgba(15,23,42,.20);">
         <div class="builder-totals__head">
           <div class="builder-totals__title">Resumen</div>
           <div class="builder-totals__hint">se actualiza solo</div>
