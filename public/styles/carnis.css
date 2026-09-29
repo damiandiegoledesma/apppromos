@@ -113,6 +113,27 @@
 
 }
 
+/* Contrato semántico Motor/Vertical (C5.2).
+   El Motor pide conceptos; la vertical (hoy Carnis) aporta los valores.
+   Las variables legacy (--carnis-*, --brand-*, --primary…) siguen vigentes. */
+:root {
+  --ui-surface: #fff;
+  --ui-line: #e5e7eb;
+  --ui-line-accent: #FADBD8;
+  --ui-action: #E52223;
+  --ui-heading: #0A2E5B;
+  --ui-eyebrow: #b45309;
+  --mode-quick-bg: #FFF1F0;
+  --mode-quick-line: #F6C6C6;
+  --mode-quick-ink: #8E1014;
+  --mode-promo-bg: #fff7ed;
+  --mode-promo-line: #fed7aa;
+  --mode-promo-ink: #7c2d12;
+  --mode-urgent-bg: #fff1f2;
+  --mode-urgent-line: #fecdd3;
+  --mode-urgent-ink: #9f1239;
+}
+
 /* ==================================================================
    2. BASE — reset, tipografía base, botones, inputs, cards, badges, grid
    Origen: public/design-system.css
@@ -2105,8 +2126,8 @@ html [data-back-mode] {
 .ci-sm { width: var(--carnis-icon-sm); height: var(--carnis-icon-sm); }
 .ci-md { width: var(--carnis-icon-md); height: var(--carnis-icon-md); }
 .ci-lg { width: var(--carnis-icon-lg); height: var(--carnis-icon-lg); }
-.ci--red  { color: var(--carnis-red) !important; }
-.ci--navy { color: var(--carnis-navy) !important; }
+.ci--red  { color: var(--ui-action) !important; }
+.ci--navy { color: var(--ui-heading) !important; }
 .ci--wa   { color: var(--carnis-wa) !important; }
 
 /* Icono solo (sin texto al lado): sin margen */
@@ -4284,25 +4305,25 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-screen { display:grid; gap:12px; }
 .builder-screen--chooser { gap:14px; }
 .builder-card { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px; }
-.builder-topbar { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #FADBD8; border-radius:18px; padding:14px; }
-.builder-topbar__kicker { font-size:.72rem; font-weight:1000; color:#E52223; text-transform:uppercase; letter-spacing:.04em; }
+.builder-topbar { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:var(--ui-surface); border:1px solid var(--ui-line-accent); border-radius:18px; padding:14px; }
+.builder-topbar__kicker { font-size:.72rem; font-weight:1000; color:var(--ui-action); text-transform:uppercase; letter-spacing:.04em; }
 .builder-topbar__title { margin:5px 0 4px; }
 .builder-topbar__subtitle { margin:0; }
-.builder-hero { background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:18px; }
-.builder-hero__kicker { font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em; }
+.builder-hero { background:var(--ui-surface); border:1px solid var(--ui-line); border-radius:20px; padding:18px; }
+.builder-hero__kicker { font-size:.75rem; font-weight:1000; color:var(--ui-eyebrow); text-transform:uppercase; letter-spacing:.04em; }
 .builder-hero__title { margin:6px 0 4px; }
 .builder-hero__subtitle { margin:0; }
 .builder-modes { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
 .builder-mode { text-align:left; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06); }
-.builder-mode--quick { background:#FFF1F0; border:2px solid #F6C6C6; }
-.builder-mode--promo { background:#fff7ed; border:2px solid #fed7aa; }
-.builder-mode--urgent { background:#fff1f2; border:2px solid #fecdd3; }
+.builder-mode--quick { background:var(--mode-quick-bg); border:2px solid var(--mode-quick-line); }
+.builder-mode--promo { background:var(--mode-promo-bg); border:2px solid var(--mode-promo-line); }
+.builder-mode--urgent { background:var(--mode-urgent-bg); border:2px solid var(--mode-urgent-line); }
 .builder-mode__icon { font-size:2rem; }
 .builder-mode__title { margin:8px 0 4px; }
 .builder-mode__desc { margin:0; font-weight:800; }
-.builder-mode--quick .builder-mode__desc { color:#8E1014; }
-.builder-mode--promo .builder-mode__desc { color:#7c2d12; }
-.builder-mode--urgent .builder-mode__desc { color:#9f1239; }
+.builder-mode--quick .builder-mode__desc { color:var(--mode-quick-ink); }
+.builder-mode--promo .builder-mode__desc { color:var(--mode-promo-ink); }
+.builder-mode--urgent .builder-mode__desc { color:var(--mode-urgent-ink); }
 .builder-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .builder-actions--end { justify-content:flex-end; }
 .builder-actions--between { justify-content:space-between; }
