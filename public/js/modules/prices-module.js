@@ -774,7 +774,7 @@ export function renderPrices(container, products = [], businessId = null, option
         </div>
       </div>
 
-      ${isDemoPriceSession ? `<div style="padding:14px 16px;border:1px solid #F6C6C6;border-radius:16px;background:#FFF1F0;color:#B3161A;font-weight:900;line-height:1.35;">Estás probando Carnis. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div style="padding:14px 16px;border:1px solid #f97316;border-radius:16px;background:#fff4e5;color:#9a3412;font-weight:900;line-height:1.35;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#lock"></use></svg>Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
+      ${isDemoPriceSession ? `<div class="prices-mode-notice prices-mode-notice--demo">Estás probando Carnis. Estos cambios quedan solo en esta demo.</div>` : (!canPersistPrices ? `<div class="prices-mode-notice prices-mode-notice--readonly"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#lock"></use></svg>Para guardar cambios, ponete al día. Podés seguir viendo la lista de precios.</div>` : "")}
 
 <div class="prices-toolbar prices-toolbar-lite">
         <div class="prices-toolbar-row prices-search-row">
@@ -819,12 +819,12 @@ export function renderPrices(container, products = [], businessId = null, option
       </div>
 
       ${preferredRubros.size ? `
-        <div class="prices-preferred-rubros" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid #fed7aa;border-radius:14px;background:#fff7ed;color:#7c2d12;">
-          <div style="display:grid;gap:2px;">
-            <strong style="font-size:12px;font-weight:1000;">Tus rubros</strong>
-            <span style="font-size:12px;font-weight:850;">${[...preferredRubros].join(" \u00b7 ")}</span>
+        <div class="prices-preferred-rubros">
+          <div class="prices-preferred-rubros__copy">
+            <strong class="prices-preferred-rubros__label">Tus rubros</strong>
+            <span class="prices-preferred-rubros__list">${[...preferredRubros].join(" \u00b7 ")}</span>
           </div>
-          <button type="button" data-toggle-all-rubros style="min-height:36px;padding:0 12px;border:1px solid #fdba74;border-radius:999px;background:#fff;color:#9a3412;font-size:12px;font-weight:1000;cursor:pointer;">
+          <button type="button" class="prices-preferred-rubros__toggle" data-toggle-all-rubros>
             ${showAllRubros ? "Ver solo mis rubros" : "+ Agregar otros rubros"}
           </button>
         </div>

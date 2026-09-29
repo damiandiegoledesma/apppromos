@@ -4013,3 +4013,17 @@ body.module-focus-admin .app-mobile-bottom-menu {
           max-width:76px !important;
         }
       }
+
+/* ============================================================
+   25. PRECIOS — AVISOS DE MODO Y "TUS RUBROS" (C4.5b)
+   ex style="" fijos de renderPrices() en prices-module.js.
+   Mismos valores; JS sigue decidiendo cuál se muestra y con qué texto.
+   ============================================================ */
+.prices-shell .prices-mode-notice { padding:14px 16px;border-radius:16px;font-weight:900;line-height:1.35; }
+.prices-shell .prices-mode-notice--demo { border:1px solid #F6C6C6;background:#FFF1F0;color:#B3161A; }
+.prices-shell .prices-mode-notice--readonly { border:1px solid #f97316;background:#fff4e5;color:#9a3412; }
+.prices-shell .prices-preferred-rubros { display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid #fed7aa;border-radius:14px;background:#fff7ed;color:#7c2d12; }
+.prices-preferred-rubros .prices-preferred-rubros__copy { display:grid;gap:2px; }
+.prices-preferred-rubros .prices-preferred-rubros__label { font-size:12px;font-weight:1000; }
+.prices-preferred-rubros .prices-preferred-rubros__list { font-size:12px;font-weight:850; }
+.prices-preferred-rubros .prices-preferred-rubros__toggle { min-height:36px;padding:0 12px;border:1px solid #fdba74;border-radius:999px;background:#fff;color:#9a3412;font-size:12px;font-weight:1000;cursor:pointer; }
