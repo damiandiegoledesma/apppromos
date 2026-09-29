@@ -129,6 +129,18 @@
   --ui-text: #182238;
   --ui-text-muted: #4B5563;
   --ui-line-panel: #EADBD8;
+  /* C5.4b — superficie suave, estados funcionales, canal y Promo */
+  --ui-surface-subtle: #f8fafc;
+  --ui-success-bg: #ecfdf5;
+  --ui-success-line: #bbf7d0;
+  --ui-success-ink: #166534;
+  --ui-warning-bg: #fffbeb;
+  --ui-warning-line: #fde68a;
+  --ui-warning-ink: #92400e;
+  --ui-danger: #dc2626;
+  --channel-whatsapp: #16a34a;
+  --mode-promo-action: #f97316;
+  --mode-promo-emphasis: #c2410c;
   --mode-quick-bg: #FFF1F0;
   --mode-quick-line: #F6C6C6;
   --mode-quick-ink: #8E1014;
@@ -4278,7 +4290,7 @@ body.module-focus-admin .app-mobile-bottom-menu {
   border:0;
   border-radius:13px;
   padding:0 14px;
-  background:#f97316;
+  background:var(--mode-promo-action);
   color:#fff;
   font-size:13px;
   font-weight:1000;
@@ -4333,8 +4345,8 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .builder-actions--end { justify-content:flex-end; }
 .builder-actions--between { justify-content:space-between; }
-.builder-btn-whatsapp { background:#16a34a; color:#fff; border-color:#16a34a; }
-.builder-btn-promo { background:#f97316; color:#fff; border-color:#f97316; }
+.builder-btn-whatsapp { background:var(--channel-whatsapp); color:#fff; border-color:var(--channel-whatsapp); }
+.builder-btn-promo { background:var(--mode-promo-action); color:#fff; border-color:var(--mode-promo-action); }
 
 /* ==========================================================================
    29. CONSTRUCTOR · CATÁLOGO (C4.7c)
@@ -4353,10 +4365,10 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-show-more { min-height:44px; border:1px solid #F6C6C6; border-radius:14px; background:#FFF1F0; color:#B3161A; font-weight:1000; cursor:pointer; }
 .builder-selected { position:sticky; top:0; z-index:5; border-radius:16px; padding:12px; }
 .builder-selected--empty { background:var(--ui-surface); border:1px dashed #cbd5e1; color:#64748b; font-weight:900; }
-.builder-selected--filled { background:#ecfdf5; border:1px solid #bbf7d0; box-shadow:0 10px 22px rgba(15,23,42,.08); }
+.builder-selected--filled { background:var(--ui-success-bg); border:1px solid var(--ui-success-line); box-shadow:0 10px 22px rgba(15,23,42,.08); }
 .builder-selected__row { display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
 .builder-selected__value { color:#14532d; }
-.builder-selected__names { margin-top:6px; color:#166534; font-weight:800; font-size:.86rem; white-space:nowrap; overflow:auto; }
+.builder-selected__names { margin-top:6px; color:var(--ui-success-ink); font-weight:800; font-size:.86rem; white-space:nowrap; overflow:auto; }
 
 /* ==========================================================================
    30. CONSTRUCTOR · EDITOR DE CANTIDADES (C4.7d)
@@ -4371,12 +4383,12 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-line__name { display:block; font-size:1rem; color:#431407; line-height:1.15; overflow:hidden; text-overflow:ellipsis; }
 .builder-line__unit { display:block; margin-top:3px; font-size:.77rem; color:#64748b; font-weight:900; }
 .builder-line__fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; align-items:stretch; }
-.builder-line-field { display:grid; gap:5px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:8px; min-width:0; }
+.builder-line-field { display:grid; gap:5px; background:var(--ui-surface-subtle); border:1px solid #e2e8f0; border-radius:14px; padding:8px; min-width:0; }
 .builder-line-field--discount { background:var(--mode-promo-bg); border:1px solid var(--mode-promo-line); }
 .builder-line-field__label { font-size:.68rem; font-weight:1000; color:#475569; text-transform:uppercase; letter-spacing:.04em; }
 .builder-line-field--discount .builder-line-field__label { color:#9a3412; }
 .builder-line__figures { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
-.builder-figure { background:#f8fafc; border-radius:12px; padding:8px; min-width:0; }
+.builder-figure { background:var(--ui-surface-subtle); border-radius:12px; padding:8px; min-width:0; }
 .builder-figure--discount { background:var(--mode-promo-bg); }
 .builder-figure--final { background:#ffedd5; border:1px solid var(--mode-promo-line); }
 .builder-figure__label { display:block; font-size:.68rem; color:#64748b; font-weight:900; }
@@ -4384,12 +4396,12 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-figure--final .builder-figure__label { color:#9a3412; font-weight:1000; }
 .builder-figure__value { display:block; margin-top:3px; color:#334155; font-size:.88rem; white-space:nowrap; }
 .builder-figure--discount .builder-figure__value { color:#92400e; }
-.builder-figure--final .builder-figure__value { color:#c2410c; font-size:.94rem; }
+.builder-figure--final .builder-figure__value { color:var(--mode-promo-emphasis); font-size:.94rem; }
 .builder-stepper { display:flex; align-items:center; justify-content:center; gap:6px; }
-.builder-stepper--compact { gap:5px; background:#f8fafc; border-radius:12px; padding:5px; }
+.builder-stepper--compact { gap:5px; background:var(--ui-surface-subtle); border-radius:12px; padding:5px; }
 .builder-stepper__suffix { font-weight:1000; }
 .builder-line-field--discount .builder-stepper__suffix { color:var(--mode-promo-ink); }
-.builder-remove { color:#dc2626; min-height:34px; border-radius:10px; }
+.builder-remove { color:var(--ui-danger); min-height:34px; border-radius:10px; }
 .builder-remove--line { padding:0 10px; flex:0 0 auto; }
 .builder-remove--compact { padding:0 9px; }
 .builder-row { background:var(--ui-surface); border:1px solid var(--ui-line); border-radius:14px; padding:8px 10px; overflow-x:auto; box-shadow:0 4px 14px rgba(15,23,42,.04); }
@@ -4417,22 +4429,22 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-review-total__value { font-size:1.2rem; color:var(--mode-quick-ink); }
 .builder-message-preview { white-space:pre-line; line-height:1.45; font-weight:800; color:#334155; }
 .builder-message-preview--quick { background:var(--ui-surface); border:1px solid var(--ui-line-accent); border-radius:14px; padding:11px; }
-.builder-message-preview--promo { background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; }
+.builder-message-preview--promo { background:var(--ui-surface-subtle); border:1px solid #e2e8f0; border-radius:16px; padding:12px; }
 .builder-sell__label { display:grid; gap:6px; font-weight:1000; }
 .builder-totals__head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
 .builder-totals__title { font-size:.76rem; color:#9a3412; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; }
 .builder-totals__hint { font-size:.72rem; color:#9a3412; font-weight:900; }
 .builder-totals__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
-.builder-totals__note { margin-top:7px; border:1px solid #fde68a; border-radius:13px; background:#fffbeb; padding:8px 10px; color:#92400e; font-size:.72rem; line-height:1.3; font-weight:900; }
+.builder-totals__note { margin-top:7px; border:1px solid var(--ui-warning-line); border-radius:13px; background:var(--ui-warning-bg); padding:8px 10px; color:var(--ui-warning-ink); font-size:.72rem; line-height:1.3; font-weight:900; }
 .builder-total-card { background:var(--ui-surface); border:1px solid var(--mode-promo-line); border-radius:13px; padding:8px; min-width:0; }
 .builder-total-card--final { border:2px solid #fb923c; }
 .builder-total-card__label { font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05; }
 .builder-total-card--final .builder-total-card__label { color:#9a3412; font-weight:1000; }
 .builder-total-card__value { display:block; margin-top:3px; color:#431407; font-size:.92rem; white-space:nowrap; }
 .builder-total-card__value--discount { color:#b45309; }
-.builder-total-card--final .builder-total-card__value { color:#c2410c; font-size:1.02rem; }
+.builder-total-card--final .builder-total-card__value { color:var(--mode-promo-emphasis); font-size:1.02rem; }
 .builder-scale-price { margin-top:7px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #fdba74; border-radius:13px; background:var(--ui-surface); padding:8px 10px; }
 .builder-scale-price__info { min-width:0; }
 .builder-scale-price__label { display:block; color:var(--mode-promo-ink); font-size:.76rem; line-height:1.1; }
 .builder-scale-price__weight { display:block; margin-top:2px; color:#92400e; font-size:.68rem; font-weight:850; }
-.builder-scale-price__value { flex:0 0 auto; color:#c2410c; font-size:1.02rem; white-space:nowrap; }
+.builder-scale-price__value { flex:0 0 auto; color:var(--mode-promo-emphasis); font-size:1.02rem; white-space:nowrap; }
