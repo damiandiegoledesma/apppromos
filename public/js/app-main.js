@@ -613,23 +613,22 @@ function renderCarnizaUrgentStockCard(container) {
 
   const card = document.createElement("div");
   card.id = "carnizaUrgentStockCard";
-  card.style.cssText = "margin:0 0 14px;padding:15px;border:2px solid #ffd6b0;border-radius:18px;background:#fff8f0;box-shadow:0 10px 24px rgba(0,0,0,.06);";
-  card.innerHTML = '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">' +
-      '<div><div style="font-size:17px;font-weight:1000;color:#8a2600;line-height:1.15;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Armá la Promo del día con Carniza</div><div style="font-size:13px;color:#6b4b3e;font-weight:800;margin-top:4px;line-height:1.28;">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
-      '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" style="width:46px;height:46px;border-radius:999px;object-fit:cover;border:2px solid #fed7aa;background:#fff;" /></div>' +
-    '<div data-daily-promos-management style="margin:0 0 12px;"></div>' +
-    '<div style="font-size:13px;font-weight:1000;color:#8a2600;margin:4px 0 7px;">1. Elegí producto</div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:8px;"><input data-carniza-product-search type="text" inputmode="text" placeholder="¿Qué producto necesitás vender hoy?" style="flex:1;min-width:0;min-height:44px;border:1px solid #e7c6a8;border-radius:13px;padding:0 12px;font-weight:900;background:#fff;" /><button type="button" data-carniza-clear-search aria-label="Limpiar búsqueda" title="Limpiar búsqueda" style="min-width:48px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:18px;font-weight:1000;cursor:pointer;">×</button></div>' +
-    '<button type="button" data-carniza-toggle-products style="width:100%;min-height:42px;margin:0 0 10px;border:1px solid #e7c6a8;border-radius:13px;background:#fff;color:#8a2600;font-size:13px;font-weight:1000;cursor:pointer;">Ver lista completa</button>' +
-    '<div data-carniza-selected style="display:none;margin:2px 0 12px;padding:10px;border-radius:13px;background:#fff;border:2px solid #fdba74;color:#4b2a12;font-size:13px;font-weight:900;box-shadow:0 8px 18px rgba(251,146,60,.12);"></div>' +
-    '<div data-carniza-real-products style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px;"></div>' +
-    '<div style="font-size:15px;font-weight:1000;color:#8a2600;margin:8px 0;">2. Ajustá descuento</div>' +
-    '<div data-carniza-discounts style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px;"></div>' +
-    '<div data-carniza-discount-help style="font-size:12px;font-weight:900;color:#6b4b3e;margin:0 0 6px;">20% = vender rápido sin regalar todo.</div>' +
-    '<div style="font-size:12px;font-weight:1000;color:#8a2600;margin:0 0 12px;padding:9px;border-radius:12px;background:#fff4e5;border:1px solid #f6c391;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg>El descuento se aplica SOLO a los productos que marcaste. Carnis no agrega otros productos automáticamente.</div>' +
-    '<button type="button" data-carniza-liquidate style="width:100%;min-height:52px;border:none;border-radius:16px;background:#E52223;color:#fff;font-size:16px;font-weight:1000;cursor:pointer;box-shadow:0 10px 20px rgba(229,34,35,.22);">3. Armar Promo del día</button>' +
-    '<div data-carniza-error style="display:none;margin-top:10px;padding:10px;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:900;"></div>' +
-    '<div data-carniza-result style="display:none;margin-top:12px;"></div>';
+  card.innerHTML = '<div class="pdd-head">' +
+      '<div><div class="pdd-title"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Armá la Promo del día con Carniza</div><div class="pdd-subtitle">Marcá productos reales de tu lista. Carniza arma la oferta para vender hoy.</div></div>' +
+      '<img src="assets/characters/carniza/carniza-avatar.webp" alt="Carniza" loading="lazy" class="pdd-avatar" /></div>' +
+    '<div data-daily-promos-management class="pdd-daily"></div>' +
+    '<div class="pdd-step1">1. Elegí producto</div>' +
+    '<div class="pdd-search-row"><input data-carniza-product-search type="text" inputmode="text" placeholder="¿Qué producto necesitás vender hoy?" class="pdd-search" /><button type="button" data-carniza-clear-search aria-label="Limpiar búsqueda" title="Limpiar búsqueda" class="pdd-search-clear">×</button></div>' +
+    '<button type="button" data-carniza-toggle-products class="pdd-toggle">Ver lista completa</button>' +
+    '<div data-carniza-selected class="pdd-selected" style="display:none"></div>' +
+    '<div data-carniza-real-products class="pdd-products"></div>' +
+    '<div class="pdd-step2">2. Ajustá descuento</div>' +
+    '<div data-carniza-discounts class="pdd-discounts"></div>' +
+    '<div data-carniza-discount-help class="pdd-help">20% = vender rápido sin regalar todo.</div>' +
+    '<div class="pdd-info"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#info"></use></svg>El descuento se aplica SOLO a los productos que marcaste. Carnis no agrega otros productos automáticamente.</div>' +
+    '<button type="button" data-carniza-liquidate class="pdd-cta">3. Armar Promo del día</button>' +
+    '<div data-carniza-error class="pdd-error" style="display:none"></div>' +
+    '<div data-carniza-result class="pdd-result"></div>';
 
   const productsEl = card.querySelector("[data-carniza-real-products]");
   const dailyPromosManagementEl = card.querySelector("[data-daily-promos-management]");
@@ -648,20 +647,20 @@ function renderCarnizaUrgentStockCard(container) {
     const promos = getDailyPromosForManagement({ state: currentPayload?.state || {}, isDemo })
       .filter((promo = {}) => promo.status === "active" && promo.dayKey === todayKey && Date.parse(promo.expiresAt || "") > Date.now());
     const statusHtml = message
-      ? '<div role="status" style="margin:0 0 8px;padding:8px;border-radius:10px;background:' + (isError ? '#fff1f0;color:#ef233c' : '#dcfce7;color:#166534') + ';font-size:12px;font-weight:1000;">' + escapeCarnizaHtml(message) + '</div>'
+      ? '<div role="status" class="pdd-status' + (isError ? ' is-error' : '') + '">' + escapeCarnizaHtml(message) + '</div>'
       : '';
     const rowsHtml = promos.length
       ? promos.map((promo = {}) => {
           const published = new Date(promo.publishedAt || promo.createdAt || "");
           const time = Number.isNaN(published.getTime()) ? "Hoy" : published.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
-          return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-top:1px solid #fed7aa;">' +
-            '<div style="min-width:0;"><strong style="display:block;color:#7c2d12;overflow-wrap:anywhere;">' + escapeCarnizaHtml(promo.name || "Promo del día") + '</strong><span style="display:block;margin-top:3px;color:#9a3412;font-size:11px;font-weight:850;">' + escapeCarnizaHtml(formatCarnizaMoney(promo.total || 0)) + ' · Publicada ' + escapeCarnizaHtml(time) + '</span></div>' +
-            '<button type="button" data-finish-daily-promo="' + escapeCarnizaHtml(promo.id || "") + '" style="min-height:44px;padding:0 11px;border:1px solid #fecaca;border-radius:12px;background:#fff1f0;color:#ef233c;font-size:12px;font-weight:1000;cursor:pointer;">Finalizar</button>' +
+          return '<div class="pdd-daily-row">' +
+            '<div class="pdd-daily-info"><strong class="pdd-daily-name">' + escapeCarnizaHtml(promo.name || "Promo del día") + '</strong><span class="pdd-daily-meta">' + escapeCarnizaHtml(formatCarnizaMoney(promo.total || 0)) + ' · Publicada ' + escapeCarnizaHtml(time) + '</span></div>' +
+            '<button type="button" data-finish-daily-promo="' + escapeCarnizaHtml(promo.id || "") + '" class="pdd-daily-finish">Finalizar</button>' +
           '</div>';
         }).join("")
-      : '<div style="padding-top:7px;color:#7c2d12;font-size:12px;font-weight:850;">No tenés ofertas activas publicadas hoy.</div>';
-    dailyPromosManagementEl.innerHTML = '<details ' + (promos.length || message ? 'open' : '') + ' style="border:1px solid #fed7aa;border-radius:14px;background:#fff;padding:10px;">' +
-      '<summary style="min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#9a3412;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicadas hoy <span style="font-size:12px;">' + promos.length + '</span></summary>' + statusHtml + rowsHtml + '</details>';
+      : '<div class="pdd-daily-empty">No tenés ofertas activas publicadas hoy.</div>';
+    dailyPromosManagementEl.innerHTML = '<details ' + (promos.length || message ? 'open' : '') + ' class="pdd-daily-box">' +
+      '<summary class="pdd-daily-summary"><svg class="ci ci-sm ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicadas hoy <span class="pdd-daily-count">' + promos.length + '</span></summary>' + statusHtml + rowsHtml + '</details>';
   }
 
   dailyPromosManagementEl?.addEventListener("click", async (event) => {
@@ -737,23 +736,23 @@ function renderCarnizaUrgentStockCard(container) {
     const units = new Set(summary.items.map((item) => String(item.unit || "kg").trim() || "kg"));
     const selectionMeta = summary.items.length + ' producto' + (summary.items.length === 1 ? '' : 's') + (units.size === 1 ? ' · ' + quantityLabel + ' ' + [...units][0] : ' · cantidades configuradas');
     const detailRows = summary.items.map((item) =>
-      '<div style="display:grid;gap:2px;padding:7px 0;border-top:1px solid #fed7aa;">' +
-        '<strong style="color:#7c2d12;">' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</strong>' +
+      '<div class="pdd-live-row">' +
+        '<strong class="pdd-live-row-name">' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</strong>' +
         '<span>' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + ' × ' + escapeCarnizaHtml(formatCarnizaMoney(item.unitPrice)) + ' = ' + escapeCarnizaHtml(formatCarnizaMoney(item.listSubtotal)) + '</span>' +
         '<span>Con ' + escapeCarnizaHtml(String(selectedDiscount)) + '%: ' + escapeCarnizaHtml(formatCarnizaMoney(item.discountedSubtotal)) + '</span>' +
       '</div>'
     ).join("");
-    return '<div data-urgent-live-summary style="margin-top:10px;padding:11px;border:2px solid #fb923c;border-radius:14px;background:linear-gradient(180deg,#fff7ed,#fff);box-shadow:0 8px 18px rgba(234,88,12,.10);">' +
-      '<div style="font-size:12px;font-weight:1000;color:#9a3412;text-transform:uppercase;letter-spacing:.04em;">Resumen de la Promo del día</div>' +
-      '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin-top:6px;">' +
-        '<div style="color:#7c2d12;font-size:12px;font-weight:900;line-height:1.35;">' + escapeCarnizaHtml(selectionMeta) + '<br>Lista: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.listTotal)) + ' · Ahorrás: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.discountAmount)) + '</div>' +
-        '<div style="text-align:right;color:#7c2d12;"><span style="display:block;font-size:11px;font-weight:1000;">TOTAL OFERTA</span><strong style="display:block;font-size:22px;line-height:1.05;">' + escapeCarnizaHtml(formatCarnizaMoney(summary.commercialTotal)) + '</strong></div>' +
+    return '<div data-urgent-live-summary class="pdd-live">' +
+      '<div class="pdd-live-title">Resumen de la Promo del día</div>' +
+      '<div class="pdd-live-body">' +
+        '<div class="pdd-live-meta">' + escapeCarnizaHtml(selectionMeta) + '<br>Lista: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.listTotal)) + ' · Ahorrás: ' + escapeCarnizaHtml(formatCarnizaMoney(summary.discountAmount)) + '</div>' +
+        '<div class="pdd-live-total"><span class="pdd-live-total-label">TOTAL OFERTA</span><strong class="pdd-live-total-value">' + escapeCarnizaHtml(formatCarnizaMoney(summary.commercialTotal)) + '</strong></div>' +
       '</div>' +
-      '<details style="margin-top:8px;color:#7c2d12;font-size:12px;font-weight:850;">' +
-        '<summary style="min-height:36px;display:flex;align-items:center;cursor:pointer;font-weight:1000;">Ver detalle del cálculo</summary>' +
+      '<details class="pdd-live-detail">' +
+        '<summary class="pdd-live-detail-summary">Ver detalle del cálculo</summary>' +
         detailRows +
-        '<div style="display:flex;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid #fb923c;"><span>Antes de redondear</span><strong>' + escapeCarnizaHtml(formatCarnizaMoney(summary.calculatedTotal)) + '</strong></div>' +
-        '<div style="font-size:11px;margin-top:5px;">Total comercial redondeado a la centena.</div>' +
+        '<div class="pdd-live-before"><span>Antes de redondear</span><strong>' + escapeCarnizaHtml(formatCarnizaMoney(summary.calculatedTotal)) + '</strong></div>' +
+        '<div class="pdd-live-note">Total comercial redondeado a la centena.</div>' +
       '</details>' +
     '</div>';
   }
@@ -766,15 +765,15 @@ function renderCarnizaUrgentStockCard(container) {
       return;
     }
     selectedEl.style.display = "block";
-    selectedEl.innerHTML = '<div style="font-size:13px;color:#8a2600;font-weight:1000;margin-bottom:7px;">2. Ajustá cantidad antes de liquidar</div>' +
+    selectedEl.innerHTML = '<div class="pdd-sel-title">2. Ajustá cantidad antes de liquidar</div>' +
       selected.map((item) =>
-        '<div style="display:grid;gap:7px;padding:9px 0;border-top:1px solid #f3dcc7;">' +
-          '<div style="min-width:0;overflow-wrap:anywhere;line-height:1.25;color:#4b2a12;font-weight:1000;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</div>' +
-          '<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">' +
-            '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" aria-label="Restar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">−</button>' +
-            '<strong style="min-width:56px;text-align:center;white-space:nowrap;">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
-            '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" aria-label="Sumar cantidad de ' + escapeCarnizaHtml(item.name) + '" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #e7c6a8;background:#fff;font-size:17px;font-weight:1000;cursor:pointer;">+</button>' +
-            '<button type="button" data-urgent-remove="' + escapeCarnizaHtml(item.id) + '" aria-label="Quitar ' + escapeCarnizaHtml(item.name) + '" title="Quitar producto" style="min-width:44px;min-height:44px;border-radius:11px;border:1px solid #fecaca;background:#fff1f0;color:#ef233c;font-size:17px;font-weight:1000;cursor:pointer;">×</button>' +
+        '<div class="pdd-sel-row">' +
+          '<div class="pdd-sel-name"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + '</div>' +
+          '<div class="pdd-sel-actions">' +
+            '<button type="button" data-urgent-qty-minus="' + escapeCarnizaHtml(item.id) + '" aria-label="Restar cantidad de ' + escapeCarnizaHtml(item.name) + '" class="pdd-qty-btn">−</button>' +
+            '<strong class="pdd-qty-value">' + escapeCarnizaHtml(String(item.qty).replace(".", ",")) + ' ' + escapeCarnizaHtml(item.unit || "kg") + '</strong>' +
+            '<button type="button" data-urgent-qty-plus="' + escapeCarnizaHtml(item.id) + '" aria-label="Sumar cantidad de ' + escapeCarnizaHtml(item.name) + '" class="pdd-qty-btn">+</button>' +
+            '<button type="button" data-urgent-remove="' + escapeCarnizaHtml(item.id) + '" aria-label="Quitar ' + escapeCarnizaHtml(item.name) + '" title="Quitar producto" class="pdd-qty-remove">×</button>' +
           '</div>' +
         '</div>'
       ).join("") + buildUrgentLiveSummaryHtml(selected);
@@ -784,7 +783,7 @@ function renderCarnizaUrgentStockCard(container) {
     const q = normalizeCarnizaProductKey(searchText);
     if (!realProducts.length) {
       productsEl.style.display = "grid";
-      productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff1f0;color:#ef233c;font-weight:900;font-size:13px;">No encontré productos con precio cargado. Primero cargá precios reales.</div>';
+      productsEl.innerHTML = '<div class="pdd-empty-error">No encontré productos con precio cargado. Primero cargá precios reales.</div>';
       updateProductListToggle();
       renderSelectedSummary();
       return;
@@ -799,7 +798,7 @@ function renderCarnizaUrgentStockCard(container) {
     const visible = getVisibleProducts();
     if (!visible.length) {
       productsEl.style.display = "grid";
-      productsEl.innerHTML = '<div style="grid-column:1/-1;padding:12px;border-radius:12px;background:#fff8e1;color:#7a4b00;font-weight:900;font-size:13px;">No encontré ese producto en tu lista de precios. Para liquidarlo, primero tiene que existir con precio real.</div>';
+      productsEl.innerHTML = '<div class="pdd-empty-warning">No encontré ese producto en tu lista de precios. Para liquidarlo, primero tiene que existir con precio real.</div>';
       updateProductListToggle();
       renderSelectedSummary();
       return;
@@ -808,9 +807,9 @@ function renderCarnizaUrgentStockCard(container) {
     productsEl.innerHTML = visible.map((item) => {
       const active = selectedIds.has(item.id);
       const subtitle = item.rubro ? item.rubro + " · " + formatCarnizaMoney(item.price) : formatCarnizaMoney(item.price);
-      return '<button type="button" data-product-id="' + escapeCarnizaHtml(item.id) + '" style="min-height:52px;text-align:left;border-radius:14px;border:1px solid ' + (active ? "#E52223" : "#ead5bf") + ';background:' + (active ? "#E52223" : "#fff") + ';color:' + (active ? "#fff" : "#4b2a12") + ';font-weight:1000;cursor:pointer;padding:8px 10px;line-height:1.15;">' +
+      return '<button type="button" data-product-id="' + escapeCarnizaHtml(item.id) + '" class="pdd-product' + (active ? ' is-active' : '') + '">' +
         '<div>' + escapeCarnizaHtml(formatCarnizaProductDisplay(item)) + (active ? " ✔" : "") + '</div>' +
-        '<div style="font-size:11px;font-weight:900;opacity:.82;margin-top:3px;">' + escapeCarnizaHtml(subtitle) + '</div>' +
+        '<div class="pdd-product-sub">' + escapeCarnizaHtml(subtitle) + '</div>' +
       '</button>';
     }).join("");
     updateProductListToggle();
@@ -822,7 +821,7 @@ function renderCarnizaUrgentStockCard(container) {
     helpEl.textContent = helpMap[selectedDiscount] || (selectedDiscount + "% aplicado solo a los productos marcados.");
     discountsEl.innerHTML = discounts.map((pct) => {
       const active = pct === selectedDiscount;
-      return '<button type="button" data-discount="' + pct + '" style="min-height:44px;border-radius:14px;border:1px solid ' + (active ? "#25a244" : "#ead5bf") + ';background:' + (active ? "#25a244" : "#fff") + ';color:' + (active ? "#fff" : "#4b2a12") + ';font-weight:1000;cursor:pointer;">' + pct + '%</button>';
+      return '<button type="button" data-discount="' + pct + '" class="pdd-discount' + (active ? ' is-active' : '') + '">' + pct + '%</button>';
     }).join("");
   }
 
@@ -1011,24 +1010,24 @@ function renderCarnizaUrgentStockCard(container) {
     const setupNodes = Array.from(card.children).filter((node) => node !== resultEl);
     setupNodes.forEach((node) => { node.style.display = "none"; });
 
-    resultEl.innerHTML = '<div style="border:1px solid #F6C6C6;border-radius:18px;background:#FFF1F0;padding:14px;box-shadow:0 10px 22px rgba(229,34,35,.08);">' +
-      '<div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">' +
-        '<div><div style="font-size:18px;font-weight:1000;color:#B3161A;line-height:1.15;"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Oferta lista</div><div style="font-size:13px;color:#8E1014;font-weight:850;margin-top:4px;line-height:1.28;">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
-        '<div style="font-size:26px;line-height:1;"><svg class="ci ci-lg ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg></div>' +
+    resultEl.innerHTML = '<div class="pdd-offer">' +
+      '<div class="pdd-offer-head">' +
+        '<div><div class="pdd-offer-title"><svg class="ci ci-md ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg>Oferta lista</div><div class="pdd-offer-subtitle">Oferta puntual para sacar esta mercadería hoy. No se guarda como combo permanente.</div></div>' +
+        '<div class="pdd-offer-icon"><svg class="ci ci-lg ci--wa" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg></div>' +
       '</div>' +
-      '<button type="button" data-urgent-back style="width:100%;min-height:44px;margin:0 0 10px;border:1px solid #F6C6C6;border-radius:13px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;">← Volver y ajustar productos</button>' +
-      '<label style="display:block;font-size:13px;font-weight:1000;color:#8E1014;margin:8px 0 6px;">Nombre comercial de la oferta</label>' +
-      '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" style="width:100%;box-sizing:border-box;min-height:48px;border:2px solid #F6C6C6;border-radius:14px;padding:0 12px;background:#fff;color:#0A2E5B;font-weight:1000;font-size:15px;" />' +
-      '<div style="font-size:12px;font-weight:900;color:#8E1014;margin:7px 0 10px;">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
-      (missing.length ? '<div style="margin:8px 0;padding:8px;border-radius:10px;background:#fff8e1;color:#7a4b00;font-size:12px;font-weight:900;"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#alert"></use></svg>Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
-      '<pre data-urgent-message-preview style="white-space:pre-wrap;font-family:inherit;margin:10px 0;padding:12px;border-radius:12px;background:#fff;color:#1f1f1f;font-weight:900;line-height:1.38;max-height:245px;overflow:auto;"></pre>' +
-      '<div data-urgent-name-error style="display:none;margin:8px 0;padding:9px;border-radius:11px;background:#fff1f0;color:#ef233c;font-size:13px;font-weight:1000;">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
-      '<div style="display:grid;grid-template-columns:1.2fr .8fr;gap:8px;">' +
-        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:14px;background:#1fa855;color:#fff;text-decoration:none;font-weight:1000;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Enviar oferta por WhatsApp</a>' +
-        '<button type="button" data-copy-message style="min-height:50px;border:none;border-radius:14px;background:#E52223;color:white;font-weight:1000;cursor:pointer;">Copiar texto</button>' +
+      '<button type="button" data-urgent-back class="pdd-offer-back">← Volver y ajustar productos</button>' +
+      '<label class="pdd-offer-label">Nombre comercial de la oferta</label>' +
+      '<input data-urgent-offer-name type="text" value="' + escapeCarnizaHtml(suggestedName) + '" placeholder="Ej: Promo parrillera de hoy" class="pdd-offer-name" />' +
+      '<div class="pdd-offer-hint">Vos armás una Promo del día. Al cliente le llega una oportunidad atractiva.</div>' +
+      (missing.length ? '<div class="pdd-offer-missing"><svg class="ci ci-sm ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#alert"></use></svg>Revisá precio de: ' + escapeCarnizaHtml(missing.join(", ")) + '. No se encontró precio real.</div>' : '') +
+      '<pre data-urgent-message-preview class="pdd-offer-preview"></pre>' +
+      '<div data-urgent-name-error class="pdd-offer-error">Poné un nombre claro para esta oferta antes de enviarla.</div>' +
+      '<div class="pdd-offer-actions">' +
+        '<a data-urgent-whatsapp href="#" target="_blank" rel="noopener" class="pdd-offer-wa"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>Enviar oferta por WhatsApp</a>' +
+        '<button type="button" data-copy-message class="pdd-offer-copy">Copiar texto</button>' +
       '</div>' +
-      '<button type="button" data-publish-daily style="width:100%;min-height:52px;margin-top:9px;border:none;border-radius:14px;background:#ea580c;color:#fff;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 9px 18px rgba(234,88,12,.20);"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicar por hoy en mi carnicería</button>' +
-      '<div data-publish-daily-status role="status" aria-live="polite" style="display:none;margin-top:8px;padding:9px;border-radius:11px;font-size:12px;font-weight:1000;line-height:1.35;"></div>' +
+      '<button type="button" data-publish-daily class="pdd-offer-publish"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Publicar por hoy en mi carnicería</button>' +
+      '<div data-publish-daily-status role="status" aria-live="polite" class="pdd-offer-status"></div>' +
       '</div>';
 
     const nameInput = resultEl.querySelector("[data-urgent-offer-name]");
@@ -1046,8 +1045,7 @@ function renderCarnizaUrgentStockCard(container) {
       const waUrl = buildWhatsAppUrlForCarniza(finalMessage);
       if (whatsapp) {
         whatsapp.href = waUrl || "#";
-        whatsapp.style.opacity = waUrl ? "1" : ".55";
-        whatsapp.style.pointerEvents = waUrl ? "auto" : "none";
+        whatsapp.classList.toggle("is-disabled", !waUrl);
       }
       if (error) error.style.display = cleanName.length ? "none" : "block";
     };
@@ -1090,11 +1088,11 @@ function renderCarnizaUrgentStockCard(container) {
         currentPayload = { ...currentPayload, state: result.state };
         renderDailyPromosManagement();
         publishButton.textContent = result.demo ? "✅ Publicación de prueba lista" : "✅ Publicada por hoy";
-        publishButton.style.background = "#15803d";
+        publishButton.classList.add("is-published");
         if (publishStatus) {
           publishStatus.style.display = "block";
-          publishStatus.style.background = "#dcfce7";
-          publishStatus.style.color = "#166534";
+          publishStatus.classList.remove("is-error");
+          publishStatus.classList.add("is-success");
           publishStatus.textContent = result.demo
             ? "Demo: simulación local. No se escribió en Firebase ni en una web pública real."
             : "Visible en el snapshot de tu carnicería hasta las 23:59 de Argentina. No se guardó en Promos.";
@@ -1113,8 +1111,8 @@ function renderCarnizaUrgentStockCard(container) {
         publishButton.textContent = previousText;
         if (publishStatus) {
           publishStatus.style.display = "block";
-          publishStatus.style.background = "#fff1f0";
-          publishStatus.style.color = "#ef233c";
+          publishStatus.classList.remove("is-success");
+          publishStatus.classList.add("is-error");
           publishStatus.textContent = publishError?.message || "No se pudo publicar. Probá nuevamente.";
         }
       }

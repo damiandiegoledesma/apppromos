@@ -2093,8 +2093,8 @@ html #carnizaFloatingLiquidatorModal #carnizaFloatingLiquidatorBody [data-carniz
   color: #FFFFFF !important;
   box-shadow: var(--carnis-shadow-cta) !important;
 }
-/* Porcentaje seleccionado (se marca con estilo inline #25a244) */
-html #carnizaFloatingLiquidatorBody [data-discount][style*="#25a244"] {
+/* Porcentaje seleccionado (clase is-active desde C6.1) */
+html #carnizaFloatingLiquidatorBody [data-discount].is-active {
   background: var(--carnis-red) !important;
   border-color: var(--carnis-red) !important;
   color: #FFFFFF !important;
@@ -4448,3 +4448,89 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-scale-price__label { display:block; color:var(--mode-promo-ink); font-size:.76rem; line-height:1.1; }
 .builder-scale-price__weight { display:block; margin-top:2px; color:var(--mode-promo-ink); font-size:.68rem; font-weight:850; }
 .builder-scale-price__value { flex:0 0 auto; color:var(--mode-promo-emphasis); font-size:1.02rem; white-space:nowrap; }
+
+/* =========================================================
+   32. PROMO DEL DÍA (C6.1)
+   Centralización de estilos de renderCarnizaUrgentStockCard()
+   ========================================================= */
+/* ex card.style.cssText */
+#carnizaUrgentStockCard { margin:0 0 14px; padding:15px; border:2px solid #ffd6b0; border-radius:18px; background:#fff8f0; box-shadow:0 10px 24px rgba(0,0,0,.06); }
+#carnizaUrgentStockCard .pdd-head { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+#carnizaUrgentStockCard .pdd-title { font-size:17px; font-weight:1000; color:#8a2600; line-height:1.15; }
+#carnizaUrgentStockCard .pdd-subtitle { font-size:13px; color:#6b4b3e; font-weight:800; margin-top:4px; line-height:1.28; }
+#carnizaUrgentStockCard .pdd-avatar { width:46px; height:46px; border-radius:999px; object-fit:cover; border:2px solid #fed7aa; background:#fff; }
+#carnizaUrgentStockCard .pdd-daily { margin:0 0 12px; }
+#carnizaUrgentStockCard .pdd-step1 { font-size:13px; font-weight:1000; color:#8a2600; margin:4px 0 7px; }
+#carnizaUrgentStockCard .pdd-search-row { display:flex; gap:8px; margin-bottom:8px; }
+#carnizaUrgentStockCard .pdd-search { flex:1; min-width:0; min-height:44px; border:1px solid #e7c6a8; border-radius:13px; padding:0 12px; font-weight:900; background:#fff; }
+#carnizaUrgentStockCard .pdd-search-clear { min-width:48px; border:1px solid #e7c6a8; border-radius:13px; background:#fff; color:#8a2600; font-size:18px; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-toggle { width:100%; min-height:42px; margin:0 0 10px; border:1px solid #e7c6a8; border-radius:13px; background:#fff; color:#8a2600; font-size:13px; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-selected { margin:2px 0 12px; padding:10px; border-radius:13px; background:#fff; border:2px solid #fdba74; color:#4b2a12; font-size:13px; font-weight:900; box-shadow:0 8px 18px rgba(251,146,60,.12); }
+#carnizaUrgentStockCard .pdd-products { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+#carnizaUrgentStockCard .pdd-step2 { font-size:15px; font-weight:1000; color:#8a2600; margin:8px 0; }
+#carnizaUrgentStockCard .pdd-discounts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:8px; }
+#carnizaUrgentStockCard .pdd-help { font-size:12px; font-weight:900; color:#6b4b3e; margin:0 0 6px; }
+#carnizaUrgentStockCard .pdd-info { font-size:12px; font-weight:1000; color:#8a2600; margin:0 0 12px; padding:9px; border-radius:12px; background:#fff4e5; border:1px solid #f6c391; }
+#carnizaUrgentStockCard .pdd-cta { width:100%; min-height:52px; border:none; border-radius:16px; background:#E52223; color:#fff; font-size:16px; font-weight:1000; cursor:pointer; box-shadow:0 10px 20px rgba(229,34,35,.22); }
+#carnizaUrgentStockCard .pdd-error { margin-top:10px; padding:10px; border-radius:12px; background:#fff1f0; color:#ef233c; font-size:13px; font-weight:900; }
+#carnizaUrgentStockCard .pdd-result { display:none; margin-top:12px; }
+#carnizaUrgentStockCard .pdd-status { margin:0 0 8px; padding:8px; border-radius:10px; background:#dcfce7; color:#166534; font-size:12px; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-status.is-error { background:#fff1f0; color:#ef233c; }
+#carnizaUrgentStockCard .pdd-daily-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 0; border-top:1px solid #fed7aa; }
+#carnizaUrgentStockCard .pdd-daily-info { min-width:0; }
+#carnizaUrgentStockCard .pdd-daily-name { display:block; color:#7c2d12; overflow-wrap:anywhere; }
+#carnizaUrgentStockCard .pdd-daily-meta { display:block; margin-top:3px; color:#9a3412; font-size:11px; font-weight:850; }
+#carnizaUrgentStockCard .pdd-daily-finish { min-height:44px; padding:0 11px; border:1px solid #fecaca; border-radius:12px; background:#fff1f0; color:#ef233c; font-size:12px; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-daily-empty { padding-top:7px; color:#7c2d12; font-size:12px; font-weight:850; }
+#carnizaUrgentStockCard .pdd-daily-box { border:1px solid #fed7aa; border-radius:14px; background:#fff; padding:10px; }
+#carnizaUrgentStockCard .pdd-daily-summary { min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:8px; color:#9a3412; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-daily-count { font-size:12px; }
+#carnizaUrgentStockCard .pdd-live-row { display:grid; gap:2px; padding:7px 0; border-top:1px solid #fed7aa; }
+#carnizaUrgentStockCard .pdd-live-row-name { color:#7c2d12; }
+#carnizaUrgentStockCard .pdd-live { margin-top:10px; padding:11px; border:2px solid #fb923c; border-radius:14px; background:linear-gradient(180deg,#fff7ed,#fff); box-shadow:0 8px 18px rgba(234,88,12,.10); }
+#carnizaUrgentStockCard .pdd-live-title { font-size:12px; font-weight:1000; color:#9a3412; text-transform:uppercase; letter-spacing:.04em; }
+#carnizaUrgentStockCard .pdd-live-body { display:flex; justify-content:space-between; gap:10px; align-items:flex-end; margin-top:6px; }
+#carnizaUrgentStockCard .pdd-live-meta { color:#7c2d12; font-size:12px; font-weight:900; line-height:1.35; }
+#carnizaUrgentStockCard .pdd-live-total { text-align:right; color:#7c2d12; }
+#carnizaUrgentStockCard .pdd-live-total-label { display:block; font-size:11px; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-live-total-value { display:block; font-size:22px; line-height:1.05; }
+#carnizaUrgentStockCard .pdd-live-detail { margin-top:8px; color:#7c2d12; font-size:12px; font-weight:850; }
+#carnizaUrgentStockCard .pdd-live-detail-summary { min-height:36px; display:flex; align-items:center; cursor:pointer; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-live-before { display:flex; justify-content:space-between; gap:8px; padding-top:8px; border-top:1px solid #fb923c; }
+#carnizaUrgentStockCard .pdd-live-note { font-size:11px; margin-top:5px; }
+#carnizaUrgentStockCard .pdd-sel-title { font-size:13px; color:#8a2600; font-weight:1000; margin-bottom:7px; }
+#carnizaUrgentStockCard .pdd-sel-row { display:grid; gap:7px; padding:9px 0; border-top:1px solid #f3dcc7; }
+#carnizaUrgentStockCard .pdd-sel-name { min-width:0; overflow-wrap:anywhere; line-height:1.25; color:#4b2a12; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-sel-actions { display:flex; align-items:center; justify-content:flex-end; gap:6px; }
+#carnizaUrgentStockCard .pdd-qty-btn { min-width:44px; min-height:44px; border-radius:11px; border:1px solid #e7c6a8; background:#fff; font-size:17px; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-qty-value { min-width:56px; text-align:center; white-space:nowrap; }
+#carnizaUrgentStockCard .pdd-qty-remove { min-width:44px; min-height:44px; border-radius:11px; border:1px solid #fecaca; background:#fff1f0; color:#ef233c; font-size:17px; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-empty-error { grid-column:1/-1; padding:12px; border-radius:12px; background:#fff1f0; color:#ef233c; font-weight:900; font-size:13px; }
+#carnizaUrgentStockCard .pdd-empty-warning { grid-column:1/-1; padding:12px; border-radius:12px; background:#fff8e1; color:#7a4b00; font-weight:900; font-size:13px; }
+#carnizaUrgentStockCard .pdd-product { min-height:52px; text-align:left; border-radius:14px; border:1px solid #ead5bf; background:#fff; color:#4b2a12; font-weight:1000; cursor:pointer; padding:8px 10px; line-height:1.15; }
+#carnizaUrgentStockCard .pdd-product.is-active { border:1px solid #E52223; background:#E52223; color:#fff; }
+#carnizaUrgentStockCard .pdd-product-sub { font-size:11px; font-weight:900; opacity:.82; margin-top:3px; }
+#carnizaUrgentStockCard .pdd-discount { min-height:44px; border-radius:14px; border:1px solid #ead5bf; background:#fff; color:#4b2a12; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-discount.is-active { border:1px solid #25a244; background:#25a244; color:#fff; }
+#carnizaUrgentStockCard .pdd-offer { border:1px solid #F6C6C6; border-radius:18px; background:#FFF1F0; padding:14px; box-shadow:0 10px 22px rgba(229,34,35,.08); }
+#carnizaUrgentStockCard .pdd-offer-head { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+#carnizaUrgentStockCard .pdd-offer-title { font-size:18px; font-weight:1000; color:#B3161A; line-height:1.15; }
+#carnizaUrgentStockCard .pdd-offer-subtitle { font-size:13px; color:#8E1014; font-weight:850; margin-top:4px; line-height:1.28; }
+#carnizaUrgentStockCard .pdd-offer-icon { font-size:26px; line-height:1; }
+#carnizaUrgentStockCard .pdd-offer-back { width:100%; min-height:44px; margin:0 0 10px; border:1px solid #F6C6C6; border-radius:13px; background:#fff; color:#B3161A; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-offer-label { display:block; font-size:13px; font-weight:1000; color:#8E1014; margin:8px 0 6px; }
+#carnizaUrgentStockCard .pdd-offer-name { width:100%; box-sizing:border-box; min-height:48px; border:2px solid #F6C6C6; border-radius:14px; padding:0 12px; background:#fff; color:#0A2E5B; font-weight:1000; font-size:15px; }
+#carnizaUrgentStockCard .pdd-offer-hint { font-size:12px; font-weight:900; color:#8E1014; margin:7px 0 10px; }
+#carnizaUrgentStockCard .pdd-offer-missing { margin:8px 0; padding:8px; border-radius:10px; background:#fff8e1; color:#7a4b00; font-size:12px; font-weight:900; }
+#carnizaUrgentStockCard .pdd-offer-preview { white-space:pre-wrap; font-family:inherit; margin:10px 0; padding:12px; border-radius:12px; background:#fff; color:#1f1f1f; font-weight:900; line-height:1.38; max-height:245px; overflow:auto; }
+#carnizaUrgentStockCard .pdd-offer-error { display:none; margin:8px 0; padding:9px; border-radius:11px; background:#fff1f0; color:#ef233c; font-size:13px; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-offer-actions { display:grid; grid-template-columns:1.2fr .8fr; gap:8px; }
+#carnizaUrgentStockCard .pdd-offer-wa { display:flex; align-items:center; justify-content:center; min-height:50px; border-radius:14px; background:#1fa855; color:#fff; text-decoration:none; font-weight:1000; }
+#carnizaUrgentStockCard .pdd-offer-copy { min-height:50px; border:none; border-radius:14px; background:#E52223; color:white; font-weight:1000; cursor:pointer; }
+#carnizaUrgentStockCard .pdd-offer-publish { width:100%; min-height:52px; margin-top:9px; border:none; border-radius:14px; background:#ea580c; color:#fff; font-size:14px; font-weight:1000; cursor:pointer; box-shadow:0 9px 18px rgba(234,88,12,.20); }
+#carnizaUrgentStockCard .pdd-offer-status { display:none; margin-top:8px; padding:9px; border-radius:11px; font-size:12px; font-weight:1000; line-height:1.35; }
+/* Estados antes asignados con element.style en renderUrgentResult() */
+#carnizaUrgentStockCard .pdd-offer-wa.is-disabled { opacity: .55; pointer-events: none; }
+#carnizaUrgentStockCard .pdd-offer-publish.is-published { background: #15803d; }
+#carnizaUrgentStockCard .pdd-offer-status.is-success { background: #dcfce7; color: #166534; }
+#carnizaUrgentStockCard .pdd-offer-status.is-error { background: #fff1f0; color: #ef233c; }
