@@ -232,60 +232,131 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
   if (!container) return;
   container.innerHTML = `
     <style>
-      .print-center{max-width:980px;margin:0 auto;padding:18px 16px 120px;color:#172033}
-      .print-center__head{margin-bottom:18px}.print-center__head h2{margin:0;color:#B3161A;font-size:clamp(25px,4vw,34px)}
-      .print-center__head p{margin:7px 0 0;color:#64748b;font-weight:750;line-height:1.45}
-      .print-center__tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px;margin-bottom:18px}
-      .print-tool-card{display:block;width:100%;font:inherit;text-align:left;border:1px solid #e2e8f0;border-radius:20px;background:#fff;padding:16px;box-shadow:0 8px 24px rgba(15,23,42,.06);text-decoration:none;color:inherit;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
-      .print-tool-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(15,23,42,.10);border-color:#fca5a5}.print-tool-card:focus-visible{outline:3px solid rgba(229,34,35,.22);outline-offset:2px}
-      .print-tool-card.active{border-color:#fecaca;background:#fffafa}.print-tool-card h3{margin:0;font-size:18px;color:#1f2937}.print-tool-card p{margin:7px 0 0;color:#64748b;line-height:1.35;font-weight:700}
-      .print-order-workspace,.price-list-workspace,.offer-poster-workspace,.qr-shop-workspace,.flyer-workspace{scroll-margin-top:22px}
-      [data-print-tool-view]{display:none}
-      .print-center.is-tool-open [data-print-hub]{display:none}
-      .print-center.is-tool-open [data-print-tool-view].is-active{display:block}
-      .print-center__back{display:inline-flex;align-items:center;gap:7px;margin:0 0 14px;border:1px solid #fecaca;border-radius:999px;background:#fff7f7;color:#B3161A;padding:9px 13px;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
-      .print-center__back:hover{background:#fee2e2}
-      .print-center__back--bottom{margin:18px 0 0}
-
-      .print-tool-card .badge{display:inline-flex;margin-top:10px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:950;background:#f1f5f9;color:#64748b}.print-tool-card.active .badge{background:#fee2e2;color:#B3161A}
-      .print-order-workspace{border:1px solid #e2e8f0;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-      .print-order-workspace h3{margin:0;color:#B3161A;font-size:22px}.print-order-workspace>p{color:#64748b;font-weight:750;line-height:1.4}
-      .print-order-input{width:100%;min-height:220px;resize:vertical;border:1px solid #cbd5e1;border-radius:16px;padding:14px;font:700 14px/1.45 system-ui,sans-serif;color:#0f172a;background:#fff;box-sizing:border-box}
-      .print-order-input:focus{outline:3px solid rgba(229,34,35,.12);border-color:#E52223}
-      .print-order-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}.print-order-actions button{min-height:46px;border:1px solid #e2e8f0;border-radius:14px;padding:0 16px;background:#fff;color:#334155;font-weight:950;cursor:pointer}.print-order-actions .primary{background:#E52223;border-color:#E52223;color:#fff}
-      .print-order-error{min-height:20px;margin-top:9px;color:#ef233c;font-weight:850;font-size:13px}
-      .print-order-preview-wrap{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #e2e8f0}.print-order-preview-wrap.is-ready{display:block}
-      .print-order-preview-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.print-order-preview-title h4{margin:0;font-size:18px}.print-order-preview-title span{color:#64748b;font-size:12px;font-weight:800}
       .print-order-ticket{width:58mm;max-width:100%;margin:0 auto;background:#fff;color:#111;border:1px solid #d1d5db;padding:5mm 4mm;box-shadow:0 10px 30px rgba(15,23,42,.12);font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere}
-      .print-ticket-center{text-align:center}.print-ticket-logo{display:none;max-width:44mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin:0 auto 3mm;filter:grayscale(1);}.print-ticket-logo.is-ready{display:block}.print-ticket-business{font-size:13px;font-weight:900}.print-ticket-title{font-size:15px;font-weight:950}.print-ticket-date{font-size:9px;margin-top:2px}.print-ticket-rule{border:0;border-top:1px dashed #111;margin:7px 0}.print-ticket-meta{display:grid;gap:2px}.print-ticket-meta strong{font-weight:950}.print-order-item{margin:0 0 8px}.print-order-item__head{display:flex;align-items:flex-start;justify-content:space-between;gap:7px}.print-order-item__head>div{min-width:0}.print-order-item__head strong{display:block;font-weight:950}.print-order-item__head>strong{text-align:right;white-space:nowrap}.print-order-item__head small{display:block;font-size:9px}.print-order-qty{font-size:10px}.print-order-component{padding-left:7px;font-size:9px;margin-top:2px}.print-ticket-total{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:950}.print-ticket-notice{font-size:8.5px;margin-top:7px}.print-ticket-checks{display:grid;gap:6px;font-size:11px;font-weight:900;margin:9px 0}.print-ticket-footer{text-align:center;font-size:8px}
-      .price-list-workspace{margin-top:18px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-      .price-list-workspace h3{margin:0;color:#B3161A;font-size:22px}.price-list-workspace>p{color:#64748b;font-weight:750;line-height:1.4}
-      .price-list-models{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-      .price-list-model{border:2px solid #e2e8f0;border-radius:16px;background:#fff;padding:12px;text-align:left;cursor:pointer}
-      .price-list-model strong{display:block;color:#172033}.price-list-model small{display:block;margin-top:4px;color:#64748b;font-weight:750}
-      .price-list-model.is-selected{border-color:#E52223;background:#fff7f7;box-shadow:0 0 0 3px rgba(229,34,35,.08)}
+      .print-ticket-center{text-align:center}
+      .print-ticket-logo{display:none;max-width:44mm;max-height:24mm;width:auto;height:auto;object-fit:contain;margin:0 auto 3mm;filter:grayscale(1);}
+      .print-ticket-logo.is-ready{display:block}
+      .print-ticket-business{font-size:13px;font-weight:900}
+      .print-ticket-title{font-size:15px;font-weight:950}
+      .print-ticket-date{font-size:9px;margin-top:2px}
+      .print-ticket-rule{border:0;border-top:1px dashed #111;margin:7px 0}
+      .print-ticket-meta{display:grid;gap:2px}
+      .print-ticket-meta strong{font-weight:950}
+      .print-ticket-total{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:950}
+      .print-ticket-notice{font-size:8.5px;margin-top:7px}
+      .print-ticket-checks{display:grid;gap:6px;font-size:11px;font-weight:900;margin:9px 0}
+      .print-ticket-footer{text-align:center;font-size:8px}
       .price-list-qr-footer{display:flex;align-items:center;justify-content:center;gap:4mm;margin-top:3mm;padding-top:3mm;border-top:1px solid #d1d5db;flex:0 0 auto;min-height:25mm;box-sizing:border-box}
       .price-list-qr{width:20mm;height:20mm;object-fit:contain;background:#fff;border:1px solid #d1d5db;border-radius:2mm;padding:1.5mm;box-sizing:border-box}
-      .price-list-qr-copy{max-width:72mm;font-size:9.5px;line-height:1.2;font-weight:800;color:#334155}.price-list-qr-copy strong{display:block;font-size:12.5px;color:#111;margin-bottom:1mm}
-      .price-list-sheet.model-classic{border:3mm solid #E52223;padding:7mm 9mm 6mm}.price-list-sheet.model-classic .price-list-head{border-bottom-color:#E52223}.price-list-sheet.model-classic .price-list-title{color:#E52223;text-transform:uppercase}.price-list-sheet.model-classic .price-list-group h5{background:#E52223;color:#fff;border:0;padding:1.5mm 2mm}.price-list-sheet.model-classic .price-list-row{border-bottom:1px solid #fecaca}
-      .price-list-sheet.model-app{padding:10mm 12mm 8mm}.price-list-sheet.model-app .price-list-title{color:#172033}.price-list-sheet.model-app .price-list-group h5{background:#f7f0e8;color:#7c2d12;border:0;border-radius:2mm;padding:1.5mm 2mm}.price-list-sheet.model-app .price-list-row{border-bottom:1px solid #e2e8f0}
-      .price-list-sheet.model-commercial{border:3mm solid #E52223;padding:7mm 9mm 6mm}.price-list-sheet.model-commercial .price-list-title{background:#E52223;color:#fff;padding:2.5mm;border-radius:2mm;text-transform:uppercase}.price-list-sheet.model-commercial .price-list-group h5{background:#E52223;color:#fff;border:0;padding:1.5mm 2mm}.price-list-sheet.model-commercial .price-list-row strong:last-child{font-size:13px;color:#E52223}.price-list-sheet.model-commercial .price-list-qr-footer{border-top:2px solid #E52223}
-      .price-list-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end}.price-list-field{display:grid;gap:6px}.price-list-field label{font-size:12px;font-weight:950;color:#475569}.price-list-field select{min-height:46px;border:1px solid #cbd5e1;border-radius:14px;padding:0 12px;background:#fff;color:#0f172a;font-weight:850}.price-list-actions{display:flex;gap:10px;margin-top:14px}.price-list-actions button{min-height:46px;border:1px solid #e2e8f0;border-radius:14px;padding:0 16px;background:#fff;color:#334155;font-weight:950;cursor:pointer}.price-list-actions .primary{background:#E52223;border-color:#E52223;color:#fff}.price-list-error{min-height:20px;margin-top:8px;color:#ef233c;font-weight:850;font-size:13px}
-      .price-list-preview-wrap{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #e2e8f0}.price-list-preview-wrap.is-ready{display:block}.price-list-preview-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.price-list-preview-title h4{margin:0;font-size:18px}.price-list-preview-title span{color:#64748b;font-size:12px;font-weight:800}
-      .price-list-pages{display:grid;gap:18px}.price-list-sheet{width:210mm;height:297mm;max-width:100%;box-sizing:border-box;margin:0 auto;background:#fff;color:#111;border:1px solid #d1d5db;padding:10mm 12mm 9mm;box-shadow:0 10px 30px rgba(15,23,42,.12);font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;overflow:hidden}.price-list-head{text-align:center;border-bottom:2px solid #111;padding-bottom:4mm;margin-bottom:4mm;flex:0 0 auto}.price-list-logo{display:none;max-width:34mm;max-height:17mm;width:auto;height:auto;object-fit:contain;margin:0 auto 2mm}.price-list-logo.is-ready{display:block}.price-list-business{font-size:18px;font-weight:900}.price-list-title{font-size:24px;font-weight:950;letter-spacing:.02em;margin-top:1mm}.price-list-date{font-size:10px;margin-top:1mm;color:#444}.price-list-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10mm;min-height:0;flex:1}.price-list-column{min-width:0}.price-list-group{margin:0 0 4mm;break-inside:avoid}.price-list-group h5{margin:0 0 1.5mm;padding:0 0 1mm;border-bottom:2px solid #111;font-size:14px;text-transform:uppercase}.price-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4mm;align-items:end;padding:1mm 0;border-bottom:1px dotted #bbb;font-size:11px}.price-list-row strong:last-child{white-space:nowrap;font-size:11.5px}.price-list-footer{padding-top:2.5mm;border-top:1px solid #aaa;text-align:center;font-size:8px;color:#444;flex:0 0 auto}.price-list-page-number{font-weight:800;margin-left:3mm}.offer-list-card{border:1.5px solid #111;border-radius:4mm;padding:4mm;margin:0 0 4mm;break-inside:avoid;background:#fff}.offer-list-card__badge{display:inline-block;margin-bottom:2mm;padding:1mm 2mm;border:1px solid #111;border-radius:999px;font-size:8px;font-weight:900;text-transform:uppercase}.offer-list-card h5{margin:0 0 2.5mm;font-size:16px;line-height:1.15}.offer-list-items{display:grid;gap:1.3mm}.offer-list-item{font-size:10.5px;line-height:1.25}.offer-list-price{margin-top:3mm;padding-top:2.5mm;border-top:2px solid #111;text-align:right;font-size:22px;font-weight:950}.offer-list-empty{grid-column:1/-1;padding:12mm;text-align:center;border:1px dashed #aaa;font-weight:800;color:#555}.offer-section-title{grid-column:1/-1;margin:1mm 0 3mm;padding:2mm 0;border-bottom:3px solid #111;font-size:16px;font-weight:950;text-transform:uppercase}.offer-subtitle{margin:0 0 2mm;font-size:10px;font-weight:900;text-transform:uppercase;color:#333}.offer-list-card.is-large{padding:6mm;margin-bottom:6mm}.offer-list-card.is-large h5{font-size:20px}.offer-list-card.is-large .offer-list-item{font-size:12px}.offer-list-card.is-large .offer-list-price{font-size:28px}.offer-list-card.is-medium{padding:5mm;margin-bottom:5mm}.offer-list-card.is-medium h5{font-size:18px}.offer-list-card.is-medium .offer-list-price{font-size:25px}.offer-list-card.is-compact{padding:3mm;margin-bottom:3mm}.offer-list-card.is-compact h5{font-size:13px}.offer-list-card.is-compact .offer-list-item{font-size:9.5px}.offer-list-card.is-compact .offer-list-price{font-size:18px}.offer-list-page-body{display:flex;flex-direction:column;gap:4mm;min-height:0;flex:1}.offer-group-block{break-inside:avoid}.offer-group-block .offer-section-title{margin:0 0 3mm}.offer-group-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm 8mm;align-items:stretch}.offer-group-grid .offer-list-card{height:100%;box-sizing:border-box;margin:0;display:flex;flex-direction:column}.offer-group-grid .offer-list-items{flex:1}.offer-group-grid .offer-list-price{margin-top:auto}.offer-list-card.is-medium h5{font-size:19px}.offer-list-card.is-medium .offer-list-item{font-size:11px}.offer-list-card.is-medium .offer-list-price{font-size:27px}.offer-list-card.is-compact h5{font-size:14px}.offer-list-card.is-compact .offer-list-price{font-size:20px}.offer-list-unit-price{margin-top:1mm;text-align:right;font-size:11px;font-weight:850;color:#333}.offer-list-card.is-large .offer-list-unit-price{font-size:13px}.offer-list-card.is-medium .offer-list-unit-price{font-size:12px}.offer-list-card.is-compact .offer-list-unit-price{font-size:10px}
-      .offer-poster-workspace{margin-top:18px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-      .offer-poster-workspace h3{margin:0;color:#B3161A;font-size:22px}.offer-poster-workspace>p{color:#64748b;font-weight:750;line-height:1.4}
-      .offer-poster-controls{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;align-items:end}.offer-poster-field{display:grid;gap:6px}.offer-poster-field label{font-size:12px;font-weight:950;color:#475569}.offer-poster-field select{min-height:46px;border:1px solid #cbd5e1;border-radius:14px;padding:0 12px;background:#fff;color:#0f172a;font-weight:850}
-      .offer-poster-models{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.offer-poster-model{border:2px solid #e2e8f0;border-radius:16px;background:#fff;padding:12px;text-align:left;cursor:pointer}.offer-poster-model strong{display:block;color:#172033}.offer-poster-model small{display:block;margin-top:4px;color:#64748b;font-weight:750}.offer-poster-model.is-selected{border-color:#E52223;background:#fff7f7;box-shadow:0 0 0 3px rgba(229,34,35,.08)}
-      .offer-poster-actions{display:flex;gap:10px;margin-top:14px}.offer-poster-actions button{min-height:46px;border:1px solid #e2e8f0;border-radius:14px;padding:0 16px;background:#fff;color:#334155;font-weight:950;cursor:pointer}.offer-poster-actions .primary{background:#E52223;border-color:#E52223;color:#fff}.offer-poster-error{min-height:20px;margin-top:8px;color:#ef233c;font-weight:850;font-size:13px}.offer-poster-export-status{min-height:18px;margin-top:8px;color:#475569;font-size:12px;font-weight:800}
-      .offer-poster-preview{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #e2e8f0}.offer-poster-preview.is-ready{display:block}.offer-poster-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.offer-poster-preview-head h4{margin:0;font-size:18px}.offer-poster-preview-head span{color:#64748b;font-size:12px;font-weight:800}
+      .price-list-qr-copy{max-width:72mm;font-size:9.5px;line-height:1.2;font-weight:800;color:#334155}
+      .price-list-qr-copy strong{display:block;font-size:12.5px;color:#111;margin-bottom:1mm}
+      .price-list-sheet.model-classic{border:3mm solid #E52223;padding:7mm 9mm 6mm}
+      .price-list-sheet.model-classic .price-list-head{border-bottom-color:#E52223}
+      .price-list-sheet.model-classic .price-list-title{color:#E52223;text-transform:uppercase}
+      .price-list-sheet.model-classic .price-list-group h5{background:#E52223;color:#fff;border:0;padding:1.5mm 2mm}
+      .price-list-sheet.model-classic .price-list-row{border-bottom:1px solid #fecaca}
+      .price-list-sheet.model-app{padding:10mm 12mm 8mm}
+      .price-list-sheet.model-app .price-list-title{color:#172033}
+      .price-list-sheet.model-app .price-list-group h5{background:#f7f0e8;color:#7c2d12;border:0;border-radius:2mm;padding:1.5mm 2mm}
+      .price-list-sheet.model-app .price-list-row{border-bottom:1px solid #e2e8f0}
+      .price-list-sheet.model-commercial{border:3mm solid #E52223;padding:7mm 9mm 6mm}
+      .price-list-sheet.model-commercial .price-list-title{background:#E52223;color:#fff;padding:2.5mm;border-radius:2mm;text-transform:uppercase}
+      .price-list-sheet.model-commercial .price-list-group h5{background:#E52223;color:#fff;border:0;padding:1.5mm 2mm}
+      .price-list-sheet.model-commercial .price-list-row strong:last-child{font-size:13px;color:#E52223}
+      .price-list-sheet.model-commercial .price-list-qr-footer{border-top:2px solid #E52223}
+      .price-list-pages{display:grid;gap:18px}
+      .price-list-sheet{width:210mm;height:297mm;max-width:100%;box-sizing:border-box;margin:0 auto;background:#fff;color:#111;border:1px solid #d1d5db;padding:10mm 12mm 9mm;box-shadow:0 10px 30px rgba(15,23,42,.12);font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+      .price-list-head{text-align:center;border-bottom:2px solid #111;padding-bottom:4mm;margin-bottom:4mm;flex:0 0 auto}
+      .price-list-logo{display:none;max-width:34mm;max-height:17mm;width:auto;height:auto;object-fit:contain;margin:0 auto 2mm}
+      .price-list-logo.is-ready{display:block}
+      .price-list-business{font-size:18px;font-weight:900}
+      .price-list-title{font-size:24px;font-weight:950;letter-spacing:.02em;margin-top:1mm}
+      .price-list-date{font-size:10px;margin-top:1mm;color:#444}
+      .price-list-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10mm;min-height:0;flex:1}
+      .price-list-column{min-width:0}
+      .price-list-group{margin:0 0 4mm;break-inside:avoid}
+      .price-list-group h5{margin:0 0 1.5mm;padding:0 0 1mm;border-bottom:2px solid #111;font-size:14px;text-transform:uppercase}
+      .price-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4mm;align-items:end;padding:1mm 0;border-bottom:1px dotted #bbb;font-size:11px}
+      .price-list-row strong:last-child{white-space:nowrap;font-size:11.5px}
+      .price-list-footer{padding-top:2.5mm;border-top:1px solid #aaa;text-align:center;font-size:8px;color:#444;flex:0 0 auto}
+      .price-list-page-number{font-weight:800;margin-left:3mm}
+      .offer-list-card{border:1.5px solid #111;border-radius:4mm;padding:4mm;margin:0 0 4mm;break-inside:avoid;background:#fff}
+      .offer-list-card__badge{display:inline-block;margin-bottom:2mm;padding:1mm 2mm;border:1px solid #111;border-radius:999px;font-size:8px;font-weight:900;text-transform:uppercase}
+      .offer-list-card h5{margin:0 0 2.5mm;font-size:16px;line-height:1.15}
+      .offer-list-items{display:grid;gap:1.3mm}
+      .offer-list-item{font-size:10.5px;line-height:1.25}
+      .offer-list-price{margin-top:3mm;padding-top:2.5mm;border-top:2px solid #111;text-align:right;font-size:22px;font-weight:950}
+      .offer-list-empty{grid-column:1/-1;padding:12mm;text-align:center;border:1px dashed #aaa;font-weight:800;color:#555}
+      .offer-section-title{grid-column:1/-1;margin:1mm 0 3mm;padding:2mm 0;border-bottom:3px solid #111;font-size:16px;font-weight:950;text-transform:uppercase}
+      .offer-subtitle{margin:0 0 2mm;font-size:10px;font-weight:900;text-transform:uppercase;color:#333}
+      .offer-list-card.is-large{padding:6mm;margin-bottom:6mm}
+      .offer-list-card.is-large h5{font-size:20px}
+      .offer-list-card.is-large .offer-list-item{font-size:12px}
+      .offer-list-card.is-large .offer-list-price{font-size:28px}
+      .offer-list-card.is-medium{padding:5mm;margin-bottom:5mm}
+      .offer-list-card.is-medium h5{font-size:18px}
+      .offer-list-card.is-medium .offer-list-price{font-size:25px}
+      .offer-list-card.is-compact{padding:3mm;margin-bottom:3mm}
+      .offer-list-card.is-compact h5{font-size:13px}
+      .offer-list-card.is-compact .offer-list-item{font-size:9.5px}
+      .offer-list-card.is-compact .offer-list-price{font-size:18px}
+      .offer-list-page-body{display:flex;flex-direction:column;gap:4mm;min-height:0;flex:1}
+      .offer-group-block{break-inside:avoid}
+      .offer-group-block .offer-section-title{margin:0 0 3mm}
+      .offer-group-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm 8mm;align-items:stretch}
+      .offer-group-grid .offer-list-card{height:100%;box-sizing:border-box;margin:0;display:flex;flex-direction:column}
+      .offer-group-grid .offer-list-items{flex:1}
+      .offer-group-grid .offer-list-price{margin-top:auto}
+      .offer-list-card.is-medium h5{font-size:19px}
+      .offer-list-card.is-medium .offer-list-item{font-size:11px}
+      .offer-list-card.is-medium .offer-list-price{font-size:27px}
+      .offer-list-card.is-compact h5{font-size:14px}
+      .offer-list-card.is-compact .offer-list-price{font-size:20px}
+      .offer-list-unit-price{margin-top:1mm;text-align:right;font-size:11px;font-weight:850;color:#333}
+      .offer-list-card.is-large .offer-list-unit-price{font-size:13px}
+      .offer-list-card.is-medium .offer-list-unit-price{font-size:12px}
+      .offer-list-card.is-compact .offer-list-unit-price{font-size:10px}
       .offer-poster-sheet{width:210mm;height:297mm;max-width:100%;box-sizing:border-box;margin:0 auto;background:#fff;color:#111;border:1px solid #d1d5db;padding:12mm;box-shadow:0 10px 30px rgba(15,23,42,.12);font-family:Arial,Helvetica,sans-serif;display:flex;flex-direction:column;overflow:hidden}
-      .offer-poster-logo{display:none;max-width:78mm;max-height:38mm;width:auto;height:auto;object-fit:contain;margin:0 auto 2mm}.offer-poster-logo.is-ready{display:block}.offer-poster-business{text-align:center;font-size:24px;font-weight:950}.offer-poster-kicker{text-align:center;font-weight:950;text-transform:uppercase;letter-spacing:.06em}.offer-poster-title{text-align:center;font-weight:950;line-height:1.02}.offer-poster-items{display:grid;gap:2.5mm}.offer-poster-item{text-align:center;font-weight:850}.offer-poster-total{text-align:center;font-weight:1000;line-height:1}.offer-poster-unit{text-align:center;font-weight:900}.offer-poster-legend{text-align:center;font-weight:950;text-transform:uppercase}.offer-poster-footer{text-align:center;margin-top:auto;font-size:9px;font-weight:800}.offer-poster-qr-row{display:flex;align-items:center;justify-content:center;gap:5mm;margin-top:3mm}.offer-poster-qr{width:28mm;height:28mm;object-fit:contain;background:#fff;border:1px solid #d1d5db;border-radius:3mm;padding:2mm;box-sizing:border-box}.offer-poster-qr-copy{max-width:62mm;text-align:left;font-size:12px;line-height:1.15;font-weight:900}.offer-poster-qr-copy strong{display:block;font-size:15px;margin-bottom:1mm}
-      .offer-poster-sheet.model-classic{border:4mm solid #E52223;padding:9mm}.model-classic .offer-poster-kicker{font-size:25px;color:#E52223;margin-top:2mm}.model-classic .offer-poster-title{font-size:42px;margin:2mm 0 3mm;text-transform:uppercase}.model-classic .offer-poster-items{border:2px solid #E52223;border-radius:6mm;padding:6mm;margin:0 4mm}.model-classic .offer-poster-item{font-size:19px}.model-classic .offer-poster-total{font-size:52px;background:#E52223;color:#fff;border-radius:5mm;padding:3mm;margin:3mm 0 1mm}.model-classic .offer-poster-unit{font-size:25px}.model-classic .offer-poster-legend{font-size:20px;color:#E52223;margin-top:5mm}
-      .offer-poster-sheet.model-app{padding:14mm}.model-app .offer-poster-business{font-size:29px}.model-app .offer-poster-kicker{font-size:16px;color:#64748b;margin-top:3mm}.model-app .offer-poster-title{font-size:39px;background:#f7f0e8;border-radius:7mm;padding:5mm;margin:2mm 0 4mm}.model-app .offer-poster-item{font-size:19px}.model-app .offer-poster-total{font-size:54px;border-top:2px solid #cbd5e1;padding-top:4mm;margin-top:4mm}.model-app .offer-poster-unit{font-size:25px;background:#f1f5f9;border-radius:4mm;padding:2.5mm 5mm;margin:3mm auto 0}.model-app .offer-poster-legend{font-size:18px;margin-top:8mm;color:#475569}
-      .offer-poster-sheet.model-window{border:4mm solid #E52223;padding:9mm}.model-window .offer-poster-kicker{font-size:40px;color:#E52223;margin:2mm 0 1mm}.model-window .offer-poster-title{font-size:37px;background:#fff;color:#111;padding:4mm;border:3px solid #E52223;border-radius:2mm;margin:0 0 3mm;text-transform:uppercase}.model-window .offer-poster-item{font-size:18px}.model-window .offer-poster-total{font-size:54px;background:#fde047;color:#E52223;border:3px solid #E52223;border-radius:50%;padding:5mm 4mm;margin:3mm 0 1mm}.model-window .offer-poster-unit{font-size:24px}.model-window .offer-poster-legend{font-size:25px;background:#E52223;color:#fff;padding:3mm;margin-top:6mm}
-      @media(max-width:700px){.print-center{padding:14px 10px 110px}.print-center__tools{grid-template-columns:1fr}.print-order-workspace{padding:14px}.print-order-actions{display:grid;grid-template-columns:1fr}.print-order-actions button{width:100%}.print-order-preview-title{align-items:flex-start;flex-direction:column}.print-order-input{min-height:190px}}
-      @media(max-width:700px){.offer-poster-controls,.offer-poster-models{grid-template-columns:1fr}.offer-poster-actions{display:grid}.offer-poster-actions button{width:100%}.offer-poster-sheet{height:auto;min-height:297mm}.model-classic .offer-poster-title,.model-app .offer-poster-title,.model-window .offer-poster-title{font-size:32px}.model-classic .offer-poster-total,.model-app .offer-poster-total,.model-window .offer-poster-total{font-size:44px}}\n      @media(max-width:700px){.price-list-models{grid-template-columns:1fr}}\n      @media(max-width:700px){.price-list-controls{grid-template-columns:1fr}.price-list-actions{display:grid}.price-list-actions button{width:100%}.price-list-sheet{padding:8mm 6mm;height:auto;min-height:297mm}.price-list-columns{grid-template-columns:1fr}.offer-group-grid{grid-template-columns:1fr}.price-list-title{font-size:22px}.price-list-business{font-size:17px}}
+      .offer-poster-logo{display:none;max-width:78mm;max-height:38mm;width:auto;height:auto;object-fit:contain;margin:0 auto 2mm}
+      .offer-poster-logo.is-ready{display:block}
+      .offer-poster-business{text-align:center;font-size:24px;font-weight:950}
+      .offer-poster-kicker{text-align:center;font-weight:950;text-transform:uppercase;letter-spacing:.06em}
+      .offer-poster-title{text-align:center;font-weight:950;line-height:1.02}
+      .offer-poster-items{display:grid;gap:2.5mm}
+      .offer-poster-item{text-align:center;font-weight:850}
+      .offer-poster-total{text-align:center;font-weight:1000;line-height:1}
+      .offer-poster-unit{text-align:center;font-weight:900}
+      .offer-poster-legend{text-align:center;font-weight:950;text-transform:uppercase}
+      .offer-poster-footer{text-align:center;margin-top:auto;font-size:9px;font-weight:800}
+      .offer-poster-qr-row{display:flex;align-items:center;justify-content:center;gap:5mm;margin-top:3mm}
+      .offer-poster-qr{width:28mm;height:28mm;object-fit:contain;background:#fff;border:1px solid #d1d5db;border-radius:3mm;padding:2mm;box-sizing:border-box}
+      .offer-poster-qr-copy{max-width:62mm;text-align:left;font-size:12px;line-height:1.15;font-weight:900}
+      .offer-poster-qr-copy strong{display:block;font-size:15px;margin-bottom:1mm}
+      .offer-poster-sheet.model-classic{border:4mm solid #E52223;padding:9mm}
+      .model-classic .offer-poster-kicker{font-size:25px;color:#E52223;margin-top:2mm}
+      .model-classic .offer-poster-title{font-size:42px;margin:2mm 0 3mm;text-transform:uppercase}
+      .model-classic .offer-poster-items{border:2px solid #E52223;border-radius:6mm;padding:6mm;margin:0 4mm}
+      .model-classic .offer-poster-item{font-size:19px}
+      .model-classic .offer-poster-total{font-size:52px;background:#E52223;color:#fff;border-radius:5mm;padding:3mm;margin:3mm 0 1mm}
+      .model-classic .offer-poster-unit{font-size:25px}
+      .model-classic .offer-poster-legend{font-size:20px;color:#E52223;margin-top:5mm}
+      .offer-poster-sheet.model-app{padding:14mm}
+      .model-app .offer-poster-business{font-size:29px}
+      .model-app .offer-poster-kicker{font-size:16px;color:#64748b;margin-top:3mm}
+      .model-app .offer-poster-title{font-size:39px;background:#f7f0e8;border-radius:7mm;padding:5mm;margin:2mm 0 4mm}
+      .model-app .offer-poster-item{font-size:19px}
+      .model-app .offer-poster-total{font-size:54px;border-top:2px solid #cbd5e1;padding-top:4mm;margin-top:4mm}
+      .model-app .offer-poster-unit{font-size:25px;background:#f1f5f9;border-radius:4mm;padding:2.5mm 5mm;margin:3mm auto 0}
+      .model-app .offer-poster-legend{font-size:18px;margin-top:8mm;color:#475569}
+      .offer-poster-sheet.model-window{border:4mm solid #E52223;padding:9mm}
+      .model-window .offer-poster-kicker{font-size:40px;color:#E52223;margin:2mm 0 1mm}
+      .model-window .offer-poster-title{font-size:37px;background:#fff;color:#111;padding:4mm;border:3px solid #E52223;border-radius:2mm;margin:0 0 3mm;text-transform:uppercase}
+      .model-window .offer-poster-item{font-size:18px}
+      .model-window .offer-poster-total{font-size:54px;background:#fde047;color:#E52223;border:3px solid #E52223;border-radius:50%;padding:5mm 4mm;margin:3mm 0 1mm}
+      .model-window .offer-poster-unit{font-size:24px}
+      .model-window .offer-poster-legend{font-size:25px;background:#E52223;color:#fff;padding:3mm;margin-top:6mm}
+      @media(max-width:700px){.offer-poster-sheet{height:auto;min-height:297mm}.model-classic .offer-poster-title,.model-app .offer-poster-title,.model-window .offer-poster-title{font-size:32px}.model-classic .offer-poster-total,.model-app .offer-poster-total,.model-window .offer-poster-total{font-size:44px}}
+      @media(max-width:700px){.price-list-sheet{padding:8mm 6mm;height:auto;min-height:297mm}.price-list-columns{grid-template-columns:1fr}.offer-group-grid{grid-template-columns:1fr}.price-list-title{font-size:22px}.price-list-business{font-size:17px}}
       @media print{
         html,body{margin:0!important;padding:0!important;width:58mm!important;min-width:58mm!important;background:#fff!important}
         body.print-ticket-only>*:not(.print-order-ticket--print-clone){display:none!important}
@@ -301,26 +372,28 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         .offer-poster-sheet--print-clone{display:flex!important;box-sizing:border-box!important;width:194mm!important;max-width:194mm!important;height:280mm!important;min-height:280mm!important;margin:8mm auto 0!important;box-shadow:none!important;background:#fff!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:avoid!important;page-break-after:avoid!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 
       }
-          .qr-shop-workspace{margin-top:18px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-      .qr-shop-workspace h3{margin:0;color:#B3161A;font-size:22px}.qr-shop-workspace>p{color:#64748b;font-weight:750;line-height:1.4}
-      .qr-shop-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.qr-shop-actions button{border:1px solid #dbe3ee;border-radius:14px;background:#fff;padding:11px 16px;font-weight:900;color:#172033;cursor:pointer}.qr-shop-actions button.primary{background:#E52223;border-color:#E52223;color:#fff}
-      .qr-shop-preview{display:none;margin-top:16px}.qr-shop-preview.is-ready{display:block}.qr-shop-card{width:min(100%,560px);aspect-ratio:794/1123;margin:0 auto;border:10px solid #E52223;background:#fff;box-sizing:border-box;padding:34px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 16px 34px rgba(15,23,42,.10)}
-      .qr-shop-card h4{font-size:30px;margin:10px 0;color:#111}.qr-shop-kicker{font-size:26px;font-weight:1000;color:#E52223;margin-top:16px}.qr-shop-copy{font-size:17px;font-weight:850;color:#334155;line-height:1.35}.qr-shop-code{width:250px;height:250px;object-fit:contain;margin:24px 0 16px}.qr-shop-whatsapp{font-size:15px;font-weight:850;color:#111;margin-top:10px}.qr-shop-brand{margin-top:auto;font-size:10px;font-weight:850;color:#111}.qr-shop-status{min-height:18px;margin-top:8px;color:#475569;font-size:12px;font-weight:800}
-
-      .flyer-workspace{margin-top:18px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06)}
-      .flyer-workspace h3{margin:0;color:#B3161A;font-size:22px}.flyer-workspace>p{color:#64748b;font-weight:750;line-height:1.4}
-      .flyer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:14px}.flyer-controls label{display:grid;gap:6px;font-size:12px;font-weight:900;color:#334155}.flyer-controls select{min-height:44px;border:1px solid #cbd5e1;border-radius:12px;padding:0 12px;background:#fff;color:#172033;font-weight:800}
-      .flyer-actions{display:flex;gap:10px;flex-wrap:wrap}.flyer-actions button{border:1px solid #dbe3ee;border-radius:14px;background:#fff;padding:11px 16px;font-weight:900;color:#172033;cursor:pointer}.flyer-actions button.primary{background:#E52223;border-color:#E52223;color:#fff}
-      .flyer-error{min-height:20px;margin-top:8px;color:#ef233c;font-weight:850;font-size:13px}.flyer-preview{display:none;margin-top:16px}.flyer-preview.is-ready{display:block}
+      .qr-shop-card{width:min(100%,560px);aspect-ratio:794/1123;margin:0 auto;border:10px solid #E52223;background:#fff;box-sizing:border-box;padding:34px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 16px 34px rgba(15,23,42,.10)}
+      .qr-shop-card h4{font-size:30px;margin:10px 0;color:#111}
+      .qr-shop-kicker{font-size:26px;font-weight:1000;color:#E52223;margin-top:16px}
+      .qr-shop-copy{font-size:17px;font-weight:850;color:#334155;line-height:1.35}
+      .qr-shop-code{width:250px;height:250px;object-fit:contain;margin:24px 0 16px}
+      .qr-shop-whatsapp{font-size:15px;font-weight:850;color:#111;margin-top:10px}
+      .qr-shop-brand{margin-top:auto;font-size:10px;font-weight:850;color:#111}
       .flyer-a4{width:min(100%,794px);aspect-ratio:794/1123;margin:0 auto;background:#fff;border:1px solid #dbe3ee;box-shadow:0 14px 34px rgba(15,23,42,.10);padding:18px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:10px}
       .flyer-card{min-width:0;min-height:0;border:3px dashed #cbd5e1;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;overflow:hidden;background:#fff}
-      .flyer-card__business{font-size:12px;font-weight:1000;color:#111;line-height:1.05}.flyer-card__badge{margin-top:5px;background:#E52223;color:#fff;border-radius:999px;padding:3px 10px;font-size:9px;font-weight:1000;letter-spacing:.04em}.flyer-card__title{margin-top:6px;font-size:16px;font-weight:1000;color:#111;line-height:1.05;text-transform:uppercase}.flyer-card__items{margin-top:5px;font-size:9px;font-weight:800;color:#334155;line-height:1.2}.flyer-card__price{margin-top:6px;font-size:25px;font-weight:1000;color:#E52223;line-height:1}.flyer-card__kg{margin-top:3px;font-size:10px;font-weight:900;color:#111}.flyer-card__bottom{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}.flyer-card__qr{width:56px;height:56px;object-fit:contain}.flyer-card__cta{font-size:8px;font-weight:900;color:#111;line-height:1.2;text-align:left}.flyer-card__stock{margin-top:4px;font-size:7px;font-weight:900;color:#E52223}.flyer-card__brand{font-size:6px;font-weight:800;color:#64748b;margin-top:2px}
-      @media(max-width:720px){.flyer-controls{grid-template-columns:1fr}}
-
-      .flyer-format{min-height:44px;border:1px solid #cbd5e1;border-radius:12px;padding:0 12px;background:#fff;color:#172033;font-weight:800}
-      .flyer-offer-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.flyer-offer-slot{display:none}.flyer-offer-slot.is-visible{display:grid;gap:6px;font-size:12px;font-weight:900;color:#334155}.flyer-offer-slot select{min-height:44px;border:1px solid #cbd5e1;border-radius:12px;padding:0 10px;background:#fff;font-weight:800}
-      .flyer-card__identity{margin-top:3px;font-size:6.5px;font-weight:800;color:#475569;line-height:1.15;max-width:100%}.flyer-card__identity span{display:block}
-      @media(max-width:720px){.flyer-offer-slots{grid-template-columns:1fr}}
+      .flyer-card__business{font-size:12px;font-weight:1000;color:#111;line-height:1.05}
+      .flyer-card__badge{margin-top:5px;background:#E52223;color:#fff;border-radius:999px;padding:3px 10px;font-size:9px;font-weight:1000;letter-spacing:.04em}
+      .flyer-card__title{margin-top:6px;font-size:16px;font-weight:1000;color:#111;line-height:1.05;text-transform:uppercase}
+      .flyer-card__items{margin-top:5px;font-size:9px;font-weight:800;color:#334155;line-height:1.2}
+      .flyer-card__price{margin-top:6px;font-size:25px;font-weight:1000;color:#E52223;line-height:1}
+      .flyer-card__kg{margin-top:3px;font-size:10px;font-weight:900;color:#111}
+      .flyer-card__bottom{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+      .flyer-card__qr{width:56px;height:56px;object-fit:contain}
+      .flyer-card__cta{font-size:8px;font-weight:900;color:#111;line-height:1.2;text-align:left}
+      .flyer-card__stock{margin-top:4px;font-size:7px;font-weight:900;color:#E52223}
+      .flyer-card__brand{font-size:6px;font-weight:800;color:#64748b;margin-top:2px}
+      .flyer-card__identity{margin-top:3px;font-size:6.5px;font-weight:800;color:#475569;line-height:1.15;max-width:100%}
+      .flyer-card__identity span{display:block}
 </style>
     <div class="print-center">
       ${renderCarnizaSpotlight("printPanel", { compact: true })}
@@ -483,7 +556,7 @@ export function renderPrintCenter(container, { businessMeta = {}, products = [],
         <div class="flyer-error" data-flyer-error role="alert"></div>
         <div class="flyer-preview" data-flyer-preview>
           <div class="flyer-a4" data-flyer-a4></div>
-          <div class="flyer-actions" style="margin-top:14px">
+          <div class="flyer-actions flyer-actions--preview">
             <button type="button" class="primary" data-flyer-print><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#printer"></use></svg>Imprimir 8 folletos</button>
           </div>
         </div>
