@@ -413,13 +413,13 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderTopActions(title, subtitle, backLabel = "← Cambiar modo") {
     return `
-      <header style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; background:#fff; border:1px solid #FADBD8; border-radius:18px; padding:14px;">
+      <header class="builder-topbar">
         <div>
-          <div style="font-size:.72rem; font-weight:1000; color:#E52223; text-transform:uppercase; letter-spacing:.04em;">Crear oferta</div>
-          <h2 style="margin:5px 0 4px;">${escapeHtml(title)}</h2>
-          ${subtitle ? `<p class="muted" style="margin:0;">${escapeHtml(subtitle)}</p>` : ""}
+          <div class="builder-topbar__kicker">Crear oferta</div>
+          <h2 class="builder-topbar__title">${escapeHtml(title)}</h2>
+          ${subtitle ? `<p class="muted builder-topbar__subtitle">${escapeHtml(subtitle)}</p>` : ""}
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <div class="builder-actions builder-actions--end">
           <button data-builder-home type="button">Inicio</button>
           <button data-back-mode type="button">${escapeHtml(backLabel)}</button>
         </div>
@@ -598,30 +598,30 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderChooser() {
     container.innerHTML = `
-      <section style="display:grid; gap:14px;">
+      <section class="builder-screen builder-screen--chooser">
         ${renderCarnizaSpotlight("builderPanel", { compact: true })}
 
-        <header style="background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:18px;">
-          <div style="font-size:.75rem; font-weight:1000; color:#b45309; text-transform:uppercase; letter-spacing:.04em;">Tres maneras de vender</div>
-          <h2 style="margin:6px 0 4px;">¿Qué necesitás hacer ahora?</h2>
-          <p class="muted" style="margin:0;">Respondé una consulta, prepará una promo para vender varias veces o sacá hoy la mercadería en riesgo.</p>
+        <header class="builder-hero">
+          <div class="builder-hero__kicker">Tres maneras de vender</div>
+          <h2 class="builder-hero__title">¿Qué necesitás hacer ahora?</h2>
+          <p class="muted builder-hero__subtitle">Respondé una consulta, prepará una promo para vender varias veces o sacá hoy la mercadería en riesgo.</p>
         </header>
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;">
-          <button id="quickModeBtn" type="button" style="text-align:left; background:#FFF1F0; border:2px solid #F6C6C6; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;"><svg class="ci ci-lg ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#bolt"></use></svg></div>
-            <h3 style="margin:8px 0 4px;">Responder una consulta</h3>
-            <p style="margin:0; color:#8E1014; font-weight:800;">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
+        <div class="builder-modes">
+          <button id="quickModeBtn" type="button" class="builder-mode builder-mode--quick">
+            <div class="builder-mode__icon"><svg class="ci ci-lg ci--navy" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#bolt"></use></svg></div>
+            <h3 class="builder-mode__title">Responder una consulta</h3>
+            <p class="builder-mode__desc">Un cliente te pidió varios productos. Calculá el total y respondé por WhatsApp. No se guarda.</p>
           </button>
-          <button id="discountModeBtn" type="button" style="text-align:left; background:#fff7ed; border:2px solid #fed7aa; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#tag"></use></svg></div>
-            <h3 style="margin:8px 0 4px;">Crear promo o combo</h3>
-            <p style="margin:0; color:#7c2d12; font-weight:800;">Armá una estrategia para vender varias veces: guardala, publicala y compartila.</p>
+          <button id="discountModeBtn" type="button" class="builder-mode builder-mode--promo">
+            <div class="builder-mode__icon"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#tag"></use></svg></div>
+            <h3 class="builder-mode__title">Crear promo o combo</h3>
+            <p class="builder-mode__desc">Armá una estrategia para vender varias veces: guardala, publicala y compartila.</p>
           </button>
-          <button id="urgentModeBtn" type="button" data-carniza-open-liquidator data-carniza-signal="builder_urgent_clicked" style="text-align:left; background:#fff1f2; border:2px solid #fecdd3; border-radius:20px; padding:18px; cursor:pointer; box-shadow:0 8px 22px rgba(15,23,42,.06);">
-            <div style="font-size:2rem;"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg></div>
-            <h3 style="margin:8px 0 4px;">Promo del día</h3>
-            <p style="margin:0; color:#9f1239; font-weight:800;">Elegí la mercadería que necesitás vender hoy. Publicala por el día y finalizala cuando quieras.</p>
+          <button id="urgentModeBtn" type="button" data-carniza-open-liquidator data-carniza-signal="builder_urgent_clicked" class="builder-mode builder-mode--urgent">
+            <div class="builder-mode__icon"><svg class="ci ci-lg ci--red" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#sell"></use></svg></div>
+            <h3 class="builder-mode__title">Promo del día</h3>
+            <p class="builder-mode__desc">Elegí la mercadería que necesitás vender hoy. Publicala por el día y finalizala cuando quieras.</p>
           </button>
         </div>
       </section>
@@ -706,7 +706,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     }
 
     container.innerHTML = `
-      <section style="display:grid; gap:12px;">
+      <section class="builder-screen">
         ${renderTopActions("Responder una consulta", "Elegí lo que pidió el cliente y calculá la respuesta con tus precios reales.")}
         ${renderQuickFloatingSummary()}
 
@@ -915,7 +915,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
             <strong style="font-size:1.2rem; color:#8E1014;">Total final: $ ${formatMoney(payload.total)}</strong>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button id="quickWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Responder por WhatsApp</button>
+              <button id="quickWhatsappBtn" type="button" class="builder-btn-whatsapp">Responder por WhatsApp</button>
             </div>
           </div>
           <div style="background:#fff; border:1px solid #FADBD8; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
@@ -943,7 +943,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     ];
 
     container.innerHTML = `
-      <section style="display:grid; gap:12px;">
+      <section class="builder-screen">
         ${renderTopActions(editingCombo ? "Editar promo" : "Crear promo o combo", editingCombo ? "Modificá la receta y guardá los cambios sobre esta promo." : "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
         <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;">
           ${steps.map((step) => `
@@ -977,10 +977,10 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
   function renderDiscountStepProducts(content) {
     const filteredProducts = getFilteredProducts(state.discount);
     content.innerHTML = `
-      <div style="display:grid; gap:12px;">
+      <div class="builder-screen">
         ${renderSelectedStrip(state.discount.items)}
         ${renderDiscountProductsFloatingSummary()}
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
+        <div class="builder-card">
           <input id="discountSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.discount.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #fed7aa; border-radius:14px; padding:0 12px; font-weight:900;" />
           ${renderRubroSelector("discount", state.discount.rubroFilter)}
           ${renderProductGrid("discount", filteredProducts, state.discount.items)}
@@ -1044,7 +1044,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
   function renderDiscountStepAdjust(content, totals) {
     content.innerHTML = `
-      <div style="display:grid; gap:12px;">
+      <div class="builder-screen">
         ${renderDiscountSummary(totals, true, true)}
         <div style="display:grid; gap:10px; padding-bottom:calc(238px + var(--apppromos-mobile-nav-height, 0px));">
           ${renderQuantityList(state.discount.items, "discountAdjust", true)}
@@ -1061,9 +1061,9 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
           </div>
           <p class="muted" style="margin:0;">Se aplica al final. El cliente no ve estos descuentos: recibe una oferta limpia.</p>
         </div>
-        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <div class="builder-actions builder-actions--between">
           <button id="discountBackProductsBtn" type="button">← Productos</button>
-          <button id="discountNextSellBtn" type="button" style="background:#f97316; color:#fff; border-color:#f97316;">Ver oferta lista</button>
+          <button id="discountNextSellBtn" type="button" class="builder-btn-promo">Ver oferta lista</button>
         </div>
       </div>
     `;
@@ -1109,19 +1109,19 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       : "Escribí un nombre comercial para ver el mensaje que recibirá el cliente.";
 
     content.innerHTML = `
-      <div style="display:grid; gap:12px;">
+      <div class="builder-screen">
         ${renderDiscountSummary(totals, true)}
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px; display:grid; gap:12px;">
+        <div class="builder-card">
           <label style="display:grid; gap:6px; font-weight:1000;">
             Nombre comercial de la promo
             <input id="discountOfferNameInput" type="text" value="${escapeHtml(state.discount.offerName)}" placeholder="Ej: 2 kg de achuras" required />
           </label>
           <div id="discountWhatsappPreview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
-          <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <div class="builder-actions builder-actions--between">
             <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+            <div class="builder-actions builder-actions--end">
               <button id="discountSaveBtn" type="button">${editingCombo ? "Guardar cambios" : "Guardar promo o combo"}</button>
-              <button id="discountWhatsappBtn" type="button" style="background:#16a34a; color:#fff; border-color:#16a34a;">Enviar por WhatsApp</button>
+              <button id="discountWhatsappBtn" type="button" class="builder-btn-whatsapp">Enviar por WhatsApp</button>
             </div>
           </div>
         </div>
