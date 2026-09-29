@@ -4534,3 +4534,49 @@ body.module-focus-admin .app-mobile-bottom-menu {
 #carnizaUrgentStockCard .pdd-offer-publish.is-published { background: #15803d; }
 #carnizaUrgentStockCard .pdd-offer-status.is-success { background: #dcfce7; color: #166534; }
 #carnizaUrgentStockCard .pdd-offer-status.is-error { background: #fff1f0; color: #ef233c; }
+
+/* =========================================================
+   33. ACTIVACIÓN COMERCIAL DE INICIO (C6.2)
+   Centralización de estilos de renderStrongCommercialPrompt(),
+   renderCommercialShareActions(), renderCompactCommercialPrompt(),
+   renderStorefrontThemePrompt() y renderStorefrontThemeChoices()
+   ========================================================= */
+/* ex card.style.cssText */
+[data-carniza-commercial-motor="storefront-theme"] { margin:0 0 16px; padding:18px; border:1px solid #fed7aa; border-radius:22px; background:linear-gradient(180deg,#fffaf0,#fff); box-shadow:0 12px 30px rgba(124,45,18,.10); }
+[data-carniza-commercial-motor="strong"] { margin:0 0 16px; padding:18px; border:1px solid #fecaca; border-radius:24px; background:linear-gradient(180deg,#fff7f5,#ffffff); box-shadow:0 14px 34px rgba(127,29,29,.10); }
+[data-carniza-commercial-motor="compact"] { margin:0 0 14px; padding:14px 16px; border:1px solid #fed7aa; border-radius:18px; background:linear-gradient(180deg,#fffaf0,#fff); box-shadow:0 8px 22px rgba(124,45,18,.08); display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px; align-items:center; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-caption { color:#8a5c51; font-size:10px; font-weight:850; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-name { color:#2b2724; font-size:12px; line-height:1.15; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-thumb { height:54px; border-radius:10px; display:block; overflow:hidden; background:#fbf7f4; border:1px solid #f1ece7; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-choice { display:grid; gap:7px; padding:10px; border:2px solid #eaded7; border-radius:16px; background:#fff; text-align:left; cursor:pointer; font:inherit; box-shadow:none; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-avatar { width:min(100%,190px); max-height:205px; object-fit:contain; justify-self:center; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-badge { display:inline-flex; padding:5px 9px; border-radius:999px; background:#ffedd5; color:#9a3412; font-size:13px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-title { margin:9px 0 6px; color:#4a1811; font-size:clamp(24px,4vw,34px); line-height:1.03; letter-spacing:-.04em; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-text { margin:0; color:#6b4b3e; font-weight:800; line-height:1.42; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:9px; margin-top:15px; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-status { min-height:20px; margin:10px 0 0; color:#7c2d12; font-weight:900; font-size:13px; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-defer { min-height:42px; border:0; background:transparent; color:#9a3412; font-weight:900; cursor:pointer; padding:0 10px; }
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-apply { min-height:42px; border:0; border-radius:13px; background:#c2410c; color:#fff; font-weight:950; cursor:pointer; padding:0 16px; }
+[data-carniza-commercial-motor="strong"] .cm-share-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:9px; }
+[data-carniza-commercial-motor="strong"] .cm-share-wa { min-height:48px; border:0; border-radius:14px; background:#16a34a; color:#fff; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="strong"] .cm-share-copy { min-height:48px; border:1px solid #fecaca; border-radius:14px; background:#fff; color:#B3161A; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="strong"] .cm-share-qr { min-height:48px; border:1px solid #ddd6fe; border-radius:14px; background:#f5f3ff; color:#5b21b6; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="strong"] .cm-strong-actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:9px; }
+[data-carniza-commercial-motor="strong"] .cm-strong-secondary { display:grid; gap:8px; }
+[data-carniza-commercial-motor="strong"] .cm-strong-status { padding:9px 11px; border-radius:14px; background:#fff7ed; color:#9a3412; font-size:13px; font-weight:900; }
+[data-carniza-commercial-motor="strong"] .cm-strong-progress { display:grid; gap:6px; }
+[data-carniza-commercial-motor="strong"] .cm-strong-progress-head { display:flex; justify-content:space-between; gap:12px; font-size:13px; font-weight:1000; color:#7c2d12; }
+[data-carniza-commercial-motor="strong"] .cm-strong-track { height:9px; border-radius:999px; background:#fee2e2; overflow:hidden; }
+[data-carniza-commercial-motor="strong"] .cm-strong-fill { height:100%; background:linear-gradient(90deg,#B3161A,#E52223); border-radius:999px; }
+[data-carniza-commercial-motor="strong"] .cm-strong-dismiss { min-height:42px; border:0; background:transparent; color:#7c2d12; font-size:13px; font-weight:900; cursor:pointer; }
+[data-carniza-commercial-motor="strong"] .cm-strong-primary { min-height:50px; border:0; border-radius:14px; background:#E52223; color:#fff; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="strong"] .cm-strong-view-web { min-height:50px; border:1px solid #fecaca; border-radius:14px; background:#fff; color:#B3161A; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="compact"] .cm-compact-visual { width:74px; height:74px; object-fit:contain; border-radius:14px; background:#fff7ed; }
+[data-carniza-commercial-motor="compact"] .cm-compact-copy { min-width:0; }
+[data-carniza-commercial-motor="compact"] .cm-compact-title { display:block; color:#7c2d12; font-size:15px; line-height:1.25; }
+[data-carniza-commercial-motor="compact"] .cm-compact-message { display:block; margin-top:4px; color:#6b4b3e; font-size:13px; font-weight:800; line-height:1.35; }
+[data-carniza-commercial-motor="compact"] .cm-compact-actions { display:grid; gap:7px; min-width:150px; }
+[data-carniza-commercial-motor="compact"] .cm-compact-primary { min-height:42px; border:0; border-radius:12px; background:#c2410c; color:#fff; font-weight:1000; cursor:pointer; }
+[data-carniza-commercial-motor="compact"] .cm-compact-dismiss { min-height:34px; border:0; background:transparent; color:#9a3412; font-size:12px; font-weight:900; cursor:pointer; }
+/* Estilo elegido: antes ternario inline + choice.style.* en showPreview() */
+[data-carniza-commercial-motor="storefront-theme"] .cm-theme-choice[aria-pressed="true"] { border-color:#c2410c; box-shadow:0 8px 18px rgba(124,45,18,.10); }

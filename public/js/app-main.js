@@ -1827,7 +1827,7 @@ function renderStorefrontThemeChoices(selectedTheme = "standard") {
   const currentTheme = normalizeStorefrontTheme(selectedTheme);
   return STOREFRONT_THEMES.map((theme) => {
     const selected = theme.id === currentTheme;
-    return `<button type="button" data-storefront-theme-choice="${theme.id}" aria-pressed="${selected}" style="display:grid;gap:7px;padding:10px;border:2px solid ${selected ? "#c2410c" : "#eaded7"};border-radius:16px;background:#fff;text-align:left;cursor:pointer;font:inherit;box-shadow:${selected ? "0 8px 18px rgba(124,45,18,.10)" : "none"};"><span style="height:54px;border-radius:10px;display:block;overflow:hidden;background:#fbf7f4;border:1px solid #f1ece7;">${renderThemeSchematicHtml(theme.id)}</span><strong style="color:#2b2724;font-size:12px;line-height:1.15;">${escapeCarnizaHtml(theme.label)}</strong><small style="color:#8a5c51;font-size:10px;font-weight:850;">${escapeCarnizaHtml(theme.caption)} · ${escapeCarnizaHtml(theme.description)}</small></button>`;
+    return `<button type="button" data-storefront-theme-choice="${theme.id}" aria-pressed="${selected}" class="cm-theme-choice"><span class="cm-theme-thumb">${renderThemeSchematicHtml(theme.id)}</span><strong class="cm-theme-name">${escapeCarnizaHtml(theme.label)}</strong><small class="cm-theme-caption">${escapeCarnizaHtml(theme.caption)} · ${escapeCarnizaHtml(theme.description)}</small></button>`;
   }).join("");
 }
 
@@ -1842,24 +1842,23 @@ function renderStorefrontThemePrompt(state = {}) {
   const selectedTheme = normalizeStorefrontTheme(transientStorefrontThemePreview || web?.storefrontTheme || "standard");
   const card = document.createElement("section");
   card.dataset.carnizaCommercialMotor = "storefront-theme";
-  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #fed7aa;border-radius:22px;background:linear-gradient(180deg,#fffaf0,#fff);box-shadow:0 12px 30px rgba(124,45,18,.10);";
   card.innerHTML = `
     <div class="theme-preview-layout">
-      <img src="${state.asset}" alt="Carniza" style="width:min(100%,190px);max-height:205px;object-fit:contain;justify-self:center;">
+      <img src="${state.asset}" alt="Carniza" class="cm-theme-avatar">
       <div>
-        <span style="display:inline-flex;padding:5px 9px;border-radius:999px;background:#ffedd5;color:#9a3412;font-size:13px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em;">Diseño de tu vidriera</span>
-        <h2 style="margin:9px 0 6px;color:#4a1811;font-size:clamp(24px,4vw,34px);line-height:1.03;letter-spacing:-.04em;">${escapeCarnizaHtml(state.title)}</h2>
-        <p style="margin:0;color:#6b4b3e;font-weight:800;line-height:1.42;">Probá cada alternativa en una vista previa de tu propia vidriera. Nada cambia hasta que confirmes.</p>
-        <div data-storefront-theme-choices style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-top:15px;"></div>
+        <span class="cm-theme-badge">Diseño de tu vidriera</span>
+        <h2 class="cm-theme-title">${escapeCarnizaHtml(state.title)}</h2>
+        <p class="cm-theme-text">Probá cada alternativa en una vista previa de tu propia vidriera. Nada cambia hasta que confirmes.</p>
+        <div data-storefront-theme-choices class="cm-theme-choices"></div>
         <div class="theme-preview-tabs" aria-label="Contenido de la vista previa">
           <button type="button" class="theme-preview-tab" data-storefront-preview-view="products" aria-pressed="true">Ver productos</button>
           <button type="button" class="theme-preview-tab" data-storefront-preview-view="promos" aria-pressed="false">Ver promos</button>
           <button type="button" class="theme-preview-tab" data-storefront-preview-view="home" aria-pressed="false">Ver inicio</button>
         </div>
-        <p data-storefront-theme-status style="min-height:20px;margin:10px 0 0;color:#7c2d12;font-weight:900;font-size:13px;">Vista previa: ${escapeCarnizaHtml(getStorefrontTheme(selectedTheme).label)}</p>
+        <p data-storefront-theme-status class="cm-theme-status">Vista previa: ${escapeCarnizaHtml(getStorefrontTheme(selectedTheme).label)}</p>
         <div class="theme-preview-actions">
-          <button type="button" data-storefront-theme-defer style="min-height:42px;border:0;background:transparent;color:#9a3412;font-weight:900;cursor:pointer;padding:0 10px;">Ver después</button>
-          <button type="button" data-storefront-theme-apply style="min-height:42px;border:0;border-radius:13px;background:#c2410c;color:#fff;font-weight:950;cursor:pointer;padding:0 16px;">Aplicar este estilo</button>
+          <button type="button" data-storefront-theme-defer class="cm-theme-defer">Ver después</button>
+          <button type="button" data-storefront-theme-apply class="cm-theme-apply">Aplicar este estilo</button>
         </div>
       </div>
       <div class="theme-preview-frame" aria-label="Vista previa de tu vidriera">
@@ -1894,8 +1893,6 @@ function renderStorefrontThemePrompt(state = {}) {
     card.querySelectorAll("[data-storefront-theme-choice]").forEach((choice) => {
       const active = choice.getAttribute("data-storefront-theme-choice") === previewTheme;
       choice.setAttribute("aria-pressed", String(active));
-      choice.style.borderColor = active ? "#c2410c" : "#eaded7";
-      choice.style.boxShadow = active ? "0 8px 18px rgba(124,45,18,.10)" : "none";
     });
     card.querySelectorAll("[data-storefront-preview-view]").forEach((button) => {
       button.setAttribute("aria-pressed", String(button.getAttribute("data-storefront-preview-view") === previewView));
@@ -2123,10 +2120,10 @@ function renderCommercialShareActions(container, state = {}) {
   if (!container || !publicUrl) return;
 
   container.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;">
-      <button type="button" data-commercial-share-wa style="min-height:48px;border:0;border-radius:14px;background:#16a34a;color:#fff;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>WhatsApp</button>
-      <button type="button" data-commercial-copy-link style="min-height:48px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#link"></use></svg>Copiar enlace</button>
-      <button type="button" data-commercial-show-qr style="min-height:48px;border:1px solid #ddd6fe;border-radius:14px;background:#f5f3ff;color:#5b21b6;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#qr"></use></svg>Mostrar QR</button>
+    <div class="cm-share-grid">
+      <button type="button" data-commercial-share-wa class="cm-share-wa"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#whatsapp"></use></svg>WhatsApp</button>
+      <button type="button" data-commercial-copy-link class="cm-share-copy"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#link"></use></svg>Copiar enlace</button>
+      <button type="button" data-commercial-show-qr class="cm-share-qr"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#qr"></use></svg>Mostrar QR</button>
     </div>
   `;
 
@@ -2161,7 +2158,6 @@ function renderStrongCommercialPrompt(state = {}) {
 
   const card = document.createElement("section");
   card.dataset.carnizaCommercialMotor = "strong";
-  card.style.cssText = "margin:0 0 16px;padding:18px;border:1px solid #fecaca;border-radius:24px;background:linear-gradient(180deg,#fff7f5,#ffffff);box-shadow:0 14px 34px rgba(127,29,29,.10);";
 
   const progress = Math.min(100, Math.round((Number(state.pricedCount || 0) / CARNIZA_RECOMMENDED_PRICES) * 100));
 
@@ -2174,21 +2170,21 @@ function renderStrongCommercialPrompt(state = {}) {
         <span class="commercial-activation-badge">Activación comercial</span>
         <h2 class="commercial-activation-title">${escapeCarnizaHtml(state.title)}</h2>
         <p class="commercial-activation-message">${escapeCarnizaHtml(state.message)}</p>
-        <div data-commercial-main-actions style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;"></div>
-        <div class="commercial-activation-secondary" style="display:grid;gap:8px;">
-          <div style="padding:9px 11px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;font-weight:900;">${escapeCarnizaHtml(state.status)}</div>
-          <div style="display:grid;gap:6px;">
-            <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:1000;color:#7c2d12;">
+        <div data-commercial-main-actions class="cm-strong-actions"></div>
+        <div class="commercial-activation-secondary cm-strong-secondary">
+          <div class="cm-strong-status">${escapeCarnizaHtml(state.status)}</div>
+          <div class="cm-strong-progress">
+            <div class="cm-strong-progress-head">
               <span>${state.pricedCount} precios cargados</span>
               <span>${state.pricedCount < CARNIZA_ACTIVATION_MIN_PRICES ? `mínimo ${CARNIZA_ACTIVATION_MIN_PRICES}` : `objetivo ${CARNIZA_RECOMMENDED_PRICES}`}</span>
             </div>
-            <div style="height:9px;border-radius:999px;background:#fee2e2;overflow:hidden;">
-              <div style="height:100%;width:${progress}%;background:linear-gradient(90deg,#B3161A,#E52223);border-radius:999px;"></div>
+            <div class="cm-strong-track">
+              <div class="cm-strong-fill" style="width:${progress}%;"></div>
             </div>
           </div>
         </div>
         <div data-commercial-share-actions></div>
-        <button type="button" data-commercial-dismiss style="min-height:42px;border:0;background:transparent;color:#7c2d12;font-size:13px;font-weight:900;cursor:pointer;">Ahora no</button>
+        <button type="button" data-commercial-dismiss class="cm-strong-dismiss">Ahora no</button>
       </div>
     </div>
   `;
@@ -2196,14 +2192,14 @@ function renderStrongCommercialPrompt(state = {}) {
   const main = card.querySelector("[data-commercial-main-actions]");
   if (state.primaryAction !== "share") {
     main.innerHTML = `
-      <button type="button" data-commercial-primary style="min-height:50px;border:0;border-radius:14px;background:#E52223;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Ver mi carnicería</button>
+      <button type="button" data-commercial-primary class="cm-strong-primary">${escapeCarnizaHtml(state.primaryLabel)}</button>
+      <button type="button" data-commercial-view-web class="cm-strong-view-web"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Ver mi carnicería</button>
     `;
     main.querySelector("[data-commercial-primary]")?.addEventListener("click", () => executeCommercialAction(state, state.primaryAction));
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
   } else {
     main.innerHTML = `
-      <button type="button" data-commercial-view-web style="min-height:50px;border:1px solid #fecaca;border-radius:14px;background:#fff;color:#B3161A;font-weight:1000;cursor:pointer;"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Revisar mi carnicería</button>
+      <button type="button" data-commercial-view-web class="cm-strong-view-web"><svg class="ci ci-sm" aria-hidden="true"><use href="/assets/icons/carnis-icons.svg#globe"></use></svg>Revisar mi carnicería</button>
     `;
     main.querySelector("[data-commercial-view-web]")?.addEventListener("click", () => executeCommercialAction(state, "view_web"));
     renderCommercialShareActions(card.querySelector("[data-commercial-share-actions]"), state);
@@ -2222,17 +2218,16 @@ function renderCompactCommercialPrompt(state = {}) {
 
   const card = document.createElement("section");
   card.dataset.carnizaCommercialMotor = "compact";
-  card.style.cssText = "margin:0 0 14px;padding:14px 16px;border:1px solid #fed7aa;border-radius:18px;background:linear-gradient(180deg,#fffaf0,#fff);box-shadow:0 8px 22px rgba(124,45,18,.08);display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;";
 
   card.innerHTML = `
-    <img class="commercial-compact-visual" src="${state.asset}" alt="Carniza" style="width:74px;height:74px;object-fit:contain;border-radius:14px;background:#fff7ed;">
-    <div class="commercial-compact-copy" style="min-width:0;">
-      <strong class="commercial-compact-title" style="display:block;color:#7c2d12;font-size:15px;line-height:1.25;">${escapeCarnizaHtml(state.title)}</strong>
-      <span class="commercial-compact-message" style="display:block;margin-top:4px;color:#6b4b3e;font-size:13px;font-weight:800;line-height:1.35;">${escapeCarnizaHtml(state.message)}</span>
+    <img class="commercial-compact-visual cm-compact-visual" src="${state.asset}" alt="Carniza">
+    <div class="commercial-compact-copy cm-compact-copy">
+      <strong class="commercial-compact-title cm-compact-title">${escapeCarnizaHtml(state.title)}</strong>
+      <span class="commercial-compact-message cm-compact-message">${escapeCarnizaHtml(state.message)}</span>
     </div>
-    <div class="commercial-compact-actions" style="display:grid;gap:7px;min-width:150px;">
-      <button type="button" data-commercial-compact-primary style="min-height:42px;border:0;border-radius:12px;background:#c2410c;color:#fff;font-weight:1000;cursor:pointer;">${escapeCarnizaHtml(state.primaryLabel)}</button>
-      <button type="button" data-commercial-compact-dismiss style="min-height:34px;border:0;background:transparent;color:#9a3412;font-size:12px;font-weight:900;cursor:pointer;">Ahora no</button>
+    <div class="commercial-compact-actions cm-compact-actions">
+      <button type="button" data-commercial-compact-primary class="cm-compact-primary">${escapeCarnizaHtml(state.primaryLabel)}</button>
+      <button type="button" data-commercial-compact-dismiss class="cm-compact-dismiss">Ahora no</button>
     </div>
   `;
 
