@@ -2535,3 +2535,397 @@ body.public-auth-open .app-mobile-bottom-menu {
     font-size:28px;
   }
 }
+
+/* ============================================================
+   18. ESTADO / LA NELLY (C4.4a)
+   ex ensureStatusCompactStyle() de status-compact.js + style="" fijos del modal de estado.
+   ============================================================ */
+body.apppromos-nelly-mode #carnizaFloatingLiquidatorShell,
+body.apppromos-nelly-mode .carniza-root,
+body.apppromos-nelly-mode .dash-carniza-card {
+  display: none !important;
+}
+#statusSmartAlert.status-smart-alert {
+  position: fixed !important;
+  left: 16px !important;
+  bottom: 16px !important;
+  right: auto !important;
+  top: auto !important;
+  z-index: 9997 !important;
+  width: min(500px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px) !important;
+  box-sizing: border-box !important;
+  border: 1px solid #fed7aa !important;
+  border-radius: 999px !important;
+  padding: 10px 12px !important;
+  background: linear-gradient(135deg, #fff7ed, #ffffff) !important;
+  box-shadow: 0 18px 42px rgba(124, 45, 18, .16) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: #7c2d12 !important;
+  font-weight: 900 !important;
+}
+#statusSmartAlert.hidden { display: none !important; }
+#statusSmartAlert .status-nelly-chip-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+#statusSmartAlert .status-nelly-chip-avatar {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(239,68,68,.24);
+  background: #fff;
+  display: block;
+}
+#statusSmartAlert .status-nelly-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.15;
+}
+#statusSmartAlert .status-nelly-chip-cta {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #22c55e;
+  color: #052e16 !important;
+  text-decoration: none !important;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+/* V12.0.NNN.7.1 — Pulido visual seguro: solo CSS, sin tocar lógica de ofertas ni WhatsApp. */
+#carnizaFloatingLiquidatorFab {
+  min-width: 142px !important;
+  height: 74px !important;
+  padding: 0 20px 0 11px !important;
+  gap: 11px !important;
+  font-size: 16px !important;
+}
+#carnizaFloatingLiquidatorFab .fab-avatar {
+  width: 54px !important;
+  height: 54px !important;
+  max-width: 54px !important;
+  max-height: 54px !important;
+}
+.carniza-floating-avatar {
+  width: 54px !important;
+  height: 54px !important;
+  max-width: 54px !important;
+  max-height: 54px !important;
+}
+input[type="number"][max="100"],
+input[type="number"][aria-label*="desc" i],
+input[type="number"][placeholder*="desc" i] {
+  background: linear-gradient(135deg, #FFF1F0, #ffffff) !important;
+  border: 1px solid #F6C6C6 !important;
+  box-shadow: 0 8px 18px rgba(229, 34, 35, .10) !important;
+  color: #0f172a !important;
+  font-weight: 1000 !important;
+  text-align: center !important;
+}
+input[type="number"][max="100"]:focus,
+input[type="number"][aria-label*="desc" i]:focus,
+input[type="number"][placeholder*="desc" i]:focus {
+  outline: 3px solid rgba(229, 34, 35, .18) !important;
+  border-color: #E52223 !important;
+}
+.dash-card .dash-value {
+  color: #8E1014 !important;
+  font-size: 26px !important;
+  line-height: 1.05 !important;
+  background: #FFF1F0 !important;
+  border: 1px solid #F6C6C6 !important;
+  border-radius: 14px !important;
+  padding: 6px 10px !important;
+  display: inline-flex !important;
+  min-width: 58px !important;
+  justify-content: center !important;
+}
+.dash-card .dash-note {
+  color: #64748b !important;
+  font-size: 12px !important;
+}
+@media (max-width: 520px) {
+  #carnizaFloatingLiquidatorFab {
+    width: 78px !important;
+    min-width: 78px !important;
+    height: 78px !important;
+    padding: 0 !important;
+  }
+  #carnizaFloatingLiquidatorFab .fab-avatar {
+    width: 58px !important;
+    height: 58px !important;
+    max-width: 58px !important;
+    max-height: 58px !important;
+  }
+}
+@media (max-width: 560px) {
+  #statusSmartAlert.status-smart-alert {
+    left: 10px !important;
+    bottom: 10px !important;
+    width: calc(100vw - 20px) !important;
+    border-radius: 18px !important;
+  }
+  #statusSmartAlert .status-nelly-chip-text {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  #statusSmartAlert .status-nelly-chip-cta { padding: 0 12px; min-height: 42px; }
+}
+
+.status-modal-card .status-modal-head { display:flex;align-items:center;gap:12px;margin-bottom:8px; }
+.status-modal-card .status-modal-avatar { width:54px;height:54px;border-radius:999px;object-fit:cover;border:2px solid #fecaca;background:#fff; }
+
+/* ============================================================
+   19. ACTIVACION COMERCIAL (C4.4a)
+   ex setCommercialActivationUi() de app-main.js. Solo la regla; la clase del body la sigue poniendo JS.
+   ============================================================ */
+body.app-commercial-activation-active #carnizaFloatingLiquidatorFab {
+  display: none !important;
+}
+
+/* ============================================================
+   20. CARNIZA FLOTANTE (C4.4a)
+   ex ensureCarnizaFloatingLiquidator() de app-main.js.
+   ============================================================ */
+#carnizaFloatingLiquidatorFab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2147482498;
+  min-width: 128px;
+  height: 68px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 18px 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #B3161A, #E52223);
+  color: #fff;
+  font-weight: 1000;
+  font-size: 15px;
+  letter-spacing: .01em;
+  box-shadow: 0 18px 38px rgba(229, 34, 35, .28);
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+body.apppromos-nelly-mode #carnizaFloatingLiquidatorShell,
+body.apppromos-nelly-mode .carniza-root,
+body.apppromos-nelly-mode .dash-carniza-card,
+body.module-focus-admin #carnizaFloatingLiquidatorShell,
+body.module-focus-admin .carniza-root,
+body.module-focus-admin .dash-carniza-card {
+  display: none !important;
+}
+body.module-focus-admin #carnizaFloatingLiquidatorOverlay {
+  display: none !important;
+}
+#carnizaFloatingLiquidatorFab:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 22px 46px rgba(15, 76, 129, .34);
+  filter: brightness(1.04);
+}
+@media (max-width: 760px) {
+  body.app-mobile-nav-ready #carnizaFloatingLiquidatorShell {
+    max-width: 100vw;
+    overflow: visible;
+  }
+  body.app-mobile-nav-ready #carnizaFloatingLiquidatorFab {
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: var(--apppromos-mobile-floating-bottom, 104px);
+    max-width: calc(100vw - 24px);
+  }
+  body.app-mobile-nav-ready #carnizaFloatingLiquidatorOverlay {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+  body.app-mobile-nav-ready #carnizaFloatingLiquidatorModal {
+    max-height: calc(100vh - 126px - env(safe-area-inset-bottom, 0px));
+  }
+}
+#carnizaFloatingLiquidatorFab .fab-avatar {
+  width: 48px;
+  height: 48px;
+  max-width: 48px;
+  max-height: 48px;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
+  background: rgba(255,255,255,.18);
+  border: 2px solid rgba(255,255,255,.58);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, .18);
+}
+#carnizaFloatingLiquidatorFab .fab-text {
+  display: inline-block;
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  #carnizaFloatingLiquidatorFab {
+    right: 14px;
+    bottom: var(--apppromos-mobile-floating-bottom, 104px);
+    min-width: 72px;
+    width: 72px;
+    height: 72px;
+    padding: 0;
+  }
+  #carnizaFloatingLiquidatorFab .fab-avatar { width: 54px; height: 54px; max-width:54px; max-height:54px; }
+  #carnizaFloatingLiquidatorFab .fab-text { display: none; }
+}
+#carnizaFloatingLiquidatorOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(8, 20, 35, .56);
+  backdrop-filter: blur(4px);
+  padding: 18px;
+}
+#carnizaFloatingLiquidatorOverlay.open { display: flex; }
+#carnizaFloatingLiquidatorModal {
+  width: min(720px, 100%);
+  max-height: min(88vh, 760px);
+  overflow: auto;
+  border-radius: 24px;
+  background: #f8fafc;
+  box-shadow: 0 28px 80px rgba(2, 6, 23, .32);
+  border: 1px solid rgba(226, 232, 240, .9);
+}
+.carniza-floating-avatar {
+  width: 50px;
+  height: 50px;
+  max-width: 50px;
+  max-height: 50px;
+  border-radius: 999px;
+  object-fit: cover;
+  display:block;
+  background: rgba(255,255,255,.16);
+  border: 2px solid rgba(255,255,255,.42);
+  flex: 0 0 auto;
+}
+.carniza-floating-title-row { display: flex; align-items: center; gap: 10px; }
+.carniza-floating-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  background: linear-gradient(135deg, #0A2E5B, #0d3a73);
+  color: #fff;
+}
+.carniza-floating-header strong { display:block; font-size:18px; font-weight:1000; line-height:1.1; }
+.carniza-floating-header span { display:block; margin-top:4px; color:rgba(255,255,255,.82); font-size:13px; font-weight:800; line-height:1.3; }
+#carnizaFloatingLiquidatorClose {
+  width:38px; height:38px; border:1px solid rgba(255,255,255,.28); border-radius:999px; background:rgba(255,255,255,.12); color:#fff; font-size:22px; font-weight:900; cursor:pointer;
+}
+#carnizaFloatingLiquidatorBody { padding:14px; }
+.carniza-unified-card {
+  border:1px solid #F6C6C6;
+  border-radius:22px;
+  background:linear-gradient(135deg,#ffffff,#FFF1F0);
+  padding:18px;
+  box-shadow:0 16px 42px rgba(15,23,42,.08);
+}
+.carniza-unified-kicker { color:#E52223; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; margin-bottom:8px; }
+.carniza-unified-card h3 { margin:0 0 8px; color:#0f172a; font-size:26px; line-height:1.05; }
+.carniza-unified-card p { margin:0 0 14px; color:#475569; font-weight:850; line-height:1.4; }
+.carniza-unified-actions { display:grid; grid-template-columns:1fr; gap:10px; }
+.carniza-unified-action {
+  border:1px solid #F6C6C6;
+  border-radius:18px;
+  background:#fff;
+  color:#0f172a;
+  min-height:72px;
+  padding:12px 14px;
+  text-align:left;
+  cursor:pointer;
+  display:grid;
+  gap:3px;
+  box-shadow:0 6px 16px rgba(15,23,42,.05);
+}
+.carniza-unified-action strong { font-size:17px; font-weight:1000; }
+.carniza-unified-action span { color:#64748b; font-size:13px; font-weight:800; line-height:1.3; }
+.carniza-unified-action.primary { border-color:#F6C6C6; background:linear-gradient(135deg,#FFF1F0,#ffffff); }
+.carniza-unified-action.urgent { border-color:#fed7aa; background:linear-gradient(135deg,#fff7ed,#ffffff); }
+.carniza-unified-action.nav { border-color:#bbf7d0; background:linear-gradient(135deg,#f0fdf4,#ffffff); }
+.carniza-unified-action.exit { border-color:#fecaca; background:linear-gradient(135deg,#fff1f2,#ffffff); }
+.carniza-unified-foot { margin-top:12px; color:#64748b; font-size:12px; font-weight:900; }
+.carniza-unified-back { width:100%; min-height:44px; border:1px solid #cbd5e1; border-radius:14px; background:#fff; color:#0f172a; font-weight:1000; cursor:pointer; margin-bottom:12px; }
+#carnizaFloatingLiquidatorBody #carnizaUrgentStockCard { margin:0 !important; border:1px solid #e2e8f0 !important; border-radius:20px !important; background:#ffffff !important; box-shadow:0 16px 42px rgba(15, 23, 42, .08) !important; }
+#carnizaFloatingLiquidatorBody input { border-color:#cbd5e1 !important; background:#fff !important; }
+#carnizaFloatingLiquidatorBody [data-carniza-liquidate] { background:linear-gradient(135deg,#16a34a,#15803d) !important; box-shadow:0 12px 24px rgba(22,163,74,.22) !important; }
+body.apppromos-carniza-overlay-open .app-mobile-bottom-menu,
+body.apppromos-carniza-overlay-open .app-mobile-bottom-nav { pointer-events:none; }
+
+/* ============================================================
+   21. MI CUENTA (C4.4a)
+   ex <style> de openAccountSheet() en app-main.js.
+   ============================================================ */
+.app-account-sheet { position:fixed; inset:0; z-index:12000; display:flex; align-items:flex-end; justify-content:center; padding:16px; background:rgba(15,23,42,.42); box-sizing:border-box; }
+.app-account-panel { width:min(560px,100%); max-height:calc(92vh - env(safe-area-inset-bottom,0px)); overflow:auto; border-radius:24px; background:#fff; box-shadow:0 28px 80px rgba(15,23,42,.28); border:1px solid #e2e8f0; padding:18px; box-sizing:border-box; }
+.app-account-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.app-account-head strong { font-size:15px; color:#0f172a; }
+.app-account-close { width:42px; height:42px; border-radius:14px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-size:20px; font-weight:1000; cursor:pointer; }
+.app-account-card { display:grid; gap:12px; }
+.app-account-kicker { color:#E52223; text-transform:uppercase; letter-spacing:.05em; font-size:12px; font-weight:1000; }
+.app-account-card h3 { margin:0; font-size:24px; line-height:1.05; color:#B3161A; }
+.app-account-card p { margin:0; color:#64748b; font-weight:800; line-height:1.35; }
+.app-account-list { display:grid; gap:8px; }
+.app-account-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
+.app-account-row span { color:#64748b; font-size:13px; font-weight:900; }
+.app-account-row strong { text-align:right; color:#0f172a; font-size:14px; overflow-wrap:anywhere; }
+.app-account-row a { color:#E52223; text-decoration:none; overflow-wrap:anywhere; }
+.app-account-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:4px; }
+.app-account-actions button { min-height:46px; border-radius:15px; border:1px solid #e2e8f0; background:#fff; color:#0f172a; font-weight:1000; cursor:pointer; }
+.app-account-actions button.primary { background:#E52223; border-color:#E52223; color:#fff; }
+.app-account-footnote { color:#64748b; font-weight:800; line-height:1.35; }
+.app-account-form label { display:grid; gap:6px; color:#475569; font-size:13px; font-weight:900; }
+.app-account-form input { width:100%; min-height:46px; border:1px solid #cbd5e1; border-radius:14px; padding:0 12px; font-size:15px; font-weight:800; box-sizing:border-box; }
+.app-account-form input:focus { outline:3px solid rgba(229,34,35,.12); border-color:#E52223; }
+.app-account-brand-section { display:grid; gap:14px; margin-top:4px; padding-top:14px; border-top:1px solid #e2e8f0; }
+.app-account-brand-section > div:first-child { display:grid; gap:4px; }
+.app-account-brand-section > div:first-child strong { color:#0f172a; font-size:16px; }
+.app-account-brand-section > div:first-child p { font-size:13px; }
+.app-account-brand-item { display:grid; gap:8px; padding:12px; border:1px solid #e2e8f0; border-radius:16px; background:#f8fafc; }
+.app-account-brand-label { color:#334155; font-size:13px; font-weight:1000; }
+.app-account-brand-preview { display:block; max-width:100%; object-fit:cover; border-radius:14px; border:1px solid #e2e8f0; background:#fff; }
+.app-account-brand-preview.logo { width:112px; height:112px; object-fit:contain; padding:8px; box-sizing:border-box; }
+.app-account-brand-preview.front { width:100%; aspect-ratio:16/9; }
+.app-account-brand-empty { min-height:72px; display:grid; place-items:center; padding:12px; border:1px dashed #cbd5e1; border-radius:14px; color:#64748b; background:#fff; font-size:13px; font-weight:800; text-align:center; }
+.app-account-file-button { position:relative; display:inline-flex !important; align-items:center; justify-content:center; min-height:44px; border-radius:14px; background:#FFF1F0; border:1px solid #F6C6C6; color:#B3161A !important; cursor:pointer; font-weight:1000 !important; }
+.app-account-file-button input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.app-account-remove-image { min-height:40px; border-radius:12px; border:1px solid #fecaca; background:#fff; color:#E52223; font-weight:900; cursor:pointer; }
+.app-account-brand-item small { color:#64748b; font-weight:700; line-height:1.3; }
+.app-account-error { min-height:18px; color:#ef233c; font-size:13px; font-weight:900; }
+.app-account-web-status { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 10px; font-size:13px; font-weight:950; }
+.app-account-web-status.active { color:#166534; background:#dcfce7; border:1px solid #86efac; }
+.app-account-web-status.pending { color:#92400e; background:#fef3c7; border:1px solid #fcd34d; }
+.app-account-web-row strong { word-break:normal; }
+@media (max-width:640px) { .app-account-sheet { padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px)); } .app-account-panel { border-radius:22px; max-height:calc(86vh - env(safe-area-inset-bottom,0px)); } .app-account-actions { grid-template-columns:1fr; } .app-account-row { flex-direction:column; gap:4px; } .app-account-row strong { text-align:left; } }
