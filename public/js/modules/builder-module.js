@@ -710,7 +710,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
         ${renderTopActions("Responder una consulta", "Elegí lo que pidió el cliente y calculá la respuesta con tus precios reales.")}
         ${renderQuickFloatingSummary()}
 
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); display:grid; gap:12px;">
+        <div class="builder-card builder-card--reserve-quick">
           <input id="quickSearchInput" type="text" placeholder="Buscar corte o producto..." value="${escapeHtml(state.quick.searchTerm)}" style="width:100%; box-sizing:border-box; min-height:46px; border:1px solid #F6C6C6; border-radius:14px; padding:0 12px; font-weight:900;" />
           ${renderRubroSelector("quick", state.quick.rubroFilter)}
           ${renderProductGrid("quick", filteredProducts, state.quick.items)}
@@ -906,19 +906,19 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     const whatsappPreview = buildWhatsappText(payload, options?.businessMeta || {});
 
     container.innerHTML = `
-      <section style="display:grid; gap:12px; padding-bottom:calc(138px + var(--apppromos-mobile-nav-height, 0px));">
+      <section class="builder-screen builder-screen--reserve-review">
         ${renderTopActions("Respuesta lista", "Revisá productos y cantidades. Es para este cliente y no se guarda en tus promociones.", "← Productos")}
-        <div style="display:grid; gap:10px;">
+        <div class="builder-lines">
           ${renderQuantityList(state.quick.items, "quickReview")}
         </div>
-        <div style="background:#FFF1F0; border:1px solid #F6C6C6; border-radius:18px; padding:14px; display:grid; gap:10px;">
-          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
-            <strong style="font-size:1.2rem; color:#8E1014;">Total final: $ ${formatMoney(payload.total)}</strong>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="builder-review-total">
+          <div class="builder-review-total__row">
+            <strong class="builder-review-total__value">Total final: $ ${formatMoney(payload.total)}</strong>
+            <div class="builder-actions">
               <button id="quickWhatsappBtn" type="button" class="builder-btn-whatsapp">Responder por WhatsApp</button>
             </div>
           </div>
-          <div style="background:#fff; border:1px solid #FADBD8; border-radius:14px; padding:11px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
+          <div class="builder-message-preview builder-message-preview--quick">${escapeHtml(whatsappPreview)}</div>
         </div>
       </section>
     `;
@@ -945,7 +945,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     container.innerHTML = `
       <section class="builder-screen">
         ${renderTopActions(editingCombo ? "Editar promo" : "Crear promo o combo", editingCombo ? "Modificá la receta y guardá los cambios sobre esta promo." : "Armá una propuesta para vender varias veces. Podés guardarla, publicarla y compartirla.")}
-        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px;">
+        <div class="builder-steps">
           ${steps.map((step) => `
             <button type="button" data-discount-step="${step.id}" style="border:1px solid ${state.discount.step === step.id ? "#f97316" : "#e5e7eb"}; background:${state.discount.step === step.id ? "#fff7ed" : "#fff"}; border-radius:14px; padding:10px; font-weight:1000; cursor:pointer;">${step.id}. ${escapeHtml(step.title)}</button>
           `).join("")}
@@ -1007,34 +1007,34 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
 
     return `
       <aside style="${baseStyle} background:#fff7ed; border:1px solid #fed7aa; border-radius:18px; padding:${compact ? "10px" : "14px"}; box-shadow:0 14px 34px rgba(15,23,42,.20);">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px;">
-          <div style="font-size:.76rem; color:#9a3412; font-weight:1000; text-transform:uppercase; letter-spacing:.04em;">Resumen</div>
-          <div style="font-size:.72rem; color:#9a3412; font-weight:900;">se actualiza solo</div>
+        <div class="builder-totals__head">
+          <div class="builder-totals__title">Resumen</div>
+          <div class="builder-totals__hint">se actualiza solo</div>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px;">
-          <div style="background:#fff; border:1px solid #fed7aa; border-radius:13px; padding:8px; min-width:0;">
-            <div style="font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05;">Sin descuento</div>
-            <strong data-discount-summary-subtotal style="display:block; margin-top:3px; color:#431407; font-size:.92rem; white-space:nowrap;">$ ${formatMoney(totals.subtotalBruto)}</strong>
+        <div class="builder-totals__grid">
+          <div class="builder-total-card">
+            <div class="builder-total-card__label">Sin descuento</div>
+            <strong data-discount-summary-subtotal class="builder-total-card__value">$ ${formatMoney(totals.subtotalBruto)}</strong>
           </div>
-          <div style="background:#fff; border:1px solid #fed7aa; border-radius:13px; padding:8px; min-width:0;">
-            <div style="font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05;">Descuentos</div>
-            <strong data-discount-summary-discounts style="display:block; margin-top:3px; color:#b45309; font-size:.92rem; white-space:nowrap;">-$ ${formatMoney(totals.descuentosAplicados)}</strong>
+          <div class="builder-total-card">
+            <div class="builder-total-card__label">Descuentos</div>
+            <strong data-discount-summary-discounts class="builder-total-card__value builder-total-card__value--discount">-$ ${formatMoney(totals.descuentosAplicados)}</strong>
           </div>
-          <div style="background:#fff; border:2px solid #fb923c; border-radius:13px; padding:8px; min-width:0;">
-            <div style="font-size:.68rem; color:#9a3412; font-weight:1000; line-height:1.05;">Total final</div>
-            <strong data-discount-summary-total style="display:block; margin-top:3px; color:#c2410c; font-size:1.02rem; white-space:nowrap;">$ ${formatMoney(totals.total)}</strong>
+          <div class="builder-total-card builder-total-card--final">
+            <div class="builder-total-card__label">Total final</div>
+            <strong data-discount-summary-total class="builder-total-card__value">$ ${formatMoney(totals.total)}</strong>
           </div>
         </div>
         ${totals.allSoldByKg ? `
-          <div style="margin-top:7px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #fdba74; border-radius:13px; background:#fff; padding:8px 10px;">
-            <div style="min-width:0;">
-              <strong style="display:block; color:#7c2d12; font-size:.76rem; line-height:1.1;">Precio para la balanza</strong>
-              <span data-discount-summary-weight style="display:block; margin-top:2px; color:#92400e; font-size:.68rem; font-weight:850;">${formatQty(totals.totalWeight)} kg previstos</span>
+          <div class="builder-scale-price">
+            <div class="builder-scale-price__info">
+              <strong class="builder-scale-price__label">Precio para la balanza</strong>
+              <span data-discount-summary-weight class="builder-scale-price__weight">${formatQty(totals.totalWeight)} kg previstos</span>
             </div>
-            <strong data-discount-summary-scale-price style="flex:0 0 auto; color:#c2410c; font-size:1.02rem; white-space:nowrap;">$ ${formatMoney(totals.scalePricePerKg)} / kg</strong>
+            <strong data-discount-summary-scale-price class="builder-scale-price__value">$ ${formatMoney(totals.scalePricePerKg)} / kg</strong>
           </div>
         ` : `
-          <div style="margin-top:7px; border:1px solid #fde68a; border-radius:13px; background:#fffbeb; padding:8px 10px; color:#92400e; font-size:.72rem; line-height:1.3; font-weight:900;">
+          <div class="builder-totals__note">
             Esta promo combina diferentes unidades. No se puede generar un único precio para la balanza.
           </div>
         `}
@@ -1046,7 +1046,7 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     content.innerHTML = `
       <div class="builder-screen">
         ${renderDiscountSummary(totals, true, true)}
-        <div style="display:grid; gap:10px; padding-bottom:calc(238px + var(--apppromos-mobile-nav-height, 0px));">
+        <div class="builder-lines builder-lines--reserve-summary">
           ${renderQuantityList(state.discount.items, "discountAdjust", true)}
         </div>
         <div class="builder-global-discount">
@@ -1112,11 +1112,11 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
       <div class="builder-screen">
         ${renderDiscountSummary(totals, true)}
         <div class="builder-card">
-          <label style="display:grid; gap:6px; font-weight:1000;">
+          <label class="builder-sell__label">
             Nombre comercial de la promo
             <input id="discountOfferNameInput" type="text" value="${escapeHtml(state.discount.offerName)}" placeholder="Ej: 2 kg de achuras" required />
           </label>
-          <div id="discountWhatsappPreview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; white-space:pre-line; line-height:1.45; font-weight:800; color:#334155;">${escapeHtml(whatsappPreview)}</div>
+          <div id="discountWhatsappPreview" class="builder-message-preview builder-message-preview--promo">${escapeHtml(whatsappPreview)}</div>
           <div class="builder-actions builder-actions--between">
             <button id="discountBackAdjustBtn" type="button">← Volver y ajustar</button>
             <div class="builder-actions builder-actions--end">

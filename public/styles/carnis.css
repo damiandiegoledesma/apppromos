@@ -4374,3 +4374,38 @@ body.module-focus-admin .app-mobile-bottom-menu {
 .builder-global-discount__head { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; font-weight:1000; color:#7c2d12; }
 .builder-global-discount__control { display:flex; align-items:center; gap:7px; background:#fff7ed; border:1px solid #fed7aa; border-radius:14px; padding:6px; }
 .builder-global-discount__note { margin:0; }
+
+/* ==========================================================================
+   31. CONSTRUCTOR · TOTALES Y CIERRE (C4.7e)
+   Antes: style="" fijos en builder-module.js. Valores copiados literal.
+   Incluye las reservas de espacio para los resúmenes flotantes (C4.7a).
+   ========================================================================== */
+.builder-card--reserve-quick { padding:14px 14px calc(230px + var(--apppromos-mobile-nav-height, 0px)); }
+.builder-screen--reserve-review { padding-bottom:calc(138px + var(--apppromos-mobile-nav-height, 0px)); }
+.builder-lines { display:grid; gap:10px; }
+.builder-lines--reserve-summary { padding-bottom:calc(238px + var(--apppromos-mobile-nav-height, 0px)); }
+.builder-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.builder-review-total { background:#FFF1F0; border:1px solid #F6C6C6; border-radius:18px; padding:14px; display:grid; gap:10px; }
+.builder-review-total__row { display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
+.builder-review-total__value { font-size:1.2rem; color:#8E1014; }
+.builder-message-preview { white-space:pre-line; line-height:1.45; font-weight:800; color:#334155; }
+.builder-message-preview--quick { background:#fff; border:1px solid #FADBD8; border-radius:14px; padding:11px; }
+.builder-message-preview--promo { background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; }
+.builder-sell__label { display:grid; gap:6px; font-weight:1000; }
+.builder-totals__head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.builder-totals__title { font-size:.76rem; color:#9a3412; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; }
+.builder-totals__hint { font-size:.72rem; color:#9a3412; font-weight:900; }
+.builder-totals__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+.builder-totals__note { margin-top:7px; border:1px solid #fde68a; border-radius:13px; background:#fffbeb; padding:8px 10px; color:#92400e; font-size:.72rem; line-height:1.3; font-weight:900; }
+.builder-total-card { background:#fff; border:1px solid #fed7aa; border-radius:13px; padding:8px; min-width:0; }
+.builder-total-card--final { border:2px solid #fb923c; }
+.builder-total-card__label { font-size:.68rem; color:#92400e; font-weight:900; line-height:1.05; }
+.builder-total-card--final .builder-total-card__label { color:#9a3412; font-weight:1000; }
+.builder-total-card__value { display:block; margin-top:3px; color:#431407; font-size:.92rem; white-space:nowrap; }
+.builder-total-card__value--discount { color:#b45309; }
+.builder-total-card--final .builder-total-card__value { color:#c2410c; font-size:1.02rem; }
+.builder-scale-price { margin-top:7px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #fdba74; border-radius:13px; background:#fff; padding:8px 10px; }
+.builder-scale-price__info { min-width:0; }
+.builder-scale-price__label { display:block; color:#7c2d12; font-size:.76rem; line-height:1.1; }
+.builder-scale-price__weight { display:block; margin-top:2px; color:#92400e; font-size:.68rem; font-weight:850; }
+.builder-scale-price__value { flex:0 0 auto; color:#c2410c; font-size:1.02rem; white-space:nowrap; }
