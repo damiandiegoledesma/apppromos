@@ -366,21 +366,18 @@ export function renderAccessWarning(business = {}) {
 
   const isBlocked = access.level === "blocked";
   const isGrace = access.level === "grace";
-  const color = isBlocked ? "#991b1b" : "#9a3412";
-  const bg = isBlocked ? "#fef2f2" : "#fff7ed";
-  const border = isBlocked ? "#fecaca" : "#fdba74";
   const icon = isBlocked ? "⛔" : isGrace ? "🟠" : "🔴";
   const text = isBlocked
     ? "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp."
     : isGrace ? access.message : "La Nelly te cuida y nos cuida. Lo resolvemos por WhatsApp y seguís vendiendo.";
 
   return `
-    <div data-access-warning="true" data-access-level="${escapeHtml(access.level)}" style="margin:0 0 12px;padding:10px 12px;border:1px solid ${border};border-radius:16px;background:${bg};color:${color};box-shadow:0 8px 18px rgba(0,0,0,.04);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-      <div style="font-size:13px;line-height:1.3;font-weight:1000;">
+    <div data-access-warning="true" data-access-level="${escapeHtml(access.level)}" class="access-warning${isBlocked ? " is-blocked" : ""}">
+      <div class="access-warning__text">
         ${icon} ${escapeHtml(access.title)} · ${escapeHtml(text)}
       </div>
       ${access.ctaUrl ? `
-        <a href="${escapeHtml(access.ctaUrl)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:999px;background:#25D366;color:#10351f;text-decoration:none;font-weight:1000;white-space:nowrap;">
+        <a href="${escapeHtml(access.ctaUrl)}" target="_blank" rel="noopener" class="access-warning__cta">
           💬 ${escapeHtml(access.ctaLabel || "Resolver ahora")}
         </a>
       ` : ""}
@@ -398,20 +395,20 @@ export function renderModuleLocked(moduleKey, business = {}) {
       : `Este módulo no está disponible para esta carnicería en este momento.`;
 
   return `
-    <div style="padding:22px;border:1px solid #e7e1d8;border-radius:18px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.04);">
-      <div style="font-size:34px;margin-bottom:8px;">🔒</div>
-      <h2 style="margin:0 0 8px;">${escapeHtml(label)} bloqueado</h2>
-      <p style="margin:0 0 14px;color:#6e6e6e;line-height:1.4;">${escapeHtml(message)}</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button type="button" data-action-panel="dashboardPanel" style="display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#374151;font-weight:1000;cursor:pointer;">
+    <div class="access-locked">
+      <div class="access-locked__icon">🔒</div>
+      <h2 class="access-locked__title">${escapeHtml(label)} bloqueado</h2>
+      <p class="access-locked__message">${escapeHtml(message)}</p>
+      <div class="access-locked__actions">
+        <button type="button" data-action-panel="dashboardPanel" class="access-locked__back">
           ← Volver a Inicio
         </button>
         ${access.ctaUrl ? `
-          <a href="${escapeHtml(access.ctaUrl)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:999px;background:#25D366;color:#10351f;text-decoration:none;font-weight:1000;">
+          <a href="${escapeHtml(access.ctaUrl)}" target="_blank" rel="noopener" class="access-locked__cta">
             💬 ${escapeHtml(access.ctaLabel || "Contactar a Carnis")}
           </a>
         ` : `
-          <div style="padding:12px;border-radius:12px;background:#fff8f4;color:#6b4b3e;font-size:14px;">
+          <div class="access-locked__note">
             Este módulo puede activarse desde el Panel Admin según el plan comercial del cliente.
           </div>
         `}

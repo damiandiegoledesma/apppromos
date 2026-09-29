@@ -4580,3 +4580,27 @@ body.module-focus-admin .app-mobile-bottom-menu {
 [data-carniza-commercial-motor="compact"] .cm-compact-dismiss { min-height:34px; border:0; background:transparent; color:#9a3412; font-size:12px; font-weight:900; cursor:pointer; }
 /* Estilo elegido: antes ternario inline + choice.style.* en showPreview() */
 [data-carniza-commercial-motor="storefront-theme"] .cm-theme-choice[aria-pressed="true"] { border-color:#c2410c; box-shadow:0 8px 18px rgba(124,45,18,.10); }
+
+/* =========================================================
+   34. ACCESO Y BLOQUEOS (C6.3)
+   Centralización de estilos de renderAccessWarning(),
+   renderModuleLocked() (access-control-service.js) y
+   renderAccessGate() (access-gate-module.js)
+   ========================================================= */
+.access-warning { margin:0 0 12px; padding:10px 12px; border:1px solid #fdba74; border-radius:16px; background:#fff7ed; color:#9a3412; box-shadow:0 8px 18px rgba(0,0,0,.04); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.access-warning.is-blocked { border-color:#fecaca; background:#fef2f2; color:#991b1b; }
+.access-warning .access-warning__text { font-size:13px; line-height:1.3; font-weight:1000; }
+.access-warning .access-warning__cta { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:999px; background:#25D366; color:#10351f; text-decoration:none; font-weight:1000; white-space:nowrap; }
+.access-locked { padding:22px; border:1px solid #e7e1d8; border-radius:18px; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.04); }
+.access-locked .access-locked__icon { font-size:34px; margin-bottom:8px; }
+.access-locked .access-locked__title { margin:0 0 8px; }
+.access-locked .access-locked__message { margin:0 0 14px; color:#6e6e6e; line-height:1.4; }
+.access-locked .access-locked__actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.access-locked .access-locked__back { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:0 14px; border-radius:999px; border:1px solid #d1d5db; background:#fff; color:#374151; font-weight:1000; cursor:pointer; }
+.access-locked .access-locked__cta { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:0 14px; border-radius:999px; background:#25D366; color:#10351f; text-decoration:none; font-weight:1000; }
+.access-locked .access-locked__note { padding:12px; border-radius:12px; background:#fff8f4; color:#6b4b3e; font-size:14px; }
+.access-gate-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.access-gate-bar .access-gate-card { background:#fff; border:1px solid #e7e1d8; border-radius:12px; padding:10px 12px; min-width:250px; box-shadow:0 6px 18px rgba(0,0,0,.04); }
+.access-gate-bar .access-gate-email { font-size:13px; font-weight:700; color:#1f1f1f; }
+.access-gate-bar .access-gate-demo { font-size:11px; color:#c62828; font-weight:700; margin-top:3px; }
+.access-gate-bar .access-gate-logout { min-height:42px; padding:0 14px; border:none; border-radius:12px; background:#222; color:#fff; font-weight:700; cursor:pointer; }

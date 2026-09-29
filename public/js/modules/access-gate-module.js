@@ -25,23 +25,10 @@ export async function renderAccessGate(container, options = {}) {
 
     const email = session?.isDemo ? "Carnicería de Carniza" : (session?.firebaseUser?.email || "-");
     container.innerHTML = `
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-        justify-content:flex-end;
-      ">
-        <div style="
-          background:#fff;
-          border:1px solid #e7e1d8;
-          border-radius:12px;
-          padding:10px 12px;
-          min-width:250px;
-          box-shadow:0 6px 18px rgba(0,0,0,.04);
-        ">
-          <div style="font-size:13px; font-weight:700; color:#1f1f1f;">${email}</div>
-          ${session?.isDemo ? `<div style="font-size:11px;color:#c62828;font-weight:700;margin-top:3px;">Demo sin registro</div>` : ""}
+      <div class="access-gate-bar">
+        <div class="access-gate-card">
+          <div class="access-gate-email">${email}</div>
+          ${session?.isDemo ? `<div class="access-gate-demo">Demo sin registro</div>` : ""}
         </div>
 
         <button
@@ -57,16 +44,7 @@ export async function renderAccessGate(container, options = {}) {
         <button
           id="logoutBtn"
           type="button"
-          style="
-            min-height:42px;
-            padding:0 14px;
-            border:none;
-            border-radius:12px;
-            background:#222;
-            color:#fff;
-            font-weight:700;
-            cursor:pointer;
-          "
+          class="access-gate-logout"
         >
           Salir
         </button>
