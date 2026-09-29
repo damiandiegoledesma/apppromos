@@ -3432,3 +3432,584 @@ body.module-focus-admin .app-mobile-bottom-menu {
   [data-carniza-commercial-motor="compact"] [data-commercial-compact-primary]{width:100%;min-height:46px !important}
   [data-carniza-commercial-motor="compact"] [data-commercial-compact-dismiss]{min-height:40px !important;font-size:13px !important}
 }
+
+/* ============================================================
+   24. PRECIOS (C4.5a)
+   ex <style> de renderPrices() en prices-module.js. Copia literal.
+   ============================================================ */
+      .prices-shell { display:flex; flex-direction:column; gap:16px; }
+      .prices-header { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+      .prices-title h2 { margin:0 0 6px; font-size:30px; color:#B3161A; line-height:1.1; }
+      .prices-title p { margin:0; color:#6b7280; font-size:15px; }
+      .prices-web-tip { display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border:1px solid #fed7aa; border-radius:18px; background:linear-gradient(135deg,#fff7ed,#ffffff); color:#7c2d12; box-shadow:0 8px 20px rgba(194,65,12,.08); }
+      .prices-web-tip-icon { width:38px; height:38px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:#ffedd5; color:#c2410c; font-weight:1000; flex:0 0 auto; }
+      .prices-web-tip strong { display:block; margin-bottom:4px; font-size:14px; font-weight:1000; }
+      .prices-web-tip p { margin:0; color:#7c2d12; line-height:1.38; font-size:13px; font-weight:850; }
+      .prices-toolbar {
+        position: sticky; top: 72px; z-index: 8; background:#fff9f7; border:1px solid #f0d7d1;
+        border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:12px;
+      }
+      .prices-toolbar-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+      .prices-status {
+        display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:999px;
+        font-weight:900; font-size:14px; background:#f3f4f6; color:#374151;
+      }
+      .prices-status[data-mode="pending"] { background:#fff3d6; color:#8a5200; }
+      .prices-status[data-mode="saving"] { background:#EAF0F6; color:#0A2E5B; }
+      .prices-status[data-mode="saved"] { background:#dcfce7; color:#166534; }
+      .prices-status[data-mode="error"] { background:#fee2e2; color:#ef233c; }
+      .prices-summary { color:#6b7280; font-size:14px; }
+      .prices-search, .prices-select { min-height:48px; border:1px solid #d1d5db; border-radius:10px; padding:0 12px; background:#fff; }
+      .prices-search { min-width:240px; flex:1; }
+      .prices-btn, .price-chip, .mini-action {
+        min-height:46px; border:1px solid #d1d5db; border-radius:10px; background:#fff; cursor:pointer; font-weight:700;
+      }
+      .prices-btn.primary { background:#E52223; color:#fff; border-color:#E52223; }
+      .prices-btn.secondary { background:#fff; color:#333; }
+      .price-chip { border-radius:999px; padding:0 14px; }
+      .price-chip.active { background:#E52223; color:#fff; border-color:#E52223; }
+      .prices-list { display:grid; grid-template-columns:1fr; gap:5px; }
+      @media (min-width: 1100px) {
+        .prices-list { grid-template-columns:1fr 1fr; }
+      }
+      .price-row {
+        display:grid; grid-template-columns:minmax(0,1fr) minmax(100px,124px) 104px; gap:7px; align-items:center;
+        padding:6px 8px; background:#fff; border:1px solid #F6C6C6; border-radius:13px;
+        transition:all .2s ease; min-height:42px;
+      }
+      .price-row.dirty { border-color:#f59e0b; background:#fffbeb; }
+      .price-row-main { min-width:0; display:flex; align-items:center; gap:7px; }
+      .price-product-thumb { width:72px; height:72px; flex:0 0 72px; object-fit:contain; border-radius:14px; background:#fff7ed; border:1px solid #ffedd5; }
+      .price-name { font-size:13px; font-weight:900; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .price-actions-wrap { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+      .price-input-wrap { display:block; color:#64748b; font-size:0; font-weight:900; }
+      .price-input-wrap span { display:none; }
+      .price-input { width:100%; min-height:34px; border-radius:11px; border:1px solid #F6C6C6; padding:0 9px; font-size:15px; font-weight:1000; color:#0f172a; box-sizing:border-box; }
+      .price-actions { display:flex; gap:5px; align-items:center; justify-content:flex-end; }
+      .mini-action { min-width:30px; min-height:34px; font-size:14px; border-radius:10px; }
+      .mini-action.danger { color:#ef233c; }
+      .prices-empty { padding:18px; color:#6b7280; border:1px dashed #d1d5db; border-radius:14px; }
+      .prices-toast {
+        position:fixed; left:18px; right:18px; bottom:92px; z-index:2147483000; width:min(560px,calc(100vw - 36px));
+        margin:0 auto; box-sizing:border-box; background:#111827; color:#fff; padding:12px 16px; text-align:center;
+        border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:all .2s ease;
+      }
+      .prices-toast[data-tone="error"] { background:#ef233c; }
+      .prices-toast[data-tone="warn"] { background:#92400e; }
+      .prices-toast[data-tone="ok"] { background:#166534; }
+      .prices-desktop-floating-summary { display:none; }
+      @media (min-width: 761px) {
+        .prices-desktop-floating-summary.is-visible {
+          position:fixed;
+          left:50%;
+          bottom:84px;
+          transform:translateX(-50%);
+          z-index:2147482400;
+          width:min(620px,calc(100vw - 36px));
+          min-height:54px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:14px;
+          padding:8px 10px 8px 16px;
+          border:1px solid rgba(217,119,6,.32);
+          border-radius:18px;
+          background:rgba(255,251,235,.97);
+          color:#78350f;
+          box-shadow:0 16px 38px rgba(15,23,42,.20);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .prices-desktop-floating-copy { min-width:0; display:flex; align-items:center; gap:9px; font-size:14px; font-weight:1000; }
+        .prices-desktop-floating-copy span:first-child { font-size:18px; line-height:1; }
+        .prices-desktop-floating-save {
+          min-width:118px;
+          min-height:38px;
+          border:0;
+          border-radius:13px;
+          padding:0 14px;
+          background:#b45309;
+          color:#fff;
+          font-size:13px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
+      }
+      @media (max-width: 760px) {
+        /* V12.23-A2-FIX1: aviso por encima de navegación inferior y Carniza. */
+        .prices-toast {
+          left:10px;
+          right:10px;
+          bottom:var(--apppromos-mobile-quick-summary-bottom, calc(184px + env(safe-area-inset-bottom, 0px)));
+          width:calc(100vw - 20px);
+          max-width:520px;
+          padding:11px 13px;
+          border-radius:14px;
+          font-size:13px;
+          line-height:1.25;
+          font-weight:900;
+        }
+        .prices-desktop-floating-summary.is-visible {
+          position:fixed;
+          left:10px;
+          right:10px;
+          bottom:var(--apppromos-mobile-quick-summary-bottom, calc(184px + env(safe-area-inset-bottom, 0px)));
+          z-index:2147482400;
+          min-height:48px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:8px;
+          padding:7px 8px 7px 12px;
+          border:1px solid rgba(217,119,6,.32);
+          border-radius:16px;
+          background:rgba(255,251,235,.97);
+          color:#78350f;
+          box-shadow:0 12px 28px rgba(15,23,42,.18);
+          backdrop-filter:blur(12px);
+          box-sizing:border-box;
+        }
+        .prices-desktop-floating-copy {
+          min-width:0;
+          display:flex;
+          align-items:center;
+          gap:7px;
+          font-size:12px;
+          line-height:1.15;
+          font-weight:1000;
+        }
+        .prices-desktop-floating-copy span:first-child { font-size:16px; line-height:1; }
+        .prices-desktop-floating-copy span:last-child {
+          min-width:0;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+        }
+        .prices-desktop-floating-save {
+          flex:0 0 auto;
+          min-width:88px;
+          min-height:36px;
+          border:0;
+          border-radius:12px;
+          padding:0 10px;
+          background:#b45309;
+          color:#fff;
+          font-size:12px;
+          font-weight:1000;
+          cursor:pointer;
+        }
+        .prices-desktop-floating-save:disabled { opacity:.62; cursor:not-allowed; }
+      }
+      @media (max-width: 768px) {
+        .price-product-thumb { width:58px; height:58px; flex-basis:58px; border-radius:12px; }
+        .prices-title h2 { font-size:25px; }
+        .prices-toolbar { top: 60px; padding:12px; }
+        .prices-toolbar-row { align-items:stretch; }
+        .prices-search, .prices-select, .prices-btn { width:100%; }
+        .prices-list { grid-template-columns:1fr; }
+        .price-row { grid-template-columns:1fr 96px 98px; gap:6px; align-items:center; padding:8px; }
+        .price-row-main { display:block; min-width:0; }
+        .price-name { font-size:15px; }
+        .price-input-wrap { width:100%; }
+        .price-input { width:100%; min-height:36px; font-size:15px; }
+        .price-actions { justify-content:flex-end; }
+        .mini-action { min-height:34px; min-width:30px; }
+      }
+
+      /* V12.13-C6-FIX2 - Cambiar Precios: más aire, menos planilla */
+      .prices-shell { gap:10px; }
+      .prices-title h2 { margin-bottom:4px; font-size:26px; letter-spacing:-.03em; }
+      .prices-title p { font-size:13px; line-height:1.28; font-weight:800; }
+      .prices-web-tip { padding:9px 11px; border-radius:14px; gap:9px; align-items:center; box-shadow:0 5px 12px rgba(194,65,12,.06); }
+      .prices-web-tip-icon { width:28px; height:28px; font-size:15px; }
+      .prices-web-tip strong { margin-bottom:2px; font-size:12px; }
+      .prices-web-tip p { font-size:12px; line-height:1.25; font-weight:850; }
+      .prices-toolbar-lite { top:8px; padding:9px; gap:8px; border-radius:16px; background:rgba(255,249,247,.96); box-shadow:0 8px 18px rgba(15,23,42,.06); }
+      .prices-search-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(116px,.48fr); gap:8px; }
+      .prices-search, .prices-select { width:100%; min-height:42px; border-radius:13px; font-size:13px; font-weight:850; box-sizing:border-box; }
+      .prices-rubro-scroll { display:flex; gap:7px; overflow-x:auto; overflow-y:hidden; flex-wrap:nowrap; padding:1px 0 4px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+      .prices-rubro-scroll::-webkit-scrollbar { display:none; }
+      .price-chip { flex:0 0 auto; min-height:34px; padding:0 12px; font-size:12px; border-radius:999px; white-space:nowrap; box-shadow:0 4px 10px rgba(15,23,42,.04); }
+      .prices-statusbar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; }
+      .prices-status { min-height:34px; padding:0 10px; font-size:12px; border-radius:999px; }
+      .prices-summary { font-size:12px; line-height:1.2; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .prices-btn { min-height:38px; padding:0 11px; border-radius:12px; font-size:12px; font-weight:1000; }
+      .prices-btn.primary { min-width:92px; }
+      .prices-advanced { border:1px solid #e5e7eb; border-radius:13px; background:#fff; overflow:hidden; }
+      .prices-advanced summary { min-height:36px; display:flex; align-items:center; padding:0 12px; cursor:pointer; color:#B3161A; font-size:12px; font-weight:1000; list-style:none; }
+      .prices-advanced summary::-webkit-details-marker { display:none; }
+      .prices-advanced summary::after { content:"+"; margin-left:auto; font-size:16px; line-height:1; color:#E52223; }
+      .prices-advanced[open] summary::after { content:"−"; }
+      .prices-quick-adjust { padding:0 9px 9px; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+      .prices-list { gap:7px; }
+      .price-row { min-height:48px; padding:8px 9px; border-radius:14px; gap:8px; }
+      .price-name { font-size:14px; line-height:1.15; }
+      .price-input { min-height:38px; font-size:14px; }
+      .mini-action { min-height:36px; min-width:31px; }
+      @media (max-width: 768px) {
+        .prices-title h2 { font-size:22px; }
+        .prices-header { gap:6px; }
+        .prices-toolbar-lite { position:sticky; top:8px; padding:8px; }
+        .prices-search-row { grid-template-columns:1fr; }
+        .prices-statusbar { grid-template-columns:1fr auto; }
+        .prices-statusbar .prices-summary { grid-column:1 / -1; order:3; }
+        .prices-statusbar #saveAllBtn { min-width:94px; }
+        .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .price-row { grid-template-columns:minmax(0,1fr) 92px 94px; min-height:50px; padding:8px; }
+        .price-actions { gap:4px; }
+        .mini-action { min-width:29px; }
+      }
+
+      /* V12.13-C6-FIX2A - Precios limpio: sin chips duplicados ni ordenamientos */
+      #rubroButtons.prices-rubro-scroll { display:none !important; }
+      .prices-hidden-control { display:none !important; }
+      .prices-advanced summary { color:#B3161A; font-weight:1000; }
+      .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+      .prices-quick-adjust .prices-btn { min-height:40px; font-size:13px; }
+      .prices-toolbar-lite { gap:7px; }
+      .prices-statusbar { margin-top:0; }
+      @media (max-width: 768px) {
+        .prices-advanced summary { min-height:34px; }
+        .prices-quick-adjust { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+      }
+    /* APPPROMOS C6 FIX2B - precios acciones simples */
+.price-actions-simple {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.price-no-use-btn {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(229,34,35, .22);
+  border-radius: 14px;
+  background: #fff7f7;
+  color: #B3161A;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.price-no-use-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+/* APPPROMOS C6 FIX4 - deshacer ajuste masivo */
+.prices-mass-undo {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 10px;
+  border:1px solid rgba(245, 158, 11, .35);
+  border-radius:13px;
+  background:#fffbeb;
+  color:#7c2d12;
+  font-size:12px;
+  font-weight:900;
+}
+.prices-mass-undo[hidden] {
+  display:none !important;
+}
+.prices-undo-btn {
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid rgba(180, 83, 9, .32);
+  border-radius:999px;
+  background:#fff;
+  color:#92400e;
+  font-size:12px;
+  font-weight:1000;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.prices-undo-btn:disabled {
+  opacity:.45;
+  cursor:not-allowed;
+}
+/* APPPROMOS C6 FIX6 - filas precios mobile legibles */
+.price-name {
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  word-break:break-word;
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+.price-input-wrap-compact {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:2px;
+  justify-items:end;
+  align-content:center;
+}
+.price-input-wrap-compact .price-input {
+  text-align:right;
+  font-weight:950;
+}
+.price-input-unit {
+  display:block;
+  width:100%;
+  text-align:right;
+  color:#64748b;
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+  margin-top:1px;
+}
+.price-no-use-check {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:34px;
+  padding:0 8px;
+  border-radius:999px;
+}
+.price-no-use-box {
+  width:13px;
+  height:13px;
+  border:2px solid rgba(153,27,27,.45);
+  border-radius:4px;
+  background:#fff;
+  flex:0 0 auto;
+}
+.price-no-use-label {
+  font-size:10px;
+  font-weight:950;
+  line-height:1;
+}
+@media (max-width: 768px) {
+  .price-row {
+    grid-template-columns:minmax(0,1fr) 84px 74px !important;
+    gap:7px !important;
+    align-items:center !important;
+    min-height:54px !important;
+  }
+  .price-name {
+    font-size:13.5px !important;
+    line-height:1.15 !important;
+    font-weight:780 !important;
+  }
+  .price-input {
+    min-height:36px !important;
+    font-size:14px !important;
+    padding:0 7px !important;
+  }
+  .price-no-use-check {
+    min-width:0;
+    width:100%;
+    padding:0 6px;
+  }
+}
+/* APPPROMOS C6 FIX6B - filas precios simples producto precio uso */
+.prices-kg-note {
+  margin:6px 0 8px;
+  padding:7px 9px;
+  border:1px solid rgba(15, 23, 42, .08);
+  border-radius:12px;
+  background:#f8fafc;
+  color:#334155;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.25;
+}
+.price-input-unit {
+  display:none !important;
+}
+.price-no-use-label {
+  display:none !important;
+}
+.price-use-only-check,
+.price-no-use-check {
+  width:38px !important;
+  min-width:38px !important;
+  max-width:38px !important;
+  min-height:36px !important;
+  padding:0 !important;
+  border-radius:14px !important;
+  gap:0 !important;
+}
+.price-no-use-box {
+  width:16px !important;
+  height:16px !important;
+  border-radius:5px !important;
+  margin:0 !important;
+}
+.price-name,
+.price-row .price-name,
+.price-row strong,
+.price-row b {
+  white-space:normal !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+  display:-webkit-box !important;
+  -webkit-line-clamp:2 !important;
+  -webkit-box-orient:vertical !important;
+  word-break:break-word !important;
+  overflow-wrap:anywhere !important;
+  line-height:1.15 !important;
+}
+@media (max-width: 768px) {
+  .price-row {
+    grid-template-columns:minmax(0,1fr) 88px 44px !important;
+    gap:8px !important;
+    min-height:56px !important;
+    align-items:center !important;
+  }
+  .price-name,
+  .price-row .price-name,
+  .price-row strong,
+  .price-row b {
+    font-size:13px !important;
+    font-weight:760 !important;
+  }
+  .price-input-wrap,
+  .price-input-wrap-compact {
+    width:88px !important;
+    min-width:88px !important;
+  }
+  .price-input {
+    width:88px !important;
+    min-height:37px !important;
+    text-align:right !important;
+    font-size:14px !important;
+    font-weight:950 !important;
+    padding:0 7px !important;
+  }
+  .price-actions,
+  .price-actions-simple {
+    width:44px !important;
+    min-width:44px !important;
+    justify-content:center !important;
+  }
+}
+/* APPPROMOS C6 FIX6C - precio moneda y uso claro */
+.prices-tip {
+  display:none !important;
+}
+.prices-kg-note {
+  margin:6px 0 8px !important;
+  padding:7px 9px !important;
+  border:1px solid rgba(15, 23, 42, .08) !important;
+  border-radius:12px !important;
+  background:#f8fafc !important;
+  color:#334155 !important;
+  font-size:10.5px !important;
+  font-weight:850 !important;
+  line-height:1.25 !important;
+}
+.price-input {
+  font-variant-numeric: tabular-nums;
+}
+/* APPPROMOS C6 FIX6C - uso checkbox mas claro */
+.price-use-only-check,
+.price-no-use-check {
+  background:#fff7f7 !important;
+  border:1px solid rgba(229,34,35, .22) !important;
+}
+.price-use-only-check:hover,
+.price-no-use-check:hover {
+  background:#fee2e2 !important;
+}
+      /* APPPROMOS V12.13-C6-FIX2-USO-NO-USO - uso claro y reversible */
+      .prices-usage-filter {
+        display:flex;
+        gap:7px;
+        align-items:center;
+        overflow-x:auto;
+        padding:1px 0 2px;
+        scrollbar-width:none;
+      }
+      .prices-usage-filter::-webkit-scrollbar { display:none; }
+      .price-use-filter {
+        flex:0 0 auto;
+        min-height:34px;
+        padding:0 12px;
+        border:1px solid #e5e7eb;
+        border-radius:999px;
+        background:#fff;
+        color:#374151;
+        font-size:12px;
+        font-weight:1000;
+        cursor:pointer;
+        white-space:nowrap;
+      }
+      .price-use-filter.active {
+        background:#B3161A;
+        border-color:#B3161A;
+        color:#fff;
+      }
+      .prices-usage-help {
+        padding:7px 9px;
+        border:1px solid rgba(15,23,42,.08);
+        border-radius:12px;
+        background:#f8fafc;
+        color:#334155;
+        font-size:11px;
+        line-height:1.28;
+        font-weight:850;
+      }
+      .price-row-inactive {
+        opacity:.72;
+        background:#f8fafc !important;
+        border-style:dashed !important;
+      }
+      .price-row-inactive .price-name::after {
+        content:" · No usado";
+        color:#ef233c;
+        font-size:11px;
+        font-weight:1000;
+      }
+      .price-no-use-label {
+        display:inline-block !important;
+        font-size:10px;
+        font-weight:1000;
+        line-height:1;
+      }
+      .price-use-only-check,
+      .price-no-use-check {
+        width:72px !important;
+        min-width:72px !important;
+        max-width:72px !important;
+        gap:5px !important;
+      }
+      .price-no-use-check.is-inactive {
+        background:#ecfdf5 !important;
+        border-color:rgba(22,101,52,.28) !important;
+        color:#166534 !important;
+      }
+      .price-no-use-check.is-inactive .price-no-use-box {
+        border-color:rgba(22,101,52,.55) !important;
+        background:#dcfce7 !important;
+      }
+      @media (max-width: 768px) {
+        .price-row {
+          grid-template-columns:minmax(0,1fr) 88px 76px !important;
+          min-height:72px !important;
+        }
+        .price-row-main {
+          display:flex !important;
+          align-items:center !important;
+          gap:7px !important;
+        }
+        .price-name,
+        .price-row .price-name {
+          font-size:12px !important;
+          line-height:1.12 !important;
+          font-weight:850 !important;
+        }
+        .price-actions,
+        .price-actions-simple {
+          width:76px !important;
+          min-width:76px !important;
+        }
+        .price-use-only-check,
+        .price-no-use-check {
+          width:76px !important;
+          min-width:76px !important;
+          max-width:76px !important;
+        }
+      }
