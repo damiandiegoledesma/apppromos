@@ -2929,3 +2929,453 @@ body.apppromos-carniza-overlay-open .app-mobile-bottom-nav { pointer-events:none
 .app-account-web-status.pending { color:#92400e; background:#fef3c7; border:1px solid #fcd34d; }
 .app-account-web-row strong { word-break:normal; }
 @media (max-width:640px) { .app-account-sheet { padding:10px 10px calc(92px + env(safe-area-inset-bottom,0px)); } .app-account-panel { border-radius:22px; max-height:calc(86vh - env(safe-area-inset-bottom,0px)); } .app-account-actions { grid-template-columns:1fr; } .app-account-row { flex-direction:column; gap:4px; } .app-account-row strong { text-align:left; } }
+
+/* ============================================================
+   22. NAVEGACION MOBILE + ENCABEZADO COMPACTO (C4.4b)
+   ex injectMobileBottomNavStyles() de app-main.js. Copia literal,
+   salvo la regla html, body (max-width:760px) que sigue en JS porque
+   solo debe regir con sesion (no en login ni antes de resolverla).
+   La seccion 11 (ARRANQUE) sigue siendo la proteccion del primer pintado.
+   ============================================================ */
+.app-mobile-bottom-nav,
+.app-mobile-bottom-menu { display: none; }
+
+body.module-focus-admin .app-mobile-bottom-nav,
+body.module-focus-admin .app-mobile-bottom-menu {
+  display: none !important;
+}
+
+/* V12.22-A2-FIX3B: en desktop reutilizamos la navegación inferior
+   probada en mobile, con una presentación más compacta. */
+@media (min-width: 761px) {
+  body.app-mobile-nav-ready .app {
+    padding-bottom: 108px;
+  }
+
+  .app-mobile-bottom-nav {
+    position: fixed;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    z-index: 2147482500;
+    width: min(760px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    padding: 7px;
+    border: 1px solid rgba(15, 23, 42, .12);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, .20);
+    backdrop-filter: blur(14px);
+    box-sizing: border-box;
+  }
+
+  .app-mobile-bottom-nav button {
+    min-width: 0;
+    min-height: 48px;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: #334155;
+    font-weight: 1000;
+    font-size: 12px;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+  }
+
+  .app-mobile-bottom-nav button .app-mobile-nav-icon {
+    font-size: 19px;
+    line-height: 1;
+  }
+
+  .app-mobile-bottom-nav button.is-active {
+    background: linear-gradient(135deg, #fff7ed, #fee2e2);
+    color: #B3161A;
+    box-shadow: inset 0 0 0 1px rgba(229, 34, 35, .18);
+  }
+
+  .app-mobile-bottom-nav button.is-primary {
+    background: linear-gradient(135deg, #E52223, #B3161A);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(229, 34, 35, .20);
+  }
+
+  .app-mobile-bottom-menu {
+    position: fixed;
+    left: 50%;
+    bottom: 82px;
+    transform: translateX(-50%);
+    z-index: 2147482499;
+    width: min(620px, calc(100vw - 32px));
+    display: none;
+    border-radius: 22px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, .12);
+    box-shadow: 0 22px 60px rgba(15, 23, 42, .24);
+    padding: 14px;
+    box-sizing: border-box;
+  }
+
+  .app-mobile-bottom-menu.is-open { display: block; }
+  .app-mobile-bottom-menu__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .app-mobile-bottom-menu__title { margin: 0; color: #B3161A; font-size: 16px; font-weight: 1000; }
+  .app-mobile-bottom-menu__hint { margin: 2px 0 0; color: #64748b; font-size: 12px; font-weight: 800; }
+  .app-mobile-bottom-menu__close {
+    min-width: 40px;
+    min-height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    color: #334155;
+    font-size: 20px;
+    font-weight: 1000;
+    cursor: pointer;
+  }
+  .app-mobile-bottom-menu__grid { display: grid; gap: 8px; }
+  .app-mobile-bottom-menu__grid.two { grid-template-columns: 1fr 1fr; }
+  .app-mobile-bottom-menu__grid button {
+    min-height: 52px;
+    border: 1px solid #e5e7eb;
+    border-radius: 15px;
+    background: #fff;
+    color: #1f2937;
+    font-weight: 1000;
+    text-align: left;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
+  .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
+  .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #B3161A; }
+  .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+  .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+}
+
+@media (max-width: 760px) {
+
+  body.app-mobile-nav-ready {
+    --apppromos-mobile-nav-height: 86px;
+    --apppromos-mobile-nav-gap: 12px;
+    --apppromos-mobile-floating-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+    --apppromos-mobile-quick-summary-bottom: calc(184px + env(safe-area-inset-bottom, 0px));
+    --apppromos-mobile-sticky-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body.app-mobile-nav-ready *,
+  body.app-mobile-nav-ready *::before,
+  body.app-mobile-nav-ready *::after {
+    min-width: 0;
+  }
+
+  body.app-mobile-nav-ready .app {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: calc(142px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  body.app-mobile-nav-ready .panel {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  body.app-mobile-nav-ready .topbar .nav-shell { display: none; }
+
+  body.app-mobile-nav-ready .topbar-frame {
+    padding: 2px 0;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, .10);
+  }
+
+  body.app-mobile-nav-ready .topbar {
+    top: 2px;
+    padding: 7px 0;
+    margin-bottom: 10px;
+    border-bottom: 0;
+  }
+
+  body.app-mobile-nav-ready .topbar-inner {
+    padding: 0 10px;
+    gap: 7px;
+  }
+
+  body.app-mobile-nav-ready .brand {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 16px;
+  }
+
+  body.app-mobile-nav-ready .brand-left {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  body.app-mobile-nav-ready .app-brand-logo-box {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+
+  body.app-mobile-nav-ready .brand-copy { min-width: 0; }
+  body.app-mobile-nav-ready .brand h1 { font-size: 1.02rem; margin: 0; line-height: 1.05; }
+  body.app-mobile-nav-ready .brand p {
+    font-size: .66rem;
+    line-height: 1.12;
+    max-height: 1.45rem;
+    overflow: hidden;
+  }
+
+  body.app-mobile-nav-ready .brand-right {
+    min-width: 124px;
+    max-width: 146px;
+    flex: 0 0 146px;
+    gap: 4px;
+    align-items: stretch;
+  }
+
+  body.app-mobile-nav-ready #accessGate,
+  body.app-mobile-nav-ready #businessSwitcher {
+    justify-content: stretch;
+  }
+
+  /* V12.13-C6 - Header mobile compacto: [logo] Carnicería · estado */
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand {
+    min-height: 52px;
+    padding: 7px 10px;
+    border-radius: 16px;
+    gap: 8px;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-right {
+    display: none !important;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-left {
+    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .app-brand-logo-box {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 12px;
+    padding: 2px;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+    cursor: pointer;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy h1,
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy p {
+    display: none !important;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy::before {
+    content: attr(data-mobile-title);
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #0A2E5B;
+    font-size: .9rem;
+    line-height: 1.15;
+    font-weight: 1000;
+    letter-spacing: -0.02em;
+  }
+
+  /* V12.22-A2-FIX4C: días de prueba visibles y tocables en mobile. */
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy::after {
+    content: attr(data-mobile-subtitle);
+    display: block;
+    max-width: 100%;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #9a3412;
+    font-size: .72rem;
+    line-height: 1.1;
+    font-weight: 950;
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy[data-mobile-trial="true"]::after {
+    content: "🎁 " attr(data-mobile-subtitle) " · Ver detalle";
+  }
+
+  body.app-mobile-nav-ready.app-compact-brand-ready .brand-copy:focus-visible {
+    outline: 2px solid #E52223;
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  body.app-mobile-nav-ready.app-mobile-action-focus .topbar-frame,
+  body.app-mobile-nav-ready.app-mobile-action-focus .topbar {
+    display: none !important;
+  }
+
+  body.app-mobile-nav-ready.app-mobile-action-focus .app {
+    padding-top: 8px;
+  }
+
+  body.app-mobile-nav-ready.app-mobile-action-focus .panel.active {
+    margin-top: 0;
+  }
+
+  .app-mobile-bottom-nav {
+    position: fixed;
+    left: max(8px, env(safe-area-inset-left, 0px));
+    right: max(8px, env(safe-area-inset-right, 0px));
+    width: auto;
+    max-width: calc(100vw - 16px);
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 2147482500;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid rgba(15, 23, 42, .10);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+    backdrop-filter: blur(14px);
+    box-sizing: border-box;
+  }
+
+  .app-mobile-bottom-nav button {
+    min-width: 0;
+    min-height: 54px;
+    border: 0;
+    border-radius: 17px;
+    background: transparent;
+    color: #334155;
+    font-weight: 1000;
+    font-size: 11px;
+    line-height: 1.1;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-mobile-bottom-nav button .app-mobile-nav-icon { font-size: 20px; line-height: 1; }
+  .app-mobile-bottom-nav button .app-mobile-whatsapp-icon {
+    display: grid;
+    place-items: center;
+    font-size: 0;
+  }
+  .app-mobile-bottom-nav button .app-mobile-whatsapp-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, .16));
+  }
+  .app-mobile-bottom-nav button.is-active {
+    background: linear-gradient(135deg, #fff7ed, #fee2e2);
+    color: #B3161A;
+    box-shadow: inset 0 0 0 1px rgba(229, 34, 35, .18);
+  }
+  .app-mobile-bottom-nav button.is-primary {
+    background: linear-gradient(135deg, #E52223, #B3161A);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(229, 34, 35, .22);
+  }
+
+  .app-mobile-bottom-menu {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    z-index: 2147482499;
+    display: none;
+    border-radius: 24px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, .10);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+    padding: 12px;
+  }
+  .app-mobile-bottom-menu.is-open { display: block; }
+  .app-mobile-bottom-menu__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .app-mobile-bottom-menu__title {
+    margin: 0;
+    color: #B3161A;
+    font-size: 15px;
+    font-weight: 1000;
+  }
+  .app-mobile-bottom-menu__hint {
+    margin: 2px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+  }
+  .app-mobile-bottom-menu__close {
+    min-width: 40px;
+    min-height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    color: #334155;
+    font-size: 20px;
+    font-weight: 1000;
+    cursor: pointer;
+  }
+  .app-mobile-bottom-menu__grid {
+    display: grid;
+    gap: 8px;
+  }
+  .app-mobile-bottom-menu__grid.two { grid-template-columns: 1fr 1fr; }
+  .app-mobile-bottom-menu__grid button {
+    min-height: 52px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #fff;
+    color: #1f2937;
+    font-weight: 1000;
+    text-align: left;
+    padding: 10px 12px;
+    cursor: pointer;
+    line-height: 1.15;
+  }
+  .app-mobile-bottom-menu__grid button strong { display: block; font-size: 13px; }
+  .app-mobile-bottom-menu__grid button span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 800; }
+  .app-mobile-bottom-menu__grid button.primary { border-color: #fecaca; background: #fff1f2; color: #B3161A; }
+  .app-mobile-bottom-menu__grid button.green { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+  .app-mobile-bottom-menu__grid button.orange { border-color: #fed7aa; background: #fff7ed; color: #9a3412; }
+}
+
