@@ -557,66 +557,6 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     const desktopProductNames = buildProductNames(3);
     const mobileProductNames = buildProductNames(2);
     return `
-      <style>
-        .quick-fixed-summary {
-          position:fixed;
-          left:50%;
-          bottom:84px;
-          transform:translateX(-50%);
-          z-index:2147482400;
-          width:min(650px,calc(100vw - 36px));
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:12px;
-          padding:9px 10px 9px 15px;
-          border:1px solid rgba(229,34,35,.28);
-          border-radius:18px;
-          background:rgba(239,246,255,.97);
-          color:#8E1014;
-          box-shadow:0 16px 38px rgba(15,23,42,.20);
-          backdrop-filter:blur(12px);
-          box-sizing:border-box;
-        }
-        .quick-fixed-summary-copy { min-width:0; display:grid; gap:2px; }
-        .quick-fixed-summary-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#E52223; }
-        .quick-fixed-summary-products { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.15; font-weight:900; color:#334155; }
-        .quick-fixed-summary-products strong { color:#E52223; }
-        .quick-fixed-summary-products-mobile { display:none; }
-        .quick-fixed-summary-main { font-size:14px; line-height:1.18; font-weight:1000; color:#8E1014; }
-        .quick-fixed-summary-detail { font-size:12px; line-height:1.15; font-weight:850; color:#475569; }
-        .quick-fixed-summary button {
-          flex:0 0 auto;
-          min-width:154px;
-          min-height:40px;
-          border:0;
-          border-radius:13px;
-          padding:0 14px;
-          background:#E52223;
-          color:#fff;
-          font-size:13px;
-          font-weight:1000;
-          cursor:pointer;
-        }
-        @media (max-width:760px) {
-          .quick-fixed-summary {
-            left:10px;
-            right:10px;
-            bottom:var(--apppromos-mobile-quick-summary-bottom,calc(184px + env(safe-area-inset-bottom,0px)));
-            width:auto;
-            transform:none;
-            gap:7px;
-            padding:7px 8px 7px 11px;
-            border-radius:16px;
-          }
-          .quick-fixed-summary-label { display:none; }
-          .quick-fixed-summary-products-desktop { display:none; }
-          .quick-fixed-summary-products-mobile { display:block; font-size:11px; }
-          .quick-fixed-summary-main { font-size:12px; white-space:nowrap; }
-          .quick-fixed-summary-detail { font-size:11px; }
-          .quick-fixed-summary button { min-width:116px; min-height:38px; padding:0 9px; font-size:11px; }
-        }
-      </style>
       <aside class="quick-fixed-summary" role="status" aria-live="polite">
         <div class="quick-fixed-summary-copy">
           <span class="quick-fixed-summary-label">Tu respuesta</span>
@@ -643,66 +583,6 @@ export function renderBuilder(container, products = [], onComboSaved = null, opt
     };
 
     return `
-      <style>
-        .discount-products-fixed-summary {
-          position:fixed;
-          left:50%;
-          bottom:84px;
-          transform:translateX(-50%);
-          z-index:2147482400;
-          width:min(650px,calc(100vw - 36px));
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:12px;
-          padding:9px 10px 9px 15px;
-          border:1px solid rgba(249,115,22,.32);
-          border-radius:18px;
-          background:rgba(255,247,237,.97);
-          color:#7c2d12;
-          box-shadow:0 16px 38px rgba(15,23,42,.20);
-          backdrop-filter:blur(12px);
-          box-sizing:border-box;
-        }
-        .discount-products-fixed-copy { min-width:0; display:grid; gap:2px; }
-        .discount-products-fixed-label { font-size:11px; font-weight:1000; text-transform:uppercase; letter-spacing:.04em; color:#ea580c; }
-        .discount-products-fixed-names { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.15; font-weight:900; color:#431407; }
-        .discount-products-fixed-names strong { color:#ea580c; }
-        .discount-products-fixed-names-mobile { display:none; }
-        .discount-products-fixed-main { font-size:14px; line-height:1.18; font-weight:1000; color:#7c2d12; }
-        .discount-products-fixed-detail { font-size:12px; line-height:1.15; font-weight:850; color:#92400e; }
-        .discount-products-fixed-summary button {
-          flex:0 0 auto;
-          min-width:154px;
-          min-height:40px;
-          border:0;
-          border-radius:13px;
-          padding:0 14px;
-          background:#f97316;
-          color:#fff;
-          font-size:13px;
-          font-weight:1000;
-          cursor:pointer;
-        }
-        @media (max-width:760px) {
-          .discount-products-fixed-summary {
-            left:10px;
-            right:10px;
-            bottom:var(--apppromos-mobile-quick-summary-bottom,calc(184px + env(safe-area-inset-bottom,0px)));
-            width:auto;
-            transform:none;
-            gap:7px;
-            padding:7px 8px 7px 11px;
-            border-radius:16px;
-          }
-          .discount-products-fixed-label { display:none; }
-          .discount-products-fixed-names-desktop { display:none; }
-          .discount-products-fixed-names-mobile { display:block; font-size:11px; }
-          .discount-products-fixed-main { font-size:12px; white-space:nowrap; }
-          .discount-products-fixed-detail { font-size:11px; }
-          .discount-products-fixed-summary button { min-width:116px; min-height:38px; padding:0 9px; font-size:11px; }
-        }
-      </style>
       <aside class="discount-products-fixed-summary" role="status" aria-live="polite">
         <div class="discount-products-fixed-copy">
           <span class="discount-products-fixed-label">Tu promo</span>
