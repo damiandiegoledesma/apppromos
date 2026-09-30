@@ -329,3 +329,30 @@ test("31 vitrina: sin foto no entra", () => {
   const pool = buildStorefrontHighlights({ products, combos: [offer], dailyOffers: [], fns });
   assert.ok(!selectShowcase(pool).some((h) => h.kind === "promo"), "promo con portada genérica no entra");
 });
+
+// ---------------------------------------------------------------------------
+// CP6 — "Completá con" (selectComplements)
+// ---------------------------------------------------------------------------
+import { selectComplements } from "../../public/js/services/storefront-highlights-service.js";
+
+test("32 completá con: alterna los rubros de las soluciones y no repite cortes", () => {
+  const sol = [toHighlight("promo", byName("Promo 2"), ctx()), toHighlight("daily", daily.find((o) => o.items.length === 1), ctx())];
+  const lines = sol.flatMap((h) => h.lines); // Costeletas Novillo + Costeletas Cerdo
+  const picks = selectComplements(fullPool(), lines, { max: 4 });
+  assert.equal(picks.length, 4);
+  const rubros = picks.map((h) => h.lines[0].rubro);
+  assert.deepEqual(rubros, ["Novillo", "Cerdo", "Novillo", "Cerdo"], "alterna, no 4 del mismo rubro");
+  assert.ok(!picks.some((h) => h.lines[0].name === "Costeletas"), "no repite cortes de las soluciones");
+});
+
+test("33 completá con: completa con otros rubros, determinista, sin foto no entra", () => {
+  const lines = toHighlight("promo", byName("Promo cerdo"), ctx()).lines; // solo Cerdo
+  const picks = selectComplements(fullPool(), lines, { max: 6 });
+  assert.equal(picks.length, 6);
+  assert.deepEqual(picks.slice(0, 2).map((h) => h.lines[0].rubro), ["Cerdo", "Cerdo"], "primero el rubro de la solución");
+  assert.ok(picks.slice(2).some((h) => h.lines[0].rubro !== "Cerdo"), "después diversifica");
+  assert.ok(!picks.some((h) => ["Matambre", "Pechito", "Pulpas"].includes(h.lines[0].name) && h.lines[0].rubro === "Cerdo"));
+  assert.deepEqual(selectComplements(fullPool(), lines, { max: 6 }).map((h) => h.key), picks.map((h) => h.key));
+  assert.equal(new Set(picks.map((h) => h.key)).size, picks.length);
+  assert.deepEqual(selectComplements(buildStorefrontHighlights({ products: [{ id: "x", nombre: "Corte raro", rubro: "Novillo", precio: 1 }], fns }), lines), []);
+});

@@ -1811,9 +1811,41 @@
     /* Combos + pedido directo: botón "+" y CTAs en verde, no en rojo */
     html[data-storefront-theme="combos_pedido_directo"] .cart-grid-step--plus{background:var(--sf-wa);}
     html[data-storefront-theme="combos_pedido_directo"] .sf-combo-add{background:var(--sf-wa);}
+    /* QA-C01.1 CP6 — vitrina directo: compacta, tarjeta blanca, sin autoavance. */
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo{margin:14px 0 18px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-card{width:136px;background:var(--sf-card-bg);border:1px solid var(--sf-border);border-radius:12px;padding:6px 8px 8px;display:flex;flex-direction:column;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-photo{height:70px;background:var(--sf-thumb-bg);border-radius:8px;margin-bottom:6px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-photo img{height:calc(70px - 8px);width:auto;max-width:100%;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-photo.is-multi img{height:calc(70px - 20px);}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-photo.is-multi img+img{margin-left:-18px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-caption{display:flex;flex-direction:column;gap:6px;flex:1 1 auto;justify-content:space-between;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-name{font-size:.76rem;font-weight:700;line-height:1.2;color:var(--sf-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-rubro{font-size:.64rem;color:var(--sf-muted);margin-top:1px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-price{font-weight:700;font-size:.82rem;color:var(--sf-accent);margin-top:2px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-price small{font-size:.64rem;font-weight:600;color:var(--sf-muted);margin-left:2px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-badge{position:absolute;top:10px;left:12px;z-index:3;background:var(--sf-accent);color:#fff;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:999px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-add{background:var(--sf-accent);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.72rem;padding:7px 0;width:100%;cursor:pointer;}
+    html[data-storefront-theme="directo_al_grano"] .sf-showcase--directo .sf-showcase-caption .cart-add-mini{width:100%!important;}
+    /* QA-C01.1 CP6 — vitrina combos: compacta, tarjeta blanca, sin autoavance. */
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos{margin:14px 0 18px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-card{width:148px;background:var(--sf-card-bg);border:1px solid var(--sf-border);border-radius:12px;padding:6px 8px 8px;display:flex;flex-direction:column;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-photo{height:76px;background:var(--sf-thumb-bg);border-radius:8px;margin-bottom:6px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-photo img{height:calc(76px - 8px);width:auto;max-width:100%;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-photo.is-multi img{height:calc(76px - 20px);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-photo.is-multi img+img{margin-left:-18px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-caption{display:flex;flex-direction:column;gap:6px;flex:1 1 auto;justify-content:space-between;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-name{font-size:.76rem;font-weight:700;line-height:1.2;color:var(--sf-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-rubro{font-size:.64rem;color:var(--sf-muted);margin-top:1px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-price{font-weight:700;font-size:.82rem;color:var(--sf-accent);margin-top:2px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-price small{font-size:.64rem;font-weight:600;color:var(--sf-muted);margin-left:2px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-badge{position:absolute;top:10px;left:12px;z-index:3;background:var(--sf-accent);color:#fff;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:999px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-add{background:var(--sf-wa);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.72rem;padding:7px 0;width:100%;cursor:pointer;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-showcase--combos .sf-showcase-caption .cart-add-mini{width:100%!important;}
     /* QA-C01.1 CP4 — Vitrina reutilizable: base neutra (.sf-showcase-*) +
        modificador por estilo. Catálogo: tiles grandes rojo claro/navy. */
     .sf-showcase{margin:6px 0 4px;}
+    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase{margin:0 0 4px;}
+    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-title{padding:0 18px 6px;}
     .sf-showcase-title{padding:4px 18px 8px;font-weight:700;font-size:.86rem;color:var(--sf-navy);font-family:var(--sf-font-display);}
     .sf-showcase-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;padding:0 18px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
     .sf-showcase-track::-webkit-scrollbar{display:none;}
@@ -1969,7 +2001,7 @@
     import { resolveSession } from "./js/services/auth-service.js";
     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
-    import { buildStorefrontHighlights, toHighlight, selectShowcase } from "./js/services/storefront-highlights-service.js";
+    import { buildStorefrontHighlights, toHighlight, selectShowcase, selectComplements, buildWhatYouGet, isInformativeLabel } from "./js/services/storefront-highlights-service.js";
     import { createStarterProducts } from "./js/data/starter-products.js";
     import {
       loadActivationDraft,
@@ -2764,7 +2796,7 @@
               const rubro=item.rubro?` · ${esc(publicRubroName(item.rubro))}`:"";
               const itemName=esc(item.name||"Producto");
               const comboDetail=isOfferCartItem(item)&&Array.isArray(item.items)&&item.items.length
-                ? `<span class="cart-combo-items">${item.items.map((part)=>`<span>${esc(part.cantidad||1)} ${esc(part.unidad||"kg")} · ${esc(part.nombre||"Producto")}</span>`).join("")}</span>`
+                ? `<span class="cart-combo-items">${item.items.map((part)=>`<span>${esc(part.cantidad||1)} ${esc(part.unidad||"kg")} · ${esc(part.nombre||"Producto")}${part.rubro?` · ${esc(publicRubroName(part.rubro))}`:""}</span>`).join("")}</span>`
                 : "";
               const removeContent=isEngineLayout
                 ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`
@@ -2874,7 +2906,7 @@
             rows.push(`*${cartQtyLabel(item)} ${item.name}* - ${total}`);
             if(Array.isArray(item.items)){
               item.items.forEach((part)=>{
-                rows.push(`  - ${part.cantidad||1} ${part.unidad||"kg"} ${part.nombre||"Producto"}`);
+                rows.push(`  - ${part.cantidad||1} ${part.unidad||"kg"} ${part.nombre||"Producto"}${part.rubro?` - ${publicRubroName(part.rubro)}`:""}`);
               });
             }
           }else{
@@ -3132,9 +3164,7 @@
         const displayName=isDaily?dailyOfferDisplayName(c):(c.name||c.nombre||"Oferta");
         const category=isDaily?"":inferOfferCategory(c);
         const total=getTotal(c);
-        const item=isDaily
-          ? {type:"daily_offer",id:dailyOfferId(c,index),name:displayName,rubro:"Oferta de hoy",unit:"oferta",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||i.name||"Producto",cantidad:i.cantidad??i.quantity??1,unidad:i.unidad||i.unit||"kg"}))}
-          : {type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:displayName,rubro:"Oferta",unit:"combo",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
+        const item=engineOfferCartItem(c,index,isDaily);
         const itemsLine=items.map(i=>`${esc(i.cantidad??i.quantity??1)} ${esc(i.unidad||i.unit||"kg")} · ${esc(i.nombre||i.name||"Producto")}`).join(" · ");
         // QA-C01.1 CP2 — "qué me llevo" como título (motor), nombre comercial
         // como etiqueta solo si es informativo, foto del corte en el thumb que
@@ -3152,12 +3182,21 @@
         return `<div class="sf-combo"${category?` data-directo-offer-category="${esc(category)}"`:""}><div class="sf-combo-thumb">${thumb}</div><div class="sf-combo-body">${h.label?`<div class="sf-combo-label">${esc(h.label)}</div>`:""}<div class="sf-combo-head"><div class="sf-combo-name">${esc(h.title||displayName)}</div>${category?`<div class="sf-combo-tag">${esc(category)}</div>`:isDaily?`<div class="sf-combo-tag">Hoy</div>`:""}</div>${fullList?`<div class="sf-combo-items">${fullList}</div>`:""}<div class="sf-combo-foot"><div class="sf-combo-price">${money(total)}${saving}</div><button type="button" class="sf-combo-add" data-cart-add="${encodeCartItem(item)}">Agregar</button></div></div></div>`;
       }
       function engineOfferCartItem(c={},index=0,isDaily=false){
+        // QA-C01.1 CP6 — mismo formato de siempre; solo cambia QUÉ dice:
+        //   name  = nombre comercial si es informativo; si no, "qué me llevo"
+        //           (motor: isInformativeLabel / buildWhatYouGet). Ya no "Promo 2".
+        //   items = + rubro de cada corte (campo opcional; carritos viejos sin
+        //           rubro siguen funcionando igual).
         const items=Array.isArray(c.items)?c.items:[];
-        const displayName=isDaily?dailyOfferDisplayName(c):(c.name||c.nombre||"Oferta");
+        const rawName=String(c.name||c.nombre||"").trim();
+        const whatYouGet=buildWhatYouGet(items).title;
+        const fallback=isDaily?dailyOfferDisplayName(c):(rawName||"Oferta");
+        const displayName=(rawName&&isInformativeLabel(rawName,sfOfferNames)?rawName:whatYouGet)||fallback;
         const total=getTotal(c);
+        const parts=items.map(i=>({nombre:i.nombre||i.name||"Producto",cantidad:isDaily?(i.cantidad??i.quantity??1):(i.cantidad||1),unidad:i.unidad||i.unit||"kg",...(String(i.rubro||"").trim()?{rubro:String(i.rubro).trim()}:{})}));
         return isDaily
-          ? {type:"daily_offer",id:dailyOfferId(c,index),name:displayName,rubro:"Oferta de hoy",unit:"oferta",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||i.name||"Producto",cantidad:i.cantidad??i.quantity??1,unidad:i.unidad||i.unit||"kg"}))}
-          : {type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:displayName,rubro:"Oferta",unit:"combo",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
+          ? {type:"daily_offer",id:dailyOfferId(c,index),name:displayName,rubro:"Oferta de hoy",unit:"oferta",price:total,quantity:1,items:parts}
+          : {type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:displayName,rubro:"Oferta",unit:"combo",price:total,quantity:1,items:parts};
       }
       function engineComboRowHtml(c={},index=0,isDaily=false){
         // QA-C01.1 CP3 — fila de oportunidad (vista Promos de Oferta primero):
@@ -3309,7 +3348,15 @@
         const metaParts=[address,[city,province].filter(Boolean).join(", "),phone].filter(Boolean);
         return `<div class="sf-header"><a class="sf-header-wa" href="${mainWa}" target="_blank" rel="noopener" aria-label="Abrir WhatsApp">${whatsappIconSvg()}</a>${logo}<div class="sf-meta">${metaParts.map(part=>`<span>${esc(part)}</span>`).join("")}</div></div>`;
       }
-      const engineHomeDirectoHtml=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${engineChipsHtml()}${engineBannerHtml()}${engineGridHtml()}</div>`;
+      // QA-C01.1 CP6 — Directo: vitrina SECUNDARIA y compacta, al final (después
+      // de la grilla), sin autoavance y sin repetir la oferta de la cinta.
+      function engineDirectoDiscoverHtml(){
+        const pool=buildStorefrontHighlights({products,combos,dailyOffers,isStarter,entryAnchor:window.location.hash,fns:sfHighlightFns});
+        const stripKey=(pool.find(x=>x.kind!=="product")||{}).key;
+        const items=selectShowcase(pool.filter(h=>h.key!==stripKey),{min:4,max:6});
+        return engineShowcaseHtml(items,{variant:"directo",title:"Para descubrir",autoplay:false});
+      }
+      const engineHomeDirectoHtml=`<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${engineChipsHtml()}${engineBannerHtml()}${engineGridHtml()}${engineDirectoDiscoverHtml()}</div>`;
       function engineHomeOfertaHtml(){
         // QA-C01.1 CP3 — APROVECHAR. Manda la oportunidad: precio grande,
         // ahorro verificado (motor), foto del corte sobre el navy. "Oferta de
@@ -3335,7 +3382,7 @@
         }).join("")}</div>`:"";
         const rubroTilesHtml=rubroNames.length?`<div class="sf-section-title">Elegí por rubro</div><div class="sf-rubro-tiles">${rubroNames.slice(0,6).map(r=>{
           const count=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r).length;
-          return `<button type="button" class="sf-rubro-tile" data-store-view-target="products" data-nav-products="true">${icon(r,"")}<div class="sf-rubro-tile-name">${esc(publicRubroName(r))}</div><div class="sf-rubro-tile-count">${count} corte${count===1?"":"s"}</div></button>`;
+          return `<button type="button" class="sf-rubro-tile" data-store-view-target="products" data-nav-products="true" data-nav-rubro="${esc(r)}">${icon(r,"")}<div class="sf-rubro-tile-name">${esc(publicRubroName(r))}</div><div class="sf-rubro-tile-count">${count} corte${count===1?"":"s"}</div></button>`;
         }).join("")}</div>`:"";
         const topProducts=products.slice(0,6);
         const topHtml=topProducts.length?`<div class="sf-section-title">Lo más pedido</div><div class="sf-rows" style="padding:0 18px 18px;">${topProducts.map((p,i)=>engineProductRowHtml(p,i)).join("")}</div>`:"";
@@ -3358,20 +3405,22 @@
         const solutionCount=dailyOffers.length+comboList.length;
         const hasProducts=Boolean(data.showPriceList&&products.length);
         const dashedCta=hasProducts?`<div class="sf-dashed-cta"><p>¿Preferís armar tu propio pedido, corte por corte?</p><a href="#" data-store-view-target="products" data-nav-products="true">Ver todos los cortes</a></div>`:"";
+        // QA-C01.1 CP6 — "Completá con" consume la vitrina reutilizable (compacta,
+        // sin autoavance, DEBAJO de las soluciones): cortes con foto de los mismos
+        // rubros, alternados (selectComplements del motor). 3+: hasta 6; 1-2: hasta 4.
         let extraHtml="";
-        if(solutionCount>0&&solutionCount<3&&hasProducts){
+        if(solutionCount>0&&hasProducts){
           const lines=[...dailyOffers.map((c,i)=>sfOfferHighlight(c,i,true)),...comboList.map((c,i)=>sfOfferHighlight(c,i,false))].flatMap(h=>h.lines);
-          const rubros=new Set(lines.map(l=>normalizeSlug(l.rubro||"")).filter(Boolean));
-          const inSolutions=new Set(lines.map(l=>`${normalizeSlug(l.rubro||"")}|${normalizeSlug(l.name)}`));
-          const picks=products.filter(p=>rubros.has(normalizeSlug(p.rubro||""))&&!inSolutions.has(`${normalizeSlug(p.rubro||"")}|${normalizeSlug(p.nombre||"")}`)&&getProductThumbnailPath(p)).slice(0,4);
-          if(picks.length)extraHtml=`<div class="sf-section-title">Completá con</div><div class="sf-grid sf-combos-complete" data-sf-grid>${picks.map(p=>engineProductCardHtml(p,products.indexOf(p))).join("")}</div>`;
+          const pool=buildStorefrontHighlights({products,combos:[],dailyOffers:[],fns:sfHighlightFns});
+          const picks=selectComplements(pool,lines,{max:solutionCount>=3?6:4});
+          if(picks.length>=2)extraHtml=engineShowcaseHtml(picks,{variant:"combos",title:"Completá con",autoplay:false});
         }
         let combosHtml=dailyCards+comboCards;
         if(!solutionCount){
           const rubroAccess=hasProducts?rubroNames.slice(0,6).map(r=>{
             const list=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r);
             const photo=list.map(p=>getProductThumbnailPath(p)).find(Boolean)||"";
-            return `<button type="button" class="sf-combos-rubro" data-store-view-target="products" data-nav-products="true">${photo?`<img src="${esc(photo)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span class="sf-combos-rubro-name">${esc(publicRubroName(r))}</span><span class="sf-combos-rubro-count">${list.length} corte${list.length===1?"":"s"}</span></button>`;
+            return `<button type="button" class="sf-combos-rubro" data-store-view-target="products" data-nav-products="true" data-nav-rubro="${esc(r)}">${photo?`<img src="${esc(photo)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span class="sf-combos-rubro-name">${esc(publicRubroName(r))}</span><span class="sf-combos-rubro-count">${list.length} corte${list.length===1?"":"s"}</span></button>`;
           }).join(""):"";
           combosHtml=`<div class="sf-combos-none"><div class="sf-combos-none-title">Hoy no hay combos armados</div><div class="sf-combos-none-desc">Podés armar tu pedido corte por corte o consultarnos por WhatsApp.</div>${rubroAccess?`<div class="sf-combos-rubros">${rubroAccess}</div>`:""}<a class="sf-combos-none-wa" href="${mainWa}" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>`;
         }
@@ -3499,6 +3548,13 @@
         if(viewTarget){
           event.preventDefault();
           const view=String(viewTarget.dataset.storeViewTarget||"home");
+          // QA-C01.1 CP6 — accesos por rubro (Oferta, Combos sin combos): abrir Productos ya filtrado.
+          if(view==="products"&&viewTarget.dataset.navRubro!==undefined){
+            engineProductsActiveRubro=viewTarget.dataset.navRubro||"";
+            app.querySelectorAll("[data-sf-products-chip]").forEach(btn=>btn.classList.toggle("is-active",(btn.dataset.sfProductsChip||"")===engineProductsActiveRubro));
+            const body=app.querySelector("[data-sf-products-body]");
+            if(body)body.innerHTML=engineProductsBodyHtml();
+          }
           applyStoreView(view,{focusSearch:view==="products"&&Boolean(viewTarget.dataset.navProducts),restoreProductScroll:true});
           return;
         }

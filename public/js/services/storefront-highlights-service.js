@@ -385,3 +385,42 @@ export function selectShowcase(pool = [], { min = SHOWCASE_MIN, max = SHOWCASE_M
 
   return picked.length >= min ? picked : [];
 }
+
+// ---------------------------------------------------------------------------
+// QA-C01.1 CP6 — "Completá con": productos con foto que complementan las
+// soluciones. Regla simple y determinista:
+//   - primero los rubros presentes en las soluciones (en su orden de
+//     aparición), alternando uno de cada rubro;
+//   - después, si falta, el resto de los rubros, también alternando;
+//   - nunca un corte que ya está en una solución (nombre + rubro);
+//   - dentro de cada rubro, el orden del pool (catálogo).
+// ---------------------------------------------------------------------------
+export function selectComplements(pool = [], solutionLines = [], { max = 6 } = {}) {
+  const lineKey = (line) => `${normalizeKey(line.rubro || "")}|${normalizeKey(line.name)}`;
+  const inSolutions = new Set((solutionLines || []).map(lineKey));
+  const candidates = (Array.isArray(pool) ? pool : [])
+    .filter((highlight) => highlight.kind === "product" && highlight.image && highlight.lines[0])
+    .filter((highlight) => !inSolutions.has(lineKey(highlight.lines[0])));
+
+  const byRubro = new Map();
+  for (const highlight of candidates) {
+    const rubro = normalizeKey(highlight.lines[0].rubro || "");
+    if (!byRubro.has(rubro)) byRubro.set(rubro, []);
+    byRubro.get(rubro).push(highlight);
+  }
+  const primary = [...new Set((solutionLines || []).map((line) => normalizeKey(line.rubro || "")).filter((rubro) => byRubro.has(rubro)))];
+  const secondary = [...byRubro.keys()].filter((rubro) => !primary.includes(rubro));
+
+  const picked = [];
+  for (const group of [primary, secondary]) {
+    const queues = group.map((rubro) => [...byRubro.get(rubro)]);
+    while (picked.length < max && queues.some((queue) => queue.length)) {
+      for (const queue of queues) {
+        if (picked.length >= max) break;
+        const next = queue.shift();
+        if (next) picked.push(next);
+      }
+    }
+  }
+  return picked;
+}
