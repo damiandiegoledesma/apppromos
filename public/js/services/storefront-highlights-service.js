@@ -337,3 +337,51 @@ export function buildStorefrontHighlights(input = {}) {
   }
   return pool;
 }
+
+// ---------------------------------------------------------------------------
+// QA-C01.1 CP4 — Selección de vitrina/carrusel (reutilizable por los 4 estilos;
+// en CP4 la consume solo Catálogo). Solo DATOS: no decide tamaños ni markup.
+//   1. Ofertas del pool (en su orden: Promo del día → 1 ítem con ahorro →
+//      resto) que sean "limpias" para una vitrina: 1 corte con foto real, o
+//      2 cortes con 2 fotos reales. 3+ cortes y portadas genéricas quedan fuera.
+//   2. Completa con productos con foto (orden del pool: rubros alternados).
+//      Un producto que ya está como promo de 1 corte (mismo nombre + rubro)
+//      no se repite.
+//   3. Máximo `max` (8). Si hay menos de `min` (4) devuelve [] (decisión 1.3:
+//      sin vitrina, sin relleno artificial).
+// ---------------------------------------------------------------------------
+export const SHOWCASE_MIN = 4;
+export const SHOWCASE_MAX = 8;
+
+function isShowcaseOffer(highlight) {
+  if (highlight.kind === "product" || highlight.imageKind !== "cut") return false;
+  if (highlight.lines.length === 1) return highlight.images.length >= 1;
+  if (highlight.lines.length === 2) return highlight.images.length >= 2;
+  return false;
+}
+
+export function selectShowcase(pool = [], { min = SHOWCASE_MIN, max = SHOWCASE_MAX } = {}) {
+  const list = Array.isArray(pool) ? pool : [];
+  const seen = new Set();
+  const picked = [];
+  const push = (highlight) => {
+    if (picked.length >= max || seen.has(highlight.key)) return;
+    seen.add(highlight.key);
+    picked.push(highlight);
+  };
+
+  const offers = list.filter(isShowcaseOffer);
+  offers.forEach(push);
+
+  const singleCuts = new Set(
+    offers
+      .filter((highlight) => highlight.lines.length === 1)
+      .map((highlight) => `${normalizeKey(highlight.lines[0].rubro || "")}|${normalizeKey(highlight.lines[0].name)}`)
+  );
+  list
+    .filter((highlight) => highlight.kind === "product" && highlight.imageKind === "cut" && highlight.image)
+    .filter((highlight) => !singleCuts.has(`${normalizeKey(highlight.lines[0].rubro || "")}|${normalizeKey(highlight.lines[0].name)}`))
+    .forEach(push);
+
+  return picked.length >= min ? picked : [];
+}

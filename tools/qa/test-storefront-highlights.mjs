@@ -269,3 +269,63 @@ test("24 lines[] incluye el rubro de cada corte (Costeletas Novillo ≠ Cerdo)",
   assert.equal(prod.lines[0].rubro, "Pollo");
   assert.equal(buildWhatYouGet([{ nombre: "Vacío", cantidad: 1 }]).lines[0].rubro, null, "sin rubro => null, no se inventa");
 });
+
+// ---------------------------------------------------------------------------
+// CP4 — selección de vitrina (selectShowcase)
+// ---------------------------------------------------------------------------
+import { selectShowcase, SHOWCASE_MAX } from "../../public/js/services/storefront-highlights-service.js";
+const fullPool = () => buildStorefrontHighlights({ products, combos: offers, dailyOffers: daily, fns });
+
+test("25 vitrina: prioriza ofertas limpias y completa con productos (máx 8)", () => {
+  const v = selectShowcase(fullPool());
+  assert.equal(v.length, SHOWCASE_MAX);
+  const kinds = v.map((h) => h.kind);
+  const firstProduct = kinds.indexOf("product");
+  assert.ok(firstProduct > 0 && kinds.slice(firstProduct).every((k) => k === "product"), "ofertas primero, productos después");
+  assert.deepEqual(v.slice(0, 2).map((h) => h.kind), ["daily", "daily"]);
+});
+
+test("26 vitrina: excluye 3+ cortes y deja 2 cortes solo con 2 fotos", () => {
+  const v = selectShowcase(fullPool());
+  assert.ok(v.every((h) => h.lines.length <= 2), "nada de 3+ cortes");
+  assert.ok(!v.some((h) => h.label === "Súper finde" || h.label === "Promo cerdo"));
+  for (const h of v.filter((x) => x.lines.length === 2)) assert.ok(h.images.length >= 2);
+});
+
+test("27 vitrina: sin promos funciona solo con productos", () => {
+  const v = selectShowcase(buildStorefrontHighlights({ products, combos: [], dailyOffers: [], fns }));
+  assert.equal(v.length, SHOWCASE_MAX);
+  assert.ok(v.every((h) => h.kind === "product" && h.image));
+});
+
+test("28 vitrina: menos de 4 candidatos => [] (sin relleno)", () => {
+  const few = products.filter((p) => p.rubro === "Pollo"); // 3 productos
+  assert.deepEqual(selectShowcase(buildStorefrontHighlights({ products: few, fns })), []);
+  assert.equal(selectShowcase(buildStorefrontHighlights({ products: few, fns }), { min: 3 }).length, 3, "min configurable para otros estilos");
+});
+
+test("29 vitrina: orden estable, sin duplicados, sin productos repetidos como promo", () => {
+  const a = selectShowcase(fullPool()).map((h) => h.key);
+  for (let i = 0; i < 5; i += 1) assert.deepEqual(selectShowcase(fullPool()).map((h) => h.key), a);
+  assert.equal(new Set(a).size, a.length);
+  const v = selectShowcase(fullPool());
+  const promoCuts = v.filter((h) => h.kind !== "product" && h.lines.length === 1).map((h) => `${h.lines[0].rubro}|${h.lines[0].name}`);
+  for (const h of v.filter((x) => x.kind === "product")) assert.ok(!promoCuts.includes(`${h.lines[0].rubro}|${h.lines[0].name}`), h.title);
+});
+
+test("30 vitrina: rubro presente y Costeletas Novillo ≠ Cerdo", () => {
+  const v = selectShowcase(fullPool(), { max: 20 });
+  assert.ok(v.every((h) => h.lines[0].rubro));
+  const nov = v.find((h) => h.lines[0].name === "Costeletas" && h.lines[0].rubro === "Novillo");
+  const cer = v.find((h) => h.lines[0].name === "Costeletas" && h.lines[0].rubro === "Cerdo");
+  assert.ok(nov && cer);
+  assert.notEqual(nov.image, cer.image);
+});
+
+test("31 vitrina: sin foto no entra", () => {
+  const noPhoto = [{ id: "a", nombre: "Corte raro", rubro: "Novillo", precio: 1 }, { id: "b", nombre: "Otro raro", rubro: "Cerdo", precio: 1 }];
+  assert.deepEqual(selectShowcase(buildStorefrontHighlights({ products: [...noPhoto, ...products.slice(0, 2)], fns })), []);
+  const offer = { name: "X", total: 100, items: [{ nombre: "Corte raro", rubro: "Novillo", cantidad: 1, unidad: "kg" }] };
+  const pool = buildStorefrontHighlights({ products, combos: [offer], dailyOffers: [], fns });
+  assert.ok(!selectShowcase(pool).some((h) => h.kind === "promo"), "promo con portada genérica no entra");
+});
