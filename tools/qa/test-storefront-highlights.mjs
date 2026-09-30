@@ -70,10 +70,10 @@ test("04 promo 3 productos — D3 conserva orden", () => {
 test("05 promo 4+ — D4 Súper finde", () => {
   const h = toHighlight("promo", byName("Súper finde"), ctx());
   assert.deepEqual(h.lines, [
-    { qty: 2, unit: "kg", name: "Asado Costilla" },
-    { qty: 1, unit: "kg", name: "Alitas" },
-    { qty: 1, unit: "kg", name: "Puchero" },
-    { qty: 1, unit: "kg", name: "Falda" }
+    { qty: 2, unit: "kg", name: "Asado Costilla", rubro: "Novillo" },
+    { qty: 1, unit: "kg", name: "Alitas", rubro: "Pollo" },
+    { qty: 1, unit: "kg", name: "Puchero", rubro: "Novillo" },
+    { qty: 1, unit: "kg", name: "Falda", rubro: "Novillo" }
   ], "contenido completo, en orden");
   assert.equal(h.images.length, 3);
   assert.equal(h.images[0], img("novillo", "costilla"), "principal = Asado");
@@ -256,4 +256,16 @@ test("22 isInformativeLabel", () => {
 
 test("23 buildWhatYouGet con decimales", () => {
   assert.equal(buildWhatYouGet([{ nombre: "Vacío", cantidad: 1.5, unidad: "kilos" }]).title, "1,5 kg de Vacío");
+});
+
+// CP5 — rubro visible por línea (requisito transversal de identificación)
+test("24 lines[] incluye el rubro de cada corte (Costeletas Novillo ≠ Cerdo)", () => {
+  const d5 = toHighlight("promo", byName("Promo 2"), ctx());
+  assert.deepEqual(d5.lines, [{ qty: 2, unit: "kg", name: "Costeletas", rubro: "Novillo" }]);
+  const pd = toHighlight("daily", daily.find((o) => o.items.length === 1), ctx());
+  assert.deepEqual(pd.lines, [{ qty: 1, unit: "kg", name: "Costeletas", rubro: "Cerdo" }]);
+  assert.notEqual(d5.lines[0].rubro, pd.lines[0].rubro);
+  const prod = toHighlight("product", products.find((x) => x.id === "pollo_alitas"), ctx());
+  assert.equal(prod.lines[0].rubro, "Pollo");
+  assert.equal(buildWhatYouGet([{ nombre: "Vacío", cantidad: 1 }]).lines[0].rubro, null, "sin rubro => null, no se inventa");
 });

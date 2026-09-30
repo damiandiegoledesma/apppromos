@@ -11,7 +11,8 @@
 //   title       qué me llevo (a partir de items) | nombre del producto
 //   titleShort  resumen "2 kg Costilla + 2 cortes más" (solo 3+ ítems) | null
 //   label       nombre comercial informativo | null
-//   lines[]     [{qty, unit, name}] lista completa, en el orden cargado
+//   lines[]     [{qty, unit, name, rubro}] lista completa, en el orden cargado
+//               (rubro agregado en CP5: identificar Costeletas Novillo vs Cerdo)
 //   price       precio final REAL publicado
 //   priceUnit   "kg" (producto) | null
 //   listPrice   precio de referencia | null (regla conservadora 1.1)
@@ -129,7 +130,7 @@ function lineText(line) {
 export function buildWhatYouGet(items = []) {
   const lines = (Array.isArray(items) ? items : [])
     .filter((item) => itemName(item))
-    .map((item) => ({ qty: itemQty(item), unit: itemUnit(item), name: itemName(item) }));
+    .map((item) => ({ qty: itemQty(item), unit: itemUnit(item), name: itemName(item), rubro: itemRubro(item) || null }));
 
   if (!lines.length) return { title: "", titleShort: null, lines };
 
@@ -245,7 +246,7 @@ export function toHighlight(kind, source = {}, ctx = {}) {
       title: String(source.nombre ?? source.name ?? "Producto"),
       titleShort: null,
       label: null,
-      lines: [{ qty: 1, unit: normalizeUnit(source.unidad ?? source.unit ?? "kg"), name: String(source.nombre ?? source.name ?? "Producto") }],
+      lines: [{ qty: 1, unit: normalizeUnit(source.unidad ?? source.unit ?? "kg"), name: String(source.nombre ?? source.name ?? "Producto"), rubro: String(source.rubro ?? "").trim() || null }],
       price: productPrice(source),
       priceUnit: normalizeUnit(source.unidad ?? source.unit ?? "kg"),
       listPrice: null,

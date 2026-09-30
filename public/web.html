@@ -1773,6 +1773,36 @@
     /* Combos + pedido directo: botón "+" y CTAs en verde, no en rojo */
     html[data-storefront-theme="combos_pedido_directo"] .cart-grid-step--plus{background:var(--sf-wa);}
     html[data-storefront-theme="combos_pedido_directo"] .sf-combo-add{background:var(--sf-wa);}
+    /* QA-C01.1 CP5 — Combos + pedido directo: tarjeta-solución con fotos de
+       los cortes, lista completa con rubro y fallback sin combos. Solo este estilo. */
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-thumb{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-thumb.is-empty{display:none;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-img{height:100px;width:auto;max-width:70%;object-fit:contain;display:block;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-img.is-cover{height:100%;width:100%;max-width:none;object-fit:cover;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-mosaic{display:flex;align-items:center;justify-content:center;height:100%;padding:0 12px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-mosaic img{height:100px;width:126px;object-fit:contain;position:relative;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-mosaic img+img{margin-left:-34px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-more{position:relative;z-index:5;align-self:flex-end;margin:0 0 12px -10px;background:var(--sf-navy);color:#fff;font-size:.74rem;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-head{margin-bottom:6px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-list{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:4px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-list li{display:flex;align-items:baseline;gap:6px;font-size:.92rem;line-height:1.3;color:var(--sf-ink);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-qty{flex:0 0 auto;min-width:44px;font-weight:700;color:var(--sf-navy);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-cut{font-weight:600;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-rubro{font-size:.74rem;color:var(--sf-muted);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-rubro::before{content:"· ";}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-list-more{font-size:.76rem;color:var(--sf-muted);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-price{font-size:.98rem;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-saving{font-family:inherit;font-size:.74rem;font-weight:600;color:var(--sf-muted);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-complete{padding:0 18px 8px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-none{margin:12px 18px 0;padding:18px 16px;background:var(--sf-card-bg);border:1px solid var(--sf-border);border-radius:16px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-none-title{font-family:var(--sf-font-display);font-weight:700;font-size:1rem;color:var(--sf-navy);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-none-desc{font-size:.8rem;color:var(--sf-muted);margin:4px 0 12px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-rubros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-rubro{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--sf-border);border-radius:12px;background:var(--sf-thumb-bg);cursor:pointer;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-rubro img{width:56px;height:56px;object-fit:contain;}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-rubro-name{font-weight:700;font-size:.8rem;color:var(--sf-navy);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-rubro-count{font-size:.66rem;color:var(--sf-muted);}
+    html[data-storefront-theme="combos_pedido_directo"] .sf-combos-none-wa{display:block;text-align:center;background:var(--sf-wa);color:#fff;font-weight:700;font-size:.84rem;padding:11px 0;border-radius:10px;text-decoration:none;}
     html[data-storefront-theme="combos_pedido_directo"] .cart-add-mini{background:var(--sf-wa);}
     /* Motor - Catálogo tipo vidriera: tiles con foto y caption superpuesta */
     .sf-tiles{padding:0 18px 24px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -3037,17 +3067,24 @@
         return `<div class="sf-tile"><div class="sf-tile-icon">🏷️</div><span class="sf-tile-badge">${esc(kgLabel)}</span><button type="button" class="sf-tile-add" data-cart-add="${encodeCartItem(item)}">Agregar</button><div class="sf-tile-caption"><div><div class="sf-tile-name">${esc(displayName)}</div><div class="sf-tile-price">${money(total)}</div></div></div></div>`;
       }
       function engineComboLgHtml(c={},index=0,isDaily=false){
-        const items=Array.isArray(c.items)?c.items:[];
-        const displayName=isDaily?dailyOfferDisplayName(c):(c.name||c.nombre||"Oferta");
-        const total=getTotal(c);
+        // QA-C01.1 CP5 — tarjeta-solución de Combos. Manda el CONTENIDO:
+        // lista completa (cantidad + corte + rubro) > precio > ahorro > nombre.
+        // Datos del motor común (CP1): fotos (images[]/extraCount, orden del
+        // carnicero), título "qué me llevo", etiqueta informativa y ahorro
+        // verificado. El cartItem es el de siempre (engineOfferCartItem).
+        const h=sfOfferHighlight(c,index,isDaily);
         const item=engineOfferCartItem(c,index,isDaily);
-        const itemsLine=items.map(i=>`${esc(i.cantidad??i.quantity??1)} ${esc(i.unidad||i.unit||"kg")} · ${esc(i.nombre||i.name||"Producto")}`).join(" · ");
-        const badge=isDaily?`<div class="sf-combo-lg-badge">Hoy</div>`:index===0?`<div class="sf-combo-lg-badge">Más pedido</div>`:"";
-        // Nota: el botón dice "Pedir este combo" (como en el mockup) pero usa
-        // el mismo flujo de "Agregar al carrito" ya existente (data-cart-add),
-        // no un pedido directo por WhatsApp que salte el carrito - eso sería
-        // lógica de negocio nueva y no está autorizado tocarla sin pedirlo.
-        return `<div class="sf-combo-lg"><div class="sf-combo-lg-thumb"></div><div class="sf-combo-lg-body"><div class="sf-combo-lg-head"><div class="sf-combo-lg-name">${esc(displayName)}</div>${badge}</div>${itemsLine?`<div class="sf-combo-lg-desc">${itemsLine}</div>`:""}<div class="sf-combo-lg-price">${money(total)}</div><button type="button" class="sf-combo-lg-cta" data-cart-add="${encodeCartItem(item)}">Pedir este combo</button></div></div>`;
+        const qty=(l)=>`${l.qty.toLocaleString("es-AR",{maximumFractionDigits:2})} ${l.unit}`;
+        const shown=h.lines.slice(0,8);
+        const hidden=h.lines.length-shown.length;
+        const listHtml=shown.length?`<ul class="sf-combo-lg-list">${shown.map(l=>`<li><span class="sf-combo-lg-qty">${esc(qty(l))}</span><span class="sf-combo-lg-cut">${esc(l.name)}</span>${l.rubro?`<span class="sf-combo-lg-rubro">${esc(publicRubroName(l.rubro))}</span>`:""}</li>`).join("")}${hidden>0?`<li class="sf-combo-lg-list-more">y ${hidden} ${hidden===1?"corte":"cortes"} más</li>`:""}</ul>`:"";
+        const multi=h.imageKind==="cut"&&h.images.length>1;
+        const thumb=multi
+          ? `<span class="sf-combo-lg-mosaic">${h.images.map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="z-index:${3-i}" onerror="this.remove()">`).join("")}${h.extraCount?`<span class="sf-combo-lg-more" aria-label="${h.extraCount} ${h.extraCount===1?"corte":"cortes"} más">+${h.extraCount}</span>`:""}</span>`
+          : h.image?`<img class="sf-combo-lg-img${h.imageKind==="cover"?" is-cover":""}" src="${esc(h.image)}" alt="" loading="lazy" onerror="this.remove()">`:"";
+        const head=(h.label||isDaily)?`<div class="sf-combo-lg-head">${h.label?`<div class="sf-combo-lg-name">${esc(h.label)}</div>`:`<span></span>`}${isDaily?`<div class="sf-combo-lg-badge">Hoy</div>`:""}</div>`:"";
+        const saving=h.savingPct?`<span class="sf-combo-lg-saving">Ahorrás ${h.savingPct}% · antes ${money(h.listPrice)}</span>`:"";
+        return `<div class="sf-combo-lg"><div class="sf-combo-lg-thumb${thumb?"":" is-empty"}">${thumb}</div><div class="sf-combo-lg-body">${head}${listHtml||`<div class="sf-combo-lg-desc">${esc(h.title)}</div>`}<div class="sf-combo-lg-price">${money(h.price)}${saving}</div><button type="button" class="sf-combo-lg-cta" data-cart-add="${encodeCartItem(item)}" data-after-add="cart">Pedir este combo</button></div></div>`;
       }
       function enginePromosBodyHtml(){
         const variant=sfLayoutVariant();
@@ -3183,12 +3220,36 @@
         return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${engineChipsHtml()}${engineGridHtml()}</div>`;
       }
       function engineHomeCombosHtml(){
+        // QA-C01.1 CP5 — RESOLVER. Soluciones = Promos del día + promos/combos.
+        //   3+  -> solo soluciones (+ acceso a "armá tu pedido").
+        //   1-2 -> soluciones + "Completá con": hasta 4 cortes con foto de los
+        //          mismos rubros que las soluciones (rubro de lines[] del motor).
+        //   0   -> mensaje honesto + accesos por rubro (sin tarjetas vacías).
         const dailyCards=dailyOffers.map((c,index)=>engineComboLgHtml(c,index,true)).join("");
         const comboList=isStarter?[]:combos;
         const comboCards=comboList.map((c,index)=>engineComboLgHtml(c,index,false)).join("");
-        const combosHtml=dailyCards+comboCards||`<div class="empty" style="padding:0 18px;">Todavía no hay combos publicados.</div>`;
-        const dashedCta=(data.showPriceList&&products.length)?`<div class="sf-dashed-cta"><p>¿Preferís armar tu propio pedido, corte por corte?</p><a href="#" data-store-view-target="products" data-nav-products="true">Ver todos los cortes</a></div>`:"";
-        return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}<div class="sf-intro"><div class="sf-intro-title">Combos listos para pedir</div><div class="sf-intro-desc">Elegí uno y lo pedís directo por WhatsApp, sin armar el carrito.</div></div>${combosHtml}${dashedCta}</div>`;
+        const solutionCount=dailyOffers.length+comboList.length;
+        const hasProducts=Boolean(data.showPriceList&&products.length);
+        const dashedCta=hasProducts?`<div class="sf-dashed-cta"><p>¿Preferís armar tu propio pedido, corte por corte?</p><a href="#" data-store-view-target="products" data-nav-products="true">Ver todos los cortes</a></div>`:"";
+        let extraHtml="";
+        if(solutionCount>0&&solutionCount<3&&hasProducts){
+          const lines=[...dailyOffers.map((c,i)=>sfOfferHighlight(c,i,true)),...comboList.map((c,i)=>sfOfferHighlight(c,i,false))].flatMap(h=>h.lines);
+          const rubros=new Set(lines.map(l=>normalizeSlug(l.rubro||"")).filter(Boolean));
+          const inSolutions=new Set(lines.map(l=>`${normalizeSlug(l.rubro||"")}|${normalizeSlug(l.name)}`));
+          const picks=products.filter(p=>rubros.has(normalizeSlug(p.rubro||""))&&!inSolutions.has(`${normalizeSlug(p.rubro||"")}|${normalizeSlug(p.nombre||"")}`)&&getProductThumbnailPath(p)).slice(0,4);
+          if(picks.length)extraHtml=`<div class="sf-section-title">Completá con</div><div class="sf-grid sf-combos-complete" data-sf-grid>${picks.map(p=>engineProductCardHtml(p,products.indexOf(p))).join("")}</div>`;
+        }
+        let combosHtml=dailyCards+comboCards;
+        if(!solutionCount){
+          const rubroAccess=hasProducts?rubroNames.slice(0,6).map(r=>{
+            const list=products.filter(p=>(String(p.rubro||"Sin rubro").trim()||"Sin rubro")===r);
+            const photo=list.map(p=>getProductThumbnailPath(p)).find(Boolean)||"";
+            return `<button type="button" class="sf-combos-rubro" data-store-view-target="products" data-nav-products="true">${photo?`<img src="${esc(photo)}" alt="" loading="lazy" onerror="this.remove()">`:""}<span class="sf-combos-rubro-name">${esc(publicRubroName(r))}</span><span class="sf-combos-rubro-count">${list.length} corte${list.length===1?"":"s"}</span></button>`;
+          }).join(""):"";
+          combosHtml=`<div class="sf-combos-none"><div class="sf-combos-none-title">Hoy no hay combos armados</div><div class="sf-combos-none-desc">Podés armar tu pedido corte por corte o consultarnos por WhatsApp.</div>${rubroAccess?`<div class="sf-combos-rubros">${rubroAccess}</div>`:""}<a class="sf-combos-none-wa" href="${mainWa}" target="_blank" rel="noopener">Consultar por WhatsApp</a></div>`;
+        }
+        const intro=solutionCount?`<div class="sf-intro"><div class="sf-intro-title">Combos listos para pedir</div><div class="sf-intro-desc">Elegí un combo, revisalo en tu pedido y mandalo por WhatsApp.</div></div>`:"";
+        return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${intro}${combosHtml}${extraHtml}${solutionCount?dashedCta:""}</div>`;
       }
       const engineHomeSection = storefrontTheme==="oferta_primero" ? engineHomeOfertaHtml()
         : storefrontTheme==="catalogo_vidriera" ? engineHomeCatalogoHtml()
@@ -3394,6 +3455,8 @@
           if(item){
             addCartItem(item);
             announceCart(`${item.name||item.nombre||"Producto"} agregado al pedido`);
+            // QA-C01.1 CP5 — decisión 1.2: en Combos, agregar una solución lleva al pedido.
+            if(addButton.dataset.afterAdd==="cart"){applyStoreView("cart");return;}
             const key=addButton.dataset.cartCell||cartItemKey(item);
             const isGridProduct=item.type==="product"&&!isOfferCartItem(item)&&addButton.hasAttribute("data-cart-cell");
             if(isGridProduct){
