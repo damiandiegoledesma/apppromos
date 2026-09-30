@@ -1,0 +1,245 @@
+{
+  "publicProducts": [
+    {
+      "precio": 8000,
+      "nombre": "Costeletas",
+      "rubro": "Cerdo",
+      "id": "cerdo_costeletas",
+      "unidad": "kg"
+    },
+    {
+      "unidad": "kg",
+      "precio": 8500,
+      "nombre": "Marucha",
+      "rubro": "Cerdo",
+      "id": "cerdo_marucha"
+    },
+    {
+      "precio": 15000,
+      "nombre": "Matambre",
+      "id": "cerdo_matambre",
+      "rubro": "Cerdo",
+      "unidad": "kg"
+    },
+    {
+      "unidad": "kg",
+      "id": "cerdo_pechito",
+      "precio": 10000,
+      "rubro": "Cerdo",
+      "nombre": "Pechito"
+    },
+    {
+      "nombre": "Pulpas",
+      "rubro": "Cerdo",
+      "id": "cerdo_pulpas",
+      "precio": 9900,
+      "unidad": "kg"
+    },
+    {
+      "rubro": "Novillo",
+      "nombre": "Asado Costilla",
+      "precio": 19000,
+      "unidad": "kg",
+      "id": "novillo_asado_costilla"
+    },
+    {
+      "unidad": "kg",
+      "id": "novillo_costeletas",
+      "rubro": "Novillo",
+      "nombre": "Costeletas",
+      "precio": 16500
+    },
+    {
+      "unidad": "kg",
+      "rubro": "Novillo",
+      "id": "novillo_falda",
+      "nombre": "Falda",
+      "precio": 15000
+    },
+    {
+      "unidad": "kg",
+      "rubro": "Novillo",
+      "id": "novillo_nalga",
+      "nombre": "Nalga",
+      "precio": 21000
+    },
+    {
+      "id": "novillo_puchero",
+      "unidad": "kg",
+      "rubro": "Novillo",
+      "nombre": "Puchero",
+      "precio": 8500
+    },
+    {
+      "nombre": "Alitas",
+      "id": "pollo_alitas",
+      "rubro": "Pollo",
+      "precio": 4500,
+      "unidad": "kg"
+    },
+    {
+      "precio": 6500,
+      "nombre": "Pata y Muslo",
+      "rubro": "Pollo",
+      "id": "pollo_pata_y_muslo",
+      "unidad": "kg"
+    },
+    {
+      "nombre": "Pechuga con Hueso",
+      "rubro": "Pollo",
+      "precio": 9900,
+      "id": "pollo_pechuga_con_hueso",
+      "unidad": "kg"
+    }
+  ],
+  "publicOffers": [
+    {
+      "total": 59500,
+      "id": "combo_1790738189282_rqckxp",
+      "name": "Súper finde",
+      "items": [
+        {
+          "unidad": "kg",
+          "cantidad": 2,
+          "rubro": "Novillo",
+          "nombre": "Asado Costilla"
+        },
+        {
+          "nombre": "Alitas",
+          "unidad": "kg",
+          "rubro": "Pollo",
+          "cantidad": 1
+        },
+        {
+          "nombre": "Puchero",
+          "unidad": "kg",
+          "rubro": "Novillo",
+          "cantidad": 1
+        },
+        {
+          "rubro": "Novillo",
+          "unidad": "kg",
+          "cantidad": 1,
+          "nombre": "Falda"
+        }
+      ]
+    },
+    {
+      "total": 29800,
+      "id": "combo_1790736736847_4wpeok",
+      "name": "Promo 2",
+      "items": [
+        {
+          "cantidad": 2,
+          "unidad": "kg",
+          "nombre": "Costeletas",
+          "rubro": "Novillo"
+        }
+      ]
+    },
+    {
+      "items": [
+        {
+          "cantidad": 1,
+          "nombre": "Matambre",
+          "rubro": "Cerdo",
+          "unidad": "kg"
+        },
+        {
+          "rubro": "Cerdo",
+          "cantidad": 1,
+          "unidad": "kg",
+          "nombre": "Pechito"
+        },
+        {
+          "rubro": "Cerdo",
+          "cantidad": 1,
+          "unidad": "kg",
+          "nombre": "Pulpas"
+        }
+      ],
+      "name": "Promo cerdo",
+      "id": "combo_1790736726799_erlgjl",
+      "total": 31500
+    },
+    {
+      "items": [
+        {
+          "rubro": "Novillo",
+          "nombre": "Falda",
+          "unidad": "kg",
+          "cantidad": 1
+        },
+        {
+          "rubro": "Novillo",
+          "unidad": "kg",
+          "cantidad": 1,
+          "nombre": "Nalga"
+        }
+      ],
+      "total": 32400,
+      "id": "combo_1790736710898_1h3yix",
+      "name": "Para la parrilla"
+    },
+    {
+      "items": [
+        {
+          "cantidad": 3,
+          "unidad": "kg",
+          "nombre": "Asado Costilla",
+          "rubro": "Novillo"
+        }
+      ],
+      "id": "combo_1790736681907_3hvuvz",
+      "total": 51300,
+      "name": "Promo 1"
+    }
+  ],
+  "dailyOffers": [
+    {
+      "total": 13100,
+      "origin": "daily_offer",
+      "expiresAt": "2026-10-01T02:59:59.999Z",
+      "items": [
+        {
+          "nombre": "Pata y Muslo",
+          "unidad": "kg",
+          "cantidad": 1,
+          "rubro": "Pollo"
+        },
+        {
+          "unidad": "kg",
+          "rubro": "Pollo",
+          "cantidad": 1,
+          "nombre": "Pechuga con Hueso"
+        }
+      ],
+      "publishedAt": "2026-09-30T03:18:22.889Z",
+      "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+      "name": "OFERTA DEL DÍA",
+      "schemaVersion": 1,
+      "status": "active"
+    },
+    {
+      "status": "active",
+      "schemaVersion": 1,
+      "publishedAt": "2026-09-30T03:18:01.378Z",
+      "name": "OFERTA DEL DÍA",
+      "id": "daily_2153af04-3c0d-451f-8005-345b8e244997",
+      "items": [
+        {
+          "cantidad": 1,
+          "nombre": "Costeletas",
+          "unidad": "kg",
+          "rubro": "Cerdo"
+        }
+      ],
+      "origin": "daily_offer",
+      "total": 6400,
+      "expiresAt": "2026-10-01T02:59:59.999Z"
+    }
+  ],
+  "mode": "web_premium",
+  "priceListStatus": "ready",
+  "_source": "Firestore apppromos-qa publicWebSlugs/carniceria-qa-3415-555666, capturado 30/09/2026 (estado CP0)"
+}
