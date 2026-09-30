@@ -1711,6 +1711,28 @@
     .sf-combo-foot{display:flex;align-items:center;justify-content:space-between;}
     .sf-combo-price{font-weight:700;color:var(--sf-accent);font-size:1rem;}
     .sf-combo-add{background:var(--sf-accent);color:#fff;font-weight:700;font-size:.72rem;padding:8px 13px;border-radius:8px;border:none;cursor:pointer;}
+    /* QA-C01.1 CP2 — Directo al grano: cinta de hoy con miniatura y
+       tarjetas de Promos con "qué me llevo". Solo afecta a este estilo. */
+    html[data-storefront-theme="directo_al_grano"] .sf-banner--strip{padding:9px 10px 9px 10px;gap:8px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner--strip .sf-banner-eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-side{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-price{font-family:var(--sf-font-display);font-weight:700;font-size:.9rem;color:#fff;white-space:nowrap;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 auto;text-decoration:none;color:inherit;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-thumb{flex:0 0 48px;width:48px;height:48px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-thumb img{width:44px;height:44px;object-fit:contain;display:block;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-copy{min-width:0;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner--strip .sf-banner-title{font-size:.88rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-add{flex:0 0 auto;font-size:.74rem;font-weight:700;color:#fff;background:var(--sf-accent);padding:7px 11px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;}
+    html[data-storefront-theme="directo_al_grano"] .sf-banner-add.is-added{background:#16a34a;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-thumb{display:flex;align-items:center;justify-content:center;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-thumb img{height:86px;width:auto;max-width:60%;object-fit:contain;display:block;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-mosaic{position:relative;display:flex;align-items:center;justify-content:center;height:100%;padding:0 10px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-mosaic img{height:86px;width:112px;max-width:none;object-fit:contain;position:relative;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-mosaic img+img{margin-left:-30px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-more{position:relative;z-index:5;align-self:flex-end;margin:0 0 10px -8px;background:var(--sf-navy);color:#fff;font-size:.72rem;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--sf-muted);margin-bottom:2px;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-was{margin-left:8px;font-size:.74rem;font-weight:600;color:var(--sf-muted);text-decoration:line-through;}
+    html[data-storefront-theme="directo_al_grano"] .sf-combo-off{margin-left:6px;font-size:.68rem;font-weight:700;color:#fff;background:var(--sf-navy);padding:2px 6px;border-radius:999px;vertical-align:2px;}
     /* Motor - Oferta primero: hero grande, scroll de combos, tiles de rubro, filas */
     .sf-hero-promo{margin:14px 18px 6px;border-radius:16px;background:var(--sf-navy);overflow:hidden;}
     .sf-hero-promo-img{height:150px;background:rgba(255,255,255,.08);}
@@ -1843,6 +1865,7 @@
     import { resolveSession } from "./js/services/auth-service.js";
     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
+    import { buildStorefrontHighlights, toHighlight } from "./js/services/storefront-highlights-service.js";
     import { createStarterProducts } from "./js/data/starter-products.js";
     import {
       loadActivationDraft,
@@ -2883,6 +2906,27 @@
       const headerName = esc(String(shortName).toUpperCase());
       const locationHtml = location ? `<p>📍 ${location}</p>` : "";
       const phoneHtml = phone ? `<p>📞 ${esc(phone)}</p>` : "";
+      // QA-C01.1 CP2 — Directo al grano consume el motor común de destacados
+      // (js/services/storefront-highlights-service.js). Acá solo se inyectan
+      // las funciones existentes de esta página; cruce, fotos, "qué me llevo",
+      // ahorro y orden los resuelve el motor. El cartItem sale de
+      // engineOfferCartItem(), el mismo que usa hoy el carrito.
+      const sfHighlightFns={
+        thumbFn:getProductThumbnailPath,
+        coverFn:comboCover,
+        totalFn:getTotal,
+        dailyIdFn:dailyOfferId,
+        cartItemFn:(source,index,kind)=>kind==="product"?null:engineOfferCartItem(source,index,kind==="daily"),
+        anchorFn:(source,index,kind)=>kind==="daily"
+          ? {view:"daily",id:dailyAnchorId(source,index)}
+          : kind==="promo"
+            ? {view:"promos",id:promoAnchorId(source,index)}
+            : {view:"products",id:productAnchorId(source,index)}
+      };
+      const sfOfferNames=[...dailyOffers,...(isStarter?[]:combos)].map(o=>String(o?.name??o?.nombre??""));
+      function sfOfferHighlight(source={},index=0,isDaily=false){
+        return toHighlight(isDaily?"daily":"promo",source,{...sfHighlightFns,products,allOfferNames:sfOfferNames,index,idFn:isDaily?dailyOfferId:null});
+      }
       // Frente 2.2 - el motor ahora soporta 3 "plantillas" de ítem (mismos
       // datos y misma lógica de carrito, sólo cambia el marcado/CSS):
       // "card" (Directo al grano / Combos), "row" (Oferta primero),
@@ -2952,7 +2996,20 @@
           ? {type:"daily_offer",id:dailyOfferId(c,index),name:displayName,rubro:"Oferta de hoy",unit:"oferta",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||i.name||"Producto",cantidad:i.cantidad??i.quantity??1,unidad:i.unidad||i.unit||"kg"}))}
           : {type:"combo",id:c.id||c.comboId||c.name||("combo-"+index),name:displayName,rubro:"Oferta",unit:"combo",price:total,quantity:1,items:items.map(i=>({nombre:i.nombre||"Producto",cantidad:i.cantidad||1,unidad:i.unidad||"kg"}))};
         const itemsLine=items.map(i=>`${esc(i.cantidad??i.quantity??1)} ${esc(i.unidad||i.unit||"kg")} · ${esc(i.nombre||i.name||"Producto")}`).join(" · ");
-        return `<div class="sf-combo"${category?` data-directo-offer-category="${esc(category)}"`:""}><div class="sf-combo-thumb"></div><div class="sf-combo-body"><div class="sf-combo-head"><div class="sf-combo-name">${esc(displayName)}</div>${category?`<div class="sf-combo-tag">${esc(category)}</div>`:isDaily?`<div class="sf-combo-tag">Hoy</div>`:""}</div>${itemsLine?`<div class="sf-combo-items">${itemsLine}</div>`:""}<div class="sf-combo-foot"><div class="sf-combo-price">${money(total)}</div><button type="button" class="sf-combo-add" data-cart-add="${encodeCartItem(item)}">Agregar</button></div></div></div>`;
+        // QA-C01.1 CP2 — "qué me llevo" como título (motor), nombre comercial
+        // como etiqueta solo si es informativo, foto del corte en el thumb que
+        // ya existía y ahorro solo si el motor lo verificó. El cartItem (item)
+        // no cambia: es el mismo de siempre.
+        const h=sfOfferHighlight(c,index,isDaily);
+        const fullList=h.lines.length>3?h.lines.map(l=>`${esc(l.qty.toLocaleString("es-AR",{maximumFractionDigits:2}))} ${esc(l.unit)} ${esc(l.name)}`).join(" · "):"";
+        // Promos de varios cortes: hasta 3 fotos superpuestas (images[] del
+        // motor, en el orden cargado) + "+N" si hay más cortes (extraCount).
+        const multi=h.imageKind==="cut"&&h.images.length>1;
+        const thumb=multi
+          ? `<span class="sf-combo-mosaic">${h.images.map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="z-index:${3-i}" onerror="this.remove()">`).join("")}${h.extraCount?`<span class="sf-combo-more" aria-label="${h.extraCount} ${h.extraCount===1?"corte":"cortes"} más">+${h.extraCount}</span>`:""}</span>`
+          : h.image?`<img src="${esc(h.image)}" alt="" loading="lazy" onerror="this.remove()">`:"";
+        const saving=h.savingPct?`<span class="sf-combo-was">${money(h.listPrice)}</span><span class="sf-combo-off">−${h.savingPct}%</span>`:"";
+        return `<div class="sf-combo"${category?` data-directo-offer-category="${esc(category)}"`:""}><div class="sf-combo-thumb">${thumb}</div><div class="sf-combo-body">${h.label?`<div class="sf-combo-label">${esc(h.label)}</div>`:""}<div class="sf-combo-head"><div class="sf-combo-name">${esc(h.title||displayName)}</div>${category?`<div class="sf-combo-tag">${esc(category)}</div>`:isDaily?`<div class="sf-combo-tag">Hoy</div>`:""}</div>${fullList?`<div class="sf-combo-items">${fullList}</div>`:""}<div class="sf-combo-foot"><div class="sf-combo-price">${money(total)}${saving}</div><button type="button" class="sf-combo-add" data-cart-add="${encodeCartItem(item)}">Agregar</button></div></div></div>`;
       }
       function engineOfferCartItem(c={},index=0,isDaily=false){
         const items=Array.isArray(c.items)?c.items:[];
@@ -3059,15 +3116,16 @@
       }
       const nosotrosSection=isEngineLayout?engineAboutSectionHtml():"";
       function engineBannerHtml(){
-        if(dailyOffers.length){
-          const c=dailyOffers[0];
-          return `<a href="#" class="sf-banner" data-store-view-target="daily"><div><div class="sf-banner-eyebrow">Oferta de hoy</div><div class="sf-banner-title">${esc(dailyOfferDisplayName(c))} · ${money(getTotal(c))}</div></div><div class="sf-banner-cta">Ver</div></a>`;
-        }
-        if(!isStarter&&combos.length){
-          const c=combos[0];
-          return `<a href="#" class="sf-banner" data-store-view-target="promos"><div><div class="sf-banner-eyebrow">Promo</div><div class="sf-banner-title">${esc(c.name||c.nombre||"Oferta")} · ${money(getTotal(c))}</div></div><div class="sf-banner-cta">Ver</div></a>`;
-        }
-        return "";
+        const pool=buildStorefrontHighlights({products,combos,dailyOffers,isStarter,entryAnchor:window.location.hash,fns:sfHighlightFns});
+        const h=pool.find(x=>x.kind!=="product");
+        if(!h)return "";
+        // Decisión B: 3+ cortes se resumen con titleShort del motor.
+        const text=h.lines.length>=3&&h.titleShort?h.titleShort:h.title;
+        const eyebrow=[h.isDaily?"Oferta de hoy":"Promo",h.savingPct?`Ahorrás ${h.savingPct}%`:""].filter(Boolean).join(" · ");
+        const thumb=h.image?`<span class="sf-banner-thumb"><img src="${esc(h.image)}" alt="" loading="eager" onerror="this.parentNode.remove()"></span>`:"";
+        const view=h.anchor&&h.anchor.view?h.anchor.view:(h.isDaily?"daily":"promos");
+        const cart=h.cartItem?`<button type="button" class="sf-banner-add" data-cart-add="${encodeCartItem(h.cartItem)}" aria-label="Agregar ${esc(h.title)} al pedido">Agregar</button>`:"";
+        return `<div class="sf-banner sf-banner--strip"><a href="#" class="sf-banner-main" data-store-view-target="${esc(view)}">${thumb}<div class="sf-banner-copy"><div class="sf-banner-eyebrow">${esc(eyebrow)}</div><div class="sf-banner-title">${esc(text)}</div></div></a><div class="sf-banner-side"><div class="sf-banner-price">${money(h.price)}</div>${cart}</div></div>`;
       }
       function engineChipsHtml(){
         const chips=[{key:"",label:"Todo"},...rubroNames.slice(0,6).map(r=>({key:r,label:publicRubroName(r)}))];
