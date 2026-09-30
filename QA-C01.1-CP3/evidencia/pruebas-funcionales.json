@@ -1,0 +1,376 @@
+{
+ "hero": {
+  "eyebrow": "OFERTA DE HOY",
+  "title": "1 kg Pata y Muslo + 1 kg Pechuga con Hueso",
+  "rubro": "Pollo",
+  "price": "$ 13.100",
+  "off": "−20%",
+  "was": "antes $ 16.400",
+  "imgs": [
+   "pollo/pata-muslo.webp",
+   "pollo/pechuga-con-hueso.webp"
+  ],
+  "more": null,
+  "top": 157,
+  "h": 247,
+  "priceTop": 301,
+  "ctaTop": 348
+ },
+ "opps": [
+  {
+   "price": "$ 6.400",
+   "name": "1 kg de Costeletas",
+   "rubro": "Cerdo",
+   "badge": "−20%",
+   "imgs": [
+    "cerdo/costeletas.webp"
+   ],
+   "more": null,
+   "x": 26,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  },
+  {
+   "price": "$ 51.300",
+   "name": "3 kg de Asado Costilla",
+   "rubro": "Novillo",
+   "badge": "−10%",
+   "imgs": [
+    "novillo/costilla.webp"
+   ],
+   "more": null,
+   "x": 200,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  },
+  {
+   "price": "$ 29.800",
+   "name": "2 kg de Costeletas",
+   "rubro": "Novillo",
+   "badge": "−9%",
+   "imgs": [
+    "novillo/costeleta.webp"
+   ],
+   "more": null,
+   "x": 374,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  },
+  {
+   "price": "$ 59.500",
+   "name": "2 kg Asado Costilla + 3 cortes más",
+   "rubro": "Novillo · Pollo",
+   "badge": "−9%",
+   "imgs": [
+    "novillo/costilla.webp",
+    "pollo/alitas.webp",
+    "novillo/puchero.webp"
+   ],
+   "more": "+1",
+   "x": 548,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  },
+  {
+   "price": "$ 31.500",
+   "name": "1 kg Matambre + 2 cortes más",
+   "rubro": "Cerdo",
+   "badge": "−9%",
+   "imgs": [
+    "cerdo/matambre.webp",
+    "cerdo/pechito.webp",
+    "cerdo/pulpas.webp"
+   ],
+   "more": null,
+   "x": 722,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  },
+  {
+   "price": "$ 32.400",
+   "name": "1 kg Falda + 1 kg Nalga",
+   "rubro": "Novillo",
+   "badge": "−10%",
+   "imgs": [
+    "novillo/falda.webp",
+    "novillo/nalga.webp"
+   ],
+   "more": null,
+   "x": 896,
+   "top": 449,
+   "h": 192,
+   "w": 164
+  }
+ ],
+ "homeH": 1233,
+ "logs_home": [],
+ "rows": [
+  {
+   "name": "1 kg Pata y Muslo + 1 kg Pechuga con Hueso",
+   "meta": "Oferta de hoy · Pollo",
+   "price": "$ 13.100",
+   "off": "−20%",
+   "img": "pollo/pata-muslo.webp",
+   "count": "2",
+   "h": 86
+  },
+  {
+   "name": "1 kg de Costeletas",
+   "meta": "Oferta de hoy · Cerdo",
+   "price": "$ 6.400",
+   "off": "−20%",
+   "img": "cerdo/costeletas.webp",
+   "count": null,
+   "h": 86
+  },
+  {
+   "name": "2 kg Asado Costilla + 3 cortes más",
+   "meta": "Súper finde · Novillo · Pollo",
+   "price": "$ 59.500",
+   "off": "−9%",
+   "img": "novillo/costilla.webp",
+   "count": "4",
+   "h": 86
+  },
+  {
+   "name": "2 kg de Costeletas",
+   "meta": "Novillo",
+   "price": "$ 29.800",
+   "off": "−9%",
+   "img": "novillo/costeleta.webp",
+   "count": null,
+   "h": 86
+  },
+  {
+   "name": "1 kg Matambre + 2 cortes más",
+   "meta": "Promo cerdo · Cerdo",
+   "price": "$ 31.500",
+   "off": "−9%",
+   "img": "cerdo/matambre.webp",
+   "count": "3",
+   "h": 86
+  },
+  {
+   "name": "1 kg Falda + 1 kg Nalga",
+   "meta": "Para la parrilla · Novillo",
+   "price": "$ 32.400",
+   "off": "−10%",
+   "img": "novillo/falda.webp",
+   "count": "2",
+   "h": 86
+  },
+  {
+   "name": "3 kg de Asado Costilla",
+   "meta": "Novillo",
+   "price": "$ 51.300",
+   "off": "−10%",
+   "img": "novillo/costilla.webp",
+   "count": null,
+   "h": 85
+  }
+ ],
+ "logs_promos": [],
+ "orig": {
+  "heroTop": 157,
+  "heroH": 317,
+  "priceTop": 387,
+  "ctaTop": 419,
+  "eyebrow": "OFERTA DE HOY",
+  "oppsTop": 519,
+  "homeH": 1273
+ },
+ "heroNoDaily": {
+  "eyebrow": "PROMO",
+  "title": "3 kg de Asado Costilla",
+  "rubro": "Novillo",
+  "price": "$ 51.300",
+  "off": "−10%",
+  "was": "antes $ 57.000",
+  "imgs": [
+   "novillo/costilla.webp"
+  ],
+  "more": null,
+  "top": 157,
+  "h": 247,
+  "priceTop": 301,
+  "ctaTop": 348
+ },
+ "oppsNoDaily": [
+  "−9%",
+  "−9%",
+  "−9%",
+  "−10%"
+ ],
+ "origNoDailyEyebrow": "OFERTA DE HOY / Súper finde",
+ "hero_D5": {
+  "eyebrow": "PROMO",
+  "title": "2 kg de Costeletas",
+  "rubro": "Novillo",
+  "price": "$ 29.800",
+  "off": "−9%",
+  "was": "antes $ 33.000",
+  "imgs": [
+   "novillo/costeleta.webp"
+  ],
+  "more": null,
+  "top": 157,
+  "h": 247,
+  "priceTop": 301,
+  "ctaTop": 348
+ },
+ "hero_D4": {
+  "eyebrow": "PROMO · SÚPER FINDE",
+  "title": "2 kg Asado Costilla + 3 cortes más",
+  "rubro": "Novillo · Pollo",
+  "price": "$ 59.500",
+  "off": "−9%",
+  "was": "antes $ 66.000",
+  "imgs": [
+   "novillo/costilla.webp",
+   "pollo/alitas.webp",
+   "novillo/puchero.webp"
+  ],
+  "more": "+1",
+  "top": 157,
+  "h": 247,
+  "priceTop": 301,
+  "ctaTop": 348
+ },
+ "hero_D1": {
+  "eyebrow": "PROMO",
+  "title": "3 kg de Asado Costilla",
+  "rubro": "Novillo",
+  "price": "$ 51.300",
+  "off": "−10%",
+  "was": "antes $ 57.000",
+  "imgs": [
+   "novillo/costilla.webp"
+  ],
+  "more": null,
+  "top": 157,
+  "h": 247,
+  "priceTop": 301,
+  "ctaTop": 348
+ },
+ "flowNew": {
+  "after": "✓ En tu pedido · Ver pedido",
+  "viewAfterSecond": "cart",
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 1,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   },
+   {
+    "type": "daily_offer",
+    "id": "daily_2153af04-3c0d-451f-8005-345b8e244997",
+    "key": "daily_offer:daily_2153af04-3c0d-451f-8005-345b8e244997",
+    "name": "1 kg de Costeletas",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 6400,
+    "quantity": 1,
+    "items": [
+     {
+      "nombre": "Costeletas",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*1%20oferta%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A013.100%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A*1%20oferta%201%20kg%20de%20Costeletas*%20-%20%24%C2%A06.400%0A%20%20-%201%20kg%20Costeletas%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A019.500*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:36:13.672Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x5863186d transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:36:13.684Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x5863186e transport errored: jd"
+  ]
+ },
+ "flowOrig": {
+  "after": "Agregado ✓",
+  "viewAfterSecond": null,
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 1,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*1%20oferta%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A013.100%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A013.100*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:36:26.102Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x2b475f67 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:36:26.112Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x2b475f68 transport errored: jd"
+  ]
+ },
+ "heroCartEqual": true,
+ "rowCart": [
+  {
+   "name": "Promo 2",
+   "qty": 2,
+   "price": 29800,
+   "items": [
+    {
+     "nombre": "Costeletas",
+     "cantidad": 2,
+     "unidad": "kg"
+    }
+   ]
+  }
+ ],
+ "others": {
+  "directo_al_grano/home": true,
+  "directo_al_grano/promos": true,
+  "combos_pedido_directo/home": true,
+  "combos_pedido_directo/promos": true,
+  "catalogo_vidriera/home": true,
+  "catalogo_vidriera/promos": true,
+  "standard/home": true,
+  "standard/promos": true
+ }
+}

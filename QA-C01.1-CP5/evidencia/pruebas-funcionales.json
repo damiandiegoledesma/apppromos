@@ -1,0 +1,375 @@
+{
+ "cards_home": [
+  {
+   "head": "Hoy",
+   "list": [
+    "1 kg Pata y Muslo Pollo",
+    "1 kg Pechuga con Hueso Pollo"
+   ],
+   "imgs": [
+    "pollo/pata-muslo.webp",
+    "pollo/pechuga-con-hueso.webp"
+   ],
+   "more": null,
+   "price": "$ 13.100 Ahorrás 20% · antes $ 16.400",
+   "badges": [
+    "Hoy"
+   ],
+   "h": 283
+  },
+  {
+   "head": "Hoy",
+   "list": [
+    "1 kg Costeletas Cerdo"
+   ],
+   "imgs": [
+    "cerdo/costeletas.webp"
+   ],
+   "more": null,
+   "price": "$ 6.400 Ahorrás 20% · antes $ 8.000",
+   "badges": [
+    "Hoy"
+   ],
+   "h": 260
+  },
+  {
+   "head": "Súper finde",
+   "list": [
+    "2 kg Asado Costilla Novillo",
+    "1 kg Alitas Pollo",
+    "1 kg Puchero Novillo",
+    "1 kg Falda Novillo"
+   ],
+   "imgs": [
+    "novillo/costilla.webp",
+    "pollo/alitas.webp",
+    "novillo/puchero.webp"
+   ],
+   "more": "+1",
+   "price": "$ 59.500 Ahorrás 9% · antes $ 66.000",
+   "badges": [],
+   "h": 327
+  },
+  {
+   "head": null,
+   "list": [
+    "2 kg Costeletas Novillo"
+   ],
+   "imgs": [
+    "novillo/costeleta.webp"
+   ],
+   "more": null,
+   "price": "$ 29.800 Ahorrás 9% · antes $ 33.000",
+   "badges": [],
+   "h": 234
+  },
+  {
+   "head": "Promo cerdo",
+   "list": [
+    "1 kg Matambre Cerdo",
+    "1 kg Pechito Cerdo",
+    "1 kg Pulpas Cerdo"
+   ],
+   "imgs": [
+    "cerdo/matambre.webp",
+    "cerdo/pechito.webp",
+    "cerdo/pulpas.webp"
+   ],
+   "more": null,
+   "price": "$ 31.500 Ahorrás 9% · antes $ 34.900",
+   "badges": [],
+   "h": 303
+  },
+  {
+   "head": "Para la parrilla",
+   "list": [
+    "1 kg Falda Novillo",
+    "1 kg Nalga Novillo"
+   ],
+   "imgs": [
+    "novillo/falda.webp",
+    "novillo/nalga.webp"
+   ],
+   "more": null,
+   "price": "$ 32.400 Ahorrás 10% · antes $ 36.000",
+   "badges": [],
+   "h": 280
+  },
+  {
+   "head": null,
+   "list": [
+    "3 kg Asado Costilla Novillo"
+   ],
+   "imgs": [
+    "novillo/costilla.webp"
+   ],
+   "more": null,
+   "price": "$ 51.300 Ahorrás 10% · antes $ 57.000",
+   "badges": [],
+   "h": 234
+  }
+ ],
+ "text_home": "CQ\nCarnicería QA\nQuebracho Herrado, Córdoba\n+5493415555666\nCombos listos para pedir\nElegí un combo, revisalo en tu pedido y mandalo por WhatsApp.\nHoy\n1 kg\nPata y Muslo\nPollo\n1 kg\nPechuga con Hueso\nPollo\n$ 13.100\nAhorrás 20% · antes $ 16.400\nPedir este combo\nHoy\n1 kg\nCosteletas\nCerdo\n$ 6.400\nAhorrás ",
+ "firstCta_home": 464,
+ "homeH_home": 2357,
+ "logs_home": [],
+ "cards_promos": [
+  {
+   "head": "Hoy",
+   "list": [
+    "1 kg Pata y Muslo Pollo",
+    "1 kg Pechuga con Hueso Pollo"
+   ],
+   "imgs": [
+    "pollo/pata-muslo.webp",
+    "pollo/pechuga-con-hueso.webp"
+   ],
+   "more": null,
+   "price": "$ 13.100 Ahorrás 20% · antes $ 16.400",
+   "badges": [
+    "Hoy"
+   ],
+   "h": 283
+  },
+  {
+   "head": "Hoy",
+   "list": [
+    "1 kg Costeletas Cerdo"
+   ],
+   "imgs": [
+    "cerdo/costeletas.webp"
+   ],
+   "more": null,
+   "price": "$ 6.400 Ahorrás 20% · antes $ 8.000",
+   "badges": [
+    "Hoy"
+   ],
+   "h": 260
+  },
+  {
+   "head": "Súper finde",
+   "list": [
+    "2 kg Asado Costilla Novillo",
+    "1 kg Alitas Pollo",
+    "1 kg Puchero Novillo",
+    "1 kg Falda Novillo"
+   ],
+   "imgs": [
+    "novillo/costilla.webp",
+    "pollo/alitas.webp",
+    "novillo/puchero.webp"
+   ],
+   "more": "+1",
+   "price": "$ 59.500 Ahorrás 9% · antes $ 66.000",
+   "badges": [],
+   "h": 327
+  },
+  {
+   "head": null,
+   "list": [
+    "2 kg Costeletas Novillo"
+   ],
+   "imgs": [
+    "novillo/costeleta.webp"
+   ],
+   "more": null,
+   "price": "$ 29.800 Ahorrás 9% · antes $ 33.000",
+   "badges": [],
+   "h": 234
+  },
+  {
+   "head": "Promo cerdo",
+   "list": [
+    "1 kg Matambre Cerdo",
+    "1 kg Pechito Cerdo",
+    "1 kg Pulpas Cerdo"
+   ],
+   "imgs": [
+    "cerdo/matambre.webp",
+    "cerdo/pechito.webp",
+    "cerdo/pulpas.webp"
+   ],
+   "more": null,
+   "price": "$ 31.500 Ahorrás 9% · antes $ 34.900",
+   "badges": [],
+   "h": 303
+  },
+  {
+   "head": "Para la parrilla",
+   "list": [
+    "1 kg Falda Novillo",
+    "1 kg Nalga Novillo"
+   ],
+   "imgs": [
+    "novillo/falda.webp",
+    "novillo/nalga.webp"
+   ],
+   "more": null,
+   "price": "$ 32.400 Ahorrás 10% · antes $ 36.000",
+   "badges": [],
+   "h": 280
+  },
+  {
+   "head": null,
+   "list": [
+    "3 kg Asado Costilla Novillo"
+   ],
+   "imgs": [
+    "novillo/costilla.webp"
+   ],
+   "more": null,
+   "price": "$ 51.300 Ahorrás 10% · antes $ 57.000",
+   "badges": [],
+   "h": 234
+  }
+ ],
+ "text_promos": "Todas las promos\nFILTRAR POR KILOS\nTodas\n2 Kgs\n3 Kgs\n5 Kgs\nHoy\n1 kg\nPata y Muslo\nPollo\n1 kg\nPechuga con Hueso\nPollo\n$ 13.100\nAhorrás 20% · antes $ 16.400\nPedir este combo\nHoy\n1 kg\nCosteletas\nCerdo\n$ 6.400\nAhorrás 20% · antes $ 8.000\nPedir este combo\n+1\nSúper finde\n2 kg\nAsado Costilla\nNovillo\n1 kg\nAl",
+ "firstCta_promos": 413,
+ "homeH_promos": 2380,
+ "logs_promos": [],
+ "orig_cards": [
+  255,
+  255,
+  273,
+  252,
+  252,
+  252,
+  252
+ ],
+ "orig_firstCta": 436,
+ "orig_homeH": 2226,
+ "sc12": {
+  "cards": 2,
+  "complete": [
+   "Marucha",
+   "Matambre",
+   "Pechito",
+   "Pulpas"
+  ],
+  "title": [
+   "Completá con"
+  ],
+  "logs": []
+ },
+ "sc0": {
+  "cards": 0,
+  "none": "Hoy no hay combos armados | Podés armar tu pedido corte por corte o consultarnos por WhatsApp. | Cerdo | 5 cortes | Novillo | 5 cortes | Pollo | 3 cortes | Consultar por WhatsApp",
+  "rubros": [
+   "Cerdo 5 cortes img:true",
+   "Novillo 5 cortes img:true",
+   "Pollo 3 cortes img:true"
+  ],
+  "logs": [],
+  "afterClick": "products"
+ },
+ "flowNew": {
+  "viewAfter": "cart",
+  "cart": [
+   {
+    "type": "combo",
+    "id": "combo_1790738189282_rqckxp",
+    "key": "combo:combo_1790738189282_rqckxp",
+    "name": "Súper finde",
+    "rubro": "Oferta",
+    "unit": "combo",
+    "price": 59500,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Asado Costilla",
+      "cantidad": 2,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Alitas",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Puchero",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Falda",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "cartText": "Tu pedido\n\nRevisá y enviá por WhatsApp.\n\n1 ítem\nSúper finde\n2 ofertas · Oferta · $ 119.000\n2 kg · Asado Costilla\n1 kg · Alitas\n1 kg · Puchero\n1 kg · Falda\n−\n2 ofertas\n+\nTotal estimado\n$ 119.000\nTU NOMBRE\nTU TELÉFONO\nRecordar mi nombre y teléfono en este dispositivo\nRetiro en el local\nPasás por la carnicería.\nEnvío con cadete\nDejanos la dirección.\nEfectivo\nAl retirar o al cadete.\nTransferencia\nCoor",
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20S%C3%BAper%20finde*%20-%20%24%C2%A0119.000%0A%20%20-%202%20kg%20Asado%20Costilla%0A%20%20-%201%20kg%20Alitas%0A%20%20-%201%20kg%20Puchero%0A%20%20-%201%20kg%20Falda%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A0119.000*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:40.789Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x151cf257 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:40.799Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x151cf258 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:41.358Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x151cf259 transport errored: jd"
+  ]
+ },
+ "flowOrig": {
+  "viewAfter": "home",
+  "cart": [
+   {
+    "type": "combo",
+    "id": "combo_1790738189282_rqckxp",
+    "key": "combo:combo_1790738189282_rqckxp",
+    "name": "Súper finde",
+    "rubro": "Oferta",
+    "unit": "combo",
+    "price": 59500,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Asado Costilla",
+      "cantidad": 2,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Alitas",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Puchero",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Falda",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "cartText": "Tu pedido\n\nRevisá y enviá por WhatsApp.\n\n1 ítem\nSúper finde\n2 ofertas · Oferta · $ 119.000\n2 kg · Asado Costilla\n1 kg · Alitas\n1 kg · Puchero\n1 kg · Falda\n−\n2 ofertas\n+\nTotal estimado\n$ 119.000\nTU NOMBRE\nTU TELÉFONO\nRecordar mi nombre y teléfono en este dispositivo\nRetiro en el local\nPasás por la carnicería.\nEnvío con cadete\nDejanos la dirección.\nEfectivo\nAl retirar o al cadete.\nTransferencia\nCoor",
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20S%C3%BAper%20finde*%20-%20%24%C2%A0119.000%0A%20%20-%202%20kg%20Asado%20Costilla%0A%20%20-%201%20kg%20Alitas%0A%20%20-%201%20kg%20Puchero%0A%20%20-%201%20kg%20Falda%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A0119.000*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:52.722Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x870f0654 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:52.730Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x870f0655 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T10:19:53.481Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x870f0656 transport errored: jd"
+  ]
+ },
+ "cartEqual": true,
+ "waEqual": true,
+ "others": {
+  "directo_al_grano/home": true,
+  "directo_al_grano/promos": true,
+  "oferta_primero/home": true,
+  "oferta_primero/promos": true,
+  "catalogo_vidriera/home": true,
+  "catalogo_vidriera/promos": true,
+  "standard/home": true,
+  "standard/promos": true
+ }
+}

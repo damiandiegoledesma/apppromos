@@ -1,0 +1,289 @@
+--- web.cp3.html	2026-09-30 12:03:35.122904750 +0000
++++ public/web.html	2026-09-30 12:05:35.299873861 +0000
+@@ -1811,6 +1811,42 @@
+     /* Combos + pedido directo: botón "+" y CTAs en verde, no en rojo */
+     html[data-storefront-theme="combos_pedido_directo"] .cart-grid-step--plus{background:var(--sf-wa);}
+     html[data-storefront-theme="combos_pedido_directo"] .sf-combo-add{background:var(--sf-wa);}
++    /* QA-C01.1 CP4 — Vitrina reutilizable: base neutra (.sf-showcase-*) +
++       modificador por estilo. Catálogo: tiles grandes rojo claro/navy. */
++    .sf-showcase{margin:6px 0 4px;}
++    .sf-showcase-title{padding:4px 18px 8px;font-weight:700;font-size:.86rem;color:var(--sf-navy);font-family:var(--sf-font-display);}
++    .sf-showcase-track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 18px;padding:0 18px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
++    .sf-showcase-track::-webkit-scrollbar{display:none;}
++    .sf-showcase-card{flex:0 0 auto;scroll-snap-align:start;position:relative;overflow:hidden;}
++    .sf-showcase-photo{display:flex;align-items:center;justify-content:center;}
++    .sf-showcase-photo img{object-fit:contain;display:block;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-card{width:74%;max-width:290px;height:226px;border-radius:16px;background:var(--sf-thumb-bg);}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-photo{position:absolute;left:0;right:0;top:2px;height:140px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-photo img{width:160px;height:140px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-photo.is-multi img{width:128px;height:128px;position:relative;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-photo.is-multi img+img{margin-left:-36px;margin-top:22px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(to top,rgba(10,46,91,.94),rgba(10,46,91,.78) 70%,rgba(10,46,91,0));color:#fff;padding:22px 12px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-copy{min-width:0;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-name{font-family:var(--sf-font-display);font-weight:700;font-size:.9rem;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-rubro{font-size:.68rem;color:#c7d3e6;margin-top:1px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-price{font-family:var(--sf-font-display);font-weight:700;font-size:.95rem;margin-top:3px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-price small{font-size:.68rem;font-weight:600;opacity:.85;margin-left:2px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-badge{position:absolute;top:10px;left:10px;z-index:3;background:var(--sf-accent);color:#fff;font-size:.66rem;font-weight:800;padding:3px 9px;border-radius:999px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-add{flex:0 0 auto;background:#fff;color:var(--sf-accent);font-weight:700;font-size:.72rem;padding:7px 12px;border-radius:999px;border:none;cursor:pointer;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-add-mini{width:auto!important;flex:0 0 auto;background:#fff;color:var(--sf-accent);font-size:.7rem;padding:6px 10px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-add-mini::before{content:none;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-add-mini.cart-add-mini--stepper{background:rgba(255,255,255,.16);}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-grid-step{background:transparent;color:#fff;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-grid-step--plus{background:#fff;color:var(--sf-accent);}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-showcase-caption .cart-grid-qty{color:#fff;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo{height:208px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo .sf-tile-photos{position:absolute;left:0;right:0;top:34px;height:82px;display:flex;align-items:center;justify-content:center;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo .sf-tile-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo .sf-tile-caption{padding-top:18px;background:linear-gradient(to top,rgba(10,46,91,.95),rgba(10,46,91,.85) 72%,rgba(10,46,91,0));}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo .sf-tile-photos img{position:relative;inset:auto;width:80px;height:80px;object-fit:contain;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile--promo .sf-tile-photos img+img{margin-left:-30px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile-more{position:relative;z-index:5;align-self:flex-end;margin:0 0 6px -6px;background:var(--sf-navy);color:#fff;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:999px;}
++    html[data-storefront-theme="catalogo_vidriera"] .sf-tile-rubro{font-size:.64rem;color:#c7d3e6;margin-top:1px;}
+     /* QA-C01.1 CP5 — Combos + pedido directo: tarjeta-solución con fotos de
+        los cortes, lista completa con rubro y fallback sin combos. Solo este estilo. */
+     html[data-storefront-theme="combos_pedido_directo"] .sf-combo-lg-thumb{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+@@ -1933,7 +1969,7 @@
+     import { resolveSession } from "./js/services/auth-service.js";
+     import { db, getBusinessMetaPath, getBusinessStatePath, readPath } from "./js/core/firebase-core.js";
+     import { getProductThumbnailPath } from "./js/services/product-image-service.js";
+-    import { buildStorefrontHighlights, toHighlight } from "./js/services/storefront-highlights-service.js";
++    import { buildStorefrontHighlights, toHighlight, selectShowcase } from "./js/services/storefront-highlights-service.js";
+     import { createStarterProducts } from "./js/data/starter-products.js";
+     import {
+       loadActivationDraft,
+@@ -2984,7 +3020,7 @@
+         coverFn:comboCover,
+         totalFn:getTotal,
+         dailyIdFn:dailyOfferId,
+-        cartItemFn:(source,index,kind)=>kind==="product"?null:engineOfferCartItem(source,index,kind==="daily"),
++        cartItemFn:(source,index,kind)=>kind==="product"?sfProductCartItem(source,index):engineOfferCartItem(source,index,kind==="daily"),
+         anchorFn:(source,index,kind)=>kind==="daily"
+           ? {view:"daily",id:dailyAnchorId(source,index)}
+           : kind==="promo"
+@@ -2992,6 +3028,37 @@
+             : {view:"products",id:productAnchorId(source,index)}
+       };
+       const sfOfferNames=[...dailyOffers,...(isStarter?[]:combos)].map(o=>String(o?.name??o?.nombre??""));
++      // QA-C01.1 CP4 — mismo objeto que arman engineProductCardHtml/RowHtml/TileHtml
++      // para un producto (no es un formato nuevo: se usa para la vitrina).
++      function sfProductCartItem(p={},index=0){
++        const unit=String(p.unidad||p.unit||"kg").trim()||"kg";
++        const r=String(p.rubro||"Sin rubro").trim()||"Sin rubro";
++        return {type:"product",id:p.id||p.nombre||(r+"-"+index),name:p.nombre||"Producto",rubro:p.rubro||r,unit,price:Number(p.precio ?? p.price ?? 0),quantity:1};
++      }
++      // QA-C01.1 CP4 — VITRINA / CARRUSEL reutilizable.
++      //   Datos: selectShowcase() del motor (qué entra y en qué orden).
++      //   Markup: engineShowcaseHtml(items,{variant,title}) - clases base
++      //     .sf-showcase-* + modificador .sf-showcase--<variant>; cada estilo
++      //     decide tamaño y protagonismo por CSS. En CP4 solo la usa Catálogo.
++      //   Comportamiento: sfInitShowcase() (scroll-snap + autoavance opcional).
++      function engineShowcaseHtml(items=[],{variant="catalogo",title="",autoplay=true}={}){
++        if(!items.length)return "";
++        const card=(h)=>{
++          const single=h.lines.length===1;
++          const photos=h.images.length>1
++            ? `<span class="sf-showcase-photo is-multi">${h.images.slice(0,2).map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="z-index:${2-i}" onerror="this.remove()">`).join("")}</span>`
++            : `<span class="sf-showcase-photo"><img src="${esc(h.image)}" alt="" loading="lazy" onerror="this.remove()"></span>`;
++          const name=h.kind==="product"?h.title:(single?h.title:h.lines.map(l=>l.name).join(" + "));
++          const rubro=sfRubroText(h);
++          const badge=h.savingPct?`<span class="sf-showcase-badge is-saving">−${h.savingPct}%</span>`:h.isDaily?`<span class="sf-showcase-badge">Hoy</span>`:"";
++          const price=`${money(h.price)}${h.priceUnit?`<small>/${esc(h.priceUnit)}</small>`:""}`;
++          const cta=h.kind==="product"
++            ? renderProductActionCell(h.cartItem,cartQuantityForKey(cartItemKey(h.cartItem)),{forceStepper:true})
++            : (h.cartItem?`<button type="button" class="sf-showcase-add" data-cart-add="${encodeCartItem(h.cartItem)}" aria-label="Agregar ${esc(h.title)} al pedido">Agregar</button>`:"");
++          return `<div class="sf-showcase-card" data-sf-showcase-card>${badge}${photos}<div class="sf-showcase-caption"><div class="sf-showcase-copy"><div class="sf-showcase-name">${esc(name)}</div>${rubro?`<div class="sf-showcase-rubro">${esc(rubro)}</div>`:""}<div class="sf-showcase-price">${price}</div></div>${cta}</div></div>`;
++        };
++        return `<section class="sf-showcase sf-showcase--${esc(variant)}" data-sf-showcase${autoplay&&items.length>1?` data-sf-showcase-autoplay`:""} aria-label="${esc(title||"Vidriera")}">${title?`<div class="sf-showcase-title">${esc(title)}</div>`:""}<div class="sf-showcase-track" data-sf-showcase-track>${items.map(card).join("")}</div></section>`;
++      }
+       // Rubros visibles de un destacado ("Novillo", "Novillo · Pollo"), en el
+       // orden de lines[] del motor, sin repetir. Solo presentación.
+       function sfRubroText(h){
+@@ -3105,13 +3172,19 @@
+         return `<div class="sf-row sf-oferta-row">${main}<div class="sf-row-left"><div class="sf-row-name">${esc(h.lines.length>=3&&h.titleShort?h.titleShort:h.title)}</div>${meta?`<div class="sf-row-meta">${esc(meta)}</div>`:""}</div><div class="sf-oferta-row-side"><span class="sf-row-price">${money(h.price)}</span>${saving}<button type="button" class="sf-row-add" data-cart-add="${encodeCartItem(item)}">+ Agregar</button></div></div>`;
+       }
+       function engineComboTileHtml(c={},index=0,isDaily=false){
+-        const items=Array.isArray(c.items)?c.items:[];
+-        const displayName=isDaily?dailyOfferDisplayName(c):(c.name||c.nombre||"Oferta");
+-        const total=getTotal(c);
++        // QA-C01.1 CP4 — tile de promo de Catálogo: foto real del corte (o hasta
++        // 3 cortes + "+N") en vez del 🏷️; "qué me llevo" + rubro; badge de kg
++        // solo si todos los ítems son kg (antes sumaba unidades distintas).
++        const h=sfOfferHighlight(c,index,isDaily);
+         const item=engineOfferCartItem(c,index,isDaily);
+-        const kg=items.reduce((acc,i)=>acc+Number((i.cantidad??i.quantity??1)||0),0);
+-        const kgLabel=kg?`${kg} kg`:"Promo";
+-        return `<div class="sf-tile"><div class="sf-tile-icon">🏷️</div><span class="sf-tile-badge">${esc(kgLabel)}</span><button type="button" class="sf-tile-add" data-cart-add="${encodeCartItem(item)}">Agregar</button><div class="sf-tile-caption"><div><div class="sf-tile-name">${esc(displayName)}</div><div class="sf-tile-price">${money(total)}</div></div></div></div>`;
++        const allKg=h.lines.length>0&&h.lines.every(l=>l.unit==="kg");
++        const kg=allKg?h.lines.reduce((acc,l)=>acc+l.qty,0):0;
++        const badge=h.savingPct?`−${h.savingPct}%`:(kg?`${kg.toLocaleString("es-AR",{maximumFractionDigits:2})} kg`:(isDaily?"Hoy":""));
++        const photo=h.imageKind==="cut"&&h.images.length>1
++          ? `<span class="sf-tile-photos">${h.images.map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="z-index:${3-i}" onerror="this.remove()">`).join("")}${h.extraCount?`<span class="sf-tile-more">+${h.extraCount}</span>`:""}</span>`
++          : h.image?`<span class="sf-tile-photos"><img src="${esc(h.image)}" alt="" loading="lazy" onerror="this.remove()"></span>`:`<div class="sf-tile-icon">🏷️</div>`;
++        const rubro=sfRubroText(h);
++        return `<div class="sf-tile sf-tile--promo">${photo}${badge?`<span class="sf-tile-badge">${esc(badge)}</span>`:""}<button type="button" class="sf-tile-add" data-cart-add="${encodeCartItem(item)}">Agregar</button><div class="sf-tile-caption"><div><div class="sf-tile-name">${esc(h.lines.length>=3&&h.titleShort?h.titleShort:h.title)}</div>${rubro?`<div class="sf-tile-rubro">${esc(rubro)}</div>`:""}<div class="sf-tile-price">${money(h.price)}</div></div></div></div>`;
+       }
+       function engineComboLgHtml(c={},index=0,isDaily=false){
+         // QA-C01.1 CP5 — tarjeta-solución de Combos. Manda el CONTENIDO:
+@@ -3269,7 +3342,9 @@
+         return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${heroHtml}${hscrollHtml}${rubroTilesHtml}${topHtml}</div>`;
+       }
+       function engineHomeCatalogoHtml(){
+-        return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${engineChipsHtml()}${engineGridHtml()}</div>`;
++        // QA-C01.1 CP4 — MIRAR / DESCUBRIR: vitrina arriba de chips + grilla.
++        const showcase=selectShowcase(buildStorefrontHighlights({products,combos,dailyOffers,isStarter,entryAnchor:window.location.hash,fns:sfHighlightFns}));
++        return `<div class="store-view${activeStoreView==="home"?" is-active":""}" data-store-view="home">${engineHeaderHtml()}${engineShowcaseHtml(showcase,{variant:"catalogo",title:"En la vidriera"})}${engineChipsHtml()}${engineGridHtml()}</div>`;
+       }
+       function engineHomeCombosHtml(){
+         // QA-C01.1 CP5 — RESOLVER. Soluciones = Promos del día + promos/combos.
+@@ -3392,6 +3467,30 @@
+         else showcaseTrack.scrollBy({left:direction*step,behavior:"smooth"});
+       }
+       if(showcaseTrack&&randomShowcase.length>1)window.setInterval(()=>moveShowcase(1),5000);
++      // QA-C01.1 CP4 — comportamiento reutilizable de la vitrina: swipe con
++      // scroll-snap (CSS) + autoavance lento (7 s) que se detiene para siempre
++      // al primer toque/scroll/foco, se pausa si la vista no está visible y no
++      // corre con "reducir movimiento".
++      function sfInitShowcase(root){
++        root.querySelectorAll("[data-sf-showcase-autoplay]").forEach((section)=>{
++          const track=section.querySelector("[data-sf-showcase-track]");
++          if(!track||track.children.length<2)return;
++          if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
++          let stopped=false;
++          const stop=()=>{stopped=true;};
++          ["pointerdown","touchstart","wheel","keydown","focusin"].forEach(ev=>track.addEventListener(ev,stop,{passive:true,once:true}));
++          const timer=window.setInterval(()=>{
++            if(!document.contains(track)){window.clearInterval(timer);return;}
++            if(stopped){window.clearInterval(timer);return;}
++            if(document.hidden||!track.offsetParent)return;
++            const card=track.querySelector("[data-sf-showcase-card]");
++            const step=card?card.getBoundingClientRect().width+10:track.clientWidth;
++            const atEnd=track.scrollLeft+track.clientWidth>=track.scrollWidth-8;
++            track.scrollTo({left:atEnd?0:track.scrollLeft+step,behavior:"smooth"});
++          },7000);
++        });
++      }
++      sfInitShowcase(app);
+ 
+       app.onclick=(event)=>{
+         const target=event.target instanceof Element?event.target:event.target?.parentElement;
+--- motor.cp5.js	2026-09-30 12:03:35.127718041 +0000
++++ public/js/services/storefront-highlights-service.js	2026-09-30 12:03:59.234220436 +0000
+@@ -337,3 +337,51 @@
+   }
+   return pool;
+ }
++
++// ---------------------------------------------------------------------------
++// QA-C01.1 CP4 — Selección de vitrina/carrusel (reutilizable por los 4 estilos;
++// en CP4 la consume solo Catálogo). Solo DATOS: no decide tamaños ni markup.
++//   1. Ofertas del pool (en su orden: Promo del día → 1 ítem con ahorro →
++//      resto) que sean "limpias" para una vitrina: 1 corte con foto real, o
++//      2 cortes con 2 fotos reales. 3+ cortes y portadas genéricas quedan fuera.
++//   2. Completa con productos con foto (orden del pool: rubros alternados).
++//      Un producto que ya está como promo de 1 corte (mismo nombre + rubro)
++//      no se repite.
++//   3. Máximo `max` (8). Si hay menos de `min` (4) devuelve [] (decisión 1.3:
++//      sin vitrina, sin relleno artificial).
++// ---------------------------------------------------------------------------
++export const SHOWCASE_MIN = 4;
++export const SHOWCASE_MAX = 8;
++
++function isShowcaseOffer(highlight) {
++  if (highlight.kind === "product" || highlight.imageKind !== "cut") return false;
++  if (highlight.lines.length === 1) return highlight.images.length >= 1;
++  if (highlight.lines.length === 2) return highlight.images.length >= 2;
++  return false;
++}
++
++export function selectShowcase(pool = [], { min = SHOWCASE_MIN, max = SHOWCASE_MAX } = {}) {
++  const list = Array.isArray(pool) ? pool : [];
++  const seen = new Set();
++  const picked = [];
++  const push = (highlight) => {
++    if (picked.length >= max || seen.has(highlight.key)) return;
++    seen.add(highlight.key);
++    picked.push(highlight);
++  };
++
++  const offers = list.filter(isShowcaseOffer);
++  offers.forEach(push);
++
++  const singleCuts = new Set(
++    offers
++      .filter((highlight) => highlight.lines.length === 1)
++      .map((highlight) => `${normalizeKey(highlight.lines[0].rubro || "")}|${normalizeKey(highlight.lines[0].name)}`)
++  );
++  list
++    .filter((highlight) => highlight.kind === "product" && highlight.imageKind === "cut" && highlight.image)
++    .filter((highlight) => !singleCuts.has(`${normalizeKey(highlight.lines[0].rubro || "")}|${normalizeKey(highlight.lines[0].name)}`))
++    .forEach(push);
++
++  return picked.length >= min ? picked : [];
++}
+--- test.cp5.mjs	2026-09-30 12:03:35.132752291 +0000
++++ tools/qa/test-storefront-highlights.mjs	2026-09-30 12:03:59.234220436 +0000
+@@ -269,3 +269,63 @@
+   assert.equal(prod.lines[0].rubro, "Pollo");
+   assert.equal(buildWhatYouGet([{ nombre: "Vacío", cantidad: 1 }]).lines[0].rubro, null, "sin rubro => null, no se inventa");
+ });
++
++// ---------------------------------------------------------------------------
++// CP4 — selección de vitrina (selectShowcase)
++// ---------------------------------------------------------------------------
++import { selectShowcase, SHOWCASE_MAX } from "../../public/js/services/storefront-highlights-service.js";
++const fullPool = () => buildStorefrontHighlights({ products, combos: offers, dailyOffers: daily, fns });
++
++test("25 vitrina: prioriza ofertas limpias y completa con productos (máx 8)", () => {
++  const v = selectShowcase(fullPool());
++  assert.equal(v.length, SHOWCASE_MAX);
++  const kinds = v.map((h) => h.kind);
++  const firstProduct = kinds.indexOf("product");
++  assert.ok(firstProduct > 0 && kinds.slice(firstProduct).every((k) => k === "product"), "ofertas primero, productos después");
++  assert.deepEqual(v.slice(0, 2).map((h) => h.kind), ["daily", "daily"]);
++});
++
++test("26 vitrina: excluye 3+ cortes y deja 2 cortes solo con 2 fotos", () => {
++  const v = selectShowcase(fullPool());
++  assert.ok(v.every((h) => h.lines.length <= 2), "nada de 3+ cortes");
++  assert.ok(!v.some((h) => h.label === "Súper finde" || h.label === "Promo cerdo"));
++  for (const h of v.filter((x) => x.lines.length === 2)) assert.ok(h.images.length >= 2);
++});
++
++test("27 vitrina: sin promos funciona solo con productos", () => {
++  const v = selectShowcase(buildStorefrontHighlights({ products, combos: [], dailyOffers: [], fns }));
++  assert.equal(v.length, SHOWCASE_MAX);
++  assert.ok(v.every((h) => h.kind === "product" && h.image));
++});
++
++test("28 vitrina: menos de 4 candidatos => [] (sin relleno)", () => {
++  const few = products.filter((p) => p.rubro === "Pollo"); // 3 productos
++  assert.deepEqual(selectShowcase(buildStorefrontHighlights({ products: few, fns })), []);
++  assert.equal(selectShowcase(buildStorefrontHighlights({ products: few, fns }), { min: 3 }).length, 3, "min configurable para otros estilos");
++});
++
++test("29 vitrina: orden estable, sin duplicados, sin productos repetidos como promo", () => {
++  const a = selectShowcase(fullPool()).map((h) => h.key);
++  for (let i = 0; i < 5; i += 1) assert.deepEqual(selectShowcase(fullPool()).map((h) => h.key), a);
++  assert.equal(new Set(a).size, a.length);
++  const v = selectShowcase(fullPool());
++  const promoCuts = v.filter((h) => h.kind !== "product" && h.lines.length === 1).map((h) => `${h.lines[0].rubro}|${h.lines[0].name}`);
++  for (const h of v.filter((x) => x.kind === "product")) assert.ok(!promoCuts.includes(`${h.lines[0].rubro}|${h.lines[0].name}`), h.title);
++});
++
++test("30 vitrina: rubro presente y Costeletas Novillo ≠ Cerdo", () => {
++  const v = selectShowcase(fullPool(), { max: 20 });
++  assert.ok(v.every((h) => h.lines[0].rubro));
++  const nov = v.find((h) => h.lines[0].name === "Costeletas" && h.lines[0].rubro === "Novillo");
++  const cer = v.find((h) => h.lines[0].name === "Costeletas" && h.lines[0].rubro === "Cerdo");
++  assert.ok(nov && cer);
++  assert.notEqual(nov.image, cer.image);
++});
++
++test("31 vitrina: sin foto no entra", () => {
++  const noPhoto = [{ id: "a", nombre: "Corte raro", rubro: "Novillo", precio: 1 }, { id: "b", nombre: "Otro raro", rubro: "Cerdo", precio: 1 }];
++  assert.deepEqual(selectShowcase(buildStorefrontHighlights({ products: [...noPhoto, ...products.slice(0, 2)], fns })), []);
++  const offer = { name: "X", total: 100, items: [{ nombre: "Corte raro", rubro: "Novillo", cantidad: 1, unidad: "kg" }] };
++  const pool = buildStorefrontHighlights({ products, combos: [offer], dailyOffers: [], fns });
++  assert.ok(!selectShowcase(pool).some((h) => h.kind === "promo"), "promo con portada genérica no entra");
++});

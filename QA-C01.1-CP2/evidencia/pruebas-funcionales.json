@@ -1,0 +1,240 @@
+{
+ "strip": {
+  "default": {
+   "img": "/assets/cortes/pollo/pata-muslo.webp",
+   "eyebrow": "OFERTA DE HOY · AHORRÁS 20%",
+   "title": "1 kg Pata y Muslo + 1 kg Pechuga con Hueso",
+   "price": "$ 13.100",
+   "h": 67,
+   "lines": 2
+  },
+  "D1": {
+   "img": "/assets/cortes/novillo/costilla.webp",
+   "eyebrow": "PROMO · AHORRÁS 10%",
+   "title": "3 kg de Asado Costilla",
+   "price": "$ 51.300",
+   "h": 66,
+   "lines": 1
+  },
+  "D3": {
+   "img": "/assets/cortes/cerdo/matambre.webp",
+   "eyebrow": "PROMO · AHORRÁS 9%",
+   "title": "1 kg Matambre + 2 cortes más",
+   "price": "$ 31.500",
+   "h": 67,
+   "lines": 2
+  },
+  "D4": {
+   "img": "/assets/cortes/novillo/costilla.webp",
+   "eyebrow": "PROMO · AHORRÁS 9%",
+   "title": "2 kg Asado Costilla + 3 cortes más",
+   "price": "$ 59.500",
+   "h": 67,
+   "lines": 2
+  },
+  "D5": {
+   "img": "/assets/cortes/novillo/costeleta.webp",
+   "eyebrow": "PROMO · AHORRÁS 9%",
+   "title": "2 kg de Costeletas",
+   "price": "$ 29.800",
+   "h": 66,
+   "lines": 1
+  },
+  "PD": {
+   "img": "/assets/cortes/cerdo/costeletas.webp",
+   "eyebrow": "OFERTA DE HOY · AHORRÁS 20%",
+   "title": "1 kg de Costeletas",
+   "price": "$ 6.400",
+   "h": 66,
+   "lines": 1
+  }
+ },
+ "promosCards": [
+  {
+   "label": null,
+   "title": "1 kg Pata y Muslo + 1 kg Pechuga con Hueso",
+   "tag": "Hoy",
+   "items": null,
+   "img": "/assets/cortes/pollo/pata-muslo.webp",
+   "price": "$ 13.100$ 16.400−20%"
+  },
+  {
+   "label": null,
+   "title": "1 kg de Costeletas",
+   "tag": "Hoy",
+   "items": null,
+   "img": "/assets/cortes/cerdo/costeletas.webp",
+   "price": "$ 6.400$ 8.000−20%"
+  },
+  {
+   "label": "SÚPER FINDE",
+   "title": "2 kg Asado Costilla + 1 kg Alitas + 1 kg Puchero + 1 corte más",
+   "tag": "5 Kgs",
+   "items": "2 kg Asado Costilla · 1 kg Alitas · 1 kg Puchero · 1 kg Falda",
+   "img": "/assets/cortes/novillo/costilla.webp",
+   "price": "$ 59.500$ 66.000−9%"
+  },
+  {
+   "label": null,
+   "title": "2 kg de Costeletas",
+   "tag": "2 Kgs",
+   "items": null,
+   "img": "/assets/cortes/novillo/costeleta.webp",
+   "price": "$ 29.800$ 33.000−9%"
+  },
+  {
+   "label": "PROMO CERDO",
+   "title": "1 kg Matambre + 1 kg Pechito + 1 kg Pulpas",
+   "tag": "3 Kgs",
+   "items": null,
+   "img": "/assets/cortes/cerdo/matambre.webp",
+   "price": "$ 31.500$ 34.900−9%"
+  },
+  {
+   "label": "PARA LA PARRILLA",
+   "title": "1 kg Falda + 1 kg Nalga",
+   "tag": "2 Kgs",
+   "items": null,
+   "img": "/assets/cortes/novillo/falda.webp",
+   "price": "$ 32.400$ 36.000−10%"
+  },
+  {
+   "label": null,
+   "title": "3 kg de Asado Costilla",
+   "tag": "3 Kgs",
+   "items": null,
+   "img": "/assets/cortes/novillo/costilla.webp",
+   "price": "$ 51.300$ 57.000−10%"
+  }
+ ],
+ "cartNew": {
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A026.200%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A026.200*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "btnAfter": "sf-banner-add is-added|Agregado ✓",
+  "badge": "1",
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T09:52:37.059Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x33f7df19 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T09:52:37.069Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x33f7df1a transport errored: jd"
+  ]
+ },
+ "cartOrig": {
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A026.200%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A026.200*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "btnAfter": "sf-combo-add is-added|Agregado ✓",
+  "badge": "1",
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T09:52:49.811Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x3365563b transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T09:52:49.824Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x3365563c transport errored: jd"
+  ]
+ },
+ "cartEqual": true,
+ "waEqual": true,
+ "chipNew": {
+  "n": [
+   "Asado Costilla",
+   "Costeletas",
+   "Falda",
+   "Nalga",
+   "Puchero"
+  ],
+  "strip": true
+ },
+ "chipOrig": {
+  "n": [
+   "Asado Costilla",
+   "Costeletas",
+   "Falda",
+   "Nalga",
+   "Puchero"
+  ],
+  "strip": true
+ },
+ "others": {
+  "oferta_primero/home": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "oferta_primero/promos": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "catalogo_vidriera/home": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "catalogo_vidriera/promos": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "combos_pedido_directo/home": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "combos_pedido_directo/promos": {
+   "sameBytesLen": true,
+   "sameHtml": true
+  },
+  "standard/home": {
+   "sameBytesLen": false,
+   "sameHtml": false
+  },
+  "standard/promos": {
+   "sameBytesLen": true,
+   "sameHtml": false
+  }
+ }
+}

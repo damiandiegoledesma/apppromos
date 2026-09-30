@@ -1,0 +1,361 @@
+{
+ "showcase": {
+  "top": 149,
+  "h": 259,
+  "cardH": 226,
+  "cardW": 250,
+  "n": 8,
+  "autoplay": true,
+  "cards": [
+   {
+    "name": "Pata y Muslo + Pechuga con Hueso",
+    "rubro": "Pollo",
+    "price": "$ 13.100",
+    "badge": "−20%",
+    "imgs": [
+     "pollo/pata-muslo.webp",
+     "pollo/pechuga-con-hueso.webp"
+    ]
+   },
+   {
+    "name": "1 kg de Costeletas",
+    "rubro": "Cerdo",
+    "price": "$ 6.400",
+    "badge": "−20%",
+    "imgs": [
+     "cerdo/costeletas.webp"
+    ]
+   },
+   {
+    "name": "3 kg de Asado Costilla",
+    "rubro": "Novillo",
+    "price": "$ 51.300",
+    "badge": "−10%",
+    "imgs": [
+     "novillo/costilla.webp"
+    ]
+   },
+   {
+    "name": "2 kg de Costeletas",
+    "rubro": "Novillo",
+    "price": "$ 29.800",
+    "badge": "−9%",
+    "imgs": [
+     "novillo/costeleta.webp"
+    ]
+   },
+   {
+    "name": "Falda + Nalga",
+    "rubro": "Novillo",
+    "price": "$ 32.400",
+    "badge": "−10%",
+    "imgs": [
+     "novillo/falda.webp",
+     "novillo/nalga.webp"
+    ]
+   },
+   {
+    "name": "Alitas",
+    "rubro": "Pollo",
+    "price": "$ 4.500/kg",
+    "badge": null,
+    "imgs": [
+     "pollo/alitas.webp"
+    ]
+   },
+   {
+    "name": "Marucha",
+    "rubro": "Cerdo",
+    "price": "$ 8.500/kg",
+    "badge": null,
+    "imgs": [
+     "cerdo/marucha.webp"
+    ]
+   },
+   {
+    "name": "Pata y Muslo",
+    "rubro": "Pollo",
+    "price": "$ 6.500/kg",
+    "badge": null,
+    "imgs": [
+     "pollo/pata-muslo.webp"
+    ]
+   }
+  ],
+  "firstPrice": 375,
+  "firstCta": 366,
+  "gridTop": 463,
+  "visible": 2
+ },
+ "gridCount": 13,
+ "logs_home": [],
+ "autoplay": {
+  "x0": 0,
+  "x1": 260,
+  "x2": 260,
+  "advanced": true,
+  "stoppedAfterTouch": true
+ },
+ "reducedMotion": {
+  "moved": false
+ },
+ "noPromos": {
+  "top": 149,
+  "h": 259,
+  "cardH": 226,
+  "cardW": 250,
+  "n": 8,
+  "autoplay": true,
+  "cards": [
+   {
+    "name": "Asado Costilla",
+    "rubro": "Novillo",
+    "price": "$ 19.000/kg",
+    "badge": null,
+    "imgs": [
+     "novillo/costilla.webp"
+    ]
+   },
+   {
+    "name": "Costeletas",
+    "rubro": "Cerdo",
+    "price": "$ 8.000/kg",
+    "badge": null,
+    "imgs": [
+     "cerdo/costeletas.webp"
+    ]
+   },
+   {
+    "name": "Alitas",
+    "rubro": "Pollo",
+    "price": "$ 4.500/kg",
+    "badge": null,
+    "imgs": [
+     "pollo/alitas.webp"
+    ]
+   },
+   {
+    "name": "Costeletas",
+    "rubro": "Novillo",
+    "price": "$ 16.500/kg",
+    "badge": null,
+    "imgs": [
+     "novillo/costeleta.webp"
+    ]
+   },
+   {
+    "name": "Marucha",
+    "rubro": "Cerdo",
+    "price": "$ 8.500/kg",
+    "badge": null,
+    "imgs": [
+     "cerdo/marucha.webp"
+    ]
+   },
+   {
+    "name": "Pata y Muslo",
+    "rubro": "Pollo",
+    "price": "$ 6.500/kg",
+    "badge": null,
+    "imgs": [
+     "pollo/pata-muslo.webp"
+    ]
+   },
+   {
+    "name": "Falda",
+    "rubro": "Novillo",
+    "price": "$ 15.000/kg",
+    "badge": null,
+    "imgs": [
+     "novillo/falda.webp"
+    ]
+   },
+   {
+    "name": "Matambre",
+    "rubro": "Cerdo",
+    "price": "$ 15.000/kg",
+    "badge": null,
+    "imgs": [
+     "cerdo/matambre.webp"
+    ]
+   }
+  ],
+  "firstPrice": 375,
+  "firstCta": 348,
+  "gridTop": 463,
+  "visible": 2
+ },
+ "few": {
+  "showcase": null,
+  "products": 3,
+  "logs": []
+ },
+ "fewSameAsBefore": false,
+ "promoTiles": [
+  {
+   "name": "1 kg Pata y Muslo + 1 kg Pechuga con Hueso",
+   "rubro": "Pollo",
+   "badge": "−20%",
+   "imgs": 2,
+   "emoji": false,
+   "more": null,
+   "price": "$ 13.100"
+  },
+  {
+   "name": "1 kg de Costeletas",
+   "rubro": "Cerdo",
+   "badge": "−20%",
+   "imgs": 1,
+   "emoji": false,
+   "more": null,
+   "price": "$ 6.400"
+  },
+  {
+   "name": "2 kg Asado Costilla + 3 cortes más",
+   "rubro": "Novillo · Pollo",
+   "badge": "−9%",
+   "imgs": 3,
+   "emoji": false,
+   "more": "+1",
+   "price": "$ 59.500"
+  },
+  {
+   "name": "2 kg de Costeletas",
+   "rubro": "Novillo",
+   "badge": "−9%",
+   "imgs": 1,
+   "emoji": false,
+   "more": null,
+   "price": "$ 29.800"
+  },
+  {
+   "name": "1 kg Matambre + 2 cortes más",
+   "rubro": "Cerdo",
+   "badge": "−9%",
+   "imgs": 3,
+   "emoji": false,
+   "more": null,
+   "price": "$ 31.500"
+  },
+  {
+   "name": "1 kg Falda + 1 kg Nalga",
+   "rubro": "Novillo",
+   "badge": "−10%",
+   "imgs": 2,
+   "emoji": false,
+   "more": null,
+   "price": "$ 32.400"
+  },
+  {
+   "name": "3 kg de Asado Costilla",
+   "rubro": "Novillo",
+   "badge": "−10%",
+   "imgs": 1,
+   "emoji": false,
+   "more": null,
+   "price": "$ 51.300"
+  }
+ ],
+ "logs_promos": [],
+ "flowNew": {
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   },
+   {
+    "type": "product",
+    "id": "pollo_alitas",
+    "key": "product:pollo_alitas",
+    "name": "Alitas",
+    "rubro": "Pollo",
+    "unit": "kg",
+    "price": 4500,
+    "quantity": 1,
+    "items": []
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A026.200%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A-%201%20kg%20Alitas%20-%20Pollo%20-%20%24%C2%A04.500%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A030.700*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "sync": [
+   "−1kg+",
+   "−1kg+"
+  ],
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:38.469Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x27e354e9 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:38.478Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x27e354ea transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:39.132Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x27e354eb transport errored: jd"
+  ]
+ },
+ "flowOrig": {
+  "cart": [
+   {
+    "type": "daily_offer",
+    "id": "daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "key": "daily_offer:daily_1f3637d9-c255-4b75-bddd-6fc50d408860",
+    "name": "Pata y Muslo y Pechuga con Hueso",
+    "rubro": "Oferta de hoy",
+    "unit": "oferta",
+    "price": 13100,
+    "quantity": 2,
+    "items": [
+     {
+      "nombre": "Pata y Muslo",
+      "cantidad": 1,
+      "unidad": "kg"
+     },
+     {
+      "nombre": "Pechuga con Hueso",
+      "cantidad": 1,
+      "unidad": "kg"
+     }
+    ]
+   }
+  ],
+  "opened": [
+   "https://wa.me/5493415555666?text=Hola%2C%20quiero%20hacer%20este%20pedido%20en%20*Carnicer%C3%ADa%20QA*%3A%0A%0A*PEDIDO*%0A*2%20ofertas%20Pata%20y%20Muslo%20y%20Pechuga%20con%20Hueso*%20-%20%24%C2%A026.200%0A%20%20-%201%20kg%20Pata%20y%20Muslo%0A%20%20-%201%20kg%20Pechuga%20con%20Hueso%0A%0A*TOTAL%20ESTIMADO%3A%20%24%C2%A026.200*%0A%0A*Cliente%3A*%20Prueba%20QA%0A*Telefono%3A*%203415555666%0A%0A*Entrega%3A*%20Retiro%20en%20el%20local%0A*Pago%3A*%20Efectivo"
+  ],
+  "sync": null,
+  "logs": [
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:50.622Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x7c8c4193 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:50.634Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x7c8c4194 transport errored: jd",
+   "error: Failed to load resource: net::ERR_FAILED",
+   "warning: [2026-09-30T12:07:51.157Z]  @firebase/firestore: Firestore (10.12.5): WebChannelConnection RPC 'Write' stream 0x7c8c4195 transport errored: jd"
+  ]
+ },
+ "offerCartEqual": true,
+ "others": {
+  "directo_al_grano/home": true,
+  "directo_al_grano/promos": true,
+  "oferta_primero/home": true,
+  "oferta_primero/promos": true,
+  "combos_pedido_directo/home": true,
+  "combos_pedido_directo/promos": true,
+  "standard/home": true,
+  "standard/promos": true
+ }
+}
