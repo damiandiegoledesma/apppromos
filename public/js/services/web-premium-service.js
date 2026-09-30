@@ -119,7 +119,7 @@ export function buildStarterWebConfig(meta = {}, businessId = "", now = new Date
   const slug = buildBusinessSlug(meta, businessId);
   return {
     enabled: true,
-    storefrontTheme: "standard",
+    storefrontTheme: "directo_al_grano",
     published: true,
     active: true,
     mode: "starter",
